@@ -1,0 +1,14 @@
+{
+  "id": "mission05-applicability-freeze",
+  "microbenchmark": {
+    "path": "evals/atlas/v0/applicability/atlas_applicability_v0.jsonl",
+    "manifest": "evals/atlas/v0/applicability/atlas_applicability_v0.manifest.json",
+    "sha256": "f3a33cc3ce85722c4895a4b91000fb21e6680265822e87ef4d8304e250d024d3",
+    "n": 15
+  },
+  "frozenBeforePrompt": true,
+  "atlasV6ContentHashAtFreeze": "1118e1a94e6558744965fd5f916b37d431984cee4cd911649e4b4c63027e4554",
+  "atlasV4ContentHashAtFreeze": "96252f0cae8ba28934e8b5facd18d4af1fa25354d04a95952b38827d7e1e26d8",
+  "note": "Microbenchmark hashed before any atlas-v7/v8 promptBundle or shared instruction change. Do not rewrite this lock to backdate a later prompt.",
+  "frozenAt": "2026-08-21T12:20:00.000Z"
+}

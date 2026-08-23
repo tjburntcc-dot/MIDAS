@@ -1,0 +1,25 @@
+{
+  "name": "@midas/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --import tsx src/index.ts",
+    "build": "tsc --pretty false",
+    "typecheck": "tsc --noEmit --pretty false",
+    "lint": "tsc --noEmit --pretty false",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@midas/db": "workspace:*",
+    "@midas/domain": "workspace:*",
+    "@midas/eval": "workspace:*",
+    "@midas/model": "workspace:*",
+    "fastify": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

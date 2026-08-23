@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MIDAS</title>
+<link rel="stylesheet" href="/village.css"/>
+</head>
+<body>
+
+<!-- ═══════════ PORTFOLIO VILLAGE (homepage) ═══════════ -->
+<div id="villageScreen">
+  <header class="vtop">
+    <div class="vbrand">
+      <div class="vmark" aria-hidden="true"></div>
+      <div>
+        <h1>MIDAS</h1>
+        <small>Founder operating system</small>
+      </div>
+    </div>
+    <div class="vmetrics" id="vMetrics"></div>
+    <div class="vactions" id="vActions"></div>
+  </header>
+  <div class="scene">
+    <svg id="villageSvg" preserveAspectRatio="xMidYMid meet" role="img"
+         aria-label="Your portfolio: a leadership headquarters surrounded by your businesses"></svg>
+  </div>
+</div>
+
+<!-- ═══════════ EVERY OTHER SCREEN ═══════════ -->
+<div id="appScreen" class="hidden">
+  <div class="shell">
+    <aside class="side" id="side"></aside>
+    <main class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/village-app.js"></script>
+</body>
+</html>

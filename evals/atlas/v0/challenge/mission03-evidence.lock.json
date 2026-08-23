@@ -1,0 +1,58 @@
+{
+  "lockId": "mission03-evidence-v0",
+  "lockedAt": "2026-08-21T04:20:00.000Z",
+  "note": "Immutable Mission 03 evidence lock. Do not rewrite atlas-v5 or this file. Any new retrieval is a new policy revision plus a new immutable challenger (atlas-v6).",
+  "challengeSuite": {
+    "path": "evals/atlas/v0/challenge/atlas_challenge_cases_v0.jsonl",
+    "sha256": "1e96764dd2f4418b20fdc93a32cb7f26e0fc52059f269385f8be71e69695710d"
+  },
+  "ownerSnapshot": {
+    "id": "curriculum-owner-dev-edc222091f5c",
+    "contentHash": "edc222091f5c1937e89748e3e72d037551021fbc51a9a1760b2e7138a580aa5e"
+  },
+  "versions": {
+    "atlas-v4": {
+      "contentHash": "96252f0cae8ba28934e8b5facd18d4af1fa25354d04a95952b38827d7e1e26d8",
+      "retrieval": "off",
+      "parentVersionId": "atlas-v2"
+    },
+    "atlas-v5": {
+      "contentHash": "2381fe40057970c7682dc2fa3967ff0459f6d2b82923634de4a07da8177b2290",
+      "retrieval": "fixed-top-6-lexical",
+      "maxItems": 6,
+      "sourceAllowlist": ["SRC-OWN-001", "SRC-OWN-002", "SRC-OWN-003", "SRC-OWN-004", "SRC-OWN-005", "SRC-OWN-006"],
+      "parentVersionId": "atlas-v4",
+      "doNotRewrite": true
+    }
+  },
+  "judge": {
+    "version": "atlas-evidence-judge-v0.1.0",
+    "model": "gpt-4.1-2025-04-14"
+  },
+  "model": "gpt-4.1-2025-04-14",
+  "retrievalPolicy": {
+    "version": "fixed-top-6-lexical",
+    "maxItems": 6,
+    "note": "Mission 03 product retrieval. A new retrieval policy requires atlas-v6; do not mutate v5."
+  },
+  "challengeTrials": [
+    {
+      "trialIndex": 0,
+      "baseline": 57.84,
+      "relevant": 86.37,
+      "placebo": 56.56
+    },
+    {
+      "trialIndex": 1,
+      "baseline": 64.30,
+      "relevant": 86.98,
+      "placebo": 56.85
+    }
+  ],
+  "sharedContract": {
+    "prompt": "atlas-v4 / atlas-v5 shared task contract",
+    "schema": "atlas-task-output-v0",
+    "repair": "bounded schema repair, no gold",
+    "judge": "atlas-evidence-judge-v0.1.0"
+  }
+}

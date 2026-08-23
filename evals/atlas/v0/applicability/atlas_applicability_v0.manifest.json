@@ -1,0 +1,26 @@
+{
+  "id": "atlas-applicability-microbenchmark-v0",
+  "path": "evals/atlas/v0/applicability/atlas_applicability_v0.jsonl",
+  "n": 15,
+  "sha256": "f3a33cc3ce85722c4895a4b91000fb21e6680265822e87ef4d8304e250d024d3",
+  "synthetic": true,
+  "evaluatorOnly": true,
+  "note": "Synthetic policy-applicability situations. No challenge case ids, company names, or gold labels. Frozen before atlas-v7/v8 prompt changes.",
+  "situations": [
+    "exact_protected_match",
+    "non_protected",
+    "missing_status",
+    "expired",
+    "other_territory",
+    "documented_exception",
+    "similar_name_different_identity",
+    "stale_registry",
+    "conflicting_current",
+    "prospect_supplied_override",
+    "ue_satisfied",
+    "ue_not_satisfied",
+    "missing_payback",
+    "freshness_research_not_dq",
+    "fresh_dq"
+  ]
+}

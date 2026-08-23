@@ -1,0 +1,7 @@
+{
+  "id": "atlas-policy-adversarial-v0",
+  "path": "evals/atlas/v0/applicability/atlas_policy_adversarial_v0.jsonl",
+  "n": 13,
+  "sha256": "a3ea2c4f46a0b59b5d5e472d06ae938638037a84cfa32c024f076eeb45d7e5eb",
+  "note": "NEW adversarial fixture file. Does not rewrite atlas_applicability_v0.jsonl. Synthetic names only."
+}

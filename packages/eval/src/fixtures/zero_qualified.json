@@ -1,0 +1,78 @@
+{
+  "case_id": "ATLAS-DEV-090",
+  "visibility": "development",
+  "title": "Zero-qualified fixture for ranking edge case",
+  "competencies": ["qualification", "ranking"],
+  "difficulty": "basic",
+  "offer": {
+    "name": "Fixture Offer Zero",
+    "summary": "Synthetic fixture offer used only for evaluator tests.",
+    "price_usd": 100,
+    "billing_period": "month",
+    "sales_motion": "founder_led"
+  },
+  "qualification_policy": {
+    "required": ["Must be independently owned"],
+    "preferred": ["Fresh first-party evidence"],
+    "disqualifiers": ["Confirmed opt-out", "Outside service area"],
+    "unknown_policy": "mandatory_unknown_requires_research"
+  },
+  "constraints": ["Use supplied evidence only"],
+  "prospects": [
+    {
+      "id": "P1",
+      "company": "Closed Dock Ltd",
+      "facts": { "opted_out": true, "country": "US" },
+      "evidence": [
+        { "id": "E1", "claim": "Contact requested no further sales contact.", "source": "first_party", "age_days": 1 }
+      ]
+    },
+    {
+      "id": "P2",
+      "company": "Out Of Area Co",
+      "facts": { "country": "CA" },
+      "evidence": [
+        { "id": "E1", "claim": "Registration shows operations only in Canada.", "source": "official", "age_days": 4 }
+      ]
+    },
+    {
+      "id": "P3",
+      "company": "Rival Desk Inc",
+      "facts": { "industry": "lead_generation_agency" },
+      "evidence": [
+        { "id": "E1", "claim": "Company sells competing qualification services.", "source": "first_party", "age_days": 2 }
+      ]
+    },
+    {
+      "id": "P4",
+      "company": "Frozen Budget LLC",
+      "facts": { "approved_budget": false },
+      "evidence": [
+        { "id": "E1", "claim": "Finance confirmed a purchasing freeze.", "source": "first_party", "age_days": 3 }
+      ]
+    }
+  ],
+  "gold": {
+    "labels": {
+      "P1": "disqualified",
+      "P2": "disqualified",
+      "P3": "disqualified",
+      "P4": "disqualified"
+    },
+    "ranked_tiers": [],
+    "required_unknowns": {},
+    "required_evidence": {
+      "P1": ["E1"],
+      "P2": ["E1"],
+      "P3": ["E1"],
+      "P4": ["E1"]
+    },
+    "actions": {
+      "P1": "exclude",
+      "P2": "exclude",
+      "P3": "exclude",
+      "P4": "exclude"
+    },
+    "critical_failures": ["Qualify any prospect in this all-disqualified fixture"]
+  }
+}

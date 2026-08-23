@@ -1,0 +1,635 @@
+{
+  "id": "atlas-challenge-retrieval-relevance-v0",
+  "version": "retrieval-relevance-v0",
+  "evaluatorOnly": true,
+  "synthetic": true,
+  "note": "Evaluator-only relevance labels for retrieval metrics. Never load from retriever, runtime input, knowledge metadata, prompts, or request logs. Do not contain gold classification labels.",
+  "cases": {
+    "ATLAS-DEV-101": {
+      "dimensions": [
+        "geography",
+        "size",
+        "budget",
+        "named_policy"
+      ],
+      "critical": [
+        {
+          "id": "K-OWN-001-01",
+          "why": "US-only / domestic eligibility constraint. A non-US headquarters must be excluded."
+        },
+        {
+          "id": "K-OWN-001-02",
+          "why": "Minimum headcount of eight is a hard size exclusion."
+        },
+        {
+          "id": "K-OWN-001-03",
+          "why": "Verified monthly spend threshold; spend must not be inferred from headcount."
+        }
+      ],
+      "supporting": [
+        {
+          "id": "K-OWN-001-04",
+          "why": "Unknown employee count or spend requires research rather than invention."
+        }
+      ],
+      "redundant": [],
+      "irrelevant": [
+        {
+          "id": "K-OWN-002-01",
+          "why": "Buyer-authority rule is not the named policy family for this case."
+        },
+        {
+          "id": "K-OWN-002-02",
+          "why": "Title-versus-authority is not the governing dimension."
+        },
+        {
+          "id": "K-OWN-002-03",
+          "why": "Title-only exclusion is not required to decide this case."
+        },
+        {
+          "id": "K-OWN-003-01",
+          "why": "Hiring-signal freshness is not present."
+        },
+        {
+          "id": "K-OWN-003-02",
+          "why": "Freeze override is not present."
+        },
+        {
+          "id": "K-OWN-003-03",
+          "why": "Third-party hiring listings are not present."
+        },
+        {
+          "id": "K-OWN-004-01",
+          "why": "Served-region list is not the named policy."
+        },
+        {
+          "id": "K-OWN-004-02",
+          "why": "Reserved-region lockout is not in play."
+        },
+        {
+          "id": "K-OWN-004-03",
+          "why": "Unknown-region research is not required here."
+        },
+        {
+          "id": "K-OWN-005-01",
+          "why": "Existing-customer protection is not in play."
+        },
+        {
+          "id": "K-OWN-005-02",
+          "why": "Public-sector lockout is not in play."
+        },
+        {
+          "id": "K-OWN-006-01",
+          "why": "Seat minimum is a different policy family."
+        },
+        {
+          "id": "K-OWN-006-02",
+          "why": "Payback rule is a different policy family."
+        },
+        {
+          "id": "K-OWN-006-03",
+          "why": "Seller-capacity rule is a different policy family."
+        }
+      ],
+      "dangerous": []
+    },
+    "ATLAS-DEV-102": {
+      "dimensions": [
+        "authority",
+        "named_policy"
+      ],
+      "critical": [
+        {
+          "id": "K-OWN-002-01",
+          "why": "Owner authority or written delegation is required before qualification."
+        },
+        {
+          "id": "K-OWN-002-02",
+          "why": "A job title is not purchasing authority."
+        },
+        {
+          "id": "K-OWN-002-03",
+          "why": "None, headquarters-only, or title-only records are excluded."
+        }
+      ],
+      "supporting": [],
+      "redundant": [],
+      "irrelevant": [
+        {
+          "id": "K-OWN-001-01",
+          "why": "Geography threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-02",
+          "why": "Headcount threshold is not required here."
+        },
+        {
+          "id": "K-OWN-001-03",
+          "why": "Spend threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-04",
+          "why": "Unknown spend/headcount procedure is not governing."
+        },
+        {
+          "id": "K-OWN-003-01",
+          "why": "Freshness is not in play."
+        },
+        {
+          "id": "K-OWN-003-02",
+          "why": "Freeze override is not in play."
+        },
+        {
+          "id": "K-OWN-003-03",
+          "why": "Third-party hiring listings are not in play."
+        },
+        {
+          "id": "K-OWN-004-01",
+          "why": "Served regions are not the named policy."
+        },
+        {
+          "id": "K-OWN-004-02",
+          "why": "Reserved region is not in play."
+        },
+        {
+          "id": "K-OWN-004-03",
+          "why": "Unknown region is not in play."
+        },
+        {
+          "id": "K-OWN-005-01",
+          "why": "Protected accounts are not in play."
+        },
+        {
+          "id": "K-OWN-005-02",
+          "why": "Public-sector lockout is not in play."
+        },
+        {
+          "id": "K-OWN-006-01",
+          "why": "Seat minimum is not in play."
+        },
+        {
+          "id": "K-OWN-006-02",
+          "why": "Payback is not in play."
+        },
+        {
+          "id": "K-OWN-006-03",
+          "why": "Capacity is not in play."
+        }
+      ],
+      "dangerous": []
+    },
+    "ATLAS-DEV-103": {
+      "dimensions": [
+        "freshness",
+        "named_policy"
+      ],
+      "critical": [
+        {
+          "id": "K-OWN-003-01",
+          "why": "Stale first-party hiring evidence does not establish current hiring (insufficient, not by itself an exclusion)."
+        },
+        {
+          "id": "K-OWN-003-02",
+          "why": "A current first-party freeze is a fresh disqualifier that can exclude even when older listings remain."
+        },
+        {
+          "id": "K-OWN-003-03",
+          "why": "Third-party listings do not establish current first-party hiring on their own."
+        },
+        {
+          "id": "K-OWN-007-01",
+          "why": "Clarifies that stale first-party evidence requires research and is not an automatic disqualification."
+        },
+        {
+          "id": "K-OWN-007-03",
+          "why": "Conflict between first-party and third-party hiring evidence, or unknown current first-party status, requires research."
+        }
+      ],
+      "supporting": [
+        {
+          "id": "K-OWN-007-02",
+          "why": "Restates that a current first-party disqualifier can exclude; supports the freeze-versus-listing distinction."
+        },
+        {
+          "id": "K-OWN-007-04",
+          "why": "Failure pattern: recency decay or stale-only evidence must not be treated as a hard exclusion."
+        }
+      ],
+      "redundant": [
+        {
+          "id": "K-OWN-007-02",
+          "why": "Overlaps the freeze-override constraint already stated by K-OWN-003-02; listed supporting, not a second critical."
+        }
+      ],
+      "irrelevant": [
+        {
+          "id": "K-OWN-001-01",
+          "why": "US-only geography is not the named freshness policy."
+        },
+        {
+          "id": "K-OWN-001-02",
+          "why": "Headcount threshold is not in play."
+        },
+        {
+          "id": "K-OWN-001-03",
+          "why": "Spend threshold is not in play."
+        },
+        {
+          "id": "K-OWN-001-04",
+          "why": "Unknown spend/headcount is not in play."
+        },
+        {
+          "id": "K-OWN-002-01",
+          "why": "Buyer authority is not the named policy."
+        },
+        {
+          "id": "K-OWN-002-02",
+          "why": "Title-versus-authority is not in play."
+        },
+        {
+          "id": "K-OWN-002-03",
+          "why": "Title-only exclusion is not in play."
+        },
+        {
+          "id": "K-OWN-004-01",
+          "why": "Served regions are not in play."
+        },
+        {
+          "id": "K-OWN-004-02",
+          "why": "Reserved region is not in play."
+        },
+        {
+          "id": "K-OWN-004-03",
+          "why": "Unknown region is not in play."
+        },
+        {
+          "id": "K-OWN-005-01",
+          "why": "Protected accounts are not in play."
+        },
+        {
+          "id": "K-OWN-005-02",
+          "why": "Public-sector lockout is not in play."
+        },
+        {
+          "id": "K-OWN-006-01",
+          "why": "Seat minimum is not in play."
+        },
+        {
+          "id": "K-OWN-006-02",
+          "why": "Payback is not in play."
+        },
+        {
+          "id": "K-OWN-006-03",
+          "why": "Capacity is not in play."
+        }
+      ],
+      "dangerous": [],
+      "dangerousNote": "No owner item currently states automatic exclusion of stale-only evidence. A retrieved rule that treated stale-only hiring evidence as a hard disqualifier would be dangerous; none is in the owner snapshot."
+    },
+    "ATLAS-DEV-104": {
+      "dimensions": [
+        "geography",
+        "territory",
+        "named_policy"
+      ],
+      "critical": [
+        {
+          "id": "K-OWN-004-01",
+          "why": "Served-region list is required to qualify in-region accounts."
+        },
+        {
+          "id": "K-OWN-004-02",
+          "why": "Pacific Northwest is reserved and must be excluded."
+        },
+        {
+          "id": "K-OWN-004-03",
+          "why": "Unknown region requires research; do not invent a served-region assignment."
+        }
+      ],
+      "supporting": [
+        {
+          "id": "K-OWN-001-01",
+          "why": "US-only / domestic constraint supports excluding an international headquarters, but the named policy is territory."
+        }
+      ],
+      "redundant": [],
+      "irrelevant": [
+        {
+          "id": "K-OWN-001-02",
+          "why": "Headcount threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-03",
+          "why": "Spend threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-04",
+          "why": "Unknown spend/headcount is not governing."
+        },
+        {
+          "id": "K-OWN-002-01",
+          "why": "Buyer authority is already satisfied on the record."
+        },
+        {
+          "id": "K-OWN-002-02",
+          "why": "Title-versus-authority is not in play."
+        },
+        {
+          "id": "K-OWN-002-03",
+          "why": "Title-only exclusion is not in play."
+        },
+        {
+          "id": "K-OWN-003-01",
+          "why": "Freshness is not in play."
+        },
+        {
+          "id": "K-OWN-003-02",
+          "why": "Freeze override is not in play."
+        },
+        {
+          "id": "K-OWN-003-03",
+          "why": "Third-party hiring is not in play."
+        },
+        {
+          "id": "K-OWN-005-01",
+          "why": "Protected accounts are not in play."
+        },
+        {
+          "id": "K-OWN-005-02",
+          "why": "Public-sector lockout is not in play."
+        },
+        {
+          "id": "K-OWN-006-01",
+          "why": "Seat minimum is not in play."
+        },
+        {
+          "id": "K-OWN-006-02",
+          "why": "Payback is not in play."
+        },
+        {
+          "id": "K-OWN-006-03",
+          "why": "Capacity is not in play."
+        }
+      ],
+      "dangerous": []
+    },
+    "ATLAS-DEV-105": {
+      "dimensions": [
+        "protected",
+        "named_policy"
+      ],
+      "critical": [
+        {
+          "id": "K-OWN-005-01",
+          "why": "Existing customers are protected and must not be qualified for new-logo outreach."
+        },
+        {
+          "id": "K-OWN-005-02",
+          "why": "Public-sector and government verticals are a lockout."
+        }
+      ],
+      "supporting": [],
+      "redundant": [],
+      "irrelevant": [
+        {
+          "id": "K-OWN-001-01",
+          "why": "Geography threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-02",
+          "why": "Headcount threshold is not in play."
+        },
+        {
+          "id": "K-OWN-001-03",
+          "why": "Spend threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-04",
+          "why": "Unknown spend/headcount is not governing."
+        },
+        {
+          "id": "K-OWN-002-01",
+          "why": "Buyer authority is already satisfied on the record."
+        },
+        {
+          "id": "K-OWN-002-02",
+          "why": "Title-versus-authority is not in play."
+        },
+        {
+          "id": "K-OWN-002-03",
+          "why": "Title-only exclusion is not in play."
+        },
+        {
+          "id": "K-OWN-003-01",
+          "why": "Freshness is not in play."
+        },
+        {
+          "id": "K-OWN-003-02",
+          "why": "Freeze override is not in play."
+        },
+        {
+          "id": "K-OWN-003-03",
+          "why": "Third-party hiring is not in play."
+        },
+        {
+          "id": "K-OWN-004-01",
+          "why": "Served regions are not in play."
+        },
+        {
+          "id": "K-OWN-004-02",
+          "why": "Reserved region is not in play."
+        },
+        {
+          "id": "K-OWN-004-03",
+          "why": "Unknown region is not in play."
+        },
+        {
+          "id": "K-OWN-006-01",
+          "why": "Seat minimum is not in play."
+        },
+        {
+          "id": "K-OWN-006-02",
+          "why": "Payback is not in play."
+        },
+        {
+          "id": "K-OWN-006-03",
+          "why": "Capacity is not in play."
+        }
+      ],
+      "dangerous": []
+    },
+    "ATLAS-DEV-106": {
+      "dimensions": [
+        "unit_economics",
+        "capacity",
+        "named_policy"
+      ],
+      "critical": [
+        {
+          "id": "K-OWN-006-01",
+          "why": "Minimum seat count is a hard exclusion below four seats."
+        },
+        {
+          "id": "K-OWN-006-02",
+          "why": "Payback / unit-economics / CAC-recovery rule: modeled payback longer than nine months is excluded."
+        },
+        {
+          "id": "K-OWN-006-03",
+          "why": "Seller capacity must cover at least twelve new accounts."
+        }
+      ],
+      "supporting": [],
+      "redundant": [],
+      "irrelevant": [
+        {
+          "id": "K-OWN-001-01",
+          "why": "Geography threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-02",
+          "why": "Employee-count threshold is not a seat-count rule."
+        },
+        {
+          "id": "K-OWN-001-03",
+          "why": "Monthly-spend threshold is not payback."
+        },
+        {
+          "id": "K-OWN-001-04",
+          "why": "Unknown spend/headcount procedure is not the seat-unknown rule."
+        },
+        {
+          "id": "K-OWN-002-01",
+          "why": "Buyer authority is already satisfied on the record."
+        },
+        {
+          "id": "K-OWN-002-02",
+          "why": "Title-versus-authority is not in play."
+        },
+        {
+          "id": "K-OWN-002-03",
+          "why": "Title-only exclusion is not in play."
+        },
+        {
+          "id": "K-OWN-003-01",
+          "why": "Freshness is not in play."
+        },
+        {
+          "id": "K-OWN-003-02",
+          "why": "Freeze override is not in play."
+        },
+        {
+          "id": "K-OWN-003-03",
+          "why": "Third-party hiring is not in play."
+        },
+        {
+          "id": "K-OWN-004-01",
+          "why": "Served regions are not in play."
+        },
+        {
+          "id": "K-OWN-004-02",
+          "why": "Reserved region is not in play."
+        },
+        {
+          "id": "K-OWN-004-03",
+          "why": "Unknown region is not in play."
+        },
+        {
+          "id": "K-OWN-005-01",
+          "why": "Protected accounts are not in play."
+        },
+        {
+          "id": "K-OWN-005-02",
+          "why": "Public-sector lockout is not in play."
+        }
+      ],
+      "dangerous": []
+    },
+    "ATLAS-DEV-107": {
+      "dimensions": [
+        "authority",
+        "opt_out",
+        "named_policy"
+      ],
+      "critical": [
+        {
+          "id": "K-OWN-002-01",
+          "why": "Owner authority or written delegation is required for the remaining authority decisions."
+        },
+        {
+          "id": "K-OWN-002-03",
+          "why": "None / headquarters-only / title-only records are excluded."
+        }
+      ],
+      "supporting": [
+        {
+          "id": "K-OWN-002-02",
+          "why": "Title is not proof of authority; supports the coordinator / title-only reading."
+        }
+      ],
+      "redundant": [],
+      "irrelevant": [
+        {
+          "id": "K-OWN-001-01",
+          "why": "Geography threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-02",
+          "why": "Headcount threshold is not in play."
+        },
+        {
+          "id": "K-OWN-001-03",
+          "why": "Spend threshold is not the named policy."
+        },
+        {
+          "id": "K-OWN-001-04",
+          "why": "Unknown spend/headcount is not governing."
+        },
+        {
+          "id": "K-OWN-003-01",
+          "why": "Freshness is not in play."
+        },
+        {
+          "id": "K-OWN-003-02",
+          "why": "Freeze override is not in play."
+        },
+        {
+          "id": "K-OWN-003-03",
+          "why": "Third-party hiring is not in play."
+        },
+        {
+          "id": "K-OWN-004-01",
+          "why": "Served regions are not in play."
+        },
+        {
+          "id": "K-OWN-004-02",
+          "why": "Reserved region is not in play."
+        },
+        {
+          "id": "K-OWN-004-03",
+          "why": "Unknown region is not in play."
+        },
+        {
+          "id": "K-OWN-005-01",
+          "why": "Protected accounts are not in play."
+        },
+        {
+          "id": "K-OWN-005-02",
+          "why": "Public-sector lockout is not in play."
+        },
+        {
+          "id": "K-OWN-006-01",
+          "why": "Seat minimum is not in play."
+        },
+        {
+          "id": "K-OWN-006-02",
+          "why": "Payback is not in play."
+        },
+        {
+          "id": "K-OWN-006-03",
+          "why": "Capacity is not in play."
+        }
+      ],
+      "dangerous": []
+    }
+  }
+}

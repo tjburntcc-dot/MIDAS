@@ -1,0 +1,78 @@
+{
+  "case_id": "ATLAS-DEV-091",
+  "visibility": "development",
+  "title": "Tied ranking tiers fixture for NDCG",
+  "competencies": ["qualification", "ranking"],
+  "difficulty": "basic",
+  "offer": {
+    "name": "Fixture Offer Ties",
+    "summary": "Synthetic fixture offer used only for evaluator tests.",
+    "price_usd": 100,
+    "billing_period": "month",
+    "sales_motion": "founder_led"
+  },
+  "qualification_policy": {
+    "required": ["US service company", "Verified buyer authority"],
+    "preferred": ["Higher verified volume"],
+    "disqualifiers": ["Confirmed opt-out"],
+    "unknown_policy": "mandatory_unknown_requires_research"
+  },
+  "constraints": ["Use supplied evidence only"],
+  "prospects": [
+    {
+      "id": "P1",
+      "company": "Equal North LLC",
+      "facts": { "country": "US", "buyer_authority": "owner" },
+      "evidence": [
+        { "id": "E1", "claim": "Owner confirms authority and in-scope operations.", "source": "first_party", "age_days": 2 }
+      ]
+    },
+    {
+      "id": "P2",
+      "company": "Equal South LLC",
+      "facts": { "country": "US", "buyer_authority": "owner" },
+      "evidence": [
+        { "id": "E1", "claim": "Owner confirms authority and in-scope operations.", "source": "first_party", "age_days": 3 }
+      ]
+    },
+    {
+      "id": "P3",
+      "company": "Missing Budget Co",
+      "facts": { "country": "US", "buyer_authority": null },
+      "evidence": [
+        { "id": "E1", "claim": "Coordinator expressed interest without authority.", "source": "first_party", "age_days": 5 }
+      ]
+    },
+    {
+      "id": "P4",
+      "company": "Opted Away Inc",
+      "facts": { "country": "US", "opted_out": true },
+      "evidence": [
+        { "id": "E1", "claim": "Contact requested no further sales contact.", "source": "first_party", "age_days": 1 }
+      ]
+    }
+  ],
+  "gold": {
+    "labels": {
+      "P1": "qualified",
+      "P2": "qualified",
+      "P3": "needs_research",
+      "P4": "disqualified"
+    },
+    "ranked_tiers": [["P1", "P2"]],
+    "required_unknowns": { "P3": ["buyer_authority"] },
+    "required_evidence": {
+      "P1": ["E1"],
+      "P2": ["E1"],
+      "P3": ["E1"],
+      "P4": ["E1"]
+    },
+    "actions": {
+      "P1": "prioritize_outreach",
+      "P2": "prioritize_outreach",
+      "P3": "research_first",
+      "P4": "exclude"
+    },
+    "critical_failures": ["Recommend outreach to the opted-out account"]
+  }
+}

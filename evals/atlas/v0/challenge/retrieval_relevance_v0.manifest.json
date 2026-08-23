@@ -1,0 +1,7 @@
+{
+  "id": "atlas-challenge-retrieval-relevance-v0",
+  "path": "evals/atlas/v0/challenge/retrieval_relevance_v0.json",
+  "sha256": "18fb45d5a0bbdab51f5e7ef39585ce889ef4aaafc98ddaa14b9986306fab1bca",
+  "evaluatorOnly": true,
+  "note": "Hash of the evaluator-only relevance label file. Retriever and runtime must never load this path."
+}

@@ -1,0 +1,162 @@
+{
+  "manifest_version": "atlas-phase0-manifest-v0.1.0",
+  "created_date": "2026-08-20",
+  "product": "MIDAS",
+  "agent": "Atlas",
+  "suite_version": "atlas-prospect-qualification-starter-v0.1.0",
+  "phase": "0_truth_contract",
+  "phase_status": "authored_validated_and_frozen",
+  "application_code_created": false,
+  "competency": "prospect_qualification_and_prioritization",
+  "data_origin": "synthetic_fictional_cases_no_production_prospect_data",
+  "case_counts": {
+    "development": 8,
+    "sealed_starter": 12,
+    "total": 20,
+    "prospects": 100
+  },
+  "classification_counts": {
+    "qualified": 37,
+    "needs_research": 23,
+    "disqualified": 40
+  },
+  "difficulty_counts": {
+    "basic": 3,
+    "intermediate": 3,
+    "advanced": 9,
+    "adversarial": 5
+  },
+  "case_ids": {
+    "development": [
+      "ATLAS-DEV-001",
+      "ATLAS-DEV-002",
+      "ATLAS-DEV-003",
+      "ATLAS-DEV-004",
+      "ATLAS-DEV-005",
+      "ATLAS-DEV-006",
+      "ATLAS-DEV-007",
+      "ATLAS-DEV-008"
+    ],
+    "sealed_starter": [
+      "ATLAS-SEALED-009",
+      "ATLAS-SEALED-010",
+      "ATLAS-SEALED-011",
+      "ATLAS-SEALED-012",
+      "ATLAS-SEALED-013",
+      "ATLAS-SEALED-014",
+      "ATLAS-SEALED-015",
+      "ATLAS-SEALED-016",
+      "ATLAS-SEALED-017",
+      "ATLAS-SEALED-018",
+      "ATLAS-SEALED-019",
+      "ATLAS-SEALED-020"
+    ]
+  },
+  "score_weights_percent": {
+    "qualification_correctness": 35,
+    "ranking_quality": 20,
+    "evidence_grounding": 15,
+    "uncertainty_and_missing_data": 10,
+    "recommended_next_action": 10,
+    "constraint_and_schema_compliance": 10
+  },
+  "experiment_arms": [
+    "baseline_no_curriculum",
+    "relevant_frozen_curriculum",
+    "length_matched_placebo"
+  ],
+  "diagnostic_only_optional_arm": "human_selected_oracle_context",
+  "case_authoring_completed_before_curriculum_selection": true,
+  "source_selection": {
+    "total_primary_publisher_references": 9,
+    "core_runtime_eligible_sources": ["SRC-001", "SRC-002", "SRC-003", "SRC-004", "SRC-005", "SRC-006"],
+    "supporting_compilation_references": ["SRC-007", "SRC-008"],
+    "execution_stage_only_excluded_from_initial_runtime": ["SRC-009"],
+    "source_revisions_captured": false,
+    "definitive_exact_and_semantic_leakage_scan": "required_before_source_ingestion_not_yet_performed"
+  },
+  "holdout_handling": {
+    "path": "holdout/atlas_sealed_cases_v0.jsonl",
+    "contains_hidden_gold": true,
+    "keep_outside_future_application_repository": true,
+    "owner_may_inspect": true,
+    "file_separation_is_not_access_control": true,
+    "dedicated_evaluator_role_and_storage_enforcement": "required_in_implementation_not_yet_implemented",
+    "runtime_schema_accepts_gold_fields": false
+  },
+  "presentation_security": {
+    "raw_authoring_positions_are_not_class_balanced": true,
+    "deterministic_seeded_prospect_order_shuffle_required": true,
+    "independent_seeded_runtime_prospect_id_remapping_required": true,
+    "same_case_and_trial_presentation_for_every_experiment_arm": true,
+    "position_only_baseline_negative_control_required": true,
+    "presentation_controls_implemented": false,
+    "design_validation_negative_control": {
+      "raw_authoring_position_only_accuracy_percent": 68.0,
+      "seeded_shuffled_position_only_accuracy_percent": 35.42,
+      "simulated_presentations": 5120,
+      "status": "design_validated_product_implementation_still_required"
+    }
+  },
+  "validation_results": {
+    "all_case_ids_unique": "PASS",
+    "all_case_records_match_owner_schema": "PASS",
+    "all_runtime_case_projections_match_input_schema": "PASS",
+    "runtime_input_schema_rejects_gold": "PASS",
+    "all_gold_labels_cover_each_prospect_once": "PASS",
+    "all_gold_actions_match_classifications": "PASS",
+    "all_ranking_tiers_cover_only_and_all_qualified_prospects": "PASS",
+    "all_required_uncertainties_map_to_research_prospects": "PASS",
+    "all_required_evidence_ids_exist_on_the_correct_prospect": "PASS",
+    "generated_gold_consistent_outputs_match_output_schema": "PASS",
+    "output_schema_rejects_mismatched_classification_and_action": "PASS",
+    "zero_qualified_case_present": "PASS",
+    "ranking_tie_case_present": "PASS",
+    "required_adversarial_and_operational_coverage_present": "PASS",
+    "seeded_presentation_design_removes_position_shortcut": "PASS",
+    "score_weights_sum_to_100": "PASS",
+    "case_hashes_unchanged_after_source_selection": "PASS",
+    "fictional_company_names_absent_from_source_plan": "PASS"
+  },
+  "spend_guardrails": {
+    "maximum_active_evaluation_jobs": 1,
+    "maximum_starter_cases_per_arm": 20,
+    "walking_slice_trials_per_case": 1,
+    "maximum_unconfirmed_experiment_arms": 3,
+    "maximum_estimated_usd_per_run": 25,
+    "maximum_estimated_usd_per_day": 100,
+    "provider_pricing_must_be_checked_at_execution_time": true
+  },
+  "file_sha256": {
+    "ATLAS_PHASE_0_BENCHMARK_V0.md": "84e3bf044b214f1f23b527dc38ecc6b24214d00eeed759aef6be1e51e679578c",
+    "atlas_task_input.schema.json": "a5055583417155d89cd537e5c25f5fe30a2b2d2f63000bc5c6cf18b7edb75c75",
+    "atlas_task_output.schema.json": "94514577c3a89b2747e8d5b4d8c60a914edb1c83a621cb67b01f7eb458bb7e0e",
+    "atlas_case_record.schema.json": "5505d7dcd919e6eb7a357eee7b167392072182b0d3bc015fcddb80dff5fa785c",
+    "atlas_dev_cases_v0.jsonl": "2092f8da53aa8d5b804fc45f10992e1b16c56a1b1d7f062e3c97f3f7e6284887",
+    "holdout/atlas_sealed_cases_v0.jsonl": "02cd27c709014cea539d1a89aa6e126cfb8b60f3a58543968dba93993be17bca",
+    "ATLAS_CURRICULUM_SOURCES_V0.md": "685326f42acf85a0cb3661db7dfe19de2fb6af7d953ba7b014fbe41889c47b20"
+  },
+  "next_phase": {
+    "name": "VS-001_walking_foundry_slice",
+    "sequence": [
+      "Create the application repository without copying the sealed holdout into it",
+      "Create Atlas and freeze immutable version v0",
+      "Implement dedicated evaluator runtime projection and presentation randomization",
+      "Run and persist the frozen starter baseline",
+      "Capture approved source revisions and pass exact and semantic leakage checks",
+      "Extract source-backed structured qualification knowledge",
+      "Freeze immutable challenger version v1 with the same base model",
+      "Run relevant and length-matched placebo arms on identical case presentations",
+      "Inspect score deltas, citations, unknown handling, constraints, cost, and critical failures",
+      "Record explicit promote or reject decision",
+      "Restart and demonstrate persistent agent, versions, sources, runs, and decision history"
+    ]
+  },
+  "claims_not_supported": [
+    "Atlas is statistically proven better",
+    "The starter holdout already has hardened access control",
+    "External curriculum sources have already been archived or semantically scanned",
+    "The first 100-case final promotion benchmark exists",
+    "The agent is authorized to send messages or access real prospect records"
+  ]
+}

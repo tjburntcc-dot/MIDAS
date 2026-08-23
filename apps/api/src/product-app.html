@@ -1,0 +1,1896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MIDAS</title>
+<link rel="stylesheet" href="/product-app.css"/>
+<style>
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:#0B0D12;color:#F4F6FA}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div>
+        <h1>MIDAS</h1>
+        <small>Founder operating system</small>
+      </div>
+    </div>
+    <div class="company-select">
+      <label class="field-label" for="wsSelect">Current company</label>
+      <select id="wsSelect" onchange="onCompanyChange(this.value)"></select>
+    </div>
+    <a class="cmd-hint" href="#/command">Ask the team <kbd>/</kbd></a>
+    <nav id="nav"></nav>
+    <div class="sidebar-foot">
+      <span class="status-chip" id="statusChip" title="Storage, retrieval, and provider details live in Settings / Diagnostics."><i></i> Local workspace</span>
+    </div>
+  </aside>
+  <div class="shell">
+    <header class="topbar">
+      <button class="menu-btn ghost" type="button" onclick="openSidebar()" aria-label="Open navigation">Menu</button>
+      <div>
+        <p class="page-kicker" id="pageKicker">MIDAS</p>
+        <h2 class="page-title" id="pageTitle">Home</h2>
+      </div>
+      <div class="topbar-actions" id="topActions"></div>
+    </header>
+    <p class="err" id="err"></p>
+    <div class="workspace" id="workspace">
+      <div class="page" id="page">Loading…</div>
+      <aside class="rail" id="rail" hidden></aside>
+    </div>
+  </div>
+</div>
+<script>
+const WS_KEY = 'midas.selectedWorkspace';
+const MOTION_KEY = 'midas.reducedMotion';
+const PRIMARY_NAV = [
+  ["overview","Home"],
+  ["companies","Companies"],
+  ["opportunities","Opportunities"],
+  ["employees","Team"],
+  ["work","Work"]
+];
+const KNOWLEDGE_NAV = [
+  ["training","Training"],
+  ["research","Research"],
+  ["teaching","Teaching"],
+  ["knowledge","Knowledge"]
+];
+const RESULTS_NAV = [
+  ["deliverables","Deliverables"],
+  ["launch-readiness","Launch Readiness"]
+];
+const UTILITY_NAV = [
+  ["approvals","Approvals"],
+  ["treasury","Treasury"],
+  ["settings","Settings"],
+  ["diagnostics","Diagnostics"]
+];
+const NAV_LABELS_PRESERVED = ["Overview","Companies","Opportunities","Teams","Employees","Training","Knowledge","Objectives","Work","Approvals","Activity","Spending"];
+const MORE_NAV = [
+  ["teams","Teams"],
+  ["objectives","Objectives"],
+  ["activity","Activity"],
+  ["spending","Spending"],
+  ["command","Command"],
+  ["jobs","Jobs"],
+  ["artifacts","Artifacts"],
+  ["portfolio","Portfolio"],
+  ["search","Search"],
+  ["autonomy","Autonomy"],
+  ["workflow-proof","Workflow proof"]
+];
+const FOUNDER_NAV = PRIMARY_NAV;
+const NAV = PRIMARY_NAV.concat(KNOWLEDGE_NAV).concat(RESULTS_NAV).concat(UTILITY_NAV);
+const PAGE_TITLES = {
+  overview:'Home', headquarters:'Headquarters', companies:'Companies', opportunities:'Opportunities',
+  employees:'Team', teams:'Teams', work:'Work', training:'Training', research:'Research', teaching:'Teaching',
+  knowledge:'Knowledge', deliverables:'Results', artifacts:'Artifacts', approvals:'Approvals', treasury:'Treasury',
+  spending:'Spending', settings:'Settings', command:'Command', 'launch-readiness':'Launch readiness',
+  objectives:'Objectives', activity:'Activity', jobs:'Jobs', portfolio:'Portfolio', search:'Search',
+  autonomy:'Autonomy', 'workflow-proof':'Workflow proof', brain:'Brain'
+};
+let COMPANIES = [];
+let COMPANY_INDEX = {};
+let LAST_HONESTY = {};
+let HQ_STATE = { selected: null, zoom: 1 };
+
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]);})}
+function el(id){return document.getElementById(id)}
+async function api(path, init){
+  const res = await fetch(path, Object.assign({headers:{'content-type':'application/json'}}, init||{}));
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error||res.statusText);
+  return data;
+}
+function route(){
+  const raw = (location.hash||'#/overview').replace(/^#\/?/,'').split('?')[0];
+  const h = raw.split('/').filter(Boolean);
+  return { page: h[0]||'overview', id: h[1]||'', extra: h[2]||'' };
+}
+function hashQuery(){ return new URLSearchParams((location.hash.split('?')[1]||'')); }
+function currentWs(){
+  const q = hashQuery();
+  return q.get('workspace') || q.get('workspaceId') || localStorage.getItem(WS_KEY) || '';
+}
+function setWs(id){
+  if(id) localStorage.setItem(WS_KEY, id);
+  else localStorage.removeItem(WS_KEY);
+  const sel = el('wsSelect');
+  if(sel && id && sel.value !== id) sel.value = id;
+}
+function withWs(path){
+  const ws = currentWs();
+  if(!ws) return path;
+  return path + (path.indexOf('?')>=0?'&':'?') + 'workspaceId=' + encodeURIComponent(ws);
+}
+function companyName(id){
+  if(!id) return '';
+  const c = COMPANY_INDEX[id];
+  return (c && c.name) || id;
+}
+function isOwnerCompany(c){
+  return c && (c.origin === 'owner_intake' || /^ws-own-/.test(c.id) || c.id === 'ws-ridgeline');
+}
+function friendlyStatus(s){
+  const raw = String(s||'').replace(/_/g,' ');
+  if(/development verified/i.test(raw)) return 'Development verified';
+  if(/supervised internal/i.test(raw)) return 'Supervised internal use';
+  if(/authorized/i.test(raw)) return 'Authorized';
+  if(/pending/i.test(raw)) return 'Waiting for you';
+  if(/block/i.test(raw)) return 'Blocked';
+  if(/complete|done/i.test(raw)) return 'Completed';
+  if(/active/i.test(raw)) return 'Active';
+  return raw ? raw.charAt(0).toUpperCase()+raw.slice(1) : 'Stored';
+}
+function initials(name){
+  return String(name||'?').split(/\s+/).slice(0,2).map(function(p){return p[0];}).join('').toUpperCase();
+}
+function colorFor(key){
+  const palette = ['#d7ae55','#6ea8d8','#6fbf8a','#d48bb0','#c47a4a','#8aa0c8','#7ec8b0','#c4a06a'];
+  let h = 0; const s = String(key||'');
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return palette[h % palette.length];
+}
+function deptForRole(roleId){
+  const map = {
+    executive:{id:'executive',label:'Leadership'},
+    workflow_manager:{id:'management',label:'Leadership'},
+    atlas:{id:'management',label:'Leadership'},
+    independent_audit:{id:'oversight',label:'Oversight'},
+    offer_strategist:{id:'strategy',label:'Strategy'},
+    opportunity_generation:{id:'strategy',label:'Strategy'},
+    business_research:{id:'research',label:'Research'},
+    marketing:{id:'marketing',label:'Marketing'},
+    product:{id:'product',label:'Product'},
+    knowledge_extraction:{id:'product',label:'Product'},
+    ops:{id:'operations',label:'Operations'},
+    finance:{id:'finance',label:'Finance'},
+    sales:{id:'sales',label:'Sales planning'}
+  };
+  return map[roleId] || {id:'operations',label:'Operations'};
+}
+function avatarHtml(name, key){
+  return '<div class="avatar" style="background:'+colorFor(key||name)+'">'+esc(initials(name))+'</div>';
+}
+function money(v){
+  if(v==null || v==='') return '—';
+  const n = Number(v);
+  if(Number.isFinite(n)) return '$' + (Math.abs(n)>=10 ? n.toFixed(2) : String(n));
+  return '$' + String(v);
+}
+function when(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return String(iso).slice(0,16);
+  return d.toLocaleString();
+}
+function claimText(field){
+  if(field==null) return '';
+  if(typeof field === 'string' || typeof field === 'number') return String(field);
+  if(Array.isArray(field)) return field.map(function(x){return claimText(x);}).filter(Boolean).join('; ');
+  return String(field.text!=null?field.text:(field.value!=null?field.value:(field.note||'')));
+}
+
+function navLink(href, label, page, activePage, badge){
+  const first = String(page||'').split('/')[0];
+  const cls = (first===activePage?'active':'') + (page==='approvals' && badge ? ' pending' : '');
+  const count = (page==='approvals' && badge) ? '<span class="count">'+esc(badge)+'</span>' : '';
+  return '<a class="nav-link '+cls+'" href="'+href+'">'+esc(label)+count+'</a>';
+}
+function setNav(page, pendingCount){
+  const ws = currentWs();
+  const hqHref = ws ? '#/headquarters?workspace='+encodeURIComponent(ws) : '#/headquarters';
+  let html = '<div class="nav-group"><div class="nav-label">Operate</div>';
+  PRIMARY_NAV.forEach(function(n){ html += navLink('#/'+n[0], n[1], n[0], page); });
+  html += navLink(hqHref, 'Headquarters', 'headquarters', page);
+  html += '</div><div class="nav-group"><div class="nav-label">Knowledge</div><div class="nav-sub">';
+  KNOWLEDGE_NAV.forEach(function(n){ html += navLink('#/'+n[0], n[1], n[0], page); });
+  html += '</div></div><div class="nav-group"><div class="nav-label">Results</div><div class="nav-sub">';
+  RESULTS_NAV.forEach(function(n){ html += navLink('#/'+n[0], n[1], n[0], page); });
+  html += '</div></div><div class="nav-group"><div class="nav-label">Utility</div>';
+  UTILITY_NAV.forEach(function(n){
+    const href = n[0]==='diagnostics' ? '/diagnostics' : '#/'+n[0];
+    html += navLink(href, n[1], n[0], page, pendingCount);
+  });
+  html += '</div>';
+  el('nav').innerHTML = html;
+  el('pageTitle').textContent = PAGE_TITLES[page] || 'MIDAS';
+  const co = companyName(ws);
+  el('pageKicker').textContent = co || 'MIDAS';
+}
+function setRail(html){
+  const rail = el('rail');
+  const wrap = el('workspace');
+  if(!html){ rail.hidden = true; rail.innerHTML=''; wrap.classList.remove('has-rail'); return; }
+  rail.hidden = false;
+  rail.innerHTML = html;
+  wrap.classList.add('has-rail');
+}
+function setTopActions(html){ el('topActions').innerHTML = html || ''; }
+function honesty(data){
+  LAST_HONESTY = (data && data.honesty) || LAST_HONESTY || {};
+  const chip = el('statusChip');
+  if(!chip) return;
+  const h = LAST_HONESTY;
+  chip.title = 'Persistence: FILE_STORE (not PostgreSQL). Retrieval: lexical/deterministic. Search '+(h.searchIntegrationExists===true?'connected-when-proven':'not-connected')+'. Live only when a provider call actually ran. Never 24/7. Details in Settings / Diagnostics.';
+}
+function showErr(e){ el('err').textContent = e ? String(e.message||e) : ''; }
+function card(title, body){ return '<div class="card"><h2>'+esc(title)+'</h2>'+body+'</div>'; }
+function empty(msg){ return '<div class="empty">'+esc(msg)+'</div>'; }
+function openSidebar(){ el('sidebar').classList.add('open'); el('overlay').classList.add('open'); }
+function closeSidebar(){ el('sidebar').classList.remove('open'); el('overlay').classList.remove('open'); }
+function onCompanyChange(id){
+  setWs(id);
+  const r = route();
+  const sensitive = {overview:1,employees:1,work:1,training:1,knowledge:1,research:1,teaching:1,deliverables:1,treasury:1,'launch-readiness':1,teams:1,headquarters:1,activity:1,approvals:1,jobs:1,autonomy:1,spending:1};
+  if(sensitive[r.page]){
+    const base = '#/'+r.page + (r.id?('/'+r.id):'') + (r.extra?('/'+r.extra):'');
+    location.hash = id ? (base+'?workspace='+encodeURIComponent(id)) : base;
+  } else {
+    render();
+  }
+}
+async function refreshCompanies(){
+  try{
+    const out = await api('/app/companies');
+    COMPANIES = out.companies || [];
+    COMPANY_INDEX = {};
+    COMPANIES.forEach(function(c){ COMPANY_INDEX[c.id]=c; });
+    const sel = el('wsSelect');
+    let cur = currentWs();
+    if(!cur || !COMPANY_INDEX[cur]){
+      const prefer = COMPANIES.find(function(c){return c.id==='ws-own-004';}) || COMPANIES.find(isOwnerCompany) || COMPANIES[0];
+      cur = prefer ? prefer.id : '';
+      if(cur) setWs(cur);
+    }
+    function opt(c){ return '<option value="'+esc(c.id)+'"'+(c.id===cur?' selected':'')+'>'+esc(c.name)+'</option>'; }
+    const iso = COMPANIES.filter(function(c){ return /ws-iso-/.test(c.id) || /isolation/i.test(c.name||''); });
+    const primary = COMPANIES.filter(function(c){ return iso.indexOf(c)<0; });
+    sel.innerHTML =
+      (primary.length ? '<optgroup label="Companies">'+primary.map(opt).join('')+'</optgroup>' : '')+
+      (iso.length ? '<optgroup label="Isolation tests">'+iso.map(opt).join('')+'</optgroup>' : '');
+  }catch(e){ /* keep last */ }
+}
+
+function liveKindPill(live){
+  return live ? '<span class="pill live">Live call</span>' : '<span class="pill unknown">Deterministic</span>';
+}
+function claimPill(cls){
+  const raw = String(cls||'unknown').toLowerCase().replace(/[\s-]+/g,'_');
+  const map = {
+    owner_provided:'Owner-provided', owner_provided_fact:'Owner-provided', owner:'Owner-provided',
+    source_supported:'Source-supported', verified_sourced_fact:'Source-supported', sourced:'Source-supported', verified:'Source-supported',
+    assumption:'Assumption', assumptions:'Assumption',
+    hypothesis:'Hypothesis', model_generated_hypothesis:'Hypothesis', ai_generated_business_hypothesis:'Hypothesis',
+    unknown:'Unknown', vendor_or_marketing_claim:'Assumption', vendor:'Assumption'
+  };
+  const label = map[raw] || String(cls||'Unknown').replace(/_/g,' ');
+  const klass = /owner/i.test(label)?'owner':(/source/i.test(label)?'fact':(/hyp/i.test(label)?'hyp':(/assump/i.test(label)?'vendor':'unknown')));
+  return '<span class="pill '+klass+'">'+esc(label)+'</span>';
+}
+function bridgePill(status){
+  const s = String(status||'NOT_CONFIGURED').toUpperCase();
+  const allowed = ['NOT_CONFIGURED','READY_TO_STAGE','STAGED','OWNER_REPORTED_EXECUTED','VERIFIED_EXECUTED'];
+  const label = allowed.indexOf(s)>=0 ? s.replace(/_/g,' ') : 'NOT CONFIGURED';
+  const klass = s==='VERIFIED_EXECUTED'?'fact':(s==='STAGED'||s==='READY_TO_STAGE'?'vendor':(s==='OWNER_REPORTED_EXECUTED'?'owner':'unknown'));
+  return '<span class="pill '+klass+'">'+esc(label)+'</span>';
+}
+function claimBlock(label, field){
+  const f = field || {};
+  if(Array.isArray(f)){
+    if(!f.length) return '<p><b>'+esc(label)+'</b> '+claimPill('unknown')+' unknown</p>';
+    return '<p><b>'+esc(label)+'</b></p><ul>'+f.map(function(x){return '<li>'+claimPill(x.claimClass)+' '+esc(x.text||x.note||'unknown')+'</li>';}).join('')+'</ul>';
+  }
+  const text = (f.text==null||f.text==='') ? (f.value==null?'unknown':f.value) : f.text;
+  return '<p><b>'+esc(label)+'</b> '+claimPill(f.claimClass||'unknown')+' '+esc(text)+'</p>'+(f.note?'<p class="muted">'+esc(f.note)+'</p>':'');
+}
+function implPill(status){
+  const s = String(status||'unknown');
+  const klass = s==='implemented_basic'?'ok':(s==='not_implemented'?'warn':'unknown');
+  return '<span class="pill '+klass+'">'+esc(s.replace(/_/g,' '))+'</span>';
+}
+
+async function loadPending(){
+  try {
+    const out = await api('/app/approvals');
+    return (out.pending||[]).length;
+  } catch(e){ return 0; }
+}
+
+function applyMotionPref(){
+  if(localStorage.getItem(MOTION_KEY)==='1' || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    document.documentElement.classList.add('reduced-motion');
+  }
+}
+
+async function renderOverview(){
+  const ws = currentWs();
+  const out = await api('/app/overview');
+  honesty(out);
+  const selected = (ws && (out.companies||[]).find(function(c){return c.id===ws;})) || out.selectedCompany || (out.companies||[])[0] || null;
+  if(selected) setWs(selected.id);
+  const pending = (out.pendingApprovals||[]);
+  const working = (out.employees||[]).filter(function(e){
+    if(selected && e.workspaceId && e.workspaceId!==selected.id) return false;
+    return /authorized|supervised|development_verified|active/i.test(String(e.status||e.honestStatus||''));
+  });
+  const actual = (out.treasury&&out.treasury.actualSpendUsd!=null)?out.treasury.actualSpendUsd:((out.spend&&out.spend.estimatedUsd)!=null?out.spend.estimatedUsd:null);
+  const goal = (selected && (selected.goal || selected.ownerGoal || selected.objective)) || out.goal || 'Set a goal with Command, Start, or Grow.';
+  const decisions = pending.slice(0,6).map(function(p){
+    return '<div class="decision-card attention" style="margin-bottom:8px"><b>'+esc(p.kind||p.id)+'</b> '+claimPill('pending')+
+      '<div class="meta muted">'+esc(companyName(p.workspaceId)||p.workspaceId||'')+' · '+esc(p.objectId||'')+'</div>'+
+      '<p>'+esc(p.note||'Needs a local owner decision. This screen does not decide it.')+'</p>'+
+      (p.id==='APR-005'?'<p class="warn">APR-005 / TPK-001 stays pending until you decide as owner.</p>':'')+
+      '</div>';
+  }).join('') || empty('Nothing needs your decision right now.');
+  const companyCards = (out.companies||[]).filter(isOwnerCompany).concat((out.companies||[]).filter(function(c){return !isOwnerCompany(c);})).slice(0,8).map(function(c){
+    const nEmp = (out.employees||[]).filter(function(e){return e.workspaceId===c.id;}).length;
+    const recent = (out.activeObjectives||[]).find(function(o){return o.workspaceId===c.id;});
+    return '<a class="company-card" href="#/companies/'+encodeURIComponent(c.id)+'"><h3 style="margin:0 0 6px">'+esc(c.name)+'</h3>'+
+      '<p class="muted" style="margin:0 0 8px">'+esc(c.industry||c.intakeKind||'Company')+' · '+nEmp+' on team</p>'+
+      '<p style="margin:0">'+esc(String(c.goal||c.description||recent&&recent.ownerText||'No current objective stored.').slice(0,160))+'</p></a>';
+  }).join('') || empty('No companies in FILE_STORE.');
+  const activity = ((out.masterOs&&out.masterOs.reviewNext)||[]).slice(0,5).map(function(x){return '<div class="activity-item">'+esc(x)+'</div>';}).join('');
+  const workItems = (out.activeObjectives||[]).filter(function(o){ return !selected || !o.workspaceId || o.workspaceId===selected.id; }).slice(0,6).map(function(o){
+    return '<div class="emp"><div><b>'+esc(String(o.ownerText||o.label||'Objective').slice(0,90))+'</b><div class="muted">'+esc(friendlyStatus(o.status))+' · '+esc(companyName(o.workspaceId)||'')+'</div></div><a href="#/work/'+encodeURIComponent(o.id||'')+'">Open</a></div>';
+  }).join('') || '<p class="muted">No work in progress.</p>';
+  const outs = (out.recentOutputs||[]).slice(0,5).map(function(d){
+    const path = (d.artifact&&d.artifact.path)||d.path||'';
+    const link = path ? (' · <a href="/app/artifacts/file?path='+encodeURIComponent(path)+'" target="_blank">preview</a>') : '';
+    return '<li>'+esc(d.title||d.type||'output')+' · '+esc(friendlyStatus(d.status||'draft'))+link+'</li>';
+  }).join('') || '<li class="muted">No deliverables yet.</li>';
+  setTopActions('<a href="#/headquarters?workspace='+encodeURIComponent(selected&&selected.id||ws||'')+'"><button class="primary" type="button">Open headquarters</button></a>');
+  setRail('<h2>Activity</h2>'+(activity||'<p class="muted">No review queue items.</p>')+'<p><a href="#/activity">Full activity</a></p>');
+  el('page').innerHTML =
+    '<div class="hero">'+
+      '<p class="muted">Selected company</p>'+
+      '<h2>'+esc(selected?selected.name:'No company selected')+'</h2>'+
+      '<p>'+esc(String(goal).slice(0,280))+'</p>'+
+      '<div class="command-bar">'+
+        '<textarea id="home-cmd" placeholder="What do you want your team to work on?"></textarea>'+
+        '<button class="primary entry" type="button" onclick="submitHomeCommand()">Plan</button>'+
+      '</div>'+
+      '<p class="muted" id="homeCmdStatus">Deterministic planner ($0). A live model is used only if you choose live planning on Command.</p>'+
+    '</div>'+
+    '<div class="metrics">'+
+      '<div class="metric"><b>'+esc((out.companies||[]).length)+'</b><span>Active companies</span></div>'+
+      '<div class="metric"><b>'+esc(working.length)+'</b><span>Authorized employees</span></div>'+
+      '<div class="metric"><b>'+esc(pending.length)+'</b><span>Pending decisions</span></div>'+
+      '<div class="metric"><b>'+esc(actual==null?'—':money(actual))+'</b><span>Recorded spend</span></div>'+
+    '</div>'+
+    '<div class="grid-2">'+
+      '<div>'+card('Needs your attention', decisions+'<p><a href="#/approvals">Approvals inbox</a></p>')+
+        card('Work in progress', workItems+'<p><a href="#/work">Open Work</a></p>')+'</div>'+
+      '<div>'+card('Quick actions',
+        '<div class="stack"><a href="#/companies/new"><button class="primary entry" type="button">Start a new business</button></a>'+
+        '<a href="#/companies/existing"><button class="entry" type="button">Grow an existing business</button></a>'+
+        '<a href="#/headquarters?workspace='+encodeURIComponent(selected&&selected.id||'')+'"><button class="entry" type="button">Open headquarters</button></a>'+
+        '<a href="#/training?workspace='+encodeURIComponent(selected&&selected.id||'')+'"><button class="entry" type="button">Train employee</button></a>'+
+        '<a href="#/approvals"><button class="entry" type="button">Review decisions</button></a></div>')+
+        card('Recent results', '<ul>'+outs+'</ul><p><a href="#/deliverables">Open Deliverables</a></p>')+
+      '</div></div>'+
+    '<div class="section-head"><h2>Companies</h2><a href="#/companies">All companies</a></div>'+
+    '<div class="company-grid">'+companyCards+'</div>';
+}
+
+async function submitHomeCommand(){
+  const text = el('home-cmd') && el('home-cmd').value;
+  if(!text){ showErr('Write what you want the team to work on.'); return; }
+  el('homeCmdStatus').textContent = 'Planning (deterministic, $0)…';
+  try{
+    const body = { ownerText: text };
+    if(currentWs()) body.workspaceId = currentWs();
+    const out = await api('/app/command/plan', { method:'POST', body: JSON.stringify(body) });
+    el('homeCmdStatus').textContent = 'Saved '+(out.plan&&out.plan.id);
+    if(out.plan&&out.plan.id) location.hash = '#/command/'+encodeURIComponent(out.plan.id);
+  }catch(e){ el('homeCmdStatus').textContent = String(e.message||e); }
+}
+
+function fieldRow(label, field){
+  const f = field || {};
+  const val = f.value == null || f.value === '' || (Array.isArray(f.value) && !f.value.length) ? 'unknown' : (Array.isArray(f.value) ? f.value.join(', ') : f.value);
+  const src = f.label || f.source || (val === 'unknown' ? 'unknown' : 'owner-provided');
+  return '<div class="emp"><div><b>'+esc(label)+'</b> '+claimPill(src)+'<div>'+esc(val)+'</div></div></div>';
+}
+
+async function renderCompanies(id){
+  if(id === 'new' || id === 'existing'){
+    await renderIntake(id === 'existing' ? 'existing_business' : 'new_business');
+    return;
+  }
+  if(id){
+    const out = await api('/app/companies/'+encodeURIComponent(id));
+    honesty(out);
+    setWs(id);
+    const c = out.company||{};
+    const intake = out.intake || {};
+    const fields = intake.fields || {};
+    const fieldOrder = c.intakeKind === 'new_business'
+      ? [['Company name', fields.companyName],['Owner objective', fields.ownerObjective],['Revenue goal', fields.revenueGoal],['Budget', fields.budget],['Timeline', fields.timeline],['Preferred industries or interests', fields.preferredIndustries],['Available skills and resources', fields.availableSkillsAndResources],['Geographic constraints', fields.geographicConstraints],['Risk tolerance', fields.riskTolerance],['Permitted research scope', fields.permittedResearchScope],['Owner-defined approval requirements', fields.ownerApprovalRequirements]]
+      : [['Company name', fields.companyName],['Business description', fields.businessDescription],['Existing offer', fields.existingOffer],['Customer profile', fields.customerProfile],['Current challenges', fields.currentChallenges],['Goals', fields.goals],['Existing documents', fields.existingDocuments],['Existing procedures', fields.existingProcedures],['Owner constraints', fields.ownerConstraints],['Available resources', fields.availableResources]];
+    const fieldHtml = fieldOrder.filter(function(x){return x[1];}).map(function(x){return fieldRow(x[0], x[1]);}).join('')
+      || '<p class="muted">No intake fields. Stored workspace description only.</p>';
+    const emps = (out.employees||[]).map(function(e){
+      return '<div class="emp-card">'+avatarHtml(e.name,e.roleId)+'<div><b>'+esc(e.name)+'</b><div class="meta">'+esc(e.roleTitle||e.roleId||'')+' · '+esc(friendlyStatus(e.status))+'</div></div><div class="actions"><a href="#/employees/'+encodeURIComponent(e.id)+'">Open</a><a href="#/employees/'+encodeURIComponent(e.id)+'/brain">View Brain</a></div></div>';
+    }).join('') || empty('No employees on this company. A team was not auto-generated.');
+    const iso = out.isolation || {};
+    const next = (out.nextSteps||[]).map(function(n){
+      return '<a href="'+esc(n.href)+'"><button class="'+(n.id==='headquarters'?'primary entry':'entry')+'" type="button">'+esc(n.label)+'</button></a>';
+    }).join(' ');
+    setTopActions(
+      '<a href="#/headquarters?workspace='+encodeURIComponent(id)+'"><button class="primary" type="button">Headquarters</button></a>'+
+      '<a href="#/companies/'+encodeURIComponent(id)+'"><button class="ghost" type="button">Dashboard</button></a>'
+    );
+    setRail('<h2>Company</h2><p>'+esc(c.industry||'Category unknown')+'</p><p class="muted">'+esc(iso.note||'Application-level isolation by workspace. Not IAM.')+'</p><p>'+esc((out.employees||[]).length)+' employees · '+esc((out.deliverables||[]).length)+' deliverables</p><p>Spend '+money(out.spend&&out.spend.estimatedUsd)+'</p>');
+    el('page').innerHTML =
+      '<div class="hero"><div class="tabs"><a class="active" href="#/companies/'+encodeURIComponent(id)+'">Dashboard</a><a href="#/headquarters?workspace='+encodeURIComponent(id)+'">Headquarters</a></div>'+
+      '<h2>'+esc(c.name||id)+'</h2><p>'+esc(c.description||'')+'</p>'+
+      '<p><b>Current objective</b> '+esc(c.goal||'None stored')+'</p>'+
+      '<div class="row" style="margin-top:12px">'+next+'</div></div>'+
+      card('Team', '<div class="emp-grid">'+emps+'</div>')+
+      card('Deliverables', deliverableCards(out.deliverables))+
+      card('Intake', fieldHtml)+
+      '<details class="details"><summary>Technical details</summary><p class="muted">Workspace '+esc(c.id)+' · isolation is application-level, not IAM. product-proof runs stay labeled.</p>'+(c.productProof?'<p class="warn">'+esc(c.productProofNote||'Fictional product-proof run. Not a live business.')+'</p>':'')+'</details>';
+    return;
+  }
+  const out = await api('/app/companies');
+  honesty(out);
+  setTopActions('<a href="#/companies/new"><button class="primary" type="button">Start a new business</button></a>');
+  const rows = (out.companies||[]).map(function(c){
+    return '<a class="company-card" href="#/companies/'+encodeURIComponent(c.id)+'"><h3 style="margin:0 0 6px">'+esc(c.name)+(c.productProof?' <span class="pill">product-proof</span>':'')+'</h3>'+
+      '<p class="muted">'+esc(c.industry||c.intakeKind||'Company')+'</p><p>'+esc(String(c.description||'').slice(0,140))+'</p></a>';
+  }).join('') || empty('No workspaces in FILE_STORE.');
+  el('page').innerHTML = card('Companies',
+    '<div class="row"><a href="#/companies/new"><button class="primary entry" type="button">Start a new business</button></a> <a href="#/companies/existing"><button class="primary entry" type="button">Grow an existing business</button></a></div>'+
+    '<p class="muted">'+esc(out.note||'')+'</p>')+'<div class="company-grid">'+rows+'</div>';
+}
+
+async function renderIntake(kind){
+  const path = kind === 'existing_business' ? '/app/companies/intake/existing' : '/app/companies/intake/new';
+  const out = await api(path);
+  honesty(out);
+  const fields = (out.fields||[]).map(function(f){
+    const req = f.required ? ' <span class="fail">required</span>' : '';
+    const hint = f.hint ? '<div class="field-label">'+esc(f.hint)+'</div>' : '';
+    if(f.kind === 'textarea') return '<label>'+esc(f.label)+req+hint+'<textarea id="in-'+esc(f.id)+'" rows="4" placeholder="Leave blank to keep unknown"></textarea></label>';
+    return '<label>'+esc(f.label)+req+hint+'<input id="in-'+esc(f.id)+'" placeholder="Leave blank to keep unknown"></input></label>';
+  }).join('');
+  const extra = kind === 'existing_business'
+    ? '<label>Attach a Text/Markdown or PDF file<div class="field-label">PDF only if pdftotext can parse it. Optional.</div><input id="in-file" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown,application/pdf"></label>'
+    : '';
+  el('page').innerHTML = card(out.title || 'Company intake',
+    '<p class="muted">'+esc(out.note||'')+'</p>'+fields+extra+
+    '<p><button class="primary entry" type="button" onclick="submitIntake(\''+kind+'\')">Create company workspace</button></p>'+
+    '<p class="muted" id="inStatus"></p>'
+  );
+}
+
+async function readIntakeFile(){
+  const input = el('in-file');
+  if(!input || !input.files || !input.files[0]) return {};
+  const file = input.files[0];
+  const name = file.name || '';
+  if(/\.pdf$/i.test(name) || file.type === 'application/pdf'){
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    for(let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+    return { existingDocumentsFilename: name, existingDocumentsPdfBase64: btoa(bin) };
+  }
+  const text = await file.text();
+  return { existingDocumentsFilename: name, existingDocumentsText: text, existingDocumentsSourceType: /\.md$/i.test(name) ? 'owner_markdown' : 'owner_paste' };
+}
+
+async function submitIntake(kind){
+  showErr('');
+  const ids = kind === 'existing_business'
+    ? ['companyName','businessDescription','existingOffer','customerProfile','currentChallenges','goals','existingDocuments','existingProcedures','ownerConstraints','availableResources']
+    : ['companyName','ownerObjective','revenueGoal','budget','timeline','preferredIndustries','availableSkillsAndResources','geographicConstraints','riskTolerance','permittedResearchScope','ownerApprovalRequirements'];
+  const payload = { kind: kind };
+  ids.forEach(function(id){
+    const node = el('in-'+id);
+    if(node) payload[id] = node.value;
+  });
+  try{
+    const extra = await readIntakeFile();
+    Object.assign(payload, extra);
+    const path = kind === 'existing_business' ? '/app/companies/intake/existing' : '/app/companies/intake/new';
+    const out = await api(path, { method:'POST', body: JSON.stringify(payload) });
+    el('inStatus').className = 'ok';
+    el('inStatus').textContent = 'Created '+out.company.id+' — real FILE_STORE workspace.';
+    setWs(out.company.id);
+    location.hash = '#/companies/'+encodeURIComponent(out.company.id);
+  }catch(e){
+    el('inStatus').className = 'fail';
+    el('inStatus').textContent = e.message || String(e);
+    showErr(e);
+  }
+}
+
+function taskBlurb(e){
+  if(e.currentTask && (e.currentTask.summary||e.currentTask.status)) return e.currentTask.summary || friendlyStatus(e.currentTask.status);
+  const st = String(e.honestStatus||e.status||'');
+  if(/development_verified/i.test(st)) return 'Verified for development use';
+  if(/watcher|independent_audit/i.test(e.roleId||'')) return 'Last review is inspectable';
+  if(/workflow_manager/i.test(e.roleId||'')) return 'Coordinates stored work';
+  return friendlyStatus(st) || 'Present, no current task';
+}
+
+async function renderEmployees(id, extra){
+  if(id && extra==='brain'){
+    await renderEmployeeBrain(id);
+    return;
+  }
+  if(id && extra!=='brain'){
+    await renderEmployeeDetail(id);
+    return;
+  }
+  const all = hashQuery().get('all') === '1';
+  const ws = all ? '' : currentWs();
+  const path = ws ? '/app/employees?workspaceId='+encodeURIComponent(ws) : '/app/employees';
+  const out = await api(path);
+  const list = (out.founderEmployees||out.employees||[]).filter(function(e){
+    if(!ws) return true;
+    return !e.workspaceId || e.workspaceId===ws;
+  });
+  const groups = {};
+  list.forEach(function(e){
+    const d = deptForRole(e.roleId);
+    if(!groups[d.label]) groups[d.label]=[];
+    groups[d.label].push(e);
+  });
+  const order = ['Leadership','Research','Strategy','Marketing','Product','Operations','Finance','Sales planning','Oversight'];
+  let body = '';
+  order.concat(Object.keys(groups)).filter(function(k,i,a){return a.indexOf(k)===i && groups[k];}).forEach(function(label){
+    body += '<div class="dept-group"><h3>'+esc(label)+'</h3><div class="emp-grid">'+groups[label].map(function(e){
+      return '<div class="emp-card">'+avatarHtml(e.name||e.roleTitle,e.roleId)+
+        '<div><b>'+esc(e.roleTitle||e.name)+'</b>'+liveKindPill(!!(e.permissionBoundaries&&e.permissionBoundaries.liveCapable))+
+        '<div class="meta">'+esc(companyName(e.workspaceId)||e.workspaceId||'')+' · '+esc(friendlyStatus(e.honestStatus||e.status))+'</div>'+
+        '<div class="meta">'+esc(taskBlurb(e))+'</div></div>'+
+        '<div class="actions"><a href="#/employees/'+encodeURIComponent(e.id)+'">Open</a><a href="#/employees/'+encodeURIComponent(e.id)+'/brain">View Brain</a></div></div>';
+    }).join('')+'</div></div>';
+  });
+  setTopActions(
+    '<a href="#/headquarters?workspace='+encodeURIComponent(ws||currentWs())+'"><button class="primary" type="button">Headquarters</button></a>'+
+    '<a href="#/teams?workspace='+encodeURIComponent(ws||currentWs())+'"><button type="button">Assemble team</button></a>'
+  );
+  el('page').innerHTML = card('Team',
+    '<p class="muted">People for '+(ws?esc(companyName(ws)):'every company')+'. IDs and evaluation notes stay in the employee inspector.</p>'+
+    '<p>'+(all?'<a href="#/employees">This company only</a>':'<a href="#/employees?all=1">All companies</a>')+' · <a href="#/teams">Teams</a> · Employees</p>'
+  )+(body||empty('No employees in this company yet.'));
+}
+
+async function renderEmployeeDetail(id){
+  const out = await api('/app/employees/'+encodeURIComponent(id));
+  honesty(out);
+  const e = out.employee || out;
+  if(e.workspaceId) setWs(e.workspaceId);
+  const resp = (e.responsibilities||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('') || '<li class="muted">—</li>';
+  const allowed = (e.allowedTasks||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('') || '<li class="muted">—</li>';
+  const lessons = (e.lessonsRetrieved||[]).slice(0,8).map(function(k){return '<li>'+esc((k.statement||k.id||'').slice(0,180))+'</li>';}).join('') || '<li class="muted">None retrieved.</li>';
+  const corr = (e.corrections||[]).map(function(k){return '<li>'+esc((k.statement||k.id||'').slice(0,180))+'</li>';}).join('') || '<li class="muted">No corrections stored.</li>';
+  const hist = (e.workHistory||[]).map(function(w){return '<li>'+esc(w.kind||w.id)+' · '+esc(friendlyStatus(w.status))+'</li>';}).join('') || '<li class="muted">No work history.</li>';
+  const train = (e.howToTrain||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+  const cost = (e.cost && e.cost.liveExecutions || []).map(function(c){return '<li>'+esc(c.taskType||c.id)+' · '+money(c.cost)+'</li>';}).join('') || '<li class="muted">No live cost rows.</li>';
+  const pb = e.permissionBoundaries || {};
+  setTopActions('<a href="#/employees/'+encodeURIComponent(id)+'/brain"><button class="primary" type="button">View Brain</button></a>');
+  el('page').innerHTML =
+    '<div class="hero"><div class="row">'+avatarHtml(e.name||e.roleTitle,e.roleId)+'<div><h2 style="margin:0">'+esc(e.name||e.roleTitle||id)+'</h2>'+
+    '<p class="muted">'+esc(e.roleTitle||e.roleId||'')+' · '+esc(companyName(e.workspaceId))+' · '+esc(friendlyStatus(e.honestStatus||e.status))+'</p></div></div>'+
+    '<div class="row" style="margin-top:12px"><a href="#/employees/'+encodeURIComponent(id)+'/brain"><button class="primary" type="button">View Brain</button></a>'+
+    '<a href="#/training?workspace='+encodeURIComponent(e.workspaceId||'')+'"><button type="button">Train employee</button></a>'+
+    '<a href="#/work?workspace='+encodeURIComponent(e.workspaceId||'')+'"><button type="button">Assign work</button></a></div></div>'+
+    card('What this employee does', '<ul>'+resp+'</ul>')+
+    card('Allowed tasks', '<ul>'+allowed+'</ul>')+
+    card('Work history', '<ul>'+hist+'</ul>')+
+    card('Retrieved knowledge', '<ul>'+lessons+'</ul>')+
+    card('Permissions', '<p>'+esc(friendlyStatus(pb.mode||''))+(pb.liveCapable?' · can run live when a provider call actually happens':' · deterministic')+'</p><p><b>May not</b> '+esc((pb.prohibited||[]).join('; '))+'</p>')+
+    '<details class="details"><summary>IDs, versions, and cost</summary>'+card('Version / budget', '<p>Version '+esc(e.version||'—')+'</p><p class="muted">'+esc((e.budget&&e.budget.note)||'Employees cannot raise own budget.')+'</p>')+card('Cost', '<ul>'+cost+'</ul>')+card('Corrections', '<ul>'+corr+'</ul>')+card('How to train', '<ul>'+train+'</ul>')+'</details>';
+}
+
+async function renderEmployeeBrain(id){
+  const out = await api('/app/employees/'+encodeURIComponent(id)+'/brain');
+  honesty(out);
+  const e = out.employee||{};
+  const tab = hashQuery().get('tab') || 'overview';
+  const knows = (out.whatItKnows||[]).map(function(k){
+    return '<div class="knowledge-card"><b>'+esc((k.excerpt||k.statement||k.id||'').slice(0,120))+'</b>'+claimPill(k.classification)+
+      '<div class="meta muted">'+esc(friendlyStatus(k.reviewStatus))+(k.source?(' · '+k.source):'')+'</div>'+
+      '<details class="details"><summary>Provenance</summary><p class="muted">'+esc(k.id)+'</p></details></div>';
+  }).join('') || empty('Nothing assigned yet.');
+  const pending = (((out.documentsAndLessons||{}).pendingLessons)||[]).map(function(p){return '<li>'+esc(p.note||p.id)+' · '+esc(friendlyStatus(p.status))+' · applied='+esc(p.applied)+'</li>';}).join('') || '<li class="muted">No pending lessons.</li>';
+  const approvedL = (((out.documentsAndLessons||{}).approvedLessons)||[]).map(function(p){return '<li>'+esc(p.id)+' '+esc(p.status)+'</li>';}).join('') || '<li class="muted">No approved lessons.</li>';
+  const work = (out.recentWork||[]).map(function(w){return '<li>'+esc(w.label||w.kind)+' · '+esc(friendlyStatus(w.status))+'</li>';}).join('') || '<li class="muted">No recent work records.</li>';
+  const unknown = (out.whatItDoesNotKnow||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+  const d = (out.learningDistinctions && out.learningDistinctions.latest) || {};
+  const tabs = ['overview','knowledge','training','skills','work','permissions','development'].map(function(t){
+    return '<a class="'+(tab===t?'active':'')+'" href="#/employees/'+encodeURIComponent(id)+'/brain?tab='+t+'">'+esc(t[0].toUpperCase()+t.slice(1))+'</a>';
+  }).join('');
+  let inner = '';
+  if(tab==='knowledge') inner = card('What it knows', knows);
+  else if(tab==='training') inner = card('Lessons', '<p><b>Pending (not applied)</b></p><ul>'+pending+'</ul><p><b>Approved</b></p><ul>'+approvedL+'</ul>')+card('Learning distinctions', '<p class="muted">Stored ≠ retrieved ≠ used ≠ correctly applied ≠ improved. Retrieval-based training does not change model weights.</p><ul><li>stored='+esc(d.stored)+'</li><li>retrieved='+esc(d.retrieved)+'</li><li>used='+esc(d.used)+'</li><li>correctly applied='+esc(d.correctlyApplied)+'</li><li>improved='+esc(d.improved)+'</li></ul>');
+  else if(tab==='skills') inner = card('Skills', ((out.skills||out.skillTags||[]).length ? '<ul>'+(out.skills||out.skillTags||[]).map(function(s){return '<li>'+esc(s)+'</li>';}).join('')+'</ul>' : '<p class="muted">No skill tags yet.</p>'));
+  else if(tab==='work') inner = card('Recent work', '<ul>'+work+'</ul>')+card('Retrieved on recent task', (function(){ const r = out.retrievedOnRecentTask || {}; const items = (r.retrieved||[]).map(function(k){return '<li>'+esc(k.statement||k.id)+'</li>';}).join('') || '<li class="muted">Nothing retrieved on a recent task yet.</li>'; return '<ul>'+items+'</ul>'; })());
+  else if(tab==='permissions') inner = card('Policies', '<ul>'+(out.policies||[]).map(function(k){return '<li>'+esc(k.statement||k.id)+'</li>';}).join('')+'</ul>')+card('May / may not', '<p><b>May</b> '+esc((out.whatItDoes&&out.whatItDoes.responsibilities||[]).join(', '))+'</p><p><b>May not</b> '+esc((out.whatItDoes&&out.whatItDoes.prohibited||[]).join(', '))+'</p>');
+  else if(tab==='development') inner = card('Development / evaluation', '<p class="muted">'+esc(out.note||'')+'</p>')+card('Active version', '<p>'+esc((out.activeVersion||{}).id||'—')+'</p><p class="muted">atlas-v16 remains ineligible. Frozen hashes are not rewritten.</p>')+'<details class="details"><summary>Exact identifiers</summary><p>'+esc(e.id)+' · hash <code>'+esc(((out.activeVersion||{}).contentHash||'').slice(0,16))+'</code></p></details>';
+  else inner = card('Overview', '<p>'+esc(out.whatItDoes&&out.whatItDoes.summary)+'</p><p>'+esc(e.roleTitle)+' for '+esc(companyName(e.workspaceId))+'.</p>')+card('Still developing', '<ul>'+unknown+'</ul>')+card('Costs', '<p>Estimated '+money((out.costs||{}).estimatedUsd)+' · cap '+money((out.costs||{}).spendLimitUsd)+'</p>');
+  el('page').innerHTML = '<div class="hero"><h2>'+esc(e.name||id)+'</h2><p class="muted">What it does, what it has learned, and what it is allowed to do. Training is retrieval-based.</p><div class="tabs">'+tabs+'</div></div>'+inner;
+}
+
+async function renderTraining(){
+  const q = hashQuery();
+  const workspace = q.get('workspace') || q.get('workspaceId') || currentWs() || '';
+  const path = workspace ? '/app/training?workspaceId='+encodeURIComponent(workspace) : '/app/training';
+  const out = await api(path);
+  honesty(out);
+  const wsOpts = ['<option value="">Select a company</option>'].concat((out.companies||COMPANIES).map(function(c){
+    return '<option value="'+esc(c.id)+'"'+(c.id===workspace?' selected':'')+'>'+esc(c.name)+'</option>';
+  })).join('');
+  const emps = (out.employees||[]).filter(function(e){ return !workspace || e.workspaceId===workspace; });
+  const opts = emps.map(function(e){return '<label class="row"><input type="checkbox" name="emp" value="'+esc(e.id)+'"> '+esc(e.name||e.roleTitle)+'</label>';}).join('') || '<p class="muted">No employees in this company. Generate a team first.</p>';
+  const recs = (out.records||[]).map(function(r){
+    const who = (r.targetEmployeeIds||[]).map(function(id){
+      const emp = emps.find(function(e){ return e.id===id; });
+      return esc(emp ? (emp.name||emp.roleTitle) : id);
+    }).join(', ') || 'company scope';
+    return '<div class="knowledge-card"><b>'+esc(r.title||r.id)+'</b> '+claimPill(r.classification)+'<div class="muted">'+esc(friendlyStatus(r.ownerApprovalStatus))+' · '+who+'</div></div>';
+  }).join('') || empty('No training records yet.');
+  const gaps = (out.gaps||[]).map(function(g){return '<li>'+esc(g.statement||g.id)+' · '+esc(friendlyStatus(g.status))+'</li>';}).join('') || '<li class="muted">No knowledge gaps recorded.</li>';
+  el('page').innerHTML = card('Owner Training Studio',
+    '<p class="muted">Choose a company and employee, paste a lesson, then save. Owner-pasted training is approved for that workspace. External packets stay pending. Stored ≠ retrieved ≠ used ≠ correctly applied ≠ improved.</p>'+
+    '<label>Company workspace<select id="trWs" onchange="location.hash=\'#/training?workspace=\'+this.value">'+wsOpts+'</select></label>'+
+    '<label>Title <input id="trTitle" placeholder="e.g. Ask which oven they use"></label>'+
+    '<label>Knowledge gap <input id="trGap" placeholder="What this employee does not know yet"></label>'+
+    '<label>Classification <select id="trClass">'+
+      ['owner_policy','company_fact','external_sourced_fact','vendor_claim','hypothesis','example','procedure','correction'].map(function(c){return '<option value="'+c+'">'+c.replace(/_/g,' ')+'</option>';}).join('')+
+    '</select></label>'+
+    '<label>Source type <select id="trSrc"><option value="owner_paste">Owner notes</option><option value="owner_markdown">Markdown</option><option value="owner_authored">Owner-authored</option><option value="owner_pdf">PDF</option><option value="external_webpage">Approved URL (needs owner approval)</option></select></label>'+
+    '<label>Skill tags (comma) <input id="trTags" placeholder="ops, intake"></label>'+
+    '<label>Role-specific guidance <input id="trGuide" placeholder="optional"></label>'+
+    '<label>Text / Markdown<br><textarea id="trText" rows="8" placeholder="Paste knowledge or a procedure. Do not paste secrets."></textarea></label>'+
+    '<p><b>Assign to</b></p>'+opts+
+    '<p><button class="primary entry" type="button" onclick="submitTraining()">Save training and check lesson</button> <button type="button" onclick="submitCheckLesson()">Check lesson only</button></p>'+
+    '<p class="muted" id="trStatus"></p>'
+  )+card('What was added', recs)+card('Knowledge gaps', '<ul>'+gaps+'</ul>');
+}
+
+async function submitTraining(){
+  showErr('');
+  const targets = Array.prototype.map.call(document.querySelectorAll('input[name=emp]:checked'), function(x){return x.value;});
+  const payload = {
+    title: el('trTitle').value,
+    workspaceId: el('trWs').value,
+    gap: el('trGap') && el('trGap').value,
+    classification: el('trClass').value,
+    sourceType: el('trSrc').value,
+    text: el('trText').value,
+    skillTags: el('trTags').value.split(',').map(function(s){return s.trim();}).filter(Boolean),
+    guidance: el('trGuide').value,
+    targetEmployeeIds: targets
+  };
+  try{
+    const out = await api('/app/training/cycle',{method:'POST',body:JSON.stringify(payload)});
+    el('trStatus').className='ok';
+    const rec = out.ingest && out.ingest.record;
+    const ep = out.episode;
+    el('trStatus').textContent = (rec?('Saved '+rec.id+' · '+(out.ingest.items||[]).length+' claim(s). '):'External packet pending. ')+
+      (ep?('Episode '+ep.id+' outcome='+ep.outcome+'. stored='+ep.stored+' retrieved='+ep.retrieved+' used='+ep.used+' applied='+ep.correctlyApplied+' improved='+ep.improved):'');
+    const ws = payload.workspaceId ? ('?workspace='+encodeURIComponent(payload.workspaceId)) : '';
+    location.hash = '#/training'+ws;
+    await renderTraining();
+  }catch(e){
+    el('trStatus').className='fail';
+    el('trStatus').textContent = e.message||String(e);
+  }
+}
+
+async function submitCheckLesson(){
+  showErr('');
+  const targets = Array.prototype.map.call(document.querySelectorAll('input[name=emp]:checked'), function(x){return x.value;});
+  if(!targets[0]){ showErr('Pick an employee to check.'); return; }
+  try{
+    const out = await api('/app/training/check',{method:'POST',body:JSON.stringify({
+      workspaceId: el('trWs').value,
+      employeeId: targets[0],
+      objective: el('trGuide').value || el('trTitle').value,
+      lessonItemIds: []
+    })});
+    el('trStatus').className='ok';
+    el('trStatus').textContent = 'Check '+out.outcome+' · episode '+(out.episode&&out.episode.id)+' · same handler='+out.sameHandler;
+    await renderTraining();
+  }catch(e){
+    el('trStatus').className='fail';
+    el('trStatus').textContent = e.message||String(e);
+  }
+}
+
+async function renderKnowledge(){
+  const ws = currentWs();
+  const out = await api(ws?'/app/knowledge?workspaceId='+encodeURIComponent(ws):'/app/knowledge');
+  honesty(out);
+  const items = (out.items||[]).slice().reverse();
+  const cards = items.slice(0,80).map(function(k){
+    return '<div class="knowledge-card"><b>'+esc((k.excerpt||k.statement||'').slice(0,180))+'</b> '+claimPill(k.classification)+
+      '<div class="muted">'+esc(friendlyStatus(k.reviewStatus))+' · '+(k.assignedToEmployees||[]).concat(k.assignedToRoles||[]).join(', ')+'</div>'+
+      '<details class="details"><summary>ID</summary>'+esc(k.id)+'</details></div>';
+  }).join('') || empty('No company knowledge stored yet.');
+  const emps = (await api(ws?'/app/employees?workspaceId='+encodeURIComponent(ws):'/app/employees')).employees||[];
+  const empOpts = emps.map(function(e){return '<option value="'+esc(e.id)+'">'+esc(e.name)+'</option>';}).join('');
+  const itemOpts = items.slice(0,80).map(function(k){return '<option value="'+esc(k.id)+'">'+esc((k.excerpt||k.id||'').slice(0,60))+'</option>';}).join('');
+  el('page').innerHTML = card('Company knowledge',
+    '<p class="muted">Readable cards for stored knowledge. Exact provenance is in the expander.</p>'+
+    '<div class="card"><h3>Assign existing knowledge</h3>'+
+    '<label>Workspace <input id="asWs" value="'+esc(ws)+'"></label>'+
+    '<label>Item <select id="asItem">'+itemOpts+'</select></label>'+
+    '<label>Employee <select id="asEmp">'+empOpts+'</select></label>'+
+    '<p><button class="primary" type="button" onclick="submitAssign()">Assign</button></p>'+
+    '<p class="muted" id="asStatus"></p></div>'+cards
+  );
+}
+
+async function submitAssign(){
+  try{
+    const out = await api('/app/knowledge/assign',{method:'POST',body:JSON.stringify({
+      workspaceId: el('asWs').value,
+      knowledgeItemId: el('asItem').value,
+      targetEmployeeIds: [el('asEmp').value]
+    })});
+    el('asStatus').className='ok';
+    el('asStatus').textContent = 'Assigned '+out.assignment.id;
+    await renderKnowledge();
+  }catch(e){
+    el('asStatus').className='fail';
+    el('asStatus').textContent = e.message||String(e);
+  }
+}
+
+async function renderApprovals(){
+  const out = await api('/app/approvals');
+  honesty(out);
+  const pending = (out.pending||[]).map(function(r){
+    const excerpts = (r.content&&r.content.excerpts)||[];
+    return '<div class="pending-box"><p><b>'+esc(r.kind||'Request')+'</b> '+claimPill('pending')+'</p>'+
+      '<p>Affects '+esc(companyName(r.workspaceId)||r.workspaceId||'a stored workspace')+'.</p>'+
+      '<p>'+esc(r.note||'Requires a local owner decision. Approving applies the change; rejecting leaves it unused.')+'</p>'+
+      (excerpts.length?'<p>What would change</p><ul>'+excerpts.slice(0,4).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>':'')+
+      (r.id==='APR-005'?'<p class="warn">APR-005 / TPK-001 stays pending. This screen does not approve or reject it.</p>':'')+
+      '<details class="details"><summary>Request details</summary><p>'+esc(r.id)+' · '+esc(r.objectId)+' · requires local_owner='+esc(r.requireLocalOwner)+'</p></details>'+
+      '</div>';
+  }).join('') || empty('No pending approvals.');
+  const hist = (out.historical||[]).map(function(r){return '<li>'+esc(r.kind||r.id)+' · '+esc(friendlyStatus(r.status))+'</li>';}).join('');
+  el('page').innerHTML = card('Approvals',
+    '<p class="muted">Pending owner decisions only. Nothing here is auto-approved. demo_operator is not local_owner.</p>'+pending+
+    '<h3>Earlier decisions</h3><ul>'+hist+'</ul>'
+  );
+}
+
+async function renderObjectives(){
+  const out = await api(withWs('/app/objectives'));
+  const rows = (out.objectives||[]).map(function(o){
+    return '<div class="emp"><div><b>'+esc(String(o.ownerText||'Objective').slice(0,120))+'</b><div class="muted">'+esc(friendlyStatus(o.status))+' · '+esc(companyName(o.workspaceId))+'</div></div></div>';
+  }).join('') || empty('No objectives stored.');
+  el('page').innerHTML = card('Objectives', '<p class="muted">'+esc(out.note||'')+'</p>'+rows);
+}
+
+async function renderActivity(){
+  const workspace = hashQuery().get('workspace') || hashQuery().get('workspaceId') || currentWs() || '';
+  const path = workspace ? '/app/activity?workspaceId='+encodeURIComponent(workspace) : '/app/activity';
+  const out = await api(path);
+  const rows = (out.activity||[]).slice().reverse().map(function(a){
+    return '<div class="activity-item"><time>'+esc(when(a.at))+'</time>'+esc(a.text||a.kind)+'</div>';
+  }).join('') || empty('No activity records.');
+  const feed = (out.workFeed||[]).slice().reverse().map(function(f){
+    return '<div class="card"><h3>'+esc(f.whatRan||f.id)+' '+(f.live?'<span class="pill fact">live</span>':'<span class="pill unknown">deterministic</span>')+'</h3>'+
+      '<p class="muted">'+esc(companyName(f.workspaceId))+' · '+esc(when(f.at))+'</p>'+
+      '<p><b>Why permitted</b> '+esc(f.whyPermitted||'autonomy inspect not stored')+'</p>'+
+      '<p><b>Sources used</b> '+esc((f.sourcesUsed||[]).join(', ')||'none')+'</p>'+
+      '<p><b>Cost</b> '+(f.costUsd==null?'unknown':money(f.costUsd))+'</p>'+
+      '<p><b>Artifact</b> '+(f.producedArtifact?'<code>'+esc(f.producedArtifact)+'</code> · not deployed':'none')+'</p>'+
+      '<p><b>Watcher</b> '+esc(f.watcherResult||'none')+'</p></div>';
+  }).join('') || empty('No work-feed rows yet.');
+  el('page').innerHTML =
+    card('Work feed', '<p class="muted">Persisted events only. Not a live ticker of invented work.</p>'+feed)+
+    card('Activity log', rows);
+}
+
+async function renderSpending(){
+  const out = await api(withWs('/app/spending'));
+  honesty(out);
+  const t = out.totals||{};
+  const sep = out.treasurySeparation || {};
+  const harbor = out.harbor || sep.harbor || {};
+  const finch = out.finch || sep.finch || {};
+  function bucketBlock(label, b){
+    const buckets = (b && b.buckets) || {};
+    const lines = Object.keys(buckets).map(function(cat){
+      const row = buckets[cat]||{};
+      return '<li><b>'+esc(cat)+'</b> · count '+esc(row.count)+' · '+money(row.usd)+'</li>';
+    }).join('') || '<li class="muted">Empty</li>';
+    return '<h3>'+esc(label)+'</h3><p>Actual spend '+money(b.actualSpendUsd)+' · actual revenue '+money(b.actualRevenueUsd||0)+'</p><ul>'+lines+'</ul>';
+  }
+  const rows = (out.entries||[]).slice().reverse().slice(0,40).map(function(e){
+    return '<tr><td>'+esc(when(e.timestamp))+'</td><td>'+esc(e.role||e.agentId)+'</td><td>'+esc(e.operation)+'</td><td>'+esc(e.kind)+'</td><td>'+esc(e.costStatus)+'</td><td>'+esc(e.costUsd)+'</td></tr>';
+  }).join('');
+  el('page').innerHTML = card('Spending / Treasury separation',
+    '<p class="ok">ACTUAL vs OWNER_REPORTED vs HYPOTHETICAL are never mixed.</p>'+
+    '<p>Ledger estimated '+money(t.estimatedUsd)+' · live rows '+esc(t.liveCount)+' · unknown-cost '+esc(t.unknownCostCount)+'</p>'+
+    bucketBlock('Harbor Oak', harbor)+
+    bucketBlock('Finch', finch)+
+    '<h3>Recent ledger rows</h3>'+
+    '<table><thead><tr><th>When</th><th>Who</th><th>Op</th><th>Kind</th><th>Cost status</th><th>USD</th></tr></thead><tbody>'+rows+'</tbody></table>'
+  );
+}
+
+function oppCard(o){
+  const research = (o.supportingResearch&&o.supportingResearch.length) ? o.supportingResearch : [];
+  return '<div class="card opp-card" id="opp-'+esc(o.id)+'">'+
+    '<h3><label><input type="checkbox" name="cmp" value="'+esc(o.id)+'"> '+esc(o.name)+'</label> '+claimPill(o.nameClaimClass||'hypothesis')+'</h3>'+
+    claimBlock('Customer', o.targetCustomer)+
+    claimBlock('Why it may be attractive', o.whyItCouldFit)+
+    claimBlock('Known facts', o.problem)+
+    claimBlock('Main assumptions', o.assumptions||[])+
+    claimBlock('Important risks', o.risks||[])+
+    claimBlock('Suggested next step', o.recommendedNextInvestigation)+
+    '<details class="details"><summary>Evidence, scoring, and limitations</summary>'+
+    claimBlock('Proposed offer', o.proposedOffer)+
+    claimBlock('Supporting research', research)+
+    claimBlock('Missing information', o.missingInformation||[])+
+    claimBlock('Startup-cost estimate', o.startupCostEstimate)+
+    claimBlock('Monetization model', o.monetizationModel)+
+    claimBlock('Business category', o.businessCategory)+
+    claimBlock('Startup requirements', o.startupRequirements)+
+    claimBlock('Operational complexity', o.operationalComplexity)+
+    claimBlock('Suggested initial team roles', o.suggestedInitialTeamRoles)+
+    claimBlock('Evidence refs', o.evidenceRefs || [])+
+    (o.ownerDisposition ? '<p>Owner disposition <b>'+esc(o.ownerDisposition)+'</b></p>' : '')+
+    '<p class="muted">'+esc(o.id)+(o.workspaceId?(' · '+companyName(o.workspaceId)):'')+' · generator '+esc(o.generator||'')+' '+liveKindPill(o.liveProviderCall===true)+'</p>'+
+    '</details>'+
+    '<p><a href="#/opportunities/'+encodeURIComponent(o.id)+'">Open</a> · <button class="primary" type="button" onclick="createCompanyFromOpp(\''+esc(o.id)+'\')">Create company from this opportunity</button> <button type="button" onclick="saveOpp(\''+esc(o.id)+'\')">Save</button> <button type="button" onclick="rejectOpp(\''+esc(o.id)+'\')">Reject</button></p>'+
+    '</div>';
+}
+
+async function submitOverviewOpp(){
+  showErr('');
+  try{
+    const out = await api('/app/opportunities/generate',{method:'POST',body:JSON.stringify({
+      ownerObjective: el('ov-obj').value,
+      budget: el('ov-budget').value,
+      constraints: el('ov-con').value
+    })});
+    el('ovOppStatus').className='ok';
+    el('ovOppStatus').textContent = 'Persisted '+(out.opportunities||[]).length+' hypotheses in '+out.set.id+'.';
+    location.hash = '#/opportunities';
+  }catch(e){
+    el('ovOppStatus').className='fail';
+    el('ovOppStatus').textContent = e.message||String(e);
+    showErr(e);
+  }
+}
+
+async function submitOppGenerate(){
+  showErr('');
+  const payload = {
+    workspaceId: (el('opp-ws')&&el('opp-ws').value)||'',
+    ownerObjective: (el('opp-obj')&&el('opp-obj').value)||'',
+    constraints: (el('opp-con')&&el('opp-con').value)||'',
+    budget: (el('opp-budget')&&el('opp-budget').value)||'',
+    timeline: (el('opp-time')&&el('opp-time').value)||'',
+    preferredIndustries: (el('opp-ind')&&el('opp-ind').value)||'',
+    availableSkillsAndResources: (el('opp-skills')&&el('opp-skills').value)||'',
+    geographicConstraints: (el('opp-geo')&&el('opp-geo').value)||'',
+    riskTolerance: (el('opp-risk')&&el('opp-risk').value)||'',
+    permittedResearchScope: (el('opp-scope')&&el('opp-scope').value)||'',
+    preferLive: !!(el('opp-live')&&el('opp-live').checked)
+  };
+  try{
+    const out = await api('/app/opportunities/generate',{method:'POST',body:JSON.stringify(payload)});
+    el('oppStatus').className='ok';
+    el('oppStatus').textContent = 'Persisted '+(out.opportunities||[]).length+' inspectable opportunities.';
+    const ws = payload.workspaceId ? ('?workspace='+encodeURIComponent(payload.workspaceId)) : '';
+    location.hash = '#/opportunities'+ws;
+    await render();
+  }catch(e){
+    el('oppStatus').className='fail';
+    el('oppStatus').textContent = e.message||String(e);
+    showErr(e);
+  }
+}
+
+function goCompare(){
+  const ids = Array.prototype.map.call(document.querySelectorAll('input[name=cmp]:checked'), function(x){return x.value;});
+  if(ids.length<2){ showErr('Select at least two persisted opportunities to compare.'); return; }
+  location.hash = '#/opportunities/compare?ids='+ids.map(encodeURIComponent).join(',');
+}
+
+async function createCompanyFromOpp(id){
+  showErr('');
+  try{
+    const out = await api('/app/opportunities/'+encodeURIComponent(id)+'/create-company',{method:'POST',body:'{}'});
+    location.hash = '#/companies/'+encodeURIComponent(out.company.id);
+  }catch(e){ showErr(e); }
+}
+
+async function renderOpportunities(id, extra){
+  const q = hashQuery();
+  const workspace = q.get('workspace') || q.get('workspaceId') || '';
+  if(id === 'compare'){
+    const ids = (q.get('ids')||'').split(',').filter(Boolean);
+    let out;
+    try { out = await api('/app/opportunities/founder-compare?ids='+ids.map(encodeURIComponent).join(',')); }
+    catch(e){ out = await api('/app/opportunities/compare?ids='+ids.map(encodeURIComponent).join(',')); }
+    honesty(out);
+    const cols = (out.opportunities||out.investmentRows||[]).map(function(o){
+      return '<div class="col card"><h3>'+esc(o.name)+'</h3></div>';
+    }).join('');
+    const rows = (out.rows||[]).map(function(row){
+      const cells = (row.values||[]).map(function(v){
+        const text = v && (v.text!=null?v.text:(v.value!=null?v.value:''));
+        return '<td>'+claimPill((v&&(v.claimClass||(v.claimClasses&&v.claimClasses[0])))||'unknown')+' '+esc(text||'unknown')+'</td>';
+      }).join('');
+      return '<tr><th>'+esc(row.field)+'</th>'+cells+'</tr>';
+    }).join('');
+    const scores = (out.scoreExplain||[]).map(function(s){
+      return '<li><b>#'+esc(s.position)+' '+esc(s.name)+'</b> — '+esc(s.explanation)+'</li>';
+    }).join('') || '<li class="muted">No score explanation rows.</li>';
+    el('page').innerHTML = card('Compare opportunities',
+      '<p class="muted">Side-by-side of persisted records. Scores are decision aids, not demand rankings.</p>'+
+      '<div class="compare">'+cols+'</div>'+
+      '<table><thead><tr><th>Field</th>'+(out.opportunityIds||[]).map(function(i){return '<th>'+esc(i)+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>'+
+      card('Why these scores', '<ul>'+scores+'</ul>')+
+      '<p><a href="#/opportunities">Back to Opportunities</a></p>'
+    );
+    return;
+  }
+  if(id){
+    let out;
+    try { out = await api('/app/opportunities/'+encodeURIComponent(id)+'/founder'); }
+    catch(e){ out = await api('/app/opportunities/'+encodeURIComponent(id)); }
+    honesty(out);
+    const o = out.opportunity||{};
+    const inv = out.investment || o.investment || {};
+    const fin = out.financialScenarios || inv.financialScenarios || {};
+    const team = out.recommendedTeam;
+    const teamRows = ((team&&team.roles)||[]).map(function(r){
+      return '<li><b>'+esc(r.roleTitle||r.roleId)+'</b> — '+esc(r.why||'')+'</li>';
+    }).join('') || '<li class="muted">No team explanation (company may be unset).</li>';
+    const nextV = (out.nextValidation||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+    function finRow(label, f){
+      f = f || {};
+      return '<div class="fin-row"><div><b>'+esc(label)+'</b><div class="cat">'+esc(f.category||'UNKNOWN')+'</div></div><div>'+esc(f.value==null?'—':f.value)+'</div></div>'+(f.note?'<p class="muted">'+esc(f.note)+'</p>':'');
+    }
+    el('page').innerHTML = card(o.name||'Opportunity', '<p class="muted">Labeled financial categories are never mixed into actual revenue.</p>')+
+      oppCard(o)+
+      card('Investment snapshot',
+        '<p><b>Customer</b> '+esc(inv.customer||'—')+'</p>'+
+        '<p><b>Problem</b> '+esc(inv.problem||'—')+'</p>'+
+        '<p><b>Solution</b> '+esc(inv.solution||'—')+'</p>'+
+        '<p><b>Owner fit</b> '+esc(inv.ownerFit||'—')+'</p>')+
+      card('Labeled financial scenarios',
+        finRow('Startup cost', fin.startupCost)+
+        finRow('Revenue', fin.revenue)+
+        finRow('Owner budget', fin.ownerBudget))+
+      card('Recommended team', '<ul>'+teamRows+'</ul>')+
+      card('Next validation', '<ul>'+nextV+'</ul>');
+    return;
+  }
+  const path = workspace ? '/app/opportunities?workspaceId='+encodeURIComponent(workspace) : '/app/opportunities';
+  const out = await api(path);
+  honesty(out);
+  const wsOpts = ['<option value="">Before a company exists</option>'].concat((out.companies||COMPANIES).map(function(c){
+    return '<option value="'+esc(c.id)+'"'+(c.id===workspace?' selected':'')+'>'+esc(c.name)+'</option>';
+  })).join('');
+  const cards = (out.opportunities||[]).map(oppCard).join('') || empty('No opportunities in this scope yet.');
+  el('page').innerHTML =
+    card('Opportunities',
+      '<p>Search integration does not exist as a live product default. Ideas from this form are model-generated hypotheses unless a field is copied from owner input or already-stored research.</p>'+
+      '<label>Company workspace<select id="opp-ws">'+wsOpts+'</select></label>'+
+      '<label>Owner objective<textarea id="opp-obj" rows="3" placeholder="Required unless the selected company already has an objective"></textarea></label>'+
+      '<label>Constraints<textarea id="opp-con" rows="2"></textarea></label>'+
+      '<label>Budget<input id="opp-budget" placeholder="Owner-stated. Leave blank to keep startup cost unknown"></label>'+
+      '<label>Timeline<input id="opp-time"></label>'+
+      '<label>Preferred industries<input id="opp-ind"></label>'+
+      '<label>Skills and resources<textarea id="opp-skills" rows="2"></textarea></label>'+
+      '<label>Geographic constraints<input id="opp-geo"></label>'+
+      '<label>Risk tolerance<input id="opp-risk"></label>'+
+      '<label>Permitted research scope<textarea id="opp-scope" rows="2" placeholder="Name permitted URLs if you have them."></textarea></label>'+
+      '<p><label><input type="checkbox" id="opp-live"> Prefer live AI-generated hypotheses (fail-closed if provider is not verified)</label></p>'+
+      '<p><button class="primary entry" type="button" onclick="submitOppGenerate()">Generate inspectable opportunities</button> <button type="button" onclick="goCompare()">Compare selected</button></p>'+
+      '<p class="muted" id="oppStatus"></p>'
+    )+cards;
+}
+
+function roleCard(r){
+  const will = r.willCreate ? 'will be created' : (r.implementationStatus==='not_implemented'?'proposed but not created':'skipped');
+  const deny = r.willCreate ? '<p><label><input type="checkbox" class="deny-role" value="'+esc(r.roleId)+'"> Deny this role</label></p>' : '';
+  return '<div class="card"><h3>'+esc(r.roleTitle||r.name)+' '+implPill(r.implementationStatus)+'</h3>'+
+    '<p>'+esc(r.jobDescription||'')+'</p>'+
+    '<p><b>Why this role</b> '+esc(r.reason||'')+'</p>'+
+    deny+
+    '<p class="muted">'+esc(will)+' · handler '+(r.handlerExists?'exists':'does not exist')+'</p></div>';
+}
+async function submitTeamPropose(){
+  showErr('');
+  try{
+    const ws = (el('tm-ws')&&el('tm-ws').value)||'';
+    if(!ws){ showErr('Pick a company workspace first.'); return; }
+    const out = await api('/app/teams/propose',{method:'POST',body:JSON.stringify({ workspaceId: ws })});
+    el('tmStatus').className='ok';
+    el('tmStatus').textContent = 'Proposed '+(out.proposal&&out.proposal.selectedRoleIds||[]).length+' roles. Employees are not created yet.';
+    location.hash = '#/teams?workspace='+encodeURIComponent(ws);
+    await render();
+  }catch(e){
+    el('tmStatus').className='fail';
+    el('tmStatus').textContent = e.message||String(e);
+    showErr(e);
+  }
+}
+async function submitTeamCreate(){
+  showErr('');
+  try{
+    const ws = (el('tm-ws')&&el('tm-ws').value)||'';
+    const pid = (el('tm-proposal')&&el('tm-proposal').value)||'';
+    const denied = Array.prototype.map.call(document.querySelectorAll('input.deny-role:checked'), function(x){return x.value;});
+    const out = await api('/app/teams/create',{method:'POST',body:JSON.stringify({
+      workspaceId: ws,
+      proposalId: pid,
+      actor: 'owner',
+      confirm: 'Create this team',
+      authorized: true,
+      createThisTeam: true,
+      deniedRoleIds: denied
+    })});
+    el('tmStatus').className='ok';
+    el('tmStatus').textContent = 'Created '+(out.createdEmployeeIds||[]).length+' employees.';
+    setWs(ws);
+    location.hash = '#/employees?workspace='+encodeURIComponent(ws);
+  }catch(e){
+    el('tmStatus').className='fail';
+    el('tmStatus').textContent = e.message||String(e);
+    showErr(e);
+  }
+}
+async function renderTeams(id){
+  const q = hashQuery();
+  const workspace = q.get('workspace') || q.get('workspaceId') || id || currentWs() || '';
+  if(id && id.indexOf('TPROP-')===0){
+    const one = await api('/app/teams/'+encodeURIComponent(id));
+    honesty(one);
+    const p = one.proposal||{};
+    const roles = (p.proposedRoles||[]).map(roleCard).join('') || empty('No proposed roles.');
+    const emps = (one.employees||[]).map(function(e){
+      return '<div class="emp"><div><b>'+esc(e.name)+'</b><div class="muted">'+esc(friendlyStatus(e.status))+'</div></div><a href="#/employees/'+encodeURIComponent(e.id)+'/brain">View Brain</a></div>';
+    }).join('') || empty('Not created yet.');
+    el('page').innerHTML = card('Team proposal', '<p>'+esc(friendlyStatus(p.status))+' · deterministic generator</p>')+roles+card('Employees', emps);
+    return;
+  }
+  const path = workspace ? '/app/teams?workspaceId='+encodeURIComponent(workspace) : '/app/teams';
+  const out = await api(path);
+  honesty(out);
+  const wsOpts = ['<option value="">Select a company</option>'].concat((out.companies||COMPANIES).map(function(c){
+    return '<option value="'+esc(c.id)+'"'+(c.id===workspace?' selected':'')+'>'+esc(c.name)+'</option>';
+  })).join('');
+  const latest = out.latest || null;
+  const roles = latest ? (latest.proposedRoles||[]).map(roleCard).join('') : '';
+  const unimplemented = latest ? (latest.unimplementedRoles||[]).map(function(r){
+    return '<li>'+esc(r.roleTitle)+' '+implPill('not_implemented')+' — '+esc(r.reason)+'</li>';
+  }).join('') : '';
+  const emps = (out.employees||[]).map(function(e){
+    return '<div class="emp-card">'+avatarHtml(e.name,e.roleId)+'<div><b>'+esc(e.name)+'</b><div class="meta">'+esc(e.roleTitle)+' · '+esc(friendlyStatus(e.status))+'</div></div><div class="actions"><a href="#/employees/'+encodeURIComponent(e.id)+'/brain">View Brain</a></div></div>';
+  }).join('') || empty('No authorized employees on this company yet.');
+  const createBtn = (!latest)
+    ? '<p class="muted">Generate a proposal before authorizing a team.</p>'
+    : (latest.status==='authorized_created'
+      ? '<p class="ok">This team is already authorized. Employees persist on the company.</p>'
+      : '<p><button class="primary entry" type="button" onclick="submitTeamCreate()">Create this team</button></p>');
+  el('page').innerHTML =
+    card('Teams',
+      '<p class="muted">Propose a useful initial subset from the company objective. Employees are created only when you click Create this team once.</p>'+
+      '<input type="hidden" id="tm-proposal" value="'+esc(latest&&latest.id||'')+'">'+
+      '<label>Company workspace<select id="tm-ws">'+wsOpts+'</select></label>'+
+      '<p><button class="primary entry" type="button" onclick="submitTeamPropose()">Generate team</button></p>'+
+      '<p class="muted" id="tmStatus"></p>'+
+      createBtn
+    )+
+    (latest ? card('Proposed subset', roles+'<h3>Unimplemented catalog roles</h3><ul>'+(unimplemented||'<li class="muted">None listed.</li>')+'</ul>') : '')+
+    card('Employees on this company', '<div class="emp-grid">'+emps+'</div>');
+}
+
+function claimClassPill(cls){
+  const c = String(cls||'unknown');
+  const klass = c==='owner-provided'||c==='owner_provided'?'owner':(c==='fact'?'fact':(c==='vendor-claim'||c==='vendor_claim'?'vendor':(c==='hypothesis'?'hyp':'unknown')));
+  return '<span class="pill '+klass+'">'+esc(c.replace(/_/g,' '))+'</span>';
+}
+function deliverableCards(rows, artifact){
+  const list = rows||[];
+  if(!list.length){
+    return '<p class="muted">No deliverable records for this work yet.</p>'+(artifact&&artifact.path?'<p>Artifact path <code>'+esc(artifact.path)+'</code> · not deployed</p>':'');
+  }
+  return list.map(function(d){
+    const claims = (d.claimClasses||[]).map(function(c){return '<li>'+claimClassPill(c.claimClass||c)+' '+esc(c.text||c)+'</li>';}).join('');
+    const art = d.artifact || artifact;
+    const artHtml = (art && art.path && (d.artifact || d.type==='landing_page_copy' || d.type==='product_requirements'))
+      ? '<p><b>Local artifact</b> <code>'+esc(art.path)+'</code></p><p class="muted">Not deployed. Inspectable file only.</p>'+(art.preview?'<pre>'+esc(art.preview)+'</pre>':'')
+      : '';
+    return '<div class="result-card"><h3>'+esc(d.title||d.type)+' <span class="pill">'+esc(friendlyStatus(d.status||d.liveVsDeterministic||'draft'))+'</span></h3>'+
+      '<p class="muted">'+esc(d.type)+' · '+esc(companyName(d.workspaceId)||'')+' · '+(d.draft!==false?'draft':'')+'</p>'+
+      '<p>'+esc((d.body||'').slice(0,320))+'</p>'+
+      (claims?'<ul>'+claims+'</ul>':'')+
+      artHtml+
+      '</div>';
+  }).join('');
+}
+function taskRow(t){
+  const deps = (t.dependencies||t.prerequisites||[]).join(', ') || 'none';
+  const result = t.resultSummary || (t.result&&t.result.summary) || '';
+  return '<div class="work-item"><b>'+esc(t.label||t.type||t.id)+'</b> <span class="pill">'+esc(friendlyStatus(t.status))+'</span> '+liveKindPill(t.liveProviderCall===true)+
+    '<div class="muted">'+esc(t.assignedRoleName||t.assignedRoleId||'')+(result?(' · '+result):'')+'</div>'+
+    (t.error?'<div class="fail">'+esc(t.error)+'</div>':'')+
+    '<details class="details"><summary>Task details</summary><p>'+esc(t.id)+' · depends on '+esc(deps)+'</p></details></div>';
+}
+function workDetail(view){
+  if(!view || !view.objective) return '';
+  const o = view.objective;
+  const plan = view.plan || {};
+  const tasks = (view.tasks||[]).map(taskRow).join('') || '<p class="muted">No tasks.</p>';
+  const emps = (view.assignedEmployees||[]).map(function(e){
+    return '<div class="emp"><div><b>'+esc(e.name)+'</b><div class="muted">'+esc(e.roleTitle)+' · '+esc(friendlyStatus(e.status))+'</div></div><a href="#/employees/'+encodeURIComponent(e.id)+'/brain">View Brain</a></div>';
+  }).join('') || '<p class="muted">No employees assigned.</p>';
+  const results = ((view.summary&&view.summary.results)||[]).map(function(r){
+    return '<li>'+esc(r.summary||r.taskId)+' <span class="pill">'+esc(r.label||'deterministic')+'</span></li>';
+  }).join('') || '<li class="muted">No persisted specialist results yet.</li>';
+  const act = (view.activity||[]).map(function(a){return '<li>'+esc(a.text||a.kind)+'</li>';}).join('') || '<li class="muted">No activity.</li>';
+  const spend = view.spend || {};
+  const blocked = ((view.summary&&view.summary.blocked)||[]).map(function(b){return '<li class="warn">'+esc(b.reason||b.status)+'</li>';}).join('');
+  const research = (view.researchRequests||[]).map(function(r){return '<li>'+esc(r.id)+' '+esc(r.status)+'</li>';}).join('');
+  const approvals = (view.approvals||[]).map(function(a){return '<li>'+esc(a.kind||a.id)+' <b>'+esc(a.status)+'</b></li>';}).join('');
+  return card(String(o.ownerText||'Objective').slice(0,80),
+      '<p>'+esc(o.ownerText)+'</p>'+
+      '<p class="muted">'+esc(companyName(o.workspaceId))+' · '+esc(friendlyStatus(o.status))+'</p>'
+    )+
+    card('Plan', '<p>'+esc(plan.disclosure||'Deterministic orchestration.')+'</p>')+
+    card('Assigned employees', emps)+
+    card('Tasks', tasks)+
+    card('Results', '<ul>'+results+'</ul>'+(blocked?'<h3>Blocked</h3><ul>'+blocked+'</ul>':''))+
+    card('Deliverables', deliverableCards(view.deliverables, view.artifact))+
+    card('Spend', '<p>Cap '+money(spend.maxSpendUsd)+' · spent '+money(spend.spentUsd)+' · live calls '+esc(spend.liveProviderCalls)+'</p>')+
+    (research?card('Research requests', '<ul>'+research+'</ul>'):'')+
+    (approvals?card('Approvals created', '<ul>'+approvals+'</ul>'):'')+
+    card('Activity', '<ul>'+act+'</ul>');
+}
+function laneOf(status){
+  const s = String(status||'').toLowerCase();
+  if(/block|fail/.test(s)) return 'blocked';
+  if(/approv|waiting|owner/.test(s)) return 'waiting';
+  if(/complete|done|succeed/.test(s)) return 'completed';
+  if(/run|progress|active|work|live/.test(s)) return 'progress';
+  return 'planned';
+}
+async function submitWork(){
+  const ws = (el('wk-ws')&&el('wk-ws').value)||'';
+  const text = (el('wk-obj')&&el('wk-obj').value)||'';
+  const budget = (el('wk-budget')&&el('wk-budget').value)||'';
+  if(!ws){ showErr('Pick a company workspace first.'); return; }
+  try{
+    const body = { workspaceId: ws, ownerText: text };
+    if(budget) body.maxSpendUsd = budget;
+    if(el('wk-live')&&el('wk-live').checked) body.preferLive = true;
+    const out = await api('/app/work/submit',{method:'POST',body:JSON.stringify(body)});
+    if(out.code==='NO_TEAM'){
+      el('wkStatus').className='warn';
+      el('wkStatus').textContent = out.message||'No team yet.';
+      return;
+    }
+    el('wkStatus').className='ok';
+    el('wkStatus').textContent = 'Submitted '+(out.objective&&out.objective.id)+' · '+(out.objective&&out.objective.status);
+    location.hash = '#/work/'+encodeURIComponent(out.objective.id)+'?workspace='+encodeURIComponent(ws);
+  }catch(e){
+    el('wkStatus').className='fail';
+    el('wkStatus').textContent = e.message||String(e);
+    showErr(e);
+  }
+}
+async function renderWork(id){
+  const q = hashQuery();
+  const workspace = q.get('workspace') || q.get('workspaceId') || currentWs() || '';
+  if(id && id.indexOf('OBJ-')===0){
+    const one = await api('/app/work/'+encodeURIComponent(id));
+    honesty(one);
+    el('page').innerHTML = workDetail(one)+'<p><a href="#/work?workspace='+encodeURIComponent(one.workspaceId||workspace)+'">Back to Work</a></p>';
+    return;
+  }
+  const path = workspace ? '/app/work?workspaceId='+encodeURIComponent(workspace) : '/app/work';
+  const out = await api(path);
+  honesty(out);
+  const wsOpts = ['<option value="">Select a company</option>'].concat((out.companies||COMPANIES).map(function(c){
+    return '<option value="'+esc(c.id)+'"'+(c.id===workspace?' selected':'')+'>'+esc(c.name)+'</option>';
+  })).join('');
+  const examples = (out.examples||[]).map(function(s){return '<li>'+esc(s)+'</li>';}).join('');
+  const team = out.team || {};
+  const teamNote = team.present===false
+    ? '<p class="warn">This company has no team yet. <a href="#/teams?workspace='+encodeURIComponent(workspace)+'">Open Teams</a>. Conductor will not invent employees.</p>'
+    : (team.present ? '<p class="ok">'+esc(team.employeeCount)+' authorized employees on this company.</p>' : '<p class="muted">Pick a company to see whether a team exists.</p>');
+  const lanes = {planned:[],progress:[],waiting:[],completed:[],blocked:[]};
+  (out.records||[]).forEach(function(r){ (lanes[laneOf(r.status)]||lanes.planned).push(r); });
+  const laneHtml = [['planned','Planned'],['progress','In progress'],['waiting','Waiting for you'],['completed','Completed'],['blocked','Blocked']].map(function(L){
+    const items = (lanes[L[0]]||[]).map(function(r){
+      return '<a class="work-item" href="#/work/'+encodeURIComponent(r.id)+'?workspace='+encodeURIComponent(r.workspaceId||workspace)+'"><b>'+esc(String(r.ownerText||r.id).slice(0,90))+'</b><div class="muted">'+esc(friendlyStatus(r.status))+' · '+esc(companyName(r.workspaceId))+'</div></a>';
+    }).join('') || '<p class="muted">None</p>';
+    return '<div class="lane"><h3>'+esc(L[1])+'</h3>'+items+'</div>';
+  }).join('');
+  el('page').innerHTML =
+    card('Work',
+      '<p class="muted">Submit an objective. Conductor plans real tasks. Orchestration stays deterministic.</p>'+
+      '<label>Company workspace<select id="wk-ws">'+wsOpts+'</select></label>'+
+      teamNote+
+      '<label>Objective<textarea id="wk-obj" rows="4" placeholder="Find three promising business ideas within a $2,000 budget."></textarea></label>'+
+      '<label>Budget cap <span class="field-label">optional</span><input id="wk-budget" placeholder="2000"></label>'+
+      '<p><label><input type="checkbox" id="wk-live"> Prefer live specialists (fail-closed if provider is not verified)</label></p>'+
+      '<p><button class="primary entry" type="button" onclick="submitWork()">Submit objective</button></p>'+
+      '<p class="muted" id="wkStatus"></p>'+
+      '<details class="details"><summary>Example objectives</summary><ul>'+examples+'</ul></details>'
+    )+'<div class="board">'+laneHtml+'</div>';
+}
+
+function renderWorkflowProofCard(proof){
+  const p = proof || {};
+  const cos = (p.companies||[]).map(function(c){
+    return '<div class="emp"><div><b>'+esc(c.name)+'</b> <span class="pill">product-proof run</span><div class="muted">'+esc(c.productProofNote||p.disclosure||'')+'</div></div><a href="'+esc(c.href||('#/companies/'+encodeURIComponent(c.id)))+'">Open</a></div>';
+  }).join('') || '<p class="muted">No product-proof companies in FILE_STORE yet.</p>';
+  return '<p>'+esc(p.disclosure||'Fictional product-proof runs, not live businesses.')+'</p>'+
+    '<p class="muted">Isolation is application-level by workspaceId, not IAM. APR-005 remains pending.</p>'+
+    cos+
+    '<p><a href="#/workflow-proof">Open Workflow proof</a></p>';
+}
+
+async function renderWorkflowProof(){
+  const out = await api('/app/workflow-proof');
+  honesty(out);
+  const proofs = (out.proofs||[]).map(function(pr){
+    const a = pr.workflowA || {};
+    const b = pr.workflowB || {};
+    return '<div class="card"><h3>'+esc(pr.id)+'</h3>'+
+      '<p class="muted">'+esc(pr.disclosure||'')+'</p>'+
+      '<p><b>Workflow A</b> '+esc(a.companyName||'')+'</p>'+
+      '<p><b>Workflow B</b> '+esc(b.companyName||'')+'</p>'+
+      (a.workspaceId?'<p><a href="#/companies/'+encodeURIComponent(a.workspaceId)+'">Open '+esc(a.companyName||a.workspaceId)+'</a></p>':'')+
+      (b.workspaceId?'<p><a href="#/companies/'+encodeURIComponent(b.workspaceId)+'">Open '+esc(b.companyName||b.workspaceId)+'</a></p>':'')+
+      '</div>';
+  }).join('') || empty('No persisted workflow proof record yet.');
+  el('page').innerHTML = card('Workflow proof',
+    '<p>'+esc(out.disclosure||'')+'</p>'+
+    '<p class="muted">Isolation is application-level, not IAM.</p>'+
+    renderWorkflowProofCard(out)+
+    proofs
+  );
+}
+
+async function renderSettings(){
+  let out = {integrations:[], embeddingsStatus:{}, note:'Settings / integrations'};
+  try { out = await api('/app/settings'); } catch(e) {
+    try {
+      const research = await api('/app/research');
+      out.integrations = (research.providers||[]).map(function(p){return {id:p.id,status:p.status,note:p.note};});
+      out.adapters = [{id:'website_publish',status:'NOT_CONFIGURED'},{id:'email',status:'NOT_CONFIGURED'},{id:'payments',status:'NOT_CONFIGURED'},{id:'ads',status:'NOT_CONFIGURED'},{id:'crm',status:'NOT_CONFIGURED'}];
+      out.note = 'Settings assembled from research registry + adapter boundary. No fake active integrations.';
+    } catch(e2) { out.note = String(e.message||e); }
+  }
+  honesty(out);
+  const emb = out.embeddingsStatus || {};
+  const ints = (out.integrations||[]).map(function(p){
+    return '<div class="emp"><div><b>'+esc(p.id)+'</b> '+bridgePill(p.bridgeStatus||(p.status==='CONNECTED'?'READY_TO_STAGE':'NOT_CONFIGURED'))+'<div class="muted">'+esc(p.note||'')+'</div></div></div>';
+  }).join('') || empty('No integrations configured.');
+  const ads = (out.adapters||[]).map(function(p){
+    return '<div class="emp"><div><b>'+esc(p.id)+'</b> '+bridgePill(p.status)+'<div class="muted">'+esc(p.note||'NOT_CONFIGURED')+'</div></div></div>';
+  }).join('');
+  const h = LAST_HONESTY || {};
+  el('page').innerHTML =
+    card('Settings / Diagnostics', '<p class="muted">Developer-facing status. The founder shell shows “Local workspace” instead of this banner.</p>'+
+      '<ul><li>Storage: FILE_STORE (not PostgreSQL)</li><li>Search: '+(h.searchIntegrationExists===true?'connected when proven':'not-connected')+'</li><li>Retrieval: lexical/deterministic</li><li>Live work: only when a provider call actually ran</li><li>Always-on: never</li></ul>')+
+    card('Embeddings', '<p>'+(emb.embeddings===true?('Proof available: model '+esc(emb.model||'')+' · <b>lexical remains default retrieval</b>'):'Semantic search is not default.')+'</p>')+
+    card('Source providers', ints)+
+    card('External action adapters', ads || '<p class="muted">website_publish / email / payments / ads / crm — all NOT_CONFIGURED</p>')+
+    card('Key setup', '<p class="muted">Supply your OpenAI key only in local <code>.env</code>. Diagnostics stay at <a href="/diagnostics">/diagnostics</a>.</p>')+
+    card('More inspection', '<p><a href="#/jobs">Jobs</a> · <a href="#/search">Search</a> · <a href="#/autonomy">Autonomy</a> · <a href="#/activity">Activity</a> · <a href="#/spending">Spending ledger</a> · <a href="#/workflow-proof">Workflow proof</a> · <a href="#/objectives">Objectives</a></p>');
+}
+async function renderLaunchReadiness(){
+  const q = hashQuery();
+  const ws = q.get('workspace') || currentWs() || 'ws-own-004';
+  const out = await api('/app/launch-readiness?workspaceId='+encodeURIComponent(ws));
+  honesty(out);
+  const rows = (out.questions||[]).map(function(r){
+    return '<div class="emp"><div><b>'+esc(r.q)+'</b><div class="muted">'+esc(r.answer||'Not answered yet')+'</div></div></div>';
+  }).join('');
+  const adapters = (out.adapters||out.externalAdapters||[]).map(function(a){
+    return '<div class="emp"><div><b>'+esc(a.id)+'</b> '+bridgePill(a.status||a.bridgeStatus)+'<div class="muted">'+esc(a.note||'')+'</div></div></div>';
+  }).join('');
+  const opts = COMPANIES.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===ws?' selected':'')+'>'+esc(c.name)+'</option>';}).join('')
+    || '<option value="ws-own-004">Harbor</option><option value="ws-own-005">Finch</option><option value="ws-own-003">Cedar</option>';
+  el('page').innerHTML = card('Launch readiness — '+esc(out.companyName||companyName(ws)),
+    '<label>Company <select id="lr-ws" onchange="location.hash=\'#/launch-readiness?workspace=\'+this.value">'+opts+'</select></label>'+
+    rows
+  )+card('External adapters', adapters||empty('All adapters NOT_CONFIGURED'));
+}
+async function renderResearchPage(){
+  const ws = currentWs();
+  const out = await api(ws?'/app/research?workspaceId='+encodeURIComponent(ws):'/app/research');
+  honesty(out);
+  let teach = {pairs:[], packets:[], note:''};
+  try { teach = await api('/app/teaching-lab'); } catch(e) { teach = {pairs:[], packets:[], note:String(e.message||e)}; }
+  const reqs = (out.requests||[]).map(function(r){
+    return '<div class="card"><h3>'+esc(r.question||r.id)+'</h3><p class="muted">'+esc(companyName(r.workspaceId)||'')+' · '+esc(friendlyStatus(r.status))+'</p></div>';
+  }).join('') || empty('No research questions stored for this company yet.');
+  const useful = (out.useful||out.findings||[]).filter(function(f){return f && !f.rejected;}).slice(0,20).map(function(f){
+    return '<div class="knowledge-card"><b>'+esc((f.claim||'').slice(0,200))+'</b> '+claimPill(f.kind)+'<div class="muted">'+esc(f.source||'stored source')+' · '+esc(friendlyStatus(f.reviewStatus))+'</div></div>';
+  }).join('') || empty('No useful findings stored.');
+  const rejected = (out.rejected||[]).map(function(f){return '<li>'+esc((f.claim||f.id).slice(0,160))+'</li>';}).join('');
+  const unknowns = (out.unknowns||[]).map(function(f){return '<li>'+esc((f.claim||f.id).slice(0,160))+'</li>';}).join('');
+  el('page').innerHTML =
+    card('Research', '<p class="muted">Investigation workspace for '+esc(companyName(ws)||'the selected company')+'. Search limitations appear only here, not on every page.</p>'+reqs)+
+    card('Useful findings', useful)+
+    (rejected?card('Rejected sources', '<ul>'+rejected+'</ul>'):'')+
+    (unknowns?card('Remaining unknowns', '<ul>'+unknowns+'</ul>'):'')+
+    '<details class="details"><summary>Source providers and teaching chain</summary>'+
+    card('Providers', (out.providers||[]).map(function(p){return '<div class="emp"><div><b>'+esc(p.id)+'</b> '+bridgePill(p.status)+'</div></div>';}).join('')||empty('No provider registry rows.'))+
+    card('Teaching packets', (teach.packets||[]).map(function(p){return '<div class="emp"><b>'+esc(p.id)+'</b> '+esc(p.from)+' → '+esc(p.to)+' · '+esc(p.status)+'</div>';}).join('')||empty('No teaching packets.'))+
+    '</details>';
+}
+async function renderTeachingPage(){
+  const out = await api('/app/teaching-lab');
+  honesty(out);
+  const pairs = (out.pairs||[]).map(function(p){ return '<li>'+esc(p.label|| (p.from+'→'+p.to))+'</li>'; }).join('');
+  const packets = (out.packets||[]).map(function(p){ return '<div class="knowledge-card"><b>'+esc(p.id)+'</b><div class="muted">'+esc(p.from)+' → '+esc(p.to)+' · '+esc(friendlyStatus(p.status))+'</div></div>'; }).join('');
+  el('page').innerHTML = card('Teaching', '<p class="muted">Company-scoped, approval-aware peer teaching. TPK-001 remains untouched.</p><h3>Pairs</h3><ul>'+pairs+'</ul><h3>Packets</h3>'+packets);
+}
+async function renderBrainPage(){
+  const q = hashQuery();
+  const emp = q.get('employeeId') || '';
+  if(!emp){ el('page').innerHTML = card('Brain', '<p class="muted">Open from an employee detail, or pass employeeId.</p><p><a href="#/employees">Employees</a></p>'); return; }
+  location.hash = '#/employees/'+encodeURIComponent(emp)+'/brain';
+}
+
+function spriteSvg(emp){
+  const c = emp.accent || colorFor(emp.roleId||emp.id);
+  const skin = '#e6c8a8';
+  return '<svg class="pixel" viewBox="0 0 16 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="5" y="1" width="6" height="6" fill="'+c+'" opacity="0.35"/><rect x="6" y="2" width="4" height="4" fill="'+skin+'"/><rect x="4" y="7" width="8" height="9" fill="'+c+'"/><rect x="2" y="8" width="2" height="6" fill="'+c+'"/><rect x="12" y="8" width="2" height="6" fill="'+c+'"/><rect x="4" y="16" width="3" height="7" fill="#1c2330"/><rect x="9" y="16" width="3" height="7" fill="#1c2330"/></svg>';
+}
+function roomProps(deptId){
+  const icons = {
+    research:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="8" y="20" width="40" height="28" rx="2" fill="#6ea8d8" opacity="0.25"/><rect x="56" y="16" width="50" height="40" rx="2" fill="#fff" opacity="0.08"/><rect x="62" y="24" width="38" height="4" fill="#fff" opacity="0.2"/></svg>',
+    marketing:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="12" y="12" width="96" height="52" rx="3" fill="#d48bb0" opacity="0.18"/><rect x="20" y="20" width="24" height="16" fill="#fff" opacity="0.12"/><rect x="50" y="20" width="48" height="8" fill="#fff" opacity="0.16"/></svg>',
+    product:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="16" y="18" width="88" height="48" rx="4" fill="#7ec8b0" opacity="0.2"/><rect x="24" y="28" width="20" height="28" fill="#fff" opacity="0.1"/><rect x="50" y="28" width="20" height="20" fill="#fff" opacity="0.1"/><rect x="76" y="28" width="20" height="24" fill="#fff" opacity="0.1"/></svg>',
+    finance:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="18" y="22" width="84" height="40" rx="2" fill="#d7ae55" opacity="0.16"/><rect x="28" y="46" width="10" height="10" fill="#d7ae55" opacity="0.4"/><rect x="44" y="36" width="10" height="20" fill="#d7ae55" opacity="0.4"/><rect x="60" y="30" width="10" height="26" fill="#d7ae55" opacity="0.4"/></svg>',
+    operations:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="14" y="16" width="92" height="50" rx="2" fill="#8fb573" opacity="0.16"/><rect x="22" y="24" width="76" height="8" fill="#fff" opacity="0.1"/><rect x="22" y="38" width="76" height="8" fill="#fff" opacity="0.1"/><rect x="22" y="52" width="48" height="8" fill="#fff" opacity="0.1"/></svg>',
+    executive:'<svg viewBox="0 0 120 80" width="100%" height="100%"><ellipse cx="60" cy="48" rx="40" ry="16" fill="#d7ae55" opacity="0.18"/><rect x="30" y="28" width="60" height="10" rx="2" fill="#d7ae55" opacity="0.3"/></svg>',
+    management:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="20" y="20" width="80" height="44" rx="6" fill="#8aa0c8" opacity="0.18"/><circle cx="40" cy="42" r="8" fill="#fff" opacity="0.12"/><circle cx="60" cy="42" r="8" fill="#fff" opacity="0.12"/><circle cx="80" cy="42" r="8" fill="#fff" opacity="0.12"/></svg>',
+    oversight:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="24" y="16" width="72" height="48" rx="4" fill="#c47a6a" opacity="0.18"/><circle cx="60" cy="40" r="12" fill="none" stroke="#c47a6a" stroke-width="3" opacity="0.5"/></svg>',
+    strategy:'<svg viewBox="0 0 120 80" width="100%" height="100%"><polygon points="20,60 60,16 100,60" fill="#c4a06a" opacity="0.18"/><rect x="40" y="40" width="40" height="8" fill="#fff" opacity="0.12"/></svg>',
+    sales:'<svg viewBox="0 0 120 80" width="100%" height="100%"><rect x="16" y="24" width="88" height="36" rx="2" fill="#6fbf8a" opacity="0.16"/><path d="M24 48 L48 32 L72 40 L96 24" fill="none" stroke="#6fbf8a" stroke-width="3" opacity="0.5"/></svg>'
+  };
+  return icons[deptId] || icons.operations;
+}
+
+async function renderHeadquarters(){
+  const ws = hashQuery().get('workspace') || currentWs();
+  if(!ws){
+    el('page').innerHTML = card('Headquarters', '<p>Select a company to enter its visual workplace.</p>');
+    return;
+  }
+  setWs(ws);
+  const out = await api('/app/headquarters?workspaceId='+encodeURIComponent(ws));
+  honesty(out);
+  HQ_STATE.data = out;
+  const theme = {
+    'ws-ridgeline':'#c47a4a','ws-own-001':'#4aa3a2','ws-own-002':'#b56b7a',
+    'ws-own-003':'#8b7355','ws-own-004':'#4a7eb5','ws-own-005':'#c4a04a'
+  }[ws] || '#d7ae55';
+  const rooms = (out.departments||[]).map(function(d){
+    const sprites = (d.employees||[]).filter(function(e){return e && e.id;}).map(function(e){
+      const sel = HQ_STATE.selected===e.id ? ' selected' : '';
+      return '<button type="button" class="sprite '+esc(e.state||'idle')+sel+'" data-emp="'+esc(e.id)+'" onclick="event.stopPropagation();inspectHqEmployee(\''+esc(e.id)+'\')">'+
+        spriteSvg(e)+'<span class="nm">'+esc(e.shortLabel||e.name)+'</span><span class="st" title="'+esc(e.state)+'"></span></button>';
+    }).join('');
+    return '<section class="room" style="--room-accent:'+(d.accent||theme)+'" tabindex="0" onclick="inspectHqDept(\''+esc(d.id)+'\')">'+
+      '<div class="room-props">'+roomProps(d.id)+'</div>'+
+      '<h3>'+esc(d.label)+'</h3><div class="sprites">'+sprites+'</div></section>';
+  }).join('') || empty('This company has no authorized employees yet.');
+  const hud = '<div class="hq-hud">'+
+    '<span class="hud-chip"><b>'+esc((out.company&&out.company.name)||companyName(ws))+'</b></span>'+
+    '<span class="hud-chip">'+esc((out.employees||[]).length)+' employees</span>'+
+    '<span class="hud-chip">Active/queued '+esc(out.activeWorkCount||0)+'/'+esc(out.queuedWorkCount||0)+'</span>'+
+    '<span class="hud-chip">Company approvals '+esc((out.pendingApprovals||[]).length)+'</span>'+
+    '<span class="hud-chip">Spend '+money(out.treasury&&out.treasury.actualSpendUsd)+'</span>'+
+    '<div class="hq-controls"><button type="button" onclick="hqZoom(-0.1)">−</button><button type="button" onclick="hqFit()">Fit</button><button type="button" onclick="hqZoom(0.1)">+</button><button type="button" onclick="clearHqSel()">Clear</button><button type="button" onclick="toggleMotion()">Reduce motion</button></div></div>';
+  setTopActions('<a href="#/companies/'+encodeURIComponent(ws)+'"><button type="button">Dashboard</button></a>');
+  el('page').classList.add('flush');
+  el('page').innerHTML =
+    '<div class="hq" id="hqRoot">'+
+      '<div class="hq-stage">'+hud+
+        '<div class="hq-floor-wrap"><div class="hq-floor" id="hqFloor" style="--hq-accent:'+theme+'"><svg class="hq-lines" id="hqLines" aria-hidden="true"></svg>'+rooms+'</div></div>'+
+        '<div class="hq-cmd card" style="margin-top:14px"><label>Company objective<textarea id="hq-cmd" rows="2" placeholder="What should this company work on?"></textarea></label>'+
+        '<button class="primary" type="button" onclick="submitHqCommand()">Plan for this company</button><p class="muted" id="hqCmdStatus">Deterministic planner unless you request a live command.</p></div>'+
+        '<p class="muted" style="font-size:12px">Only real employees and persisted work appear. Idle means no current stored task — not a fake live loop. Accessible list: <a href="#/employees?workspace='+encodeURIComponent(ws)+'">Team view</a>.</p>'+
+      '</div>'+
+      '<aside class="hq-inspect" id="hqInspect">'+hqDefaultInspect(out)+'</aside>'+
+    '</div>';
+  applyHqZoom();
+  requestAnimationFrame(drawHqHandoffs);
+}
+
+function hqDefaultInspect(out){
+  const act = (out.activity||[]).slice().reverse().slice(0,8).map(function(a){return '<div class="activity-item"><time>'+esc(when(a.at))+'</time>'+esc(a.text||a.kind)+'</div>';}).join('') || '<p class="muted">No persisted events yet.</p>';
+  const pend = (out.pendingApprovals||[]).map(function(p){return '<p><b>'+esc(p.kind||p.id)+'</b> waiting</p>';}).join('');
+  return '<p class="muted">Company HUD</p><h2>'+esc(out.company&&out.company.name)+'</h2><p>'+esc((out.company&&out.company.description||'').slice(0,220))+'</p>'+
+    (pend?('<div class="attention" style="padding:10px;margin:12px 0">'+pend+'</div>'):'')+
+    '<h3 class="nav-label">Activity</h3>'+act;
+}
+
+function inspectHqEmployee(id){
+  HQ_STATE.selected = id;
+  const out = HQ_STATE.data || {};
+  const e = (out.employees||[]).find(function(x){return x.id===id;});
+  if(!e) return;
+  const box = el('hqInspect');
+  if(!box) return;
+  document.querySelectorAll('.sprite').forEach(function(n){ n.classList.toggle('selected', n.getAttribute('data-emp')===id); });
+  const knows = (e.knowledge||[]).map(function(k){
+    const layer = k.applied ? 'Applied' : (k.retrieved ? 'Retrieved' : 'Stored');
+    return '<div class="knowledge-card"><b>'+esc((k.excerpt||'').slice(0,140))+'</b> '+claimPill(k.classification)+'<div class="muted">'+esc(layer)+' · '+esc(friendlyStatus(k.reviewStatus))+'</div></div>';
+  }).join('') || '<p class="muted">No assigned knowledge cards yet.</p>';
+  const outs = (e.recentOutputs||[]).map(function(d){ return '<li>'+esc(d.title)+' · '+esc(friendlyStatus(d.status))+'</li>'; }).join('') || '<li class="muted">No stored outputs.</li>';
+  const teach = (e.teaching||[]).map(function(p){ return '<li>'+esc(p.id)+' · '+esc(friendlyStatus(p.status))+'</li>'; }).join('');
+  box.innerHTML = '<p class="muted">'+esc(e.departmentLabel)+'</p><h2>'+esc(e.name)+'</h2>'+
+    '<p>'+esc(e.roleTitle)+' · '+esc(companyName(e.workspaceId))+' · '+esc(friendlyStatus(e.status))+'</p>'+
+    '<p><b>Current / recent task</b><br>'+esc((e.currentTask&&(e.currentTask.summary||e.currentTask.status))||'Idle — no stored active task')+'</p>'+
+    '<p class="muted">State: '+esc(e.state)+'. This is persisted work state, not a continuous model call.</p>'+
+    '<h3 class="nav-label">Knowledge</h3>'+knows+
+    '<h3 class="nav-label">Recent outputs</h3><ul>'+outs+'</ul>'+
+    (teach?'<h3 class="nav-label">Teaching</h3><ul>'+teach+'</ul>':'')+
+    '<p class="muted">Company spend '+money(out.treasury&&out.treasury.actualSpendUsd)+'</p>'+
+    '<div class="drawer-actions">'+
+      '<a href="#/employees/'+encodeURIComponent(e.id)+'/brain"><button class="primary" type="button">View Brain</button></a>'+
+      '<a href="#/work?workspace='+encodeURIComponent(e.workspaceId)+'"><button type="button">Assign Work</button></a>'+
+      '<a href="#/training?workspace='+encodeURIComponent(e.workspaceId)+'"><button type="button">Train Employee</button></a>'+
+      '<a href="#/activity?workspace='+encodeURIComponent(e.workspaceId)+'"><button type="button">View Activity</button></a>'+
+      '<a href="#/deliverables?workspace='+encodeURIComponent(e.workspaceId)+'"><button type="button">Open Deliverables</button></a>'+
+    '</div>'+
+    '<details class="details"><summary>Permissions and identifiers</summary><p>'+esc(e.id)+' · '+esc(e.roleId)+' · liveCapable='+esc(e.liveCapable)+'</p></details>';
+}
+function inspectHqDept(id){
+  HQ_STATE.selected = null;
+  document.querySelectorAll('.sprite.selected').forEach(function(n){n.classList.remove('selected');});
+  const out = HQ_STATE.data || {};
+  const d = (out.departments||[]).find(function(x){return x.id===id;});
+  if(!d) return;
+  const knows = (d.knowledge||[]).map(function(k){ return '<div class="knowledge-card"><b>'+esc((k.excerpt||'').slice(0,140))+'</b> '+claimPill(k.classification)+'</div>'; }).join('') || '<p class="muted">No department-scoped knowledge stored.</p>';
+  el('hqInspect').innerHTML = '<p class="muted">Department</p><h2>'+esc(d.label)+'</h2>'+
+    '<p>'+esc((d.employees||[]).length)+' employees in this company\'s '+esc(d.label)+' function.</p>'+
+    '<ul>'+(d.employees||[]).map(function(e){return '<li><button type="button" class="linkish" onclick="inspectHqEmployee(\''+esc(e.id)+'\')">'+esc(e.name)+'</button> · '+esc(e.state)+'</li>';}).join('')+'</ul>'+
+    ((d.work||[]).length?'<h3>Current work</h3><ul>'+d.work.map(function(w){return '<li>'+esc(w.summary||w.status||w.id)+'</li>';}).join('')+'</ul>':'<p class="muted">No stored active work for this room.</p>')+
+    ((d.blockers||[]).length?'<h3>Blockers</h3><ul>'+d.blockers.map(function(w){return '<li class="warn">'+esc(w.summary||w.id)+'</li>';}).join('')+'</ul>':'')+
+    '<h3 class="nav-label">Knowledge</h3>'+knows;
+}
+function clearHqSel(){ HQ_STATE.selected=null; document.querySelectorAll('.sprite.selected').forEach(function(n){n.classList.remove('selected');}); if(HQ_STATE.data) el('hqInspect').innerHTML = hqDefaultInspect(HQ_STATE.data); }
+function applyHqZoom(){
+  const floor = el('hqFloor');
+  if(!floor) return;
+  const z = HQ_STATE.zoom || 1;
+  floor.style.transform = 'scale('+z+')';
+}
+function hqFit(){ HQ_STATE.zoom = 1; applyHqZoom(); requestAnimationFrame(drawHqHandoffs); }
+function hqZoom(delta){
+  HQ_STATE.zoom = Math.min(1.45, Math.max(0.7, (HQ_STATE.zoom||1)+delta));
+  applyHqZoom();
+  requestAnimationFrame(drawHqHandoffs);
+}
+function drawHqHandoffs(){
+  const floor = el('hqFloor');
+  const svg = el('hqLines');
+  const out = HQ_STATE.data || {};
+  if(!floor || !svg) return;
+  const w = floor.offsetWidth;
+  const h = floor.offsetHeight;
+  svg.setAttribute('viewBox', '0 0 '+w+' '+h);
+  svg.setAttribute('width', String(w));
+  svg.setAttribute('height', String(h));
+  const origin = floor.getBoundingClientRect();
+  const seen = {};
+  const lines = (out.handoffs||[]).map(function(link){
+    const key = link.kind+'|'+link.fromEmployeeId+'|'+link.toEmployeeId;
+    if(seen[key]) return '';
+    seen[key] = 1;
+    const a = floor.querySelector('[data-emp="'+String(link.fromEmployeeId).replace(/"/g,'')+'"]');
+    const b = floor.querySelector('[data-emp="'+String(link.toEmployeeId).replace(/"/g,'')+'"]');
+    if(!a || !b) return '';
+    const ar = a.getBoundingClientRect();
+    const br = b.getBoundingClientRect();
+    const x1 = ar.left + ar.width/2 - origin.left;
+    const y1 = ar.top + ar.height/2 - origin.top;
+    const x2 = br.left + br.width/2 - origin.left;
+    const y2 = br.top + br.height/2 - origin.top;
+    const cls = link.kind==='teaching' ? 'teach' : 'flow';
+    return '<line class="'+cls+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" />';
+  }).join('');
+  svg.innerHTML = lines;
+}
+function toggleMotion(){
+  const on = document.documentElement.classList.toggle('reduced-motion');
+  localStorage.setItem(MOTION_KEY, on?'1':'0');
+}
+async function submitHqCommand(){
+  const text = el('hq-cmd') && el('hq-cmd').value;
+  if(!text){ showErr('Write a company objective first.'); return; }
+  el('hqCmdStatus').textContent = 'Planning…';
+  try{
+    const out = await api('/app/command/plan', { method:'POST', body: JSON.stringify({ ownerText: text, workspaceId: currentWs() }) });
+    el('hqCmdStatus').textContent = 'Saved '+(out.plan&&out.plan.id);
+    if(out.plan&&out.plan.id) location.hash = '#/command/'+encodeURIComponent(out.plan.id);
+  }catch(e){ el('hqCmdStatus').textContent = String(e.message||e); }
+}
+
+async function renderCommand(id){
+  if(id){
+    const out = await api('/app/command/'+encodeURIComponent(id));
+    honesty(out);
+    const p = out.plan || {};
+    const plan = p.plan || p;
+    const ov = plan.ownerVisible || {};
+    const tasks = ((plan.proposedTaskPlan)||[]).map(function(t){
+      return '<li><b>'+esc(t.label||t.key)+'</b> · '+esc(t.roleId||'owner')+(t.needsOwnerApproval?' · <span class="warn">needs owner</span>':'')+'</li>';
+    }).join('');
+    const last = p.lastRun || {};
+    const steps = (last.stepResults||[]).map(function(s){
+      return '<li><b>'+esc(s.key)+'</b> '+esc(s.decision)+' — '+esc(s.reason||'')+'</li>';
+    }).join('');
+    el('page').innerHTML = card('Plan',
+      '<p class="muted">'+esc(p.objectiveType||'')+' · '+esc(friendlyStatus(p.status))+' · deterministic $0 planner</p>'+
+      '<p><b>Understood</b> '+esc(ov.whatMidasUnderstands||'')+'</p>'+
+      '<h3>Plan</h3><ul>'+((ov.whatItPlans||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')||'<li class="muted">—</li>')+'</ul>'+
+      (tasks?('<h3>Task list</h3><ul>'+tasks+'</ul>'):'')+
+      '<h3>Employees</h3><ul>'+((ov.whichEmployees||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')||'')+'</ul>'+
+      '<h3>Uncertainty</h3><ul>'+((ov.remainingUncertainty||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')||'<li class="muted">None listed</li>')+'</ul>'+
+      '<p><button class="primary" type="button" onclick="approveCommand(\''+esc(p.id||id)+'\')">Approve plan</button> '+
+      '<button class="primary" type="button" onclick="runCommand(\''+esc(p.id||id)+'\')">Run permitted steps (dry-run)</button></p>'+
+      '<p class="muted" id="cmdRunStatus"></p>'+
+      (steps?card('Last run', '<ul>'+steps+'</ul>'):'')+
+      '<p><a href="#/command">Back</a></p>'
+    );
+    return;
+  }
+  const out = await api('/app/command');
+  honesty(out);
+  const recent = (out.recentPlans||[]).map(function(p){
+    return '<div class="emp"><div><b>'+esc(String(p.ownerText||p.id).slice(0,120))+'</b><div class="muted">'+esc(p.objectiveType)+'</div></div><a href="#/command/'+encodeURIComponent(p.id)+'">Open</a></div>';
+  }).join('') || empty('No plans yet.');
+  const examples = (out.examples||[]).map(function(ex){
+    return '<li><button type="button" class="linkish" onclick="el(\'cmd-text\').value='+JSON.stringify(ex)+'">'+esc(ex)+'</button></li>';
+  }).join('');
+  el('page').innerHTML = card('What do you want MIDAS to accomplish?',
+    '<p class="muted">'+esc(out.note||'')+'</p>'+
+    '<label>Objective<textarea id="cmd-text" rows="4" placeholder="Find three business opportunities I can start with $1,500."></textarea></label>'+
+    '<label>Workspace (optional)<input id="cmd-ws" value="'+esc(currentWs())+'"></label>'+
+    '<p><button class="primary entry" type="button" onclick="submitCommandPlan()">Plan (deterministic, $0)</button> '+'<button type="button" onclick="submitCommandPlanLive()">Plan with live model (validated)</button></p>'+
+    '<p class="muted" id="cmdStatus"></p>'+
+    '<h3>Examples</h3><ul>'+examples+'</ul>'
+  )+card('Recent plans', recent);
+}
+
+async function approveCommand(id){
+  el('cmdRunStatus') && (el('cmdRunStatus').textContent = 'Approving…');
+  try{
+    const out = await api('/app/command/'+encodeURIComponent(id)+'/approve',{method:'POST',body:JSON.stringify({actor:'local_owner'})});
+    honesty(out);
+    location.hash = '#/command/'+encodeURIComponent(id);
+    await render();
+  }catch(e){ if(el('cmdRunStatus')) el('cmdRunStatus').textContent = String(e.message||e); showErr(e); }
+}
+async function runCommand(id){
+  if(el('cmdRunStatus')) el('cmdRunStatus').textContent = 'Running dry-run under autonomy…';
+  try{
+    const out = await api('/app/command/'+encodeURIComponent(id)+'/run',{method:'POST',body:JSON.stringify({dryRun:true})});
+    honesty(out);
+    if(el('cmdRunStatus')) el('cmdRunStatus').textContent = 'executed='+esc(out.executedCount)+' paused='+esc(out.pausedCount);
+    location.hash = '#/command/'+encodeURIComponent(id);
+    await render();
+  }catch(e){ if(el('cmdRunStatus')) el('cmdRunStatus').textContent = String(e.message||e); showErr(e); }
+}
+async function submitCommandPlanLive(){
+  const text = el('cmd-text').value;
+  const ws = el('cmd-ws').value;
+  el('cmdStatus').textContent = 'Live planning (validated; falls back if needed)…';
+  try{
+    const body = { ownerText: text, preferLive: true };
+    if(ws) body.workspaceId = ws;
+    const out = await api('/app/command/plan-live', { method:'POST', body: JSON.stringify(body) });
+    honesty(out);
+    el('cmdStatus').textContent = 'Saved '+(out.plan&&out.plan.id)+' · live='+esc(out.usedLive);
+    if(out.plan&&out.plan.id) location.hash = '#/command/'+encodeURIComponent(out.plan.id);
+  }catch(e){ el('cmdStatus').textContent = String(e.message||e); }
+}
+async function submitCommandPlan(){
+  const text = el('cmd-text').value;
+  const ws = el('cmd-ws').value;
+  el('cmdStatus').textContent = 'Planning…';
+  try{
+    const body = { ownerText: text };
+    if(ws) body.workspaceId = ws;
+    const out = await api('/app/command/plan', { method:'POST', body: JSON.stringify(body) });
+    honesty(out);
+    el('cmdStatus').textContent = 'Saved '+(out.plan&&out.plan.id);
+    if(out.plan&&out.plan.id) location.hash = '#/command/'+encodeURIComponent(out.plan.id);
+  }catch(e){ el('cmdStatus').textContent = String(e.message||e); }
+}
+
+async function renderTreasury(){
+  const ws = currentWs();
+  const out = await api('/app/treasury'+(ws?('?workspaceId='+encodeURIComponent(ws)):''));
+  honesty(out);
+  const cats = Object.keys(out.buckets||{}).map(function(cat){
+    const rows = (out.buckets[cat]||[]).slice(0,8).map(function(r){
+      return '<li>'+money(r.usd)+' · '+esc(companyName(r.workspaceId)||r.workspaceId||'')+'</li>';
+    }).join('') || '<li class="muted">Empty</li>';
+    return '<div class="card"><h3>'+esc(cat)+'</h3><ul>'+rows+'</ul></div>';
+  }).join('');
+  el('page').innerHTML = card('Treasury',
+    '<div class="metrics"><div class="metric"><b>'+money(out.totals&&out.totals.actualSpendUsd)+'</b><span>Actual API / recorded spend</span></div>'+
+    '<div class="metric"><b>'+money(out.totals&&out.totals.actualRevenueUsd)+'</b><span>Actual recorded revenue</span></div>'+
+    '<div class="metric"><b>'+esc(out.totals&&out.totals.speculativeRevenueExcluded)+'</b><span>Speculative excluded</span></div></div>'+
+    '<p class="muted">Hypothetical forecasts and owner-reported figures stay in their own buckets. Empty is honest.</p>'+cats
+  );
+}
+
+async function renderArtifacts(){
+  const out = await api('/app/artifacts');
+  honesty(out);
+  const dels = (out.deliverables||[]).map(function(d){
+    const open = d.openPath ? '<a href="'+esc(d.openPath)+'" target="_blank" rel="noopener">Open</a>' : '';
+    return '<div class="result-card"><h3>'+esc(d.title||d.id)+'</h3><p class="muted">'+esc(companyName(d.workspaceId))+' · '+esc(friendlyStatus(d.status||d.type))+'</p>'+open+'</div>';
+  }).join('');
+  const files = (out.files||[]).map(function(f){
+    const open = f.openPath ? '<a href="'+esc(f.openPath)+'" target="_blank" rel="noopener">Open</a>' : '';
+    return '<div class="emp"><div><b>'+esc(f.name)+'</b> '+open+'<div class="muted">'+esc(companyName(f.workspaceId))+' · draft · not deployed</div></div></div>';
+  }).join('');
+  el('page').innerHTML =
+    card('Artifacts', '<p class="muted">Local only. Not deployed.</p>'+
+      (dels ? '<div class="result-grid">'+dels+'</div>' : empty('No deliverable records.'))+
+      (files ? '<h3>Workspace files</h3>'+files : empty('No files under var/artifacts/ for selected companies.')));
+}
+
+async function saveOpp(id){
+  try{ await api('/app/opportunities/'+encodeURIComponent(id)+'/save',{method:'POST',body:'{}'}); location.hash = '#/opportunities/'+encodeURIComponent(id); await render(); }
+  catch(e){ showErr(e); }
+}
+async function rejectOpp(id){
+  try{ await api('/app/opportunities/'+encodeURIComponent(id)+'/reject',{method:'POST',body:'{}'}); location.hash = '#/opportunities'; await render(); }
+  catch(e){ showErr(e); }
+}
+
+async function renderPortfolio(){
+  const out = await api('/app/portfolio');
+  honesty(out);
+  const rows = (out.companies||[]).map(function(c){
+    return '<div class="company-card"><h3>'+esc(c.name)+'</h3>'+
+      '<p>Objective: '+esc(c.objective||'unknown')+'</p>'+
+      '<p>Employees: '+esc((c.employees||[]).length)+' · Pending '+(c.pendingApprovals||[]).length+' · Spend '+money((c.spend&&c.spend.estimatedUsd)||0)+'</p>'+
+      '<p><a href="#/companies/'+encodeURIComponent(c.id)+'">Open company</a> · <a href="#/headquarters?workspace='+encodeURIComponent(c.id)+'">Headquarters</a></p></div>';
+  }).join('') || empty('No companies.');
+  el('page').innerHTML = card('Portfolio', '<p class="muted">Switch companies without leak. Isolation is application-level, not IAM.</p>')+'<div class="company-grid">'+rows+'</div>';
+}
+async function renderDeliverables(){
+  const workspace = hashQuery().get('workspace') || hashQuery().get('workspaceId') || currentWs() || '';
+  const path = workspace ? '/app/deliverables?workspaceId='+encodeURIComponent(workspace) : '/app/deliverables';
+  const out = await api(path);
+  honesty(out);
+  const rows = (out.deliverables||out.records||[]).map(function(d){
+    const draft = d.draft!==false || d.status==='draft';
+    const fpath = (d.artifact&&d.artifact.path)||d.path||'';
+    const preview = fpath ? ('<a href="/app/artifacts/file?path='+encodeURIComponent(fpath)+'" target="_blank">preview</a> · <a href="/app/artifacts/file?path='+encodeURIComponent(fpath)+'&download=1">download</a>') : '<span class="muted">no file</span>';
+    const published = String(d.status||'').toLowerCase()==='published';
+    return '<div class="result-card"><h3>'+esc(d.title||d.type||d.id)+'</h3>'+
+      '<p class="muted">'+esc(companyName(d.workspaceId))+' · '+esc(d.type||'artifact')+' · '+(published?'Published':(draft?'Draft':esc(friendlyStatus(d.status))))+'</p>'+
+      '<p>'+preview+'</p></div>';
+  }).join('') || empty('No deliverables in this workspace.');
+  el('page').innerHTML = card('Results', '<p>Inspectable drafts only. Not deployed unless a record is actually published.</p><div class="result-grid">'+rows+'</div>');
+}
+async function renderSearch(){
+  const out = await api('/app/search');
+  honesty(out);
+  const recs = (out.records||[]).map(function(r){
+    return '<div class="emp"><div><b>'+esc(r.query)+'</b><div class="muted">'+esc(r.provider)+' · '+(r.live?'live':'not live')+'</div></div></div>';
+  }).join('') || empty('No persisted search records. Search stays not-connected until a real official call succeeds.');
+  el('page').innerHTML = card('Search',
+    '<p>Status: <b>'+esc(out.status)+'</b></p>'+
+    '<p class="muted">'+esc(out.note||'')+'</p>'
+  )+card('Persisted queries', recs);
+}
+
+async function renderJobs(){
+  const workspace = hashQuery().get('workspace') || hashQuery().get('workspaceId') || currentWs() || 'ws-own-004';
+  const out = await api('/app/jobs?workspaceId='+encodeURIComponent(workspace));
+  honesty(out);
+  const jobs = (out.jobs||[]).map(function(j){
+    return '<div class="emp"><div><b>'+esc(j.id)+'</b> <span class="pill fact">'+esc(j.status)+'</span><div class="muted">Last heartbeat '+esc(j.lastHeartbeatAt||'none')+' · next '+esc(j.nextRunAt||'none')+'</div></div></div>';
+  }).join('') || empty('No scheduled jobs.');
+  el('page').innerHTML =
+    card('Scheduled jobs',
+      '<p class="muted">FILE_STORE foundations — NOT 24/7 infrastructure.</p>'+jobs+
+      '<p><button class="primary entry" type="button" onclick="runJobTick()">Run worker tick</button> <span class="muted" id="jobTickStatus"></span></p>'
+    );
+}
+async function runJobTick(){
+  showErr('');
+  try{
+    const out = await api('/app/jobs/tick',{method:'POST',body:JSON.stringify({jobId:'JOB-001',workspaceId:'ws-own-004',forceDue:false})});
+    if(el('jobTickStatus')){ el('jobTickStatus').className='ok'; el('jobTickStatus').textContent='outcome='+esc(out.outcome); }
+    await renderJobs();
+  }catch(e){ showErr(e); }
+}
+async function renderAutonomy(){
+  const workspace = hashQuery().get('workspace') || hashQuery().get('workspaceId') || currentWs() || '';
+  const path = workspace ? '/app/autonomy?workspaceId='+encodeURIComponent(workspace) : '/app/autonomy';
+  const out = await api(path);
+  honesty(out);
+  const companies = await api('/app/companies');
+  const wsOpts = ['<option value="">Select a company</option>'].concat((companies.companies||[]).map(function(c){
+    const id = c.id || c.workspaceId;
+    return '<option value="'+esc(id)+'"'+(id===workspace?' selected':'')+'>'+esc(c.name||id)+'</option>';
+  })).join('');
+  const active = out.active || null;
+  const rows = (out.policies||[]).map(function(p){
+    return '<div class="emp"><div><b>'+esc(p.id)+'</b> '+(p.active===false?'<span class="pill unknown">revoked</span>':'<span class="pill fact">active</span>')+'<div class="muted">'+esc(companyName(p.workspaceId))+' · budget '+money(p.budgetUsd)+'</div></div></div>';
+  }).join('') || empty('No owner-persisted internal autonomy policy yet.');
+  el('page').innerHTML =
+    card('Internal autonomy policy',
+      '<p class="muted">'+esc(out.note||'')+'</p>'+
+      '<label>Company workspace<select id="au-ws">'+wsOpts+'</select></label>'+
+      '<label>Authorized internal actions (comma)<input id="au-allow" value="'+(out.defaultAuthorized||[]).join(', ')+'"></label>'+
+      '<label>Forbidden actions (comma)<input id="au-forbid" value="'+(out.defaultForbidden||[]).join(', ')+'"></label>'+
+      '<label>Approved domains (comma)<input id="au-dom" placeholder="optional"></label>'+
+      '<label>Budget USD<input id="au-budget" value="0"></label>'+
+      '<label>Expiration ISO<input id="au-exp" placeholder="optional"></label>'+
+      '<p><button class="primary entry" type="button" onclick="submitAutonomy()">Save autonomy policy</button></p>'+
+      '<p class="muted" id="auStatus"></p>'+
+      (active?'<p class="ok">Active policy '+esc(active.id)+'</p>':'<p class="muted">No active policy in this workspace.</p>')
+    )+card('Persisted policies', rows);
+}
+async function submitAutonomy(){
+  showErr('');
+  try{
+    const ws = (el('au-ws')&&el('au-ws').value)||'';
+    if(!ws){ showErr('Pick a company workspace first.'); return; }
+    const split = function(s){return String(s||'').split(',').map(function(x){return x.trim();}).filter(Boolean);};
+    const out = await api('/app/autonomy',{method:'POST',body:JSON.stringify({
+      workspaceId: ws,
+      actor: 'owner',
+      authorized: true,
+      confirm: 'Save autonomy policy',
+      authorizedActions: split(el('au-allow').value),
+      forbiddenActions: split(el('au-forbid').value),
+      approvedDomains: split(el('au-dom').value),
+      budgetUsd: el('au-budget').value,
+      expiration: el('au-exp').value || null
+    })});
+    el('auStatus').className='ok';
+    el('auStatus').textContent = 'Saved '+out.policy.id+' by '+out.authorizedBy;
+    location.hash = '#/autonomy?workspace='+encodeURIComponent(ws);
+    await render();
+  }catch(e){
+    el('auStatus').className='fail';
+    el('auStatus').textContent = e.message||String(e);
+    showErr(e);
+  }
+}
+
+async function render(){
+  showErr('');
+  closeSidebar();
+  applyMotionPref();
+  if(!el('page') || !el('rail')){
+    el('workspace').innerHTML = '<div class="page" id="page"></div><aside class="rail" id="rail" hidden></aside>';
+  }
+  const r = route();
+  if(!COMPANIES.length) await refreshCompanies();
+  const pending = await loadPending();
+  setNav(r.page, pending);
+  setRail('');
+  setTopActions('');
+  el('page').classList.remove('flush');
+  try{
+    if(r.page==='overview') await renderOverview();
+    else if(r.page==='headquarters' || r.page==='hq') await renderHeadquarters();
+    else if(r.page==='command') await renderCommand(r.id);
+    else if(r.page==='launch-readiness') await renderLaunchReadiness();
+    else if(r.page==='settings' || r.page==='diagnostics') await renderSettings();
+    else if(r.page==='research') await renderResearchPage();
+    else if(r.page==='teaching') await renderTeachingPage();
+    else if(r.page==='brain') await renderBrainPage();
+    else if(r.page==='companies') await renderCompanies(r.id);
+    else if(r.page==='employees') await renderEmployees(r.id, r.extra);
+    else if(r.page==='training') await renderTraining();
+    else if(r.page==='knowledge') await renderKnowledge();
+    else if(r.page==='approvals') await renderApprovals();
+    else if(r.page==='objectives') await renderObjectives();
+    else if(r.page==='activity') await renderActivity();
+    else if(r.page==='jobs') await renderJobs();
+    else if(r.page==='spending') await renderSpending();
+    else if(r.page==='treasury') await renderTreasury();
+    else if(r.page==='artifacts') await renderArtifacts();
+    else if(r.page==='opportunities') await renderOpportunities(r.id, r.extra);
+    else if(r.page==='teams') await renderTeams(r.id);
+    else if(r.page==='work') await renderWork(r.id);
+    else if(r.page==='autonomy') await renderAutonomy();
+    else if(r.page==='workflow-proof') await renderWorkflowProof();
+    else if(r.page==='portfolio') await renderPortfolio();
+    else if(r.page==='deliverables') await renderDeliverables();
+    else if(r.page==='search') await renderSearch();
+    else await renderOverview();
+  }catch(e){ showErr(e); const p=el('page'); if(p) p.innerHTML = '<div class="card fail">'+esc(e.message||e)+'<pre>'+esc(e.stack||'')+'</pre></div>'; }
+}
+
+window.submitTraining = submitTraining;
+window.submitCheckLesson = submitCheckLesson;
+window.submitAssign = submitAssign;
+window.submitIntake = submitIntake;
+window.submitOverviewOpp = submitOverviewOpp;
+window.submitCommandPlan = submitCommandPlan;
+window.submitCommandPlanLive = submitCommandPlanLive;
+window.approveCommand = approveCommand;
+window.runCommand = runCommand;
+window.submitOppGenerate = submitOppGenerate;
+window.goCompare = goCompare;
+window.createCompanyFromOpp = createCompanyFromOpp;
+window.saveOpp = saveOpp;
+window.rejectOpp = rejectOpp;
+window.submitTeamPropose = submitTeamPropose;
+window.submitTeamCreate = submitTeamCreate;
+window.submitWork = submitWork;
+window.submitAutonomy = submitAutonomy;
+window.submitHomeCommand = submitHomeCommand;
+window.onCompanyChange = onCompanyChange;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+window.inspectHqEmployee = inspectHqEmployee;
+window.inspectHqDept = inspectHqDept;
+window.clearHqSel = clearHqSel;
+window.hqFit = hqFit;
+window.hqZoom = hqZoom;
+window.toggleMotion = toggleMotion;
+window.submitHqCommand = submitHqCommand;
+window.addEventListener('hashchange', render);
+window.addEventListener('keydown', function(ev){
+  if(ev.key==='/' && ev.target && ev.target.tagName!=='INPUT' && ev.target.tagName!=='TEXTAREA'){
+    ev.preventDefault();
+    location.hash = '#/command';
+  }
+});
+if(!location.hash) location.hash = '#/overview';
+render();
+</script>
+</body>
+</html>

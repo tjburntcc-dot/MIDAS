@@ -1,0 +1,23 @@
+:root {
+  color: #e8e6e1;
+  background: #11130f;
+  font-family: Georgia, "Times New Roman", serif;
+}
+body { margin: 0; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+h1, h2, h3 { font-weight: 600; }
+button, input, textarea {
+  font: inherit;
+  background: #1c1f18;
+  color: inherit;
+  border: 1px solid #4a4f43;
+  padding: 8px 12px;
+}
+button { cursor: pointer; }
+.banner { border: 1px solid #8a6a2f; padding: 10px 12px; margin: 12px 0; }
+.grid { display: grid; gap: 12px; }
+.card { border: 1px solid #33382d; padding: 12px; }
+.fail { color: #e07a5f; }
+.muted { color: #a7aa9d; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #2b2f26; text-align: left; padding: 6px; vertical-align: top; }

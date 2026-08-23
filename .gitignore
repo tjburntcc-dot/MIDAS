@@ -1,0 +1,38 @@
+# ── credentials: never commit ────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*secret*
+*credential*
+
+# ── private FILE_STORE state: stays on the local machine ─────────────────────
+# Companies, employees, approvals, training, knowledge, spend ledger.
+# Move this between machines with the state export archive, never through git.
+var/
+
+# ── local UI backups and archives ────────────────────────────────────────────
+.midas-ui-backups/
+*.zip
+*.tar.gz
+
+# ── dependencies and build output ────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# ── logs and scratch ─────────────────────────────────────────────────────────
+*.log
+tools/_scratch/
+tools/_s/
+tools/_diag*.mjs
+
+# ── editor / OS noise ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

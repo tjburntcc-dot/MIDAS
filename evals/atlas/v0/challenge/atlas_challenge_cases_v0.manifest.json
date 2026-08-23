@@ -1,0 +1,92 @@
+{
+  "suiteId": "atlas-challenge-v0",
+  "suiteVersion": "atlas-prospect-qualification-challenge-v0",
+  "path": "evals/atlas/v0/challenge/atlas_challenge_cases_v0.jsonl",
+  "sha256": "1e96764dd2f4418b20fdc93a32cb7f26e0fc52059f269385f8be71e69695710d",
+  "parentSuite": null,
+  "visibility": "development",
+  "synthetic": true,
+  "sealed": false,
+  "provenance": "Independently authored synthetic development challenge suite. Not copied from sealed holdout. Not real customers.",
+  "changeReason": "Mission 03: cases whose correct decision depends on named owner-authored policy retrieved at runtime, not pasted into the task. P5 current_first_party_hiring_signal exposed as null so gold is runtime-visible.",
+  "frozenAt": "2026-08-21T04:01:58.815037+00:00",
+  "policiesFrozenAfter": true,
+  "caseCount": 7,
+  "caseMeta": {
+    "ATLAS-DEV-101": {
+      "relevant_policy": "Atlas Owner Policy: Qualification Thresholds",
+      "supporting_principle": "US-only, minimum eight employees, minimum 2500 USD verified monthly spend.",
+      "safely_answerable_without_policy": false,
+      "oracle_item_ids": [
+        "K-OWN-001-01",
+        "K-OWN-001-02",
+        "K-OWN-001-03"
+      ]
+    },
+    "ATLAS-DEV-102": {
+      "relevant_policy": "Atlas Owner Policy: Buyer Authority",
+      "supporting_principle": "Owner or written delegation required; title is not authority.",
+      "safely_answerable_without_policy": false,
+      "oracle_item_ids": [
+        "K-OWN-002-01",
+        "K-OWN-002-02",
+        "K-OWN-002-03"
+      ]
+    },
+    "ATLAS-DEV-103": {
+      "relevant_policy": "Atlas Owner Policy: Signal Freshness",
+      "supporting_principle": "First-party signals older than 45 days are stale; a current freeze overrides older third-party listings.",
+      "safely_answerable_without_policy": false,
+      "oracle_item_ids": [
+        "K-OWN-003-01",
+        "K-OWN-003-02",
+        "K-OWN-003-03"
+      ]
+    },
+    "ATLAS-DEV-104": {
+      "relevant_policy": "Atlas Owner Policy: Territory",
+      "supporting_principle": "Southeast/Midwest/Northeast/Southwest served; Pacific Northwest reserved; international excluded.",
+      "safely_answerable_without_policy": false,
+      "oracle_item_ids": [
+        "K-OWN-004-01",
+        "K-OWN-004-02",
+        "K-OWN-004-03"
+      ]
+    },
+    "ATLAS-DEV-105": {
+      "relevant_policy": "Atlas Owner Policy: Protected Accounts",
+      "supporting_principle": "Existing customers and public-sector verticals are lockouts for new-logo motion.",
+      "safely_answerable_without_policy": false,
+      "oracle_item_ids": [
+        "K-OWN-005-01",
+        "K-OWN-005-02"
+      ]
+    },
+    "ATLAS-DEV-106": {
+      "relevant_policy": "Atlas Owner Policy: Unit Economics",
+      "supporting_principle": "Minimum four seats, payback no longer than nine months, capacity at least twelve.",
+      "safely_answerable_without_policy": false,
+      "oracle_item_ids": [
+        "K-OWN-006-01",
+        "K-OWN-006-02",
+        "K-OWN-006-03"
+      ]
+    },
+    "ATLAS-DEV-107": {
+      "relevant_policy": "Atlas Owner Policy: Buyer Authority",
+      "supporting_principle": "Opt-out is a hard stop from case constraints; remaining authority calls need the named owner policy.",
+      "safely_answerable_without_policy": false,
+      "oracle_item_ids": [
+        "K-OWN-002-01",
+        "K-OWN-002-03"
+      ],
+      "notes": "P4 opted_out is observable without policy and must still be excluded."
+    }
+  },
+  "audit": {
+    "ok": true,
+    "findings": [],
+    "caseCount": 7,
+    "auditedAt": "2026-08-21T04:06:46.048Z"
+  }
+}

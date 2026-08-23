@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>MIDAS Control Room</title>
+<style>
+body{font-family:Georgia,serif;background:#11130f;color:#e8e6e1;margin:0;padding:24px;max-width:1280px}
+.banner{border:1px solid #8a6a2f;padding:10px 12px;margin:8px 0}
+.card{border:1px solid #33382d;padding:12px;margin:12px 0}
+button{font:inherit;background:#1c1f18;color:inherit;border:1px solid #4a4f43;padding:8px 12px;cursor:pointer;margin:0 8px 8px 0}
+.muted{color:#a7aa9d} .fail{color:#e07a5f} .ok{color:#8fb573}
+table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid #2b2f26;text-align:left;padding:6px;vertical-align:top;font-size:14px}
+code{font-size:12px}
+h2{margin:0 0 8px}
+#pendingOwnerBanner{position:sticky;top:0;z-index:50;display:none;background:#3a1c14;border:2px solid #e07a5f;padding:14px 16px;margin:0 0 16px;box-shadow:0 4px 16px #000}
+#pendingOwnerBanner h2{color:#e07a5f;margin:0 0 6px}
+#pendingOwnerBanner button.reject-owner{background:#5a2218;border-color:#e07a5f;font-weight:700;padding:10px 16px}
+#authorizeEmployeeBanner{position:sticky;top:0;z-index:60;display:none;background:#1c2a14;border:2px solid #8fb573;padding:14px 16px;margin:0 0 16px;box-shadow:0 4px 16px #000}
+#authorizeEmployeeBanner h2{color:#8fb573;margin:0 0 6px}
+#authorizeEmployeeBanner button.authorize-owner{background:#24351a;border-color:#8fb573;font-weight:700;padding:10px 16px}
+</style>
+</head>
+<body>
+<p class="banner" id="productShellLink"><a href="/" style="color:#8fb573">MIDAS product</a> — this page is Diagnostics / Missions (Mission 01–18 technical controls). Not the owner home.</p>
+<div id="authorizeEmployeeBanner" role="alert">
+<h2>Pending local_owner authorization</h2>
+<p id="authorizeEmployeeBannerText">Offer Strategist EMP-001 is awaiting your authorization. This is not promotion, not outreach, and not IAM.</p>
+<p>
+<button type="button" class="authorize-owner" id="authorizeEmployeeBtn" onclick="authorizeOfferStrategistFromBanner()">Authorize Offer Strategist as local_owner</button>
+</p>
+<p class="muted" id="authorizeEmployeeBannerNote">Records actorType=local_owner. I will not click this for you.</p>
+</div>
+<div id="pendingOwnerBanner" role="alert">
+<h2>Pending local_owner approval</h2>
+<p id="pendingOwnerBannerText">A Conductor objective is waiting for your decision.</p>
+<p>
+<button type="button" class="reject-owner" id="pendingRejectBtn" onclick="rejectPendingAsLocalOwner()">Reject pending as local_owner</button>
+</p>
+<p class="muted" id="pendingOwnerBannerNote">This records actorType=local_owner. Not enterprise IAM. I will not click this for you.</p>
+</div>
+<div id="teachingApprovalBanner" role="alert" style="display:none;position:sticky;top:0;z-index:70;background:#2a2414;border:2px solid #d4a017;padding:14px 16px;margin:0 0 16px">
+<h2 style="color:#d4a017;margin:0 0 6px">EMPLOYEE LEARNING AND TEACHING — owner decision required</h2>
+<p id="teachingApprovalText">A teaching packet is awaiting local_owner approval.</p>
+<p>
+<button type="button" id="teachingApproveBtn" onclick="decideTeaching('approve')">Approve lesson as local_owner</button>
+<button type="button" class="reject-owner" id="teachingRejectBtn" onclick="decideTeaching('reject')">Reject lesson as local_owner</button>
+</p>
+<p class="muted" id="teachingApprovalNote">I will not click Approve or Reject. demo_operator is not local_owner. Not IAM.</p>
+</div>
+<h1>MIDAS Control Room</h1>
+<div class="banner" id="b1">Persistence: FILE_STORE (not PostgreSQL)</div>
+<div class="banner" id="b2">Responder: not_configured</div>
+<div class="banner" id="b3">Semantic evidence judge: not_implemented · attainableMax 92.5</div>
+<div class="banner" id="b4">Suite: development v0.1 default + challenge v0. Historical v0 loadable. Not a sealed-promotion claim.</div>
+<div class="banner" id="b5">Spend: disconnected (not live)</div>
+<div class="card" id="teachingCard">
+<h2>EMPLOYEE LEARNING AND TEACHING</h2>
+<p class="muted">Bounded owner-permitted public-domain research. Lexical/deterministic retrieval. Not embeddings. Not fine-tuning. Not RL. Not internet-wide search. FILE_STORE.</p>
+<div id="teachingBody">Refresh to load the teaching chain.</div>
+</div>
+<div class="card" id="founderBriefCard">
+<h2>FOUNDER OPPORTUNITY BRIEF</h2>
+<p class="muted">Supervised internal development. Deterministic assembly from approved RidgeLine knowledge plus preserved OSR-003. Not sealed. Not demand. Not outreach. FILE_STORE.</p>
+<div id="fobBody">Refresh to load the Founder Opportunity Brief.</div>
+</div>
+<div class="card" id="keysetup">
+<h2>API Key Setup</h2>
+<div id="keyform">
+<p class="muted">Paste your OpenAI API key. Saved only to the local gitignored .env. Never shown back.</p>
+<input id="openaiKey" type="password" autocomplete="off" spellcheck="false" placeholder="OpenAI API key" style="width:70%;padding:8px;font:inherit">
+<button type="button" onclick="connectKey()">Connect</button>
+<p id="keystatus" class="muted"></p>
+</div>
+<div id="keylocked" style="display:none">
+<p class="ok" id="keylockedline">OpenAI connected. Setup field locked.</p>
+<p class="muted" id="keylockeddetail"></p>
+</div>
+</div>
+<p>
+<button onclick="createAtlas()">Create Atlas</button>
+<button onclick="ingest()">Ingest curriculum pack</button>
+<button onclick="freezeV1()">Freeze Atlas v1</button>
+<button onclick="runExperiment()">Run experiment (3 arms, v9/v10 challenge)</button>
+<button onclick="runHistoricalExp()">Run v2/v3 on historical v0.1</button>
+<button onclick="verifyOneCase()">One-case verify</button>
+<button onclick="ingestOwner()">Ingest owner policy pack</button>
+<button onclick="calibrateJudge()">Calibrate judge</button>
+<button onclick="refresh()">Refresh</button>
+<button onclick="refreshStudio()">Refresh studio</button>
+<button onclick="runBoth()">Run v0 and v1 on same trial</button>
+<button onclick="decide('promote')">Promote</button>
+<button onclick="decide('reject')">Reject</button>
+</p>
+<p class="fail" id="err"></p>
+<p class="muted" id="status"></p>
+<div class="banner" id="wbanner">Fictional / test data. Not real prospects. No outreach. Not a sealed eval. Owner-review labels are stored separately and are never runtime input.</div>
+<div class="card" id="owner-setup">
+<h2>Owner workspace setup</h2>
+<p class="muted">Create or inspect a workspace from fields. This form is not a hardcoded product example. Description is a business description and does not become policy unless you add an explicit owner rule.</p>
+<p>
+<label>Name <input id="wsName" style="width:40%;padding:6px;font:inherit" placeholder="Workspace name"></label>
+</p>
+<p>
+<label>Description<br><textarea id="wsDesc" rows="3" style="width:90%;padding:6px;font:inherit" placeholder="Business description of the offer and customer"></textarea></label>
+</p>
+<p>
+<label>Industry <input id="wsIndustry" style="padding:6px;font:inherit" placeholder="industry"></label>
+<label>Type <input id="wsType" style="padding:6px;font:inherit" placeholder="b2b_saas"></label>
+<label>Geography <input id="wsGeo" style="padding:6px;font:inherit" placeholder="US"></label>
+</p>
+<p>
+<label>Offer name <input id="wsOfferName" style="padding:6px;font:inherit"></label>
+<label>Offer summary <input id="wsOfferSum" style="width:50%;padding:6px;font:inherit"></label>
+</p>
+<p>
+<label>Ideal customer <input id="wsIcp" style="width:60%;padding:6px;font:inherit"></label>
+</p>
+<p>
+<label>Goal<br><textarea id="wsGoal" rows="2" style="width:90%;padding:6px;font:inherit"></textarea></label>
+</p>
+<p>
+<label>Constraints (comma separated) <input id="wsConstraints" style="width:70%;padding:6px;font:inherit"></label>
+</p>
+<p>
+<button type="button" onclick="createWorkspaceFromForm()">Create workspace</button>
+<button type="button" onclick="loadWorkspaces()">Refresh workspaces</button>
+<select id="wsSelect" onchange="selectWorkspace(this.value)"><option value="">Select workspace…</option></select>
+</p>
+<p class="muted" id="wsSetupStatus"></p>
+<div id="wsInspect" class="muted">No workspace selected.</div>
+</div>
+<div class="card" id="owner-dash">
+<h2>Owner dashboard</h2>
+<p class="muted">Current workspace, objective, assigned Atlas agent, version, approved counts, latest training event, latest fictional run. Semantic judge is advisory. Isolation is application-level, not enterprise IAM.</p>
+<div id="dashBody">Select a workspace.</div>
+</div>
+<div class="card" id="scout">
+<h2>Scout research</h2>
+<p class="muted">Research from owner-provided URLs and permitted existing sources. No fake search. Scout proposes findings. Owner approves. Suggestions are not policy. Scout cannot self-approve.</p>
+<p>
+<label>Question<br><textarea id="scoutQ" rows="2" style="width:90%;padding:6px;font:inherit">What makes a US roofing contractor a stronger candidate for estimating software?</textarea></label>
+</p>
+<p>
+<label>Permitted URL <input id="scoutUrl" style="width:50%;padding:6px;font:inherit" placeholder="https://…"></label>
+<label>Max sources <input id="scoutMax" style="width:4em;padding:6px;font:inherit" value="2"></label>
+</p>
+<p>
+<label>Owner paste (fixture if no live URL)<br><textarea id="scoutPaste" rows="4" style="width:95%;padding:6px;font:inherit;font-family:monospace">US roofing contractors produce estimates from takeoffs of roof area, pitch, and materials.
+Estimating software is used to turn measurements into material lists and proposals.
+Contractors who still estimate by hand or with generic spreadsheets may be candidates for dedicated takeoff tools.
+This page does not state a conversion rate, average revenue, or win-rate statistic.</textarea></label>
+</p>
+<p>
+<button type="button" onclick="runScoutFromForm()">Submit research</button>
+<button type="button" onclick="trainScoutAtlas()">Freeze approved → new Atlas version</button>
+</p>
+<p class="muted" id="scoutStatus"></p>
+<div id="scoutFindings"></div>
+</div>
+<div class="card" id="teamChain">
+<h2>Team chain</h2>
+<p class="muted">Conductor is a real workflow manager (deterministic orchestration). Atlas qualifies. Scout researches. Watcher audits completed work. Application-enforced role permissions, not OS isolation. Watcher checks are deterministic/advisory, not an independent semantic evidence judge. No fake executive. Conductor cannot approve findings, create owner policy, promote, or bypass Watcher.</p>
+<div id="chainBody">Select a workspace.</div>
+<p><button type="button" onclick="runWatcherAudit()">Watcher audit latest run</button></p>
+<p class="muted" id="watcherStatus"></p>
+</div>
+<div class="card" id="conductorCard">
+<h2>Conductor objective</h2>
+<p class="muted">Owner-approved business objective. Research from owner-provided public URLs and permitted bounded source collection. Not internet-wide search. Submitting does not authorize outreach, real prospects, purchases, new owner policies, or promotion. Orchestration is deterministic. Scripted demo approvals are labeled demo_operator, never Mason. A local-owner session is a local click, not enterprise IAM.</p>
+<p>
+<label>Objective text<br><textarea id="condText" rows="2" style="width:90%;padding:6px;font:inherit">Research operational buying signals relevant to US roofing companies using these permitted public sources, then evaluate the fictional prospect scenario.</textarea></label>
+</p>
+<p>
+<label>Owner-provided public URL <input id="condUrl" style="width:70%;padding:6px;font:inherit" placeholder="https://…" value="https://www.bls.gov/ooh/construction-and-extraction/roofers.htm"></label>
+</p>
+<p>
+<label>Owner-provided paste (optional; never relabeled live public)<br><textarea id="condPaste" rows="3" style="width:95%;padding:6px;font:inherit;font-family:monospace"></textarea></label>
+</p>
+<p>
+<label>Max spend USD <input id="condSpend" style="width:5em;padding:6px;font:inherit" value="2"></label>
+<button type="button" onclick="submitConductorObjective()">Submit objective</button>
+<button type="button" onclick="tickConductor(true)">Run until blocked</button>
+<button type="button" onclick="approveConductorLocalOwner()">Approve as local_owner</button>
+<button type="button" onclick="rejectConductorLocalOwner()">Reject as local_owner</button>
+<button type="button" onclick="approveConductorDemo()">Approve as demo_operator (tests only)</button>
+<button type="button" onclick="pauseConductor()">Pause</button>
+<button type="button" onclick="resumeConductor()">Resume</button>
+<button type="button" onclick="exportWorkspaceLocal()">Export workspace (local_owner)</button>
+</p>
+<p class="muted">Live Mission 13 approvals stay at awaiting_owner_approval until you click as local_owner. demo_operator cannot stand in for that click. Local session is not enterprise IAM.</p>
+<p class="muted" id="condStatus"></p>
+<div id="condView">Select a workspace, then submit an objective.</div>
+</div>
+<div class="card" id="mission16Card">
+<h2>Mission 16 evaluator correction</h2>
+<p class="muted">The ruler was wrong before the employee was judged. Original Watcher and bakeoff scores stay visible. Correction is not hidden. FILE_STORE. Not promotion. $0 additional live API.</p>
+<div id="m16Body">Refresh to load Mission 16 review.</div>
+</div>
+<div class="card" id="mission15Card">
+<h2>Mission 15 Offer Strategist interview</h2>
+<p class="muted">First bounded development assignment for EMP-001. Live model via shared gateway. Not promotion. Not outreach. Not IAM. FILE_STORE.</p>
+<div id="m15Body">Refresh to load Mission 15 review.</div>
+</div>
+<div class="card" id="mission14Card">
+<h2>Mission 14 research review</h2>
+<p class="muted">Objective-aware Scout: brief, source fitness, passages, omissions, usefulness, shadow, effective vs provisional contributions, employee-creation availability. FILE_STORE. Not IAM. Not promotion.</p>
+<div id="m14Body">Refresh to load Mission 14 review.</div>
+</div>
+<div class="card" id="spendCard">
+<h2>Owner spend ledger</h2>
+<p class="muted">One usage boundary for probes, workbench, evals, Scout research, extraction, judging. Cost is estimated only when the provider sent tokens. Caps $25/run $100/day.</p>
+<div id="spendBody">Refresh to load spend.</div>
+</div>
+<div class="card" id="workbench">
+<h2>Fictional prospect workbench</h2>
+<p class="muted">Owner-entered fictional prospects only. Banner: fictional/test data. Atlas classifies, ranks only viable, flags missing facts, cites supplied evidence, and recommends a safe next action. No outreach. Not a sealed eval.</p>
+<p>
+<label>Offer override <input id="wbOffer" style="width:40%;padding:6px;font:inherit"></label>
+<label>Context <input id="wbCtx" style="width:40%;padding:6px;font:inherit"></label>
+</p>
+<p>
+<label>Prospects JSON<br><textarea id="wbProspects" rows="8" style="width:95%;padding:6px;font:inherit;font-family:monospace" placeholder='[{"id":"P1","company":"Example","facts":{"country":"US","monthly_budget_usd":3000},"evidence":[{"id":"E1","claim":"US contractor","source":"first_party","age_days":2}]}]'></textarea></label>
+</p>
+<p>
+<button type="button" onclick="runWorkbenchFromForm()">Run fictional workbench</button>
+</p>
+<p class="muted" id="wbStatus"></p>
+<div id="wbResult"></div>
+</div>
+<div class="card" id="atlas">No Atlas loaded.</div>
+<div class="card" id="sources"><h2>Curriculum sources</h2><p class="muted">Ingest the Phase 0 pack to persist title, original bytes, sha256, and capture status.</p></div>
+<div class="card" id="knowledge"><h2>Knowledge browser</h2><p class="muted">Extracted items Atlas can retrieve. Each row has source title, type, statement, locator text, and competency/type.</p></div>
+<div class="card" id="applicability"><h2>Applicability inspector</h2><p class="muted">Statement, required conditions, required evidence, effect, unknown behavior, exceptions, source support. Three-valued: satisfied / not_satisfied / unknown.</p></div>
+<div class="card" id="honesty"><h2>Score honesty</h2><p class="muted">Raw scores are frozen. Attainable max is 92.5 while the semantic judge is not_implemented.</p></div>
+<div class="card" id="experiment"><h2>Experiment (baseline / relevant / placebo)</h2><p class="muted">Run the three-arm experiment on the same trial.</p></div>
+<div class="card" id="run">No eval run loaded.</div>
+<div class="card" id="trace"><h2>Retrieval trace</h2><p class="muted">Per-case selected ids, reasons, rejected near-duplicates, tokens/budget.</p></div>
+<div class="card" id="compare"><h2>v0 vs v1 comparison</h2><p class="muted">Historical pair. Not the Mission 02 experiment.</p></div>
+<div class="card" id="studio">
+<h2>Knowledge Studio</h2>
+<p class="muted">Knowledge Studio is scoped to the selected workspace. Owner-provided URLs and bounded permitted public-source crawling. Records are FILE_STORE. Public pages propose facts. Only explicit owner authorization creates authoritative owner policy. Descriptions do not auto-become policy. Semantic judge is advisory. Fixture sources are labeled fixture. Train: select workspace → Atlas → review approved items → freeze a new immutable version. Creating a version is not promotion.</p>
+<p>
+<button type="button" onclick="studioOwnerRule()">Add owner-authored rule</button>
+<button type="button" onclick="studioPaste()">Paste text</button>
+<button type="button" onclick="studioUrl()">Submit public URL</button>
+<button type="button" onclick="studioTrain()">Freeze approved → new Atlas version</button>
+</p>
+<p class="muted" id="studiostatus"></p>
+<div id="studio-sources"><h3>1 Sources</h3><p class="muted">No studio sources yet.</p></div>
+<div id="studio-ownerrules"><h3>2 Owner rules</h3><p class="muted">No owner-authored rules yet.</p></div>
+<div id="studio-proposed"><h3>3 Proposed</h3><p class="muted">Public pages and pastes land here.</p></div>
+<div id="studio-approved"><h3>4 Approved</h3><p class="muted">Approved items only.</p></div>
+<div id="studio-rejected"><h3>5 Rejected</h3><p class="muted">Rejected items stay inspectable.</p></div>
+<div id="studio-history"><h3>6 Training / version history</h3><p class="muted">Frozen versions and snapshots.</p></div>
+<div id="studio-inspect"><h3>7 Source + claim inspection</h3><p class="muted">Pick an item to inspect excerpt, verified-at, and source.</p></div>
+</div>
+<div id="cases"></div>
+<script>
+let selected = null;
+let lastCompare = null;
+let lastExperiment = null;
+let currentWorkspaceId = null;
+async function api(path, init){
+  const res = await fetch(path, Object.assign({headers:{'content-type':'application/json'}}, init||{}));
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error||res.statusText);
+  return data;
+}
+function el(id){return document.getElementById(id)}
+function lockKey(model){ el('keyform').style.display='none'; el('keylocked').style.display='block'; el('keylockeddetail').textContent = model ? ('Model: '+model) : 'Live configuration saved.'; }
+function unlockKey(){ el('keyform').style.display='block'; el('keylocked').style.display='none'; }
+async function connectKey(){
+  const input=el('openaiKey'); const apiKey=input.value; input.value='';
+  el('keystatus').textContent='Connecting…'; el('keystatus').className='muted';
+  try{
+    const out=await api('/setup/openai-key',{method:'POST',body:JSON.stringify({apiKey})});
+    if(out.ok===true && out.live===true){
+      lockKey(out.model);
+      el('b2').textContent='Responder: live · model '+(out.model||'');
+      el('b5').textContent='Spend: live · cap $25/run, $100/day';
+      el('keystatus').className='ok';
+      el('keystatus').textContent='';
+    } else {
+      unlockKey();
+      el('keystatus').className='fail';
+      el('keystatus').textContent=out.error||'Connect failed.';
+      el('b2').textContent='Responder: disconnected (not live)';
+      el('b5').textContent='Spend: disconnected (not live)';
+    }
+  }catch(e){
+    unlockKey();
+    el('keystatus').className='fail';
+    el('keystatus').textContent=e.message||String(e);
+    el('b2').textContent='Responder: disconnected (not live)';
+    el('b5').textContent='Spend: disconnected (not live)';
+  }
+}
+function showErr(e){el('err').textContent = e ? String(e.message||e) : ''}
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]);})}
+function bannersFrom(health){
+  const provider = health.provider || {};
+  const live = provider.live===true || health.model==='live' || health.live===true;
+  el('b1').textContent = 'Persistence: '+(health.persistence||'FILE_STORE')+' (not PostgreSQL)';
+  el('b2').textContent = live
+    ? ('Responder: verified_live'+(provider.model||health.modelId?(' · model '+(provider.model||health.modelId)):''))
+    : ('Responder: '+(provider.status||'not_configured')+(provider.reVerificationRequired?' · re-verification required':''));
+  el('b3').textContent = 'Semantic evidence judge: '+(health.semanticJudge||'not_implemented')+' · attainableMax '+(health.attainableMax!=null?health.attainableMax:92.5)+(health.sameModelFamily?' · worker/judge share gpt-4.1 family':'');
+  el('b4').textContent = 'Suite: '+(health.suite||'development v0.1 + challenge v0')+'. FILE_STORE. Semantic judge advisory. Fixture vs live labeled. Not a sealed-promotion claim.';
+}
+function scoreLabel(total, status, blocked){
+  if (blocked || status==='inconclusive' || total==null || total==='') return 'inconclusive / blocked';
+  return Number(total).toFixed(1);
+}
+function normLabel(total, status, blocked){
+  if (blocked || status==='inconclusive' || total==null) return 'n/a';
+  return (Number(total)/92.5).toFixed(3)+' of attainable max (display only; frozen raw kept)';
+}
+async function createAtlas(){
+  showErr('');
+  try{ await api('/agents/atlas',{method:'POST',body:'{}'}); await refresh(); }
+  catch(e){ showErr(e); }
+}
+async function ingest(){
+  showErr('');
+  el('status').textContent = 'Ingesting Phase 0 curriculum (live fetch or LOCAL_REFERENCE)...';
+  try{ await api('/curriculum/ingest',{method:'POST',body:'{}'}); el('status').textContent = 'Curriculum ingested.'; await refresh(); }
+  catch(e){ showErr(e); el('status').textContent = ''; }
+}
+async function ingestOwner(){
+  showErr('');
+  el('status').textContent = 'Ingesting synthetic owner policy pack (new snapshot only)...';
+  try{ await api('/curriculum/ingest-owner',{method:'POST',body:'{}'}); el('status').textContent = 'Owner policy snapshot created. Earlier snapshots were not mutated.'; await refresh(); }
+  catch(e){ showErr(e); el('status').textContent = ''; }
+}
+async function calibrateJudge(){
+  showErr('');
+  el('status').textContent = 'Running evidence-judge calibration...';
+  try{
+    const out = await api('/eval/judge/calibrate',{method:'POST',body:'{}'});
+    const c = out.calibration||{};
+    el('status').textContent = 'Judge calibration kind='+(c.kind||'?')+' passed='+c.passed+' agreement='+c.agreement+' official='+out.officialActivation;
+    await refresh();
+  }catch(e){ showErr(e); el('status').textContent = ''; }
+}
+async function freezeV1(){
+  showErr('');
+  try{
+    await api('/agents/atlas/versions',{method:'POST',body:JSON.stringify({parentVersionId:'atlas-v0',declaredChange:'relevant frozen curriculum snapshot'})});
+    el('status').textContent = 'Atlas v1 frozen (immutable). v0 was not mutated. v2/v3 ensured if snapshot exists.';
+    await refresh();
+  }catch(e){ showErr(e); }
+}
+async function runBoth(){
+  showErr('');
+  el('status').textContent = 'Running atlas-v0 and atlas-v1 on trialIndex 0 with the same evaluator secret...';
+  try{
+    await api('/eval/runs',{method:'POST',body:JSON.stringify({versionId:'atlas-v0',trialIndex:0,arm:'baseline'})});
+    await api('/eval/runs',{method:'POST',body:JSON.stringify({versionId:'atlas-v1',trialIndex:0,arm:'relevant'})});
+    lastCompare = await api('/eval/compare/latest');
+    el('status').textContent = 'Both historical runs completed on the same trial. Not a Mission 02 experiment.';
+    await refresh();
+  }catch(e){ showErr(e); el('status').textContent = ''; }
+}
+async function runExperiment(){
+  showErr('');
+  el('status').textContent = 'Running baseline + relevant + placebo on the same trial (atlas-v9 / atlas-v10)...';
+  try{
+    lastExperiment = await api('/eval/experiment',{method:'POST',body:JSON.stringify({trialIndex:0,suite:'challenge',baselineVersionId:'atlas-v9',relevantVersionId:'atlas-v10'})});
+    el('status').textContent = 'Three-arm challenge experiment finished. Development scoring is not sealed-promotion proof.';
+    await refresh();
+  }catch(e){ showErr(e); el('status').textContent = ''; }
+}
+async function runHistoricalExp(){
+  showErr('');
+  el('status').textContent = 'Running v2/v3 on development v0.1...';
+  try{
+    lastExperiment = await api('/eval/experiment',{method:'POST',body:JSON.stringify({trialIndex:0,suite:'v0.1',baselineVersionId:'atlas-v2',relevantVersionId:'atlas-v3'})});
+    el('status').textContent = 'Historical-pair experiment finished.';
+    await refresh();
+  }catch(e){ showErr(e); el('status').textContent = ''; }
+}
+async function verifyOneCase(){
+  showErr('');
+  el('status').textContent = 'One-case verify: ATLAS-DEV-008 arm=relevant maxCases=1...';
+  try{
+    await api('/eval/runs',{method:'POST',body:JSON.stringify({versionId:'atlas-v3',trialIndex:0,maxCases:1,arm:'relevant',caseId:'ATLAS-DEV-008'})});
+    el('status').textContent = 'One-case verify completed for ATLAS-DEV-008 (relevant).';
+    await refresh();
+  }catch(e){ showErr(e); el('status').textContent = ''; }
+}
+async function decide(kind){
+  showErr('');
+  try{
+    const cmp = lastCompare && lastCompare.compare;
+    const runId = (cmp && cmp.v1RunId) || (selected && selected.run && selected.run.id);
+    if(!runId) throw new Error('Run a challenger first, then promote or reject. Versions remain immutable.');
+    await api('/eval/runs/'+runId+'/decision',{method:'POST',body:JSON.stringify({kind,rationale:'operator '+kind+' — versions remain immutable'})});
+    el('status').textContent = 'Decision recorded: '+kind+'. Frozen versions were not rewritten.';
+    await refresh();
+  }catch(e){ showErr(e); }
+}
+
+async function refreshFounderBrief(){
+  const box = el('fobBody');
+  if(!box) return;
+  try{
+    const out = await api('/founder-brief?workspaceId='+encodeURIComponent(currentWorkspaceId||'ws-ridgeline'));
+    const ev = out.evidence || [];
+    const miss = out.missingInformation || {};
+    const rec = out.recommendedNextAction || {};
+    const watch = out.watcher || {};
+    const spend = out.spend || {};
+    const live = out.liveVsDeterministic || {};
+    const emp = out.employeeStatus || {};
+    const assump = out.assumptions || [];
+    box.innerHTML =
+      '<p><b>Workspace</b> '+esc(out.workspaceId)+' · <b>Objective</b> '+esc(out.objectiveId||'—')+'</p>'+
+      '<p><b>Objective text</b> '+esc(out.objectiveText||'—')+'</p>'+
+      '<p><b>Assigned employees</b> '+(out.assignedEmployees||[]).map(function(e){return esc(e.id)+' '+esc(e.status)+' '+esc(e.versionId);}).join(' · ')+'</p>'+
+      '<p><b>Status</b> '+esc(out.status||'—')+' · owner approval required '+esc(out.ownerApprovalRequired)+'</p>'+
+      '<p><b>Offer hypothesis</b> '+esc(out.offerHypothesis||'—')+'</p>'+
+      '<p><b>Target customer</b> '+esc(out.targetCustomer||'—')+'</p>'+
+      '<p><b>Customer problem</b> '+esc(out.customerProblem||'—')+'</p>'+
+      '<p><b>Evidence</b></p><ul>'+(ev.length?ev.map(function(e){return '<li>'+esc(e.knowledgeId)+' ['+esc(e.sourceOrigin)+' / '+esc(e.approvalStatus)+' / '+esc(e.statedVsInferred)+'] — '+esc((e.excerpt||'').slice(0,220))+'</li>';}).join(''):'<li class="muted">none</li>')+'</ul>'+
+      '<p><b>Assumptions</b></p><ul>'+(assump.length?assump.map(function(a){return '<li>'+esc(a.text)+' <span class="muted">('+esc(a.claimClass)+')</span></li>';}).join(''):'<li class="muted">none</li>')+'</ul>'+
+      '<p><b>Missing information</b></p><ul>'+Object.keys(miss).map(function(k){const m=miss[k]||{}; return '<li>'+esc(k)+' — '+esc(m.status)+' · '+esc(m.note||'')+'</li>';}).join('')+'</ul>'+
+      '<p><b>Recommended next action</b> '+esc(rec.text||'—')+' · executed='+esc(rec.executed)+' · outreach='+esc(rec.outreach)+'</p>'+
+      '<p><b>Watcher</b> '+esc(watch.id||'none')+' <b>'+esc(watch.status||'')+'</b> evaluator '+esc(watch.evaluatorRevisionId)+' · originalPreserved='+esc(watch.originalPreserved)+'</p>'+
+      '<p><b>Employee</b> '+esc(emp.id)+' '+esc(emp.status)+' · promoted '+esc(emp.promoted)+' · autonomous '+esc(emp.autonomous)+'</p>'+
+      '<p><b>Live vs deterministic</b> OSR-003='+esc(live.osr003)+' · assembly='+esc(live.briefAssembly)+' · fresh live='+esc(live.freshLiveSpecialistTask)+' · fixtureFallback='+esc(live.fixtureFallback)+'</p>'+
+      '<p><b>Spend</b> this assembly $'+esc(spend.thisAssemblyUsd)+' · historical specialist live $'+esc(spend.specialistHistoricalLiveUsd)+' · additional live $'+esc(spend.additionalLiveApiUsd)+'</p>'+
+      '<p class="muted">'+(out.disclosure&&out.disclosure.note?esc(out.disclosure.note):'Supervised internal development. Not sealed. Not demand.')+'</p>';
+  }catch(e){ box.textContent = e.message||String(e); }
+}
+
+async function refresh(){
+  showErr('');
+  try{
+    const health = await api('/health');
+    bannersFrom(health);
+    const ks = await api('/setup/openai-status');
+    if(ks.live===true){
+      lockKey(ks.modelName);
+      el('b2').textContent='Responder: verified_live'+(ks.modelName?(' · model '+ks.modelName):'');
+      el('b5').textContent='Spend: live · cap $25/run, $100/day';
+      try {
+        const spend = await api('/spend');
+        const usd = spend && spend.today && spend.today.usd;
+        if (usd != null) el('b5').textContent += ' · today $' + Number(usd).toFixed(4);
+      } catch (e) { /* ignore spend fetch failures */ }
+    } else {
+      if(ks.status==='not_configured') unlockKey();
+      else { try { lockKey(ks.modelName); } catch(e) { unlockKey(); } }
+      el('b2').textContent='Responder: '+(ks.status||'not_configured')+(ks.reVerificationRequired?' · re-verification required':'');
+      el('b5').textContent= ks.configured ? 'Spend: configured, not yet verified this process' : 'Spend: not configured';
+      if(ks.lastError){ el('keystatus').className='muted'; el('keystatus').textContent=String(ks.lastError).slice(0,160); }
+    }
+    let atlas;
+    try { atlas = await api('/agents/atlas'); } catch { atlas = null; }
+    if(atlas&&atlas.agent){
+      const rows = (atlas.versions||[]).map(function(v){
+        return '<tr><td>'+esc(v.id)+'</td><td>'+esc(v.parentVersionId||'—')+'</td><td><code>'+esc((v.contentHash||'').slice(0,12))+'</code></td><td>'+esc(v.curriculumSnapshotId||'null')+'</td><td>'+esc(v.retrievalPolicy&&v.retrievalPolicy.version?v.retrievalPolicy.version:(v.retrievalPolicy&&v.retrievalPolicy.enabled?'on':'off'))+'</td><td>'+esc(v.declaredChange||'')+'</td></tr>';
+      }).join('');
+      el('atlas').innerHTML = '<h2>Atlas versions</h2><p>'+esc(atlas.agent.name)+' ('+esc(atlas.agent.id)+')</p><table><thead><tr><th>id</th><th>parent</th><th>contentHash</th><th>curriculum</th><th>retrieval</th><th>declared change</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    } else {
+      el('atlas').innerHTML = '<h2>Atlas</h2><p class="muted">Not created yet.</p>';
+    }
+    let sources;
+    try { sources = await api('/curriculum/sources'); } catch { sources = {sources:[]}; }
+    const srcRows = (sources.sources||[]).map(function(s){
+      return '<tr><td>'+esc(s.id)+'</td><td>'+esc(s.title)+'</td><td>'+esc(s.publisher)+'</td><td><code>'+esc((s.sha256||'').slice(0,12))+'</code></td><td>'+esc(s.byteLength)+'</td><td>'+esc(s.captureStatus)+'</td></tr>';
+    }).join('');
+    el('sources').innerHTML = '<h2>Curriculum sources</h2>'+(srcRows
+      ? '<table><thead><tr><th>id</th><th>title</th><th>publisher</th><th>sha256</th><th>bytes</th><th>capture</th></tr></thead><tbody>'+srcRows+'</tbody></table>'
+      : '<p class="muted">No sources yet. Use Ingest curriculum pack.</p>');
+    let know;
+    try { know = await api('/knowledge'); } catch { know = {items:[]}; }
+    const kRows = (know.items||[]).map(function(k){
+      return '<tr><td>'+esc(k.id)+'</td><td>'+esc(k.type)+'</td><td>'+esc(k.sourceTitle||k.sourceId)+'</td><td>'+esc(k.locatorText|| (k.locator&&k.locator.text) || '')+'</td><td>'+esc(k.competency||k.claimKind||'')+'</td><td>'+esc(k.statement)+'</td></tr>';
+    }).join('');
+    el('knowledge').innerHTML = '<h2>Knowledge browser — source title, type, statement, locator, competency</h2>'+(kRows
+      ? '<table><thead><tr><th>id</th><th>type</th><th>source title</th><th>locator text</th><th>competency/type</th><th>statement</th></tr></thead><tbody>'+kRows+'</tbody></table>'
+      : '<p class="muted">Empty until curriculum extraction.</p>');
+    const appRows = (know.items||[]).filter(function(k){return k.applicability || k.requiredConditions || k.ownerVisibleReason;}).map(function(k){
+      const conds = (k.requiredConditions||[]).map(function(c){return (c.id||'')+': '+(c.description||c.field||'');}).join('; ') || '—';
+      const ex = (k.exceptions||[]).map(function(e){return e.id+': '+(e.description||'');}).join('; ') || '—';
+      return '<tr><td>'+esc(k.id)+'</td><td>'+esc(k.statement||'')+'</td><td>'+esc(conds)+'</td><td>'+esc(k.effect||'')+'</td><td>'+esc(k.unknownBehavior||'')+'</td><td>'+esc(ex)+'</td><td>'+esc((k.sourceSpan&&k.sourceSpan.text)|| (k.locator&&k.locator.text) || '')+'</td><td>'+esc(k.ownerVisibleReason||'')+'</td></tr>';
+    }).join('');
+    el('applicability').innerHTML = '<h2>Applicability inspector</h2><p class="muted">Diagnostic. Not gold. Hard exclude only when required conditions are supported. Unknown mandatory condition => research_first.</p>'+(appRows
+      ? '<table><thead><tr><th>id</th><th>statement</th><th>conditions</th><th>effect</th><th>unknown</th><th>exceptions</th><th>source support</th><th>owner reason</th></tr></thead><tbody>'+appRows+'</tbody></table>'
+      : '<p class="muted">No compiled applicability contracts yet. Ingest owner policy pack.</p>');
+    const runs = await api('/eval/runs');
+    const list = (runs.runs||[]);
+    if(list.length){
+      const latest = list[list.length-1];
+      selected = await api('/eval/runs/'+latest.id);
+    }
+    try { lastCompare = await api('/eval/compare/latest'); } catch { /* none yet */ }
+    try { lastExperiment = await api('/eval/experiment/latest-completed'); } catch {
+      try { lastExperiment = await api('/eval/experiment/latest'); } catch { /* none yet */ }
+    }
+    render();
+    try { await loadWorkspaces(); } catch(e) { /* owner views optional */ }
+    try { await refreshFounderBrief(); } catch(e) { /* founder brief optional */ }
+    try { await refreshPendingOwnerBanner(); } catch(e) { /* banner optional */ }
+    try { await refreshAuthorizeEmployeeBanner(); } catch(e) { /* banner optional */ }
+  }catch(e){ showErr(e); }
+}
+function renderHonesty(){
+  const r = selected && selected.run;
+  const results = (selected && selected.results) || [];
+  const dimRows = results.map(function(c){
+    const d = c.dimensions||{};
+    const raw = scoreLabel(c.weightedTotal, c.scoreStatus, c.blocked);
+    return '<tr><td>'+esc(c.caseId)+'</td><td>'+esc(raw)+'</td><td>'+esc(c.attainableMax!=null?c.attainableMax:92.5)+'</td><td>'+esc(normLabel(c.weightedTotal,c.scoreStatus,c.blocked))+'</td><td>'+esc(d.qualification)+'</td><td>'+esc(d.ranking)+'</td><td>'+esc(d.evidence)+'</td><td>'+esc(d.uncertainty)+'</td><td>'+esc(d.nextAction||d.next_action)+'</td><td>'+esc(d.compliance)+'</td></tr>';
+  }).join('');
+  el('honesty').innerHTML = '<h2>Score honesty</h2>'
+    + '<p>Implemented: qualification, ranking, deterministic evidence, uncertainty (exact-string F1), next action, compliance.</p>'
+    + '<p>Semantic judge: <code>'+esc((r&&r.semanticJudge)||'not_implemented')+'</code>. Official live v0.2 activation is required before /100 is authoritative. Worker and judge may share gpt-4.1 — disclose. Development scoring is not sealed-promotion proof.</p>'
+    + '<p>Retrieval policy: <code>'+esc((r&&r.results&&r.results[0]&&r.results[0].retrievalPolicyVersion)|| (selected&&selected.results&&selected.results[0]&&selected.results[0].retrievalPolicyVersion) || 'n/a')+'</code>. Oracle is diagnostic only. Attainable max is honest. No sealed-promotion claim.</p>'
+    + '<p>Raw weighted totals are stored and shown. If a ratio of raw/92.5 appears, it is labeled normalized (display only).</p>'
+    + '<p class="muted">Latest run '+(r?esc(r.id)+' · '+esc(r.agentVersionId)+' · arm '+esc(r.arm)+' · suite '+esc(r.suiteId||r.suiteVersion)+' · retries '+esc(r.nRetries)+' · invalid '+esc(r.nInvalid)+' · scored '+esc(r.nScored)+'/'+esc(r.nAttempted):'none')+'</p>'
+    + (dimRows
+      ? '<table><thead><tr><th>Case</th><th>raw</th><th>max</th><th>normalized</th><th>Q</th><th>R</th><th>E</th><th>U</th><th>Act</th><th>Comp</th></tr></thead><tbody>'+dimRows+'</tbody></table>'
+      : '<p class="muted">No case results yet.</p>');
+}
+function renderTrace(){
+  const results = (selected && selected.results) || [];
+  const blocks = results.map(function(c){
+    const t = c.retrievalTrace || {};
+    const sel = (t.selected||[]).map(function(s){return esc(s.id)+' ('+esc(s.score)+': '+esc(s.reason)+')'}).join('; ') || 'none';
+    const rej = (t.rejectedNearDuplicates||[]).map(function(s){return esc(s.id)+' '+esc(s.reason)}).join('; ') || 'none';
+    const traces = (c.applicabilityTraces||[]).map(function(tr){return esc(tr.prospect_id)+'×'+esc(tr.knowledge_item_id)+'='+esc(tr.applicability)+' effect '+esc(tr.effect)+' unmet ['+esc((tr.unmet_conditions||[]).join(','))+'] ev ['+esc((tr.supporting_evidence_ids||[]).join(','))+'] ex '+esc(tr.exception||'—');}).join('<br>') || 'none';
+    return '<p><strong>'+esc(c.caseId)+'</strong> policy '+esc(t.retrievalPolicyVersion||c.retrievalPolicyVersion||'')+' · considered '+esc(t.candidateCount)+' · selected '+esc((t.retrievedItemIds||[]).join(', ')||'none')+' · tokens '+esc(t.tokensUsed)+'/'+esc(t.budgetTokens)+' · cap '+esc(t.maxItems)+' · criticalCoverage '+esc(c.criticalCoverage)+' · attribution '+esc(c.failureAttribution||'—')+(c.failureAttribution?' · subreasons '+esc((c.failureAttributionSubreasons||[]).join(',')||'—'):'')+'</p><p class="muted">applicability traces:<br>'+traces+'</p>'
+      + '<p class="muted">why: '+sel+'</p><p class="muted">rejected dupes: '+rej+'</p><p class="muted">'+esc(t.note||'')+'</p>';
+  }).join('');
+  el('trace').innerHTML = '<h2>Retrieval trace</h2>'+(blocks || '<p class="muted">No per-case traces yet.</p>');
+}
+function renderExperiment(){
+  const cmp = lastExperiment && lastExperiment.compare;
+  if(!cmp){
+    el('experiment').innerHTML = '<h2>Experiment (baseline / relevant / placebo)</h2><p class="muted">Need three completed arms on the same trial.</p>';
+    return;
+  }
+  const blocked = cmp.result==='blocked' || cmp.baselineStatus==='blocked' || cmp.relevantStatus==='blocked' || cmp.placeboStatus==='blocked';
+  const mean = function(v){ return v==null ? 'inconclusive' : Number(v).toFixed(1); };
+  const rows = (cmp.cases||[]).map(function(c){
+    const b = scoreLabel(c.baselineScore, c.baselineScore==null?'inconclusive':null, c.result==='blocked');
+    const r = scoreLabel(c.relevantScore, c.relevantScore==null?'inconclusive':null, c.result==='blocked');
+    const p = scoreLabel(c.placeboScore, c.placeboScore==null?'inconclusive':null, c.result==='blocked');
+    const clsB = (c.baselineClassifications||[]).map(function(a){return a.prospect_id+'='+a.classification}).join('; ');
+    const clsR = (c.relevantClassifications||[]).map(function(a){return a.prospect_id+'='+a.classification}).join('; ');
+    const clsP = (c.placeboClassifications||[]).map(function(a){return a.prospect_id+'='+a.classification}).join('; ');
+    const missB = (c.baselineMissing||[]).map(function(x){return x.prospect_id+':['+(x.fields||[]).join(',')+']'}).join('; ');
+    const missR = (c.relevantMissing||[]).map(function(x){return x.prospect_id+':['+(x.fields||[]).join(',')+']'}).join('; ');
+    const cf = [].concat(c.relevantCriticalFailures||[], c.placeboCriticalFailures||[], c.baselineCriticalFailures||[]).map(function(f){return f.code}).join(', ') || '—';
+    return '<tr><td>'+esc(c.caseId)+'</td><td>'+esc(b)+'</td><td>'+esc(r)+'</td><td>'+esc(p)+'</td><td>'+esc(c.result)+'</td><td>'+esc(c.relevantAttribution||'—')+' ' +esc((c.relevantAttributionSubreasons||[]).join(',')||'')+'</td><td>'+esc(clsB)+'</td><td>'+esc(clsR)+'</td><td>'+esc(clsP)+'</td><td>'+esc(missB)+'</td><td>'+esc(missR)+'</td><td class="'+(cf!=='—'?'fail':'muted')+'">'+esc(cf)+'</td></tr>';
+  }).join('');
+  el('experiment').innerHTML = '<h2>Experiment — three arms</h2>'
+    + (blocked ? '<p class="fail">Experiment is blocked / inconclusive. These runs are not quality evidence.</p>' : '')
+    + '<p>result <strong>'+esc(cmp.result)+'</strong> · sameTrial='+esc(cmp.sameTrial)+' · trial '+esc(cmp.trialIndex)+' · eligibleForInterpretation='+esc(cmp.eligibleForInterpretation)+'</p>'
+    + '<p>SERVED / enforced means: baseline '+esc(mean(cmp.meanBaselineEnforced!=null?cmp.meanBaselineEnforced:cmp.meanBaseline))+' · relevant '+esc(mean(cmp.meanRelevantEnforced!=null?cmp.meanRelevantEnforced:cmp.meanRelevant))+' · placebo '+esc(mean(cmp.meanPlaceboEnforced!=null?cmp.meanPlaceboEnforced:cmp.meanPlacebo))+'</p>'+ '<p>RAW model means: baseline '+esc(mean(cmp.meanBaselineRaw))+' · relevant '+esc(mean(cmp.meanRelevantRaw))+' · placebo '+esc(mean(cmp.meanPlaceboRaw))+' · do not merge with served</p>'+ '<p>attainableMax '+esc(cmp.attainableMax!=null?cmp.attainableMax:92.5)+'</p>'
+    + '<p>wins '+esc(cmp.wins)+' · ties '+esc(cmp.ties)+' · losses '+esc(cmp.losses)+' · cost $'+Number(cmp.totalUsd||0).toFixed(4)+'</p>'
+    + '<p class="muted">n_scored/n_attempted baseline '+(cmp.nBaseline?esc(cmp.nBaseline.nScored)+'/'+esc(cmp.nBaseline.nAttempted):'?')+' · relevant '+(cmp.nRelevant?esc(cmp.nRelevant.nScored)+'/'+esc(cmp.nRelevant.nAttempted):'?')+' · retries '+(cmp.nRelevant?esc(cmp.nRelevant.nRetries):'?')+'</p>'
+    + (lastExperiment&&lastExperiment.pointers ? '<p class="muted">latest-completed vs latest-attempted/blocked are distinct. Oracle is diagnostic only.</p>' : '')
+    + '<p class="muted">'+(cmp.honesty||[]).join(' ')+'</p>'
+    + '<p class="muted">versions '+esc(cmp.baselineVersionId||'')+' / '+esc(cmp.relevantVersionId||'')+' · retrieval policy '+esc(cmp.cases&&cmp.cases[0]&&cmp.cases[0].relevantRetrievalPolicy||'')+' · oracle diagnostic only · attainableMax '+esc(cmp.attainableMax)+' · no sealed-promotion claim</p>'
+    + '<table><thead><tr><th>Case</th><th>baseline</th><th>relevant</th><th>placebo</th><th>result</th><th>attribution</th><th>base class</th><th>rel class</th><th>pbo class</th><th>base missing</th><th>rel missing</th><th>CFs</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function render(){
+  renderHonesty();
+  renderTrace();
+  renderExperiment();
+  if(!selected||!selected.run){
+    el('run').innerHTML = '<h2>Eval run</h2><p class="muted">Create Atlas, ingest, then run the three-arm experiment or one-case verify.</p>';
+    el('cases').innerHTML = '';
+  } else {
+    const r = selected.run;
+    const kind = r.responderKind|| (selected.responder&&selected.responder.kind) || 'disconnected';
+    const kindNote = kind==='live' ? 'live' : 'disconnected (not live)';
+    el('run').innerHTML = '<h2>Latest eval run</h2><p>'+esc(r.id)+' · '+esc(r.agentVersionId)+' · arm '+esc(r.arm)+(r.arm==='oracle'?' (diagnostic, not a product default)':'')+' · '+esc(r.status)+' · responder '+esc(kindNote)+'</p><p>suite '+esc(r.suiteId||r.suiteVersion)+' · trialIndex '+esc(r.trialIndex)+' · retrieved '+(r.retrievedItemIds||[]).join(', ')+'</p><p>Semantic judge: '+(r.semanticJudge||'not_implemented')+' · attainableMax '+(r.attainableMax!=null?r.attainableMax:92.5)+' · retries '+esc(r.nRetries)+' · invalid '+esc(r.nInvalid)+' · scored '+esc(r.nScored)+'/'+esc(r.nAttempted)+' · eligible '+esc(r.eligibleForInterpretation)+'</p>';
+    const results = selected.results||[];
+    el('cases').innerHTML = results.map(function(c){
+      const dims = c.dimensions||{};
+      const fails = (c.criticalFailures||[]).map(function(f){return f.code+': '+f.message}).join(' | ') || 'No critical failures recorded.';
+      const rawBy = {};
+      (c.rawAssessments||c.modelProposal||[]).forEach(function(a){ rawBy[a.prospect_id]=a; });
+      const servedExtra = {};
+      (c.servedDecision||[]).forEach(function(a){ servedExtra[a.prospect_id]=a; });
+      const rows = (c.assessments||[]).map(function(a){
+        const raw = rawBy[a.prospect_id] || {};
+        const extra = servedExtra[a.prospect_id] || {};
+        const overridden = extra.enforcement_intervened || c.enforcementIntervened;
+        const rawCell = (raw.classification||'—')+' / '+(raw.next_action||'');
+        const servedCell = (overridden?'<strong>SERVED </strong>':'')+esc(a.classification)+' / '+esc(a.next_action);
+        const why = extra.why_safe || extra.intervention_reason || '';
+        return '<tr><td>'+esc(a.prospect_id)+'</td><td class="'+(overridden?'fail':'')+'">'+esc(rawCell)+'</td><td>'+servedCell+'</td><td>'+esc((a.cited_evidence_ids||[]).join(', '))+'</td><td>'+esc((a.missing_information||[]).join(', '))+'</td><td>'+esc(why)+'</td></tr>';
+      }).join('');
+      const inconclusive = r.status==='blocked' || r.status==='failed' || r.inconclusive || c.scoreStatus==='inconclusive' || c.blocked || c.weightedTotal==null;
+      const totalLabel = inconclusive ? 'inconclusive / blocked' : ('served '+Number(c.weightedTotal).toFixed(1)+(c.rawWeightedTotal!=null?(' · raw '+Number(c.rawWeightedTotal).toFixed(1)):'') );
+      const lists = 'ranked ['+esc((c.rankedQualifiedIds||[]).join(', '))+'] · research ['+esc((c.researchQueueIds||[]).join(', '))+'] · excluded ['+esc((c.excludedIds||[]).join(', '))+']';
+      const judgeRows = (c.claimJudgments||[]).map(function(j){return esc(j.prospect_id||'')+': '+esc((j.claim||'').slice(0,120))+' ids ['+esc((j.cited_evidence_ids||[]).join(','))+'] '+esc(j.verdict||j.class||'')+' — '+esc(j.rationale||j.explanation||'');}).join('<br>');
+      return '<div class="card"><h3>'+esc(c.caseId)+' — '+esc(c.title||'')+' · raw '+esc(totalLabel)+(inconclusive?'':' / 92.5')+'</h3><p class="muted">Q '+esc(dims.qualification)+' · Rank '+esc(dims.ranking)+' · Ev '+esc(dims.evidence)+' · Unc '+esc(dims.uncertainty)+' · Act '+(dims.nextAction||dims.next_action)+' · Comp '+esc(dims.compliance)+'</p><p class="muted">'+lists+'</p><p class="'+(c.criticalFailures&&c.criticalFailures.length?'fail':'muted')+'">'+esc(fails)+'</p><table><thead><tr><th>Prospect</th><th>Class</th><th>Citations</th><th>Missing</th><th>Action</th></tr></thead><tbody>'+rows+'</tbody></table>'+(judgeRows?'<p class="muted">claim judgments<br>'+judgeRows+'</p>':'')+'</div>';
+    }).join('');
+  }
+  const cmp = lastCompare && lastCompare.compare;
+  if(!cmp){
+    el('compare').innerHTML = '<h2>v0 vs v1 comparison</h2><p class="muted">Need completed historical runs for both versions.</p>';
+    return;
+  }
+  if (cmp.inconclusive || cmp.v0Status==='blocked' || cmp.v1Status==='blocked' || cmp.v0Status==='failed' || cmp.v1Status==='failed') {
+    el('compare').innerHTML = '<h2>v0 vs v1 comparison</h2><p class="fail">Comparison is inconclusive / blocked. These runs are not a quality comparison and do not show that v1 is worse.</p><p class="muted">v0 '+esc(cmp.v0Status||'')+' · v1 '+esc(cmp.v1Status||'')+'</p>';
+    return;
+  }
+  const kind = (cmp.responderKindV0||'')==='live' ? 'live' : 'disconnected (not live)';
+  const intro = (cmp.criticalFailuresIntroducedByChallenger||[]).map(function(x){return x.caseId+': '+(x.failures||[]).map(function(f){return f.code}).join(',');}).join(' | ') || 'None';
+  const rows = (cmp.cases||[]).map(function(c){
+    const v0Incon = c.v0Score==null || c.v0ScoreStatus==='inconclusive';
+    const v1Incon = c.v1Score==null || c.v1ScoreStatus==='inconclusive';
+    const d = (v0Incon || v1Incon || c.delta==null) ? 'inconclusive / blocked' : (Number(c.delta)>=0?'+':'')+Number(c.delta).toFixed(1);
+    const cls0 = (c.v0Classifications||[]).map(function(a){return a.prospect_id+'='+a.classification}).join('; ');
+    const cls1 = (c.v1Classifications||[]).map(function(a){return a.prospect_id+'='+a.classification}).join('; ');
+    const cit0 = (c.v0Citations||[]).map(function(x){return x.prospect_id+':['+(x.evidence_ids||[]).join(',')+']'}).join('; ');
+    const cit1 = (c.v1Citations||[]).map(function(x){return x.prospect_id+':['+(x.evidence_ids||[]).join(',')+']'}).join('; ');
+    const miss0 = (c.v0Missing||[]).map(function(x){return x.prospect_id+':['+(x.fields||[]).join(',')+']'}).join('; ');
+    const miss1 = (c.v1Missing||[]).map(function(x){return x.prospect_id+':['+(x.fields||[]).join(',')+']'}).join('; ');
+    const cf = (c.criticalFailuresIntroduced||[]).map(function(f){return f.code}).join(', ') || '—';
+    return '<tr><td>'+esc(c.caseId)+'</td><td>'+(v0Incon?'inconclusive / blocked':Number(c.v0Score).toFixed(1))+'</td><td>'+(v1Incon?'inconclusive / blocked':Number(c.v1Score).toFixed(1))+'</td><td>'+esc(d)+'</td><td>'+esc(cls0)+'</td><td>'+esc(cls1)+'</td><td>'+esc(cit0)+'</td><td>'+esc(cit1)+'</td><td>'+esc(miss0)+'</td><td>'+esc(miss1)+'</td><td class="'+(cf!=='—'?'fail':'muted')+'">'+esc(cf)+'</td></tr>';
+  }).join('');
+  el('compare').innerHTML = '<h2>v0 vs v1 comparison (historical)</h2>'
+    + '<p>v0 run <code>'+esc(cmp.v0RunId)+'</code> · v1 run <code>'+esc(cmp.v1RunId)+'</code></p>'
+    + '<p>sameTrial='+esc(cmp.sameTrial)+' · trial '+esc(cmp.trialIndexV0)+'/'+esc(cmp.trialIndexV1)+' · responder '+esc(kind)+' · semantic judge '+esc(cmp.semanticJudge)+'</p>'
+    + '<p>mean v0 '+Number(cmp.meanV0||0).toFixed(1)+' · mean v1 '+Number(cmp.meanV1||0).toFixed(1)+' · mean Δ '+(cmp.meanDelta==null?'—':Number(cmp.meanDelta).toFixed(1))+'</p>'
+    + '<p class="fail">Critical failures introduced by challenger: '+esc(intro)+'</p>'
+    + '<p class="muted">Live scores appear only after Connect verifies a Responses probe in this process. Blocked or inconclusive cases are not quality evidence.</p>'
+    + '<table><thead><tr><th>Case</th><th>v0</th><th>v1</th><th>Δ</th><th>v0 class</th><th>v1 class</th><th>v0 citations</th><th>v1 citations</th><th>v0 missing</th><th>v1 missing</th><th>new CF</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+let lastStudio = null;
+let inspectId = null;
+function studioRows(items, actions){
+  return (items||[]).map(function(k){
+    const act = actions ? '<button type="button" onclick="studioReview(\''+esc(k.id)+'\',\'approve\')">approve</button><button type="button" onclick="studioReview(\''+esc(k.id)+'\',\'reject\')">reject</button><button type="button" onclick="studioInspect(\''+esc(k.id)+'\')">inspect</button>' : '<button type="button" onclick="studioInspect(\''+esc(k.id)+'\')">inspect</button>';
+    return '<tr><td>'+esc(k.id)+'</td><td>'+esc(k.kind)+'</td><td>'+esc(k.reviewStatus)+'</td><td>'+esc(k.trust)+'</td><td>'+esc(k.sourceId)+'</td><td>'+esc((k.claim||'').slice(0,180))+'</td><td>'+act+'</td></tr>';
+  }).join('');
+}
+function renderStudio(){
+  const s = lastStudio || {};
+  el('studiostatus').textContent = (s.capability||'')+' · sources '+esc(s.sourcesAdded)+' · live fetches '+esc(s.liveFetches)+' · fixture '+esc(s.fixtureFetches)+' · failed '+esc(s.failedFetches)+' · approved '+esc(s.approved)+' · written-by-me '+esc(s.writtenByMe);
+  const src = (s.fetches||[]).map(function(f){
+    return '<tr><td>'+esc(f.id)+'</td><td>'+esc(f.url)+'</td><td>'+esc(f.status)+'</td><td>'+(f.live?'live':'fixture/failed')+'</td><td>'+esc(f.contentType)+'</td><td>'+esc(f.title)+'</td><td><code>'+esc((f.sha256||'').slice(0,12))+'</code></td></tr>';
+  }).join('');
+  el('studio-sources').innerHTML = '<h3>1 Sources</h3>'+(src?'<table><thead><tr><th>id</th><th>url</th><th>status</th><th>live</th><th>type</th><th>title</th><th>sha</th></tr></thead><tbody>'+src+'</tbody></table>':'<p class="muted">No fetches yet.</p>');
+  const owner = (s.items||[]).filter(function(k){return k.writtenByOwner || k.kind==='owner_policy';});
+  el('studio-ownerrules').innerHTML = '<h3>2 Owner rules</h3>'+(owner.length?'<table><thead><tr><th>id</th><th>kind</th><th>status</th><th>trust</th><th>source</th><th>rule</th><th></th></tr></thead><tbody>'+studioRows(owner,false)+'</tbody></table>':'<p class="muted">No owner-authored rules yet.</p>');
+  const proposed = (s.items||[]).filter(function(k){return k.reviewStatus==='proposed'||k.reviewStatus==='needs_review';});
+  el('studio-proposed').innerHTML = '<h3>3 Proposed</h3>'+(proposed.length?'<table><thead><tr><th>id</th><th>kind</th><th>status</th><th>trust</th><th>source</th><th>claim</th><th></th></tr></thead><tbody>'+studioRows(proposed,true)+'</tbody></table>':'<p class="muted">Nothing proposed.</p>');
+  const approved = (s.items||[]).filter(function(k){return k.reviewStatus==='approved';});
+  el('studio-approved').innerHTML = '<h3>4 Approved</h3>'+(approved.length?'<table><thead><tr><th>id</th><th>kind</th><th>status</th><th>trust</th><th>source</th><th>claim</th><th></th></tr></thead><tbody>'+studioRows(approved,false)+'</tbody></table>':'<p class="muted">Nothing approved.</p>');
+  const rejected = (s.items||[]).filter(function(k){return k.reviewStatus==='rejected'||k.reviewStatus==='superseded';});
+  el('studio-rejected').innerHTML = '<h3>5 Rejected / superseded</h3>'+(rejected.length?'<table><thead><tr><th>id</th><th>kind</th><th>status</th><th>trust</th><th>source</th><th>claim</th><th></th></tr></thead><tbody>'+studioRows(rejected,false)+'</tbody></table>':'<p class="muted">Nothing rejected.</p>');
+  const hist = (s.versions||[]).map(function(v){return '<tr><td>'+esc(v.id)+'</td><td>'+esc(v.parent||'—')+'</td><td>'+esc(v.snapshot||'')+'</td><td>'+esc(v.declaredChange||'')+'</td></tr>';}).join('');
+  const diff = s.versionDiff ? '<p class="muted">Latest diff '+esc(s.versionDiff.parent)+' → '+esc(s.versionDiff.child)+' added ['+esc((s.versionDiff.addedItems||[]).join(', '))+']</p>' : '';
+  el('studio-history').innerHTML = '<h3>6 Training / version history</h3>'+diff+(hist?'<table><thead><tr><th>version</th><th>parent</th><th>snapshot</th><th>declared change</th></tr></thead><tbody>'+hist+'</tbody></table>':'<p class="muted">No versions.</p>');
+}
+async function studioUrl(){
+  const url = window.prompt('Public URL (no credentials, no private hosts):','https://example.com/');
+  if(!url) return;
+  try{
+    const out = await api('/studio/url',{method:'POST',body:JSON.stringify({url:url})});
+    el('studiostatus').textContent = out.live ? 'Live public fetch recorded.' : (out.note||'Fetch recorded.');
+    await refreshStudio();
+  }catch(e){ el('studiostatus').textContent = e.message||String(e); }
+}
+async function studioReview(id, action){
+  try{
+    await api('/studio/knowledge/'+encodeURIComponent(id)+'/review',{method:'POST',body:JSON.stringify({action:action})});
+    await refreshStudio();
+    if(inspectId) await studioInspect(inspectId);
+  }catch(e){ el('studiostatus').textContent = e.message||String(e); }
+}
+async function studioInspect(id){
+  inspectId = id;
+  try{
+    const out = await api('/studio/inspect/'+encodeURIComponent(id));
+    const it = out.item||{};
+    const src = out.source||{};
+    el('studio-inspect').innerHTML = '<h3>7 Source + claim inspection</h3><p><strong>'+esc(it.id)+'</strong> · '+esc(it.kind)+' · '+esc(it.reviewStatus)+'</p><p>'+esc(it.claim||'')+'</p><p class="muted">excerpt: '+esc(out.excerpt||'')+' · verified '+esc(out.verifiedAt||'')+'</p><p class="muted">source '+esc(src.id)+' · '+esc(src.url)+' · '+esc(src.captureStatus)+' · sha '+esc((src.sha256||'').slice(0,16))+' · live='+esc(src.live)+'</p><p class="muted">'+esc(out.untrustedNote||'')+'</p>';
+  }catch(e){ el('studio-inspect').innerHTML = '<h3>7 Source + claim inspection</h3><p class="fail">'+esc(e.message||e)+'</p>'; }
+}
+async function studioTrain(){
+  try{
+    const out = await api('/studio/train',{method:'POST',body:JSON.stringify({workspaceId:currentWorkspaceId,declaredChange:'Owner-approved Knowledge Studio freeze for the selected workspace. Parent latest frozen version unchanged. Not a promotion.'})});
+    el('studiostatus').textContent = 'Frozen '+(out.version&&out.version.id)+' parent '+(out.parent&&out.parent.id)+' · created is not promotion';
+    await refreshStudio(); await refresh();
+  }catch(e){ el('studiostatus').textContent = e.message||String(e); }
+}
+async function createWorkspaceFromForm(){
+  showErr('');
+  try{
+    const body = {
+      name: el('wsName').value,
+      description: el('wsDesc').value,
+      industry: el('wsIndustry').value,
+      type: el('wsType').value,
+      geography: el('wsGeo').value,
+      offer: { name: el('wsOfferName').value, summary: el('wsOfferSum').value },
+      idealCustomer: el('wsIcp').value,
+      goal: el('wsGoal').value,
+      constraints: el('wsConstraints').value.split(',').map(function(s){return s.trim();}).filter(Boolean),
+    };
+    const out = await api('/workspace',{method:'POST',body:JSON.stringify(body)});
+    el('wsSetupStatus').textContent = 'Created '+out.workspace.id+' · description is business_description, not policy';
+    currentWorkspaceId = out.workspace.id;
+    await loadWorkspaces();
+  }catch(e){ el('wsSetupStatus').textContent = e.message||String(e); }
+}
+async function loadWorkspaces(){
+  const list = await api('/workspace');
+  const sel = el('wsSelect');
+  const cur = currentWorkspaceId;
+  sel.innerHTML = '<option value="">Select workspace…</option>'+(list.workspaces||[]).map(function(w){
+    return '<option value="'+esc(w.id)+'"'+(w.id===cur?' selected':'')+'>'+esc(w.name)+' ('+esc(w.id)+')</option>';
+  }).join('');
+  if(cur) await selectWorkspace(cur);
+}
+async function selectWorkspace(id){
+  currentWorkspaceId = id || null;
+  if(!id){ el('wsInspect').textContent = 'No workspace selected.'; el('dashBody').textContent = 'Select a workspace.'; return; }
+  const insp = await api('/workspace/'+encodeURIComponent(id));
+  const w = insp.workspace||{};
+  el('wsInspect').innerHTML = '<p><strong>'+esc(w.name)+'</strong> · '+esc(w.id)+' · '+esc(w.ownerStatus)+'</p><p class="muted">'+esc(w.description)+' <em>('+esc(w.epistemicClass||'business_description')+')</em></p><p>offer '+esc((w.offer&&w.offer.name)||'')+' · geo '+esc(w.geography)+' · assigned '+esc(w.assignedAgentId)+'</p><p class="muted">approved rules '+esc(insp.approvedRules)+' · sourced '+esc(insp.approvedSourced)+' · '+esc(insp.isolation)+'</p>';
+  const dash = await api('/workspace/'+encodeURIComponent(id)+'/dashboard');
+  const run = dash.latestFictionalRun;
+  const ev = dash.latestTrainingEvent;
+  const ver = dash.currentAtlasVersion;
+  el('dashBody').innerHTML =
+    '<p>Workspace <strong>'+esc(dash.currentWorkspace&&dash.currentWorkspace.name)+'</strong> · objective '+esc(dash.objective)+'</p>'
+    + '<p>Assigned agent '+esc(dash.assignedAgent&&dash.assignedAgent.id)+' ('+esc(dash.assignedAgent&&dash.assignedAgent.roleName)+') · Atlas version '+esc(ver&&ver.id)+'</p>'
+    + '<p>Approved rules '+esc(dash.approvedRuleCount)+' · approved sourced items '+esc(dash.approvedSourcedItemCount)+'</p>'
+    + '<p>Latest training event '+esc(ev&&ev.newVersionId)+' · reviewStatus '+esc(ev&&ev.reviewStatus)+' (created is not promotion)</p>'
+    + (run
+      ? '<p>Latest fictional run '+esc(run.id)+' · '+esc(run.liveVsFixture)+' · served '+(run.servedClassifications||[]).map(function(a){return a.prospect_id+'='+a.classification;}).join('; ')+'</p><p class="muted">retrieved '+esc((run.retrievedRules||[]).join(', '))+' · judge advisory='+esc(dash.judgeAdvisory)+'</p><p class="muted">'+(run.why||[]).map(function(x){return esc(x.prospect_id)+': '+esc(x.decision)+' — '+esc(x.why);}).join('<br>')+'</p>'
+      : '<p class="muted">No fictional run yet.</p>')
+    + '<p>Scout '+(dash.assignedScout?esc(dash.assignedScout.id)+' · '+esc(dash.assignedScout.status):'not created')+'</p>'
+    + '<p>Roles: '+(dash.roleResponsibilities||[]).map(function(r){return esc(r.roleName)+' '+(r.implemented?'implemented':(r.label||'unimplemented'));}).join(' · ')+'</p>'
+    + '<p>Research requests '+esc((dash.researchRequests||[]).length)+' · proposed findings '+esc((dash.proposedFindings||[]).length)+' · approved findings '+esc((dash.approvedFindings||[]).length)+'</p>'
+    + '<p class="muted">Spend estimated $'+esc(dash.spend&&dash.spend.totals?dash.spend.totals.estimatedUsd:0)+' · unknown rows '+esc(dash.spend&&dash.spend.totals?dash.spend.totals.unknownCostCount:0)+' · live '+esc(dash.spend&&dash.spend.totals?dash.spend.totals.liveCount:0)+' / fixture '+esc(dash.spend&&dash.spend.totals?dash.spend.totals.fixtureCount:0)+'</p>'
+    + '<p class="muted">'+esc(dash.provenance&&dash.provenance.scoutLabel||'')+' · isolation '+esc(dash.isolation)+'</p>';
+  await refreshStudio();
+  await refreshSpend();
+  await refreshScout();
+  if (dash) renderChain(dash);
+}
+async function refreshStudio(){
+  try{
+    lastStudio = await api('/studio/overview'+(currentWorkspaceId?('?workspaceId='+encodeURIComponent(currentWorkspaceId)):''));
+    renderStudio();
+  }catch(e){ el('studiostatus').textContent = e.message||String(e); }
+}
+async function studioOwnerRule(){
+  const statement = window.prompt('Owner-authored rule (authoritative after submit):','Only United States accounts are eligible.');
+  if(!statement) return;
+  try{
+    await api('/studio/owner-rules',{method:'POST',body:JSON.stringify({statement:statement,category:'owner_policy',workspaceId:currentWorkspaceId,applicableRole:'atlas'})});
+    el('studiostatus').textContent = 'Owner rule stored as authoritative in the selected workspace.';
+    await refreshStudio();
+  }catch(e){ el('studiostatus').textContent = e.message||String(e); }
+}
+async function studioPaste(){
+  const text = window.prompt('Paste text to propose facts (not authoritative until approve):','- Example sourced fact about a public process.');
+  if(!text) return;
+  try{
+    await api('/studio/paste',{method:'POST',body:JSON.stringify({text:text,workspaceId:currentWorkspaceId})});
+    await refreshStudio();
+  }catch(e){ el('studiostatus').textContent = e.message||String(e); }
+}
+async function runWorkbenchFromForm(){
+  if(!currentWorkspaceId){ el('wbStatus').textContent = 'Select a workspace first.'; return; }
+  let prospects;
+  try { prospects = JSON.parse(el('wbProspects').value||'[]'); }
+  catch(e){ el('wbStatus').textContent = 'Prospects JSON is invalid.'; return; }
+  try{
+    const out = await api('/workbench/run',{method:'POST',body:JSON.stringify({
+      workspaceId: currentWorkspaceId,
+      offer: el('wbOffer').value ? { name: el('wbOffer').value } : undefined,
+      businessContext: el('wbCtx').value || undefined,
+      prospects: prospects,
+    })});
+    el('wbStatus').textContent = (out.banner||'')+' · '+(out.live?'live':'fixture')+' · not a generalization proof';
+    const rows = ((out.run&&out.run.servedAssessments)||[]).map(function(a){
+      const raw = ((out.run.rawAssessments)||[]).find(function(x){return x.prospect_id===a.prospect_id;})||{};
+      const why = ((out.run.why)||[]).find(function(x){return x.prospect_id===a.prospect_id;})||{};
+      return '<tr><td>'+esc(a.prospect_id)+'</td><td>'+esc(raw.classification||'—')+'</td><td>'+esc(a.classification)+'</td><td>'+esc((a.cited_evidence_ids||[]).join(', '))+'</td><td>'+esc((a.missing_information||[]).join(', '))+'</td><td>'+esc(a.next_action)+'</td><td>'+esc(why.why||'')+'</td></tr>';
+    }).join('');
+    el('wbResult').innerHTML = '<p>ranked ['+esc(((out.run&&out.run.rankedQualifiedIds)||[]).join(', '))+'] · research ['+esc(((out.run&&out.run.researchQueueIds)||[]).join(', '))+'] · excluded ['+esc(((out.run&&out.run.excludedIds)||[]).join(', '))+']</p><p class="muted">retrieved '+esc(((out.run&&out.run.retrievedItemIds)||[]).join(', '))+'</p><table><thead><tr><th>Prospect</th><th>Raw</th><th>Served</th><th>Citations</th><th>Missing</th><th>Action</th><th>Why</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    await selectWorkspace(currentWorkspaceId);
+  }catch(e){ el('wbStatus').textContent = e.message||String(e); }
+}
+async function refreshSpend(){
+  try{
+    const s = await api('/spend'+(currentWorkspaceId?('?workspaceId='+encodeURIComponent(currentWorkspaceId)):''));
+    const L = s.ledger||s;
+    const rows = (L.entries||[]).slice(-12).map(function(e){
+      const cost = e.costStatus==='estimated' ? ('$'+Number(e.costUsd||0).toFixed(4)) : 'unknown';
+      return '<tr><td>'+esc(e.timestamp)+'</td><td>'+esc(e.operation)+'</td><td>'+esc(e.agentId)+'</td><td>'+esc(e.role)+'</td><td>'+esc(e.kind)+'</td><td>'+esc(e.inputTokens)+'/'+esc(e.outputTokens)+'</td><td>'+esc(cost)+'</td><td>'+esc(e.pricingSource)+'</td><td>'+esc(e.resultStatus)+'</td></tr>';
+    }).join('');
+    el('spendBody').innerHTML = '<p>caps $'+esc(L.preservedCaps&&L.preservedCaps.maxUsdPerRun)+'/run $'+esc(L.preservedCaps&&L.preservedCaps.maxUsdPerDay)+'/day · today $'+Number((s.today&&s.today.usd)||L.dayUsd||0).toFixed(4)+'</p>'
+      + (rows?'<table><thead><tr><th>at</th><th>op</th><th>agent</th><th>role</th><th>kind</th><th>tok in/out</th><th>cost</th><th>pricing</th><th>status</th></tr></thead><tbody>'+rows+'</tbody></table>':'<p class="muted">No ledger rows yet.</p>');
+  }catch(e){ el('spendBody').textContent = e.message||String(e); }
+}
+async function refreshScout(){
+  if(!currentWorkspaceId){ el('scoutFindings').innerHTML = '<p class="muted">Select a workspace.</p>'; return; }
+  try{
+    const out = await api('/scout/findings?workspaceId='+encodeURIComponent(currentWorkspaceId));
+    const rows = (out.findings||[]).map(function(f){
+      return '<tr><td>'+esc(f.id)+'</td><td>'+esc(f.kind)+'</td><td>'+esc(f.reviewStatus)+'</td><td>'+esc((f.claim||'').slice(0,160))+'</td><td>'+esc((f.excerpt||'').slice(0,80))+'</td><td><button type="button" onclick="scoutReview(\''+esc(f.id)+'\',\'approve\')">approve</button><button type="button" onclick="scoutReview(\''+esc(f.id)+'\',\'reject\')">reject</button><button type="button" onclick="scoutReview(\''+esc(f.id)+'\',\'assign_to_atlas\')">assign Atlas</button></td></tr>';
+    }).join('');
+    el('scoutFindings').innerHTML = rows
+      ? '<table><thead><tr><th>id</th><th>kind</th><th>status</th><th>claim</th><th>excerpt</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'
+      : '<p class="muted">No Scout findings yet.</p>';
+  }catch(e){ el('scoutFindings').textContent = e.message||String(e); }
+}
+async function runScoutFromForm(){
+  if(!currentWorkspaceId){ el('scoutStatus').textContent = 'Select a workspace first.'; return; }
+  try{
+    const body = {
+      workspaceId: currentWorkspaceId,
+      question: el('scoutQ').value,
+      paste: el('scoutPaste').value || undefined,
+      seedUrls: el('scoutUrl').value ? [el('scoutUrl').value] : [],
+      maxSources: Number(el('scoutMax').value||2),
+      fixture: !el('scoutUrl').value,
+    };
+    const out = await api('/scout/research',{method:'POST',body:JSON.stringify(body)});
+    el('scoutStatus').textContent = (out.label||'')+' · findings '+(out.findings||[]).length+' · '+(out.live?'live':'fixture');
+    await refreshScout();
+    await selectWorkspace(currentWorkspaceId);
+  }catch(e){ el('scoutStatus').textContent = e.message||String(e); }
+}
+async function scoutReview(id, action){
+  try{
+    const payload = { action: action, actor: 'owner' };
+    if(action==='approve') payload.assignToAtlas = true;
+    await api('/scout/findings/'+encodeURIComponent(id)+'/review',{method:'POST',body:JSON.stringify(payload)});
+    el('scoutStatus').textContent = 'Owner '+action+' '+id;
+    await refreshScout();
+    await selectWorkspace(currentWorkspaceId);
+  }catch(e){ el('scoutStatus').textContent = e.message||String(e); }
+}
+async function trainScoutAtlas(){
+  if(!currentWorkspaceId){ el('scoutStatus').textContent = 'Select a workspace first.'; return; }
+  try{
+    const out = await api('/scout/train',{method:'POST',body:JSON.stringify({workspaceId:currentWorkspaceId,parentVersionId:undefined,declaredChange:'Owner-approved Scout findings freeze. Parent atlas-v12 unchanged. Not a promotion.'})});
+    el('scoutStatus').textContent = 'Frozen '+(out.version&&out.version.id)+' parent '+(out.version&&out.version.parentVersionId)+' · not promotion';
+    await selectWorkspace(currentWorkspaceId);
+  }catch(e){ el('scoutStatus').textContent = e.message||String(e); }
+}
+async function renderChain(dash){
+  const c = dash.chain || {};
+  const w = dash.assignedWatcher;
+  const wr = c.watcherResult;
+  el('chainBody').innerHTML =
+    '<p>Objective '+esc(c.objective)+'</p>'
+    + '<p>Source '+esc(c.source&&c.source.id)+' · finding '+esc(c.finding&&c.finding.id)+' · excerpt '+esc((c.excerpt||'').slice(0,180))+'</p>'
+    + '<p>Approval '+esc(c.approval&&c.approval.action)+' · Atlas '+esc(c.atlasVersion&&c.atlasVersion.id)+' parent '+esc(c.atlasVersion&&c.atlasVersion.parent)+'</p>'
+    + '<p>Scenario '+esc(c.scenario&&c.scenario.id)+' · retrieved '+esc((c.retrievedItems||[]).join(' , '))+'</p>'
+    + '<p>Decision ranked '+esc(((c.decision&&c.decision.ranked)||[]).join(' , '))+'</p>'
+    + '<p>Watcher '+(w?esc(w.id)+' · '+esc(w.roleName):'not created')+' · result '+esc(wr&&wr.status)+'</p>'
+    + '<p class="muted">'+esc(dash.watcherJudgeNote||'')+' · no fake manager='+esc(c.noFakeManager)+' · real Conductor='+esc(c.realConductor)+'</p>'
+    + '<p>Conductor '+(dash.assignedConductor?esc(dash.assignedConductor.id)+' · '+esc(dash.assignedConductor.status):'not created')+'</p>';
+  await refreshConductor();
+}
+let currentObjectiveId = null;
+function renderMission13Review(v){
+  const findings = v.findings || [];
+  const supportRows = (v.sourceSupport || findings).map(function(f){
+    const sup = f.support || {};
+    const gates = ((f.gates || (v.usefulness && v.usefulness.reviews || []).find(function(r){return r.id===f.id;}) || {}).gates) || [];
+    const gateTxt = gates.length ? gates.map(function(g){return (g.pass?'ok':'fail')+':'+(g.name||'');}).join(' · ') : esc(sup.supportStatus || f.supportStatus || '');
+    return '<tr><td>'+esc(f.id)+'</td><td>'+esc(f.kind)+'</td><td>'+esc((f.excerpt||'').slice(0,120))+'</td><td>'+gateTxt+'</td></tr>';
+  }).join('');
+  const ext = v.extraction || {};
+  const util = v.expectedUtility;
+  const sh = v.shadow;
+  return '<div class="card">'
+    + '<h3>Learning review</h3>'
+    + '<p>Raw/substantive extract: region '+esc(ext.usedRegion||'—')+' · quality '+(ext.quality?esc(ext.quality.pass)+' '+esc((ext.quality.flags||[]).join(',')):'—')+'</p>'
+    + '<p>Expected utility: '+(util?esc(util.expectedTaskType||'')+' · defined '+esc(util.defined):'not defined')+'</p>'
+    + '<p>Shadow compile: '+(sh?esc(sh.outcome)+' · produceVersion '+esc(sh.produceVersion):'not run')+'</p>'
+    + (supportRows?'<table><thead><tr><th>finding</th><th>kind</th><th>excerpt</th><th>gates / support</th></tr></thead><tbody>'+supportRows+'</tbody></table>':'<p class="muted">No findings yet.</p>')
+    + '</div>';
+}
+async function refreshConductor(){
+  if(!currentWorkspaceId){ el('condView').innerHTML = '<p class="muted">Select a workspace.</p>'; return; }
+  try{
+    const list = await api('/conductor/objectives?workspaceId='+encodeURIComponent(currentWorkspaceId));
+    const objs = list.objectives || [];
+    if(!objs.length){ el('condView').innerHTML = '<p class="muted">No Conductor objectives yet.</p>'; return; }
+    const id = currentObjectiveId || objs[objs.length-1].id;
+    currentObjectiveId = id;
+    const v = await api('/conductor/objectives/'+encodeURIComponent(id));
+    const o = v.objective || {};
+    const tasks = (v.currentTasks||[]).concat(v.completedTasks||[]);
+    const taskRows = tasks.map(function(t){ return '<tr><td>'+esc(t.key)+'</td><td>'+esc(t.type)+'</td><td>'+esc(t.assignedRoleName||t.assignedRoleId)+'</td><td>'+esc(t.status)+'</td><td>'+esc(t.attemptCount)+'</td></tr>'; }).join('');
+    el('condView').innerHTML =
+      '<p>Objective <strong>'+esc(o.id)+'</strong> · status '+esc(v.status)+' · manager '+esc(v.manager&&v.manager.versionId)+'</p>'
+      + '<p class="muted">'+esc(o.ownerText||'')+'</p>'
+      + '<p>Employees '+(v.assignedEmployees||[]).map(function(e){return esc(e.roleName);}).join(' · ')+'</p>'
+      + '<p>Pending approvals '+(v.pendingApprovals||[]).map(function(a){return esc(a.id)+' '+esc(a.kind);}).join(', ')+'</p>'
+      + '<p>Findings '+(v.findings||[]).map(function(f){return esc(f.id);}).join(', ')+'</p>'
+      + '<p>Atlas version '+esc(v.newAtlasVersion&&v.newAtlasVersion.versionId)+' · run '+esc(v.fictionalResults&&v.fictionalResults.workbenchRunId)+'</p>'
+      + '<p>Watcher '+esc(v.watcher&&v.watcher.status)+' · '+esc(v.watcher&&v.watcher.auditId)+'</p>'
+      + '<p>Budget used $'+esc(v.budget&&v.budget.used)+' remaining $'+esc(v.budget&&v.budget.remaining)+' / $'+esc(v.budget&&v.budget.ceiling)+'</p>'
+      + '<p>Usefulness '+(v.usefulness?esc(v.usefulness.skipReason|| (v.usefulness.shouldTrain?'train':'skip')):'none')+'</p>'
+      + '<p>Serving '+esc(v.servingVersionId||'')+' · candidate '+esc(v.candidateVersionId||'')+' · scenario hash '+esc((v.fictionalScenarioHash||'').slice(0,16))+' · require local_owner '+esc(v.requireLocalOwner)+'</p>'
+      + renderMission13Review(v)
+      + '<p class="muted">'+esc(v.disclosure||'')+'</p>'
+      + (taskRows?'<table><thead><tr><th>step</th><th>type</th><th>role</th><th>status</th><th>attempts</th></tr></thead><tbody>'+taskRows+'</tbody></table>':'');
+  }catch(e){ el('condView').textContent = e.message||String(e); }
+}
+async function submitConductorObjective(){
+  if(!currentWorkspaceId){ el('condStatus').textContent = 'Select a workspace first.'; return; }
+  try{
+    const body = {
+      workspaceId: currentWorkspaceId,
+      ownerText: el('condText').value,
+      paste: (el('condPaste').value||'').trim() || undefined,
+      seedUrls: el('condUrl') && el('condUrl').value ? [el('condUrl').value] : [],
+      livePublic: !!(el('condUrl') && el('condUrl').value) && !(el('condPaste').value||'').trim(),
+      sourceLabel: (el('condUrl') && el('condUrl').value && !(el('condPaste').value||'').trim()) ? 'owner-provided public URLs' : 'owner-provided operational knowledge',
+      requireLocalOwner: !!(el('condUrl') && el('condUrl').value) && !(el('condPaste').value||'').trim(),
+      maxSpendUsd: Number(el('condSpend').value||2),
+      permittedFictionalScenario: { title: 'Conductor fictional eval', fictional: true, prospects: [
+        { id: 'P-HAND', company: 'Cedar & Slate Roofing', facts: { company: 'Cedar & Slate Roofing', country: 'US', monthly_budget_usd: 4800, estimates_by_hand: true, estimating_method: 'spreadsheet' }, evidence: [{ id: 'E-HAND-1', claim: 'US contractor budget 4800', source: 'first_party', age_days: 3 }] },
+        { id: 'P-SOFT', company: 'Metro Pitch Roofing', facts: { company: 'Metro Pitch Roofing', country: 'US', monthly_budget_usd: 5000, uses_estimating_software: true, estimating_method: 'dedicated_software' }, evidence: [{ id: 'E-SOFT-1', claim: 'US contractor budget 5000', source: 'first_party', age_days: 4 }] },
+        { id: 'P-GAP', company: 'Open Deck Roofing', facts: { company: 'Open Deck Roofing', country: 'US', monthly_budget_usd: null, estimates_by_hand: true }, evidence: [{ id: 'E-GAP-1', claim: 'Budget missing', source: 'first_party', age_days: 2 }] },
+        { id: 'P-CA', company: 'Laurentian Ridge Works', facts: { company: 'Laurentian Ridge Works', country: 'CA', monthly_budget_usd: 6200 }, evidence: [{ id: 'E-CA-1', claim: 'Canada HQ', source: 'first_party', age_days: 5 }] }
+      ] }
+    };
+    const out = await api('/conductor/objectives',{method:'POST',body:JSON.stringify(body)});
+    currentObjectiveId = out.objective && out.objective.id;
+    el('condStatus').textContent = 'Submitted '+currentObjectiveId+' · does not authorize outreach';
+    await tickConductor(true);
+  }catch(e){ el('condStatus').textContent = e.message||String(e); }
+}
+async function tickConductor(until){
+  if(!currentObjectiveId){ el('condStatus').textContent = 'No objective.'; return; }
+  try{
+    const out = await api('/conductor/objectives/'+encodeURIComponent(currentObjectiveId)+'/tick',{method:'POST',body:JSON.stringify({untilBlocked: !!until})});
+    el('condStatus').textContent = (out.awaitingOwnerApproval?'awaiting owner approval': (out.objective&&out.objective.status)||'')+' · '+esc(out.disclosure||'');
+    await refreshConductor();
+  }catch(e){ el('condStatus').textContent = e.message||String(e); }
+}
+async function decideConductor(actorType, action, authorizeTrain){
+  if(!currentObjectiveId){ el('condStatus').textContent = 'No objective.'; return; }
+  const v = await api('/conductor/objectives/'+encodeURIComponent(currentObjectiveId));
+  const pending = (v.pendingApprovals||[])[0];
+  if(!pending){ el('condStatus').textContent = 'No pending approval.'; return; }
+  if(v.requireLocalOwner && actorType !== 'local_owner'){
+    el('condStatus').textContent = 'This live approval requires local_owner. demo_operator cannot decide it.';
+    return;
+  }
+  await api('/conductor/approvals/'+encodeURIComponent(pending.id)+'/decide',{method:'POST',body:JSON.stringify({actor:actorType, actorType:actorType, action:action, authorizeAtlasTrain: !!authorizeTrain, assignToAtlas: action==='approve'})});
+  el('condStatus').textContent = actorType+' '+action+' '+pending.id+' · not Mason by name · local session is not IAM';
+  if(action==='approve' || action==='reject') await tickConductor(true);
+}
+async function approveConductorLocalOwner(){ await decideConductor('local_owner','approve', false); }
+async function rejectConductorLocalOwner(){ await decideConductor('local_owner','reject', false); }
+async function exportWorkspaceLocal(){
+  if(!currentWorkspaceId){ el('condStatus').textContent = 'Select a workspace first.'; return; }
+  try{
+    const out = await api('/workspace/export',{method:'POST',body:JSON.stringify({workspaceId:currentWorkspaceId, actor:'local_owner', actorType:'local_owner'})});
+    el('condStatus').textContent = 'Exported '+esc(out.record&&out.record.id)+' checksum '+(out.record&&out.record.checksum||'').slice(0,16)+' · keys excluded';
+  }catch(e){ el('condStatus').textContent = e.message||String(e); }
+}
+async function approveConductorDemo(){
+  if(!currentObjectiveId){ el('condStatus').textContent = 'No objective.'; return; }
+  try{
+    const v = await api('/conductor/objectives/'+encodeURIComponent(currentObjectiveId));
+    const pending = (v.pendingApprovals||[])[0];
+    if(!pending){ el('condStatus').textContent = 'No pending approval.'; return; }
+    if(v.requireLocalOwner){ el('condStatus').textContent = 'Live Mission approval requires local_owner. demo_operator path is tests only.'; return; }
+    await api('/conductor/approvals/'+encodeURIComponent(pending.id)+'/decide',{method:'POST',body:JSON.stringify({actor:'demo_operator', actorType:'demo_operator', action:'approve', authorizeAtlasTrain:true, assignToAtlas:true})});
+    el('condStatus').textContent = 'demo_operator approved '+pending.id+' (not Mason; test/scripted path)';
+    await tickConductor(true);
+  }catch(e){ el('condStatus').textContent = e.message||String(e); }
+}
+async function pauseConductor(){
+  if(!currentObjectiveId) return;
+  await api('/conductor/objectives/'+encodeURIComponent(currentObjectiveId)+'/pause',{method:'POST',body:'{}'});
+  await refreshConductor();
+}
+async function resumeConductor(){
+  if(!currentObjectiveId) return;
+  await api('/conductor/objectives/'+encodeURIComponent(currentObjectiveId)+'/resume',{method:'POST',body:'{}'});
+  await refreshConductor();
+}
+async function runWatcherAudit(){
+  if(!currentWorkspaceId){ el('watcherStatus').textContent = 'Select a workspace first.'; return; }
+  try{
+    const dash = await api('/workspace/'+encodeURIComponent(currentWorkspaceId)+'/dashboard');
+    const runId = dash.latestFictionalRun && dash.latestFictionalRun.id;
+    const out = await api('/watcher/audit',{method:'POST',body:JSON.stringify({workspaceId:currentWorkspaceId, workbenchRunId: runId})});
+    el('watcherStatus').textContent = 'Audit '+(out.report&&out.report.id)+' · '+(out.report&&out.report.status)+' · not a silent fix';
+    await selectWorkspace(currentWorkspaceId);
+  }catch(e){ el('watcherStatus').textContent = e.message||String(e); }
+}
+async function startLocalSession(){
+  try{
+    const out = await api('/session/local-owner',{method:'POST',body:'{}'});
+    if(out && out.session && out.session.id){
+      document.cookie = 'midas_local_owner='+out.session.id+'; path=/; SameSite=Lax';
+    }
+  }catch(e){ /* local session is optional; scripted actions stay demo_operator */ }
+}
+async function refreshPendingOwnerBanner(){
+  const box = el('pendingOwnerBanner');
+  if(!box) return;
+  try{
+    const list = await api('/conductor/pending-approvals');
+    const pending = (list.pending||[])[0];
+    if(!pending){ box.style.display='none'; return; }
+    currentObjectiveId = pending.objectiveId;
+    currentWorkspaceId = pending.workspaceId || currentWorkspaceId || 'ws-ridgeline';
+    box.style.display='block';
+    el('pendingOwnerBannerText').textContent = pending.objectiveId+' / '+pending.approvalId+' is awaiting a local_owner decision. Reject is a valid outcome. demo_operator cannot stand in for this click.';
+    const btn = el('pendingRejectBtn');
+    if(btn) btn.textContent = 'Reject '+pending.objectiveId+' as local_owner';
+  }catch(e){ box.style.display='none'; }
+}
+async function rejectPendingAsLocalOwner(){
+  try{
+    await startLocalSession();
+    const list = await api('/conductor/pending-approvals');
+    const pending = (list.pending||[])[0];
+    if(!pending){ el('pendingOwnerBannerNote').textContent = 'No pending local_owner approval.'; return; }
+    currentObjectiveId = pending.objectiveId;
+    currentWorkspaceId = pending.workspaceId || currentWorkspaceId;
+    await api('/conductor/approvals/'+encodeURIComponent(pending.approvalId)+'/decide',{method:'POST',body:JSON.stringify({actor:'local_owner', actorType:'local_owner', action:'reject', authorizeAtlasTrain:false, assignToAtlas:false})});
+    el('pendingOwnerBannerNote').textContent = 'local_owner rejected '+pending.approvalId+' · not Mason by name · local session is not IAM';
+    await refreshPendingOwnerBanner();
+refreshAuthorizeEmployeeBanner();
+refreshMission14();
+    try { await tickConductor(true); } catch(e) { /* tick after reject is optional */ }
+  }catch(e){ el('pendingOwnerBannerNote').textContent = e.message||String(e); }
+}
+async function authorizeOfferStrategistAsLocalOwner(){
+  try{
+    await startLocalSession();
+    const out = await api('/employees/EMP-001/authorize',{method:'POST',body:JSON.stringify({actor:'local_owner', actorType:'local_owner'})});
+    const note = el('authorizeEmployeeBannerNote');
+    if(note) note.textContent = 'local_owner authorized EMP-001. Not promotion. Not IAM.';
+    if(el('m14Body')) el('m14Body').insertAdjacentHTML('afterbegin', '<p class="ok">local_owner authorized EMP-001. Not promotion. Not IAM.</p>');
+    await refreshAuthorizeEmployeeBanner();
+    await refreshMission14();
+  }catch(e){
+    const msg = e.message||String(e);
+    const note = el('authorizeEmployeeBannerNote');
+    if(note) note.textContent = msg;
+    if(el('m14Body')) el('m14Body').insertAdjacentHTML('afterbegin', '<p class="fail">'+msg+'</p>');
+  }
+}
+async function authorizeOfferStrategistFromBanner(){
+  await authorizeOfferStrategistAsLocalOwner();
+}
+async function refreshAuthorizeEmployeeBanner(){
+  const box = el('authorizeEmployeeBanner');
+  if(!box) return;
+  try{
+    const out = await api('/mission14/review?workspaceId=ws-ridgeline');
+    const roles = out.employeeRoles || [];
+    const waiting = roles.some(function(r){ return r.status==='awaiting_owner_authorization' && (r.roleId==='offer_strategist' || r.id==='EMP-001' || /offer strategist/i.test(r.roleTitle||'')); });
+    if(!waiting){ box.style.display='none'; return; }
+    box.style.display='block';
+    const role = roles.filter(function(r){ return r.status==='awaiting_owner_authorization'; })[0];
+    el('authorizeEmployeeBannerText').textContent = (role && (role.roleTitle||'Offer Strategist'))+' '+(role && (role.id||'EMP-001'))+' is awaiting your local_owner authorization. Not promotion. Not outreach. Not IAM. Conductor will not assign this role until you click.';
+    const btn = el('authorizeEmployeeBtn');
+    if(btn) btn.textContent = 'Authorize Offer Strategist as local_owner';
+  }catch(e){ box.style.display='none'; }
+}
+async function refreshMission16(){
+  const box = el('m16Body');
+  if(!box) return;
+  try{
+    const out = await api('/mission16/review?workspaceId='+encodeURIComponent(currentWorkspaceId||'ws-ridgeline'));
+    const origW = out.originalWatcher || {};
+    const superW = out.supersedingWatcher || {};
+    const rev = out.evaluatorRevision || {};
+    const bakeO = out.bakeoffOriginal || {};
+    const bakeC = out.bakeoffCorrected || {};
+    const prog = out.progression || {};
+    const changed = out.changedJudgments || (out.bakeoffCorrected && out.bakeoffCorrected.changedJudgments) || [];
+    const remain = out.remainingGenuineFailures || (out.bakeoffCorrected && out.bakeoffCorrected.remainingGenuineCriticalFailures) || [];
+    const ev = out.events || {};
+    const num = out.numericNormalization || {};
+    const scope = out.claimScope || {};
+    const osr = out.osr001002 || {};
+    function armLine(by){
+      if(!by) return '';
+      return Object.keys(by).map(function(k){
+        const a = by[k]||{};
+        return '<li><b>'+esc(k)+'</b> mean '+esc(a.mean)+' n='+esc(a.n)+' critical '+(a.criticalFailures||[]).length+'</li>';
+      }).join('');
+    }
+    box.innerHTML =
+      '<p><b>Correction is shown, not hidden.</b> Persistence FILE_STORE. Additional live API $'+esc(out.liveApiUsd)+'. Provider calls '+esc(out.providerCalls)+'.</p>'+
+      '<p><b>OSR-001/002 cause</b> '+esc(osr.cause)+' · attribution '+esc(osr.attribution)+' · employee credit '+esc(osr.employeeCredit)+' · employee blame '+esc(osr.employeeBlame)+' · model executed '+esc(osr.modelExecuted)+'</p>'+
+      '<p><b>Original Watcher</b> '+esc(origW.id||'none')+' <b>'+esc(origW.status||'')+'</b> violations=['+esc((origW.violations||[]).join(', '))+'] · original preserved</p>'+
+      '<p><b>Superseding Watcher</b> '+esc(superW.id||'none')+' <b>'+esc(superW.status||'')+'</b> supersedes '+esc(superW.supersedes)+' · evaluator '+esc(superW.evaluatorRevisionId)+'</p>'+
+      '<p><b>Watcher review</b> falsePositive='+esc(out.watcherReview&&out.watcherReview.falsePositive)+' structuralMatch='+esc(out.watcherReview&&out.watcherReview.structuralMatch)+' — '+esc(out.watcherReview&&out.watcherReview.reason)+'</p>'+
+      '<p><b>Evaluator revision</b> '+esc(rev.id)+' parent '+esc(rev.parent)+' hash <code>'+esc((rev.contentHash||'').slice(0,16))+'</code></p>'+
+      '<p class="muted">'+esc(rev.declaredChange)+'</p>'+
+      '<p><b>Numeric normalization</b> '+esc(num.safeFormatting)+'</p>'+
+      '<p><b>Not equated</b> '+esc((num.notEquated||[]).join('; '))+'</p>'+
+      '<p><b>Assertion vs refusal</b> '+esc(scope.rule)+'</p>'+
+      '<p><b>Original bakeoff</b> '+esc(bakeO.id)+'</p><ul>'+armLine(bakeO.byArm)+'</ul>'+
+      '<p><b>Corrected bakeoff</b> '+esc(bakeC.id)+' parent '+esc(bakeC.parentBakeoffId)+'</p><ul>'+armLine(bakeC.byArm)+'</ul>'+
+      '<p><b>Changed judgments</b></p><ul>'+(changed.length?changed.map(function(c){return '<li>'+esc(c.arm)+' '+esc(c.caseId)+' '+esc(c.originalScore)+'→'+esc(c.correctedScore)+' '+esc(c.attribution)+' — '+esc(c.reason)+'</li>';}).join(''):'<li class="muted">none</li>')+'</ul>'+
+      '<p><b>Remaining genuine failures</b></p><ul>'+(remain.length?remain.map(function(c){return '<li>'+esc(c.arm)+' '+esc(c.caseId)+' '+esc(c.code)+' — '+esc(c.detail)+'</li>';}).join(''):'<li>none on the Offer Strategist arm</li>')+'</ul>'+
+      '<p><b>Progression</b> '+esc(prog.status)+' · '+esc(prog.meaning)+'</p>'+
+      '<p><b>Reason</b> '+esc(prog.reason)+' · not promoted · not autonomous · not world-class</p>'+
+      '<p><b>Events</b> '+(ev.correction||[]).map(function(e){return esc(e.id)+' '+esc(e.kind);}).join(' · ')+'</p>'+
+      '<p class="muted">'+esc(out.disclosure)+'</p>';
+  }catch(e){ box.textContent = e.message||String(e); }
+}
+async function refreshMission15(){
+
+  const box = el('m15Body');
+  if(!box) return;
+  try{
+    const out = await api('/mission15/review?workspaceId='+encodeURIComponent(currentWorkspaceId||'ws-ridgeline'));
+    const run = out.run || {};
+    const ev = run.approved_evidence || [];
+    const watch = out.watcher || {};
+    const bake = out.bakeoff || {};
+    const prog = out.progression || {};
+    const spend = out.spend || {};
+    const byArm = bake.byArm || {};
+    const armLines = Object.keys(byArm).map(function(k){
+      const a = byArm[k]||{};
+      return '<li><b>'+esc(k)+'</b> mean '+esc(a.mean)+' n='+esc(a.n)+' critical '+(a.criticalFailures||[]).length+'</li>';
+    }).join('');
+    box.innerHTML =
+      '<p><b>Role</b> '+(out.role?esc(out.role.id)+' '+esc(out.role.status)+' cap $'+esc(out.role.spendLimitUsd):'none')+' · authorized '+esc(out.role&&out.role.authorizedAt)+' · promoted '+esc(out.role&&out.role.promoted)+'</p>'+
+      '<p><b>Assignment</b> '+(out.assignment?esc(out.assignment.id)+' '+esc(out.assignment.status):'none')+'</p>'+
+      '<p><b>Live</b> '+esc(run.live)+' · fixture '+esc(run.fixture)+' · fixtureFallback '+esc(run.fixtureFallback)+' · parse '+esc(run.parseStatus)+'</p>'+
+      '<p><b>Proposed offer</b> '+esc(run.proposed_offer||'—')+'</p>'+
+      '<p><b>Target customer</b> '+esc(run.target_customer||'—')+'</p>'+
+      '<p><b>Customer problem</b> '+esc(run.customer_problem||'—')+'</p>'+
+      '<p><b>Citations</b></p><ul>'+(ev.length?ev.map(function(e){return '<li>'+esc(e.id)+' — '+esc((e.excerpt||'').slice(0,220))+'</li>';}).join(''):'<li class="muted">none</li>')+'</ul>'+
+      '<p><b>Assumptions</b> '+esc(JSON.stringify(run.assumptions||[]))+'</p>'+
+      '<p><b>Missing information</b> '+esc(JSON.stringify(run.missing_information||[]))+'</p>'+
+      '<p><b>Risks</b> '+esc(JSON.stringify(run.risks||[]))+'</p>'+
+      '<p><b>Recommended validation</b> '+esc(run.recommended_validation_step||'—')+'</p>'+
+      '<p><b>Watcher</b> '+esc(watch.id||'none')+' '+esc(watch.status||'')+' originalPreserved='+esc(watch.originalPreserved)+' violations=['+esc((watch.violations||[]).join(', '))+']</p>'+
+      '<p><b>Bakeoff</b> '+esc(bake.id||'none')+' sealed='+esc(bake.sealedEval)+'</p><ul>'+(armLines||'<li class="muted">none</li>')+'</ul>'+
+      '<p><b>Spend</b> employee $'+esc(spend.employeeUsd)+' / $'+esc(spend.employeeCapUsd)+' remaining $'+esc(spend.employeeRemainingUsd)+'</p>'+
+      '<p><b>Progression</b> '+esc(prog.status)+' · not promoted · gates pass='+esc(prog.gates&&prog.gates.pass)+' failed=['+esc(((prog.gates&&prog.gates.failedIds)||[]).join(', '))+']</p>'+
+      '<p class="muted">'+esc(out.disclosure)+' · OBJ-002 in pending queue: '+esc(out.staleObj002Listed)+' · authorize banner hidden: '+esc(out.authorizeBannerHidden)+'</p>';
+  }catch(e){ box.textContent = e.message||String(e); }
+}
+async function refreshMission14(){
+  const box = el('m14Body');
+  if(!box) return;
+  try{
+    const out = await api('/mission14/review'+(currentWorkspaceId?('?workspaceId='+encodeURIComponent(currentWorkspaceId)):''));
+    const v = out.objective || {};
+    const brief = v.researchBrief || (out.briefs||[]).slice(-1)[0] || {};
+    const fitness = v.sourceFitness || out.fitness || [];
+    const passages = (v.passages || out.passages || []).slice().sort(function(a,b){return (b.score||0)-(a.score||0);});
+    const omitted = v.omittedFindings || [];
+    const why = v.whyReachedOwnerReview || {};
+    const split = v.contributionSplit || {};
+    const gate = out.gate || {};
+    const roles = out.employeeRoles || [];
+    box.innerHTML =
+      '<p><b>Research question</b> '+esc(brief.researchQuestion||v.objective&&v.objective.ownerText||'—')+' · family '+esc(brief.questionFamily||'—')+'</p>'+
+      '<p><b>Useful</b> '+esc((brief.usefulEvidenceCategories||[]).join(', '))+' · <b>Non-relevant</b> '+esc((brief.nonRelevantEvidenceCategories||[]).join(', '))+'</p>'+
+      '<p><b>Source fitness</b> '+(fitness.map(function(f){return esc(f.sourceId)+' '+esc(f.disposition);}).join(' · ')||'none')+'</p>'+
+      '<p><b>Top relevant passages</b></p><ul>'+(passages.filter(function(p){return p.relevant;}).slice(0,5).map(function(p){return '<li>['+esc(p.score)+'] '+esc((p.excerpt||'').slice(0,180))+'</li>';}).join('')||'<li class="muted">none</li>')+'</ul>'+
+      '<p><b>Omitted irrelevant</b></p><ul>'+(passages.filter(function(p){return !p.relevant;}).slice(0,5).map(function(p){return '<li>'+esc((p.deprioritizedReasons||[]).join(','))+' · '+esc((p.excerpt||'').slice(0,140))+'</li>';}).join('')||'<li class="muted">none</li>')+'</ul>'+
+      '<p><b>Usefulness</b> '+(v.usefulness?esc(v.usefulness.id)+' train='+esc(v.usefulness.shouldTrain):'none persisted on this objective')+'</p>'+
+      '<p><b>Why owner review</b> '+esc(JSON.stringify(why))+'</p>'+
+      '<p><b>Shadow</b> '+(v.shadow?esc(v.shadow.outcome||v.shadow.id):'none')+' · <b>Training warranted?</b> '+esc(v.trainingWarranted)+'</p>'+
+      '<p><b>Contributions</b> provisional '+(split.provisional||[]).length+' · verified+effective '+(split.verifiedEffective||[]).length+'</p>'+
+      '<p><b>Employee-creation availability</b> '+esc(out.factory&&out.factory.available)+' · '+esc(out.factory&&out.factory.note)+'</p>'+
+      '<p><b>New role</b> '+(roles.map(function(r){return esc(r.roleTitle)+' '+esc(r.status)+' spend $'+esc(r.spendLimitUsd);}).join(' · ')||'none')+'</p>'+(roles.some(function(r){return r.status==='awaiting_owner_authorization';})?'<p><button type="button" onclick="authorizeOfferStrategistAsLocalOwner()">Authorize Offer Strategist as local_owner</button></p>':'')+
+      '<p><b>Stage I</b> '+(gate.pass?'PASS':'FAIL')+' failed=['+esc((gate.failedIds||[]).join(', '))+']</p>';
+  }catch(e){ box.textContent = e.message||String(e); }
+}
+async function refreshTeaching(){
+  const box = el('teachingBody');
+  const banner = el('teachingApprovalBanner');
+  try{
+    const out = await api('/mission18/review?workspaceId='+encodeURIComponent(currentWorkspaceId||'ws-ridgeline'));
+    const chain = out.chain || {};
+    const pending = out.pendingTeachingApprovals || [];
+    if(banner){
+      if(pending.length){
+        banner.style.display='block';
+        const p = pending[0];
+        el('teachingApprovalText').textContent = 'Lesson '+esc(p.packetId)+' for '+esc(p.recipientEmployeeId)+'. Excerpts: '+(p.excerpts||[]).slice(0,2).join(' | ')+'. They may: '+esc(p.whatTheyMayDo||'supervised internal use only')+'.';
+        banner.dataset.approvalId = p.approvalId;
+      } else {
+        banner.style.display='none';
+        banner.dataset.approvalId = '';
+      }
+    }
+    if(box){
+      box.innerHTML =
+        '<p><b>Capability</b> '+esc(out.capabilityLabel)+' · search integration exists '+esc(out.searchIntegrationExists)+'</p>'+
+        '<p><b>Retrieval</b> '+esc(out.retrievalLabel)+'</p>'+
+        '<p><b>Learning</b> '+esc(out.learningDescription)+'</p>'+
+        '<p><b>Objective</b> '+esc(out.objectiveId)+' · parent '+esc(out.parentBriefId)+'</p>'+
+        '<p><b>Source fetched</b> '+(out.pagesFetched||[]).map(function(p){return esc(p.domain)+' '+esc(p.status);}).join(' · ')+'</p>'+
+        '<p><b>Blocked</b> '+(out.pagesBlocked||[]).map(function(p){return esc(p.domain)+' '+esc(p.failureReason);}).join(' · ')+'</p>'+
+        '<p><b>Relevant</b> '+esc((chain.relevant||[]).length)+' · <b>Finding proposed</b> '+esc((chain.findingProposed||[]).length)+'</p>'+
+        '<p><b>Verified / approved</b> '+esc((chain.verified||[]).join(', ')||'none')+'</p>'+
+        '<p><b>Lesson awaiting approval</b> '+esc((chain.lessonAwaitingApproval||[]).join(', ')||'none')+'</p>'+
+        '<p><b>Delivered</b> '+esc((chain.delivered||[]).join(', ')||'none')+' · used '+esc((chain.used||[]).join(', ')||'none')+' · helped '+esc((chain.helped||[]).join(', ')||'none')+' · did not help '+esc((chain.didNotHelp||[]).join(', ')||'none')+'</p>'+
+        '<p><b>FOB-002</b> '+esc(out.fob002Created)+' — '+esc(out.fob002Reason)+'</p>'+
+        '<p><b>Watcher</b> '+(out.watcher?esc(out.watcher.id)+' '+esc(out.watcher.status):'none')+'</p>'+
+        '<p class="muted">Approve/Reject appears only when a real request exists. Canceled/stale approvals are hidden. I will not click.</p>';
+    }
+  }catch(e){ if(box) box.textContent = e.message||String(e); }
+}
+async function decideTeaching(action){
+  const banner = el('teachingApprovalBanner');
+  const id = banner && banner.dataset && banner.dataset.approvalId;
+  if(!id){ if(el('teachingApprovalNote')) el('teachingApprovalNote').textContent = 'No teaching approval request exists.'; return; }
+  await startLocalSession();
+  await api('/teaching/approvals/'+encodeURIComponent(id)+'/decide',{method:'POST',body:JSON.stringify({actor:'local_owner', actorType:'local_owner', action:action})});
+  await refreshTeaching();
+}
+startLocalSession();
+refresh();
+refreshStudio();
+refreshPendingOwnerBanner();
+refreshMission14();
+refreshMission15();
+refreshMission16();
+refreshFounderBrief();
+refreshTeaching();
+</script>
+</body>
+</html>

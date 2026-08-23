@@ -1,0 +1,29 @@
+{
+  "suiteId": "atlas-dev-v0.1",
+  "suiteVersion": "atlas-prospect-qualification-starter-v0.1.1",
+  "path": "evals/atlas/v0/development/atlas_dev_cases_v0.1.jsonl",
+  "sha256": "c501167c9880d3b53a8b169dbce1093427e6a5689c3a8236937215a3f7a5ae57",
+  "parentSuite": {
+    "suiteId": "atlas-dev-v0",
+    "path": "evals/atlas/v0/development/atlas_dev_cases_v0.jsonl",
+    "sha256": "2092f8da53aa8d5b804fc45f10992e1b16c56a1b1d7f062e3c97f3f7e6284887",
+    "note": "Historical v0 remains loadable and byte-identical. This file is a new revision, not a rewrite of history."
+  },
+  "provenance": "Copied from atlas_dev_cases_v0.jsonl. Only ATLAS-DEV-006 P3 gained a runtime-visible null fact. Gold keys were not deleted.",
+  "changeReason": "Mission 03: expose gold required_unknowns current_first_party_hiring_signal as a runtime fact so the exact-name contract can emit it. Audit found no other invisible gold keys.",
+  "changes": [
+    {
+      "case_id": "ATLAS-DEV-006",
+      "prospect_id": "P3",
+      "added_fact": "current_first_party_hiring_signal",
+      "value": null,
+      "reason": "Gold required_unknowns listed current_first_party_hiring_signal but it was not a runtime-visible fact, so the exact-name contract could not emit it. Exposed as null; open_roles remains null; evidence unchanged."
+    }
+  ],
+  "audit": {
+    "ok": true,
+    "findings": [],
+    "caseCount": 8,
+    "auditedAt": "2026-08-21T04:06:46.037Z"
+  }
+}

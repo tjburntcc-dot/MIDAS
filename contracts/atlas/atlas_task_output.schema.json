@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://midas.local/schemas/atlas-task-output-v0.json",
+  "title": "Atlas prospect qualification structured output v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "assessments", "ranked_qualified_ids", "research_queue_ids", "excluded_ids", "case_uncertainties"],
+  "properties": {
+    "case_id": { "type": "string", "pattern": "^ATLAS-(DEV|SEALED)-[0-9]{3}$" },
+    "assessments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prospect_id", "classification", "fit_score", "cited_evidence_ids", "rationale", "missing_information", "next_action", "disqualification_reason"],
+        "properties": {
+          "prospect_id": { "type": "string", "pattern": "^P[0-9]{1,2}$" },
+          "classification": { "enum": ["qualified", "needs_research", "disqualified"] },
+          "fit_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "cited_evidence_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^E[0-9]{1,2}$" } },
+          "rationale": { "type": "string", "minLength": 12 },
+          "missing_information": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 2 } },
+          "next_action": { "enum": ["prioritize_outreach", "research_first", "exclude"] },
+          "disqualification_reason": { "type": ["string", "null"] }
+        },
+        "allOf": [
+          { "if": { "properties": { "classification": { "const": "qualified" } } }, "then": { "properties": { "next_action": { "const": "prioritize_outreach" }, "disqualification_reason": { "type": "null" } } } },
+          { "if": { "properties": { "classification": { "const": "needs_research" } } }, "then": { "properties": { "next_action": { "const": "research_first" }, "disqualification_reason": { "type": "null" } } } },
+          { "if": { "properties": { "classification": { "const": "disqualified" } } }, "then": { "properties": { "next_action": { "const": "exclude" }, "disqualification_reason": { "type": "string", "minLength": 5 } } } }
+        ]
+      }
+    },
+    "ranked_qualified_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^P[0-9]{1,2}$" } },
+    "research_queue_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^P[0-9]{1,2}$" } },
+    "excluded_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^P[0-9]{1,2}$" } },
+    "case_uncertainties": { "type": "array", "items": { "type": "string", "minLength": 5 } }
+  }
+}

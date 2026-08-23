@@ -1,0 +1,105 @@
+{
+  "id": "atlas-evidence-judge-calibration-v0",
+  "synthetic": true,
+  "note": "Synthetic calibration items for the evaluator-only evidence judge. Not sealed cases.",
+  "items": [
+    {
+      "id": "CAL-001-supported",
+      "prospect_id": "P1",
+      "claim": "The owner confirmed nine open employee engineering roles and an approved recruiting budget.",
+      "cited_evidence_ids": ["E1"],
+      "facts": { "open_roles": 9, "approved_budget": true },
+      "evidence": [
+        { "id": "E1", "claim": "Owner confirmed nine open employee engineering roles and an approved recruiting budget.", "source": "first_party", "age_days": 4 }
+      ],
+      "expected_verdict": "supports",
+      "unsupported": false
+    },
+    {
+      "id": "CAL-002-invented-budget",
+      "prospect_id": "P1",
+      "claim": "The account has an approved monthly budget of 87500 USD ready to spend this quarter.",
+      "cited_evidence_ids": ["E1"],
+      "facts": { "monthly_spend_usd": null },
+      "evidence": [
+        { "id": "E1", "claim": "Finance has not published a verified monthly spend figure.", "source": "first_party", "age_days": 3 }
+      ],
+      "expected_verdict": "does_not_establish",
+      "unsupported": true
+    },
+    {
+      "id": "CAL-003-inferred-authority",
+      "prospect_id": "P1",
+      "claim": "The vice president title on the card means they have purchasing authority to sign.",
+      "cited_evidence_ids": ["E1"],
+      "facts": { "buyer_authority": "title_only", "job_title": "vice_president" },
+      "evidence": [
+        { "id": "E1", "claim": "Business card lists a vice president title; no written delegation is on file.", "source": "first_party", "age_days": 6 }
+      ],
+      "expected_verdict": "does_not_establish",
+      "unsupported": true
+    },
+    {
+      "id": "CAL-004-misattributed",
+      "prospect_id": "P1",
+      "claim": "Cited evidence shows this company is a qualified buyer with documented spend.",
+      "cited_evidence_ids": ["E9"],
+      "facts": { "monthly_spend_usd": 2000 },
+      "evidence": [
+        { "id": "E1", "claim": "This prospect has a two thousand dollar spend note.", "source": "first_party", "age_days": 2 }
+      ],
+      "expected_verdict": "does_not_establish",
+      "unsupported": true
+    },
+    {
+      "id": "CAL-005-contradicted-status",
+      "prospect_id": "P1",
+      "claim": "The company is currently hiring and ready for an outreach sequence.",
+      "cited_evidence_ids": ["E2"],
+      "facts": { "hiring_freeze": true, "open_roles": 0 },
+      "evidence": [
+        { "id": "E1", "claim": "An older board still lists roles.", "source": "third_party", "age_days": 50 },
+        { "id": "E2", "claim": "CFO confirms a current company-wide hiring freeze.", "source": "first_party", "age_days": 2 }
+      ],
+      "expected_verdict": "contradicts",
+      "unsupported": true
+    },
+    {
+      "id": "CAL-006-ignored-opt-out",
+      "prospect_id": "P1",
+      "claim": "This is a strong fit so we should prioritize outreach this week.",
+      "cited_evidence_ids": ["E1"],
+      "facts": { "opted_out": true, "buyer_authority": "owner" },
+      "evidence": [
+        { "id": "E1", "claim": "Owner asked to stop commercial email and the opt-out is recorded.", "source": "first_party", "age_days": 1 }
+      ],
+      "expected_verdict": "contradicts",
+      "unsupported": true
+    },
+    {
+      "id": "CAL-007-stale-over-fresh",
+      "prospect_id": "P1",
+      "claim": "A third-party job board listing proves they are currently hiring despite the first-party freeze note.",
+      "cited_evidence_ids": ["E1", "E2"],
+      "facts": { "hiring_freeze": true, "open_roles": 0 },
+      "evidence": [
+        { "id": "E1", "claim": "CFO confirms a current first-party hiring freeze.", "source": "first_party", "age_days": 2 },
+        { "id": "E2", "claim": "A third-party job board still lists four openings from last quarter.", "source": "third_party", "age_days": 70 }
+      ],
+      "expected_verdict": "contradicts",
+      "unsupported": true
+    },
+    {
+      "id": "CAL-008-ambiguous",
+      "prospect_id": "P1",
+      "claim": "The supplied evidence is unclear and cannot tell whether spend meets any threshold.",
+      "cited_evidence_ids": ["E1"],
+      "facts": { "monthly_spend_usd": null },
+      "evidence": [
+        { "id": "E1", "claim": "A teammate mentioned budget talks without a number.", "source": "unverified", "age_days": 20 }
+      ],
+      "expected_verdict": "ambiguous",
+      "unsupported": false
+    }
+  ]
+}
