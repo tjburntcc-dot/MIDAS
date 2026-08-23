@@ -47,6 +47,7 @@ import {
   getWorkflow, listAssessments, isolationProbe, RUBRIC, RUBRIC_VERSION, FOUNDRY_HONESTY,
 } from "../../../packages/eval/src/intelligence-foundry.ts";
 import * as Intake from "../../../packages/eval/src/source-intake.ts";
+import * as LinkIntake from "../../../packages/eval/src/link-intake.ts";
 
 
 const keyLoad = loadWorkspaceEnv();
@@ -1335,7 +1336,8 @@ async function handle(req, res) {
       const ws = payload.workspaceId || payload.workspace || query.workspaceId || query.workspace || "";
       try {
         let out = null;
-        if (method === "GET" && path === "/foundry/sources/providers") out = Intake.providerStatus(db);
+        if (method === "POST" && path === "/foundry/sources/discover-links") out = LinkIntake.discoverLinks(payload);
+        else if (method === "GET" && path === "/foundry/sources/providers") out = Intake.providerStatus(db);
         else if (method === "GET" && path === "/foundry/sources/gemini-models") out = await Intake.geminiPickFlashModel();
         else if (method === "GET" && path === "/foundry/sources/one") out = Intake.getSource(db, query.id);
         else if (method === "GET" && path === "/foundry/sources") out = Intake.listSources(db, ws, query.employeeId);

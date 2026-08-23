@@ -134,7 +134,17 @@ export const SOURCE_TYPES = [
   { id: "youtube_url",   label: "YouTube video link",       needs: "url",  provider: "gemini", paid: true },
 ];
 
-export function geminiConfigured() { return Boolean(txt(process.env.GEMINI_API_KEY).trim()); }
+/* GEMINI_API_KEY is the documented primary. GOOGLE_API_KEY is accepted as a
+   fallback because Google AI Studio hands some users that name instead. */
+export function geminiKey() {
+  return txt(process.env.GEMINI_API_KEY).trim() || txt(process.env.GOOGLE_API_KEY).trim();
+}
+export function geminiKeySource() {
+  if (txt(process.env.GEMINI_API_KEY).trim()) return "GEMINI_API_KEY";
+  if (txt(process.env.GOOGLE_API_KEY).trim()) return "GOOGLE_API_KEY";
+  return null;
+}
+export function geminiConfigured() { return Boolean(geminiKey()); }
 export function tavilyConfigured() { return Boolean(txt(process.env.TAVILY_API_KEY).trim()); }
 export function openaiConfigured() { return Boolean(txt(process.env.OPENAI_API_KEY).trim()); }
 
@@ -164,6 +174,7 @@ export function providerStatus(store) {
         : "Needs a GEMINI_API_KEY in the project .env file. Until then, paste the transcript instead.",
       setup: geminiConfigured() ? null : {
         variable: "GEMINI_API_KEY",
+        alsoAccepts: "GOOGLE_API_KEY",
         where: "the .env file in the MIDAS folder",
         howToGet: "https://aistudio.google.com/apikey",
         thenRestart: true,
@@ -303,8 +314,8 @@ async function fetchArticle(store, input) {
 /* ---- Gemini: watch a public YouTube video ---- */
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
 export async function geminiPickFlashModel() {
-  const key = txt(process.env.GEMINI_API_KEY).trim();
-  if (!key) return { ok: false, error: "GEMINI_API_KEY is not set." };
+  const key = geminiKey();
+  if (!key) return { ok: false, error: "Neither GEMINI_API_KEY nor GOOGLE_API_KEY is set." };
   let res;
   try {
     res = await fetch(GEMINI_BASE + "/models?key=" + encodeURIComponent(key), { signal: AbortSignal.timeout(20000) });
@@ -338,7 +349,7 @@ const VIDEO_PROMPT =
   "Use timestamps where you can. Do not invent content that is not in the video.";
 
 async function geminiWatchYouTube(store, input) {
-  const key = txt(process.env.GEMINI_API_KEY).trim();
+  const key = geminiKey();
   if (!key) {
     return { ok: false, provider: "gemini", billable: false, needsSetup: true,
       error: "No Gemini key is configured, so MIDAS cannot watch the video. Paste the transcript instead, or add GEMINI_API_KEY to the .env file and restart." };

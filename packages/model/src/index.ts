@@ -70,7 +70,8 @@ export function loadWorkspaceEnv() {
       // credentials and model choice from the project file override the ambient
       // environment; anything else only fills a gap
       const projectAuthoritative = key === "OPENAI_API_KEY" || key === "OPENAI_MODEL"
-        || key === "GEMINI_API_KEY" || key === "TAVILY_API_KEY" || key === "TRANSCRIPT_API_KEY";
+        || key === "GEMINI_API_KEY" || key === "GOOGLE_API_KEY"
+        || key === "TAVILY_API_KEY" || key === "TRANSCRIPT_API_KEY";
       if (projectAuthoritative || process.env[key] === undefined) process.env[key] = val;
     }
     read = true;
