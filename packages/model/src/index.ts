@@ -591,3 +591,10 @@ export function cosineSimilarity(a, b) {
   if (!na || !nb) return 0;
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
+
+/* ---- OpenRouter (optional third provider) ---- */
+export {
+  OpenRouterProvider, OPENROUTER_BASE, OX_ALPHA_MODEL, OPENROUTER_DISCLOSURE,
+  MissingOpenRouterKey, EgressBlocked, openRouterKey, openRouterConfigured,
+  openRouterFingerprint, openRouterGenerationCost, probeOpenRouter, scanForSecrets,
+} from "./openrouter.ts";

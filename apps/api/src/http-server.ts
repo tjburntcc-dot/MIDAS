@@ -48,6 +48,9 @@ import {
 } from "../../../packages/eval/src/intelligence-foundry.ts";
 import * as Intake from "../../../packages/eval/src/source-intake.ts";
 import * as LinkIntake from "../../../packages/eval/src/link-intake.ts";
+import { OpenRouterProvider, probeOpenRouter, OPENROUTER_DISCLOSURE, openRouterConfigured, openRouterFingerprint, openRouterGenerationCost } from "@midas/model";
+import { validateAgainstSchema, repairInstruction } from "../../../packages/eval/src/schema-guard.ts";
+import { resolveRoute, setRoute, publicRouting, modelCatalogue } from "../../../packages/eval/src/model-routing.ts";
 
 
 const keyLoad = loadWorkspaceEnv();
@@ -122,25 +125,91 @@ function makeOfferStrategistResponder() {
   };
 }
 
-function makeSpecialistResponder() {
+function makeSpecialistResponder(routeCtx) {
   return async (input) => {
-    const provider = new OpenAIResponsesProvider();
     const taskType = (input && input.taskType) || "offer_strategist";
     const contract = LIVE_SPECIALIST_CONTRACTS[taskType];
     const pb = (input && input.instructions) || (contract ? (contract.system + "\n" + contract.developer) : "Return JSON only.");
-    const completion = await provider.complete({
-      input: input && (input.input != null ? input.input : input),
-      instructions: typeof pb === "string" ? pb : String(pb),
-      outputSchema: (input && input.outputSchema) || (contract && contract.outputSchema) || undefined,
+    const outputSchema = (input && input.outputSchema) || (contract && contract.outputSchema) || undefined;
+    const instructions = typeof pb === "string" ? pb : String(pb);
+    const payloadInput = input && (input.input != null ? input.input : input);
+
+    /* which model should do this piece of work */
+    const db = createStore();
+    const route = resolveRoute(db, {
+      workspaceId: (routeCtx && routeCtx.workspaceId) || (input && input.workspaceId),
+      employeeId: (routeCtx && routeCtx.employeeId) || (input && input.employeeId),
+      taskKind: (input && input.taskKind) || taskType,
     });
-    if (completion.kind !== "live") throw new Error("Specialist live call was not live. Not falling back to fixture.");
+
+    async function runOn(provider, modelLabel) {
+      const completion = await provider.complete({ input: payloadInput, instructions, outputSchema });
+      if (completion.kind !== "live") throw new Error("Specialist live call was not live. Not falling back to fixture.");
+      return completion;
+    }
+
+    let completion = null;
+    let usedRoute = route;
+    let validation = null;
+    let fellBack = null;
+
+    if (route.provider === "openrouter") {
+      try {
+        completion = await runOn(new OpenRouterProvider(undefined, route.model));
+        /* ox-alpha does not enforce the schema, so enforce it here */
+        if (outputSchema) {
+          validation = validateAgainstSchema(completion.text, outputSchema);
+          if (!validation.ok) {
+            /* one bounded repair attempt before giving up on this provider */
+            const repair = await new OpenRouterProvider(undefined, route.model).complete({
+              input: payloadInput,
+              instructions: instructions + "\n\n" + repairInstruction(outputSchema, validation.errors),
+              outputSchema,
+            });
+            const v2 = validateAgainstSchema(repair.text, outputSchema);
+            if (v2.ok) { completion = repair; validation = v2; }
+            else {
+              fellBack = "Ox Alpha did not return the required JSON shape after a retry, so the default model was used instead.";
+              completion = null;
+            }
+          }
+        }
+      } catch (err) {
+        fellBack = "Ox Alpha failed (" + String(err && err.message || err).slice(0, 120) + "), so the default model was used instead.";
+        completion = null;
+      }
+      if (!completion) {
+        usedRoute = Object.assign({}, route, { provider: "openai", model: "gpt-4.1", modelId: "openai:gpt-4.1", label: "OpenAI GPT-4.1" });
+        completion = await runOn(new OpenAIResponsesProvider());
+        validation = outputSchema ? validateAgainstSchema(completion.text, outputSchema) : null;
+      }
+    } else {
+      completion = await runOn(new OpenAIResponsesProvider(undefined, route.model));
+      /* validate the enforcing provider too: cheap, and it catches contract drift */
+      validation = outputSchema ? validateAgainstSchema(completion.text, outputSchema) : null;
+    }
+
     return {
       text: completion.text,
       raw: completion.raw,
       kind: "live",
       usage: completion.usage || { inputTokens: null, outputTokens: null },
-      model: (completion.raw && completion.raw.model) || process.env.OPENAI_MODEL || "gpt-4.1",
-      providerRequestId: completion.raw && completion.raw.id,
+      model: (completion.raw && completion.raw.model) || completion.model || usedRoute.model,
+      providerRequestId: (completion.raw && completion.raw.id) || completion.generationId || null,
+      providerName: completion.providerName || usedRoute.provider,
+      latencyMs: completion.latencyMs != null ? completion.latencyMs : null,
+      route: {
+        requested: route.modelId,
+        used: usedRoute.modelId,
+        level: route.level,
+        retainsData: Boolean(usedRoute.retainsData),
+        enforcedSchemaLocally: usedRoute.provider === "openrouter",
+        fellBack: fellBack,
+        notes: route.notes,
+      },
+      schemaValidation: validation
+        ? { ok: validation.ok, repaired: Boolean(validation.repaired), recovered: Boolean(validation.recovered), errors: validation.errors }
+        : null,
     };
   };
 }
@@ -1336,7 +1405,11 @@ async function handle(req, res) {
       const ws = payload.workspaceId || payload.workspace || query.workspaceId || query.workspace || "";
       try {
         let out = null;
-        if (method === "POST" && path === "/foundry/sources/discover-links") out = LinkIntake.discoverLinks(payload);
+        if (method === "GET" && path === "/foundry/models") out = publicRouting(db);
+        else if (method === "GET" && path === "/foundry/models/probe") out = await probeOpenRouter(query.model);
+        else if (method === "POST" && path === "/foundry/models/select") out = setRoute(db, payload);
+        else if (method === "POST" && path === "/foundry/models/resolve") out = { built: true, route: resolveRoute(db, payload) };
+        else if (method === "POST" && path === "/foundry/sources/discover-links") out = LinkIntake.discoverLinks(payload);
         else if (method === "GET" && path === "/foundry/sources/providers") out = Intake.providerStatus(db);
         else if (method === "GET" && path === "/foundry/sources/gemini-models") out = await Intake.geminiPickFlashModel();
         else if (method === "GET" && path === "/foundry/sources/one") out = Intake.getSource(db, query.id);

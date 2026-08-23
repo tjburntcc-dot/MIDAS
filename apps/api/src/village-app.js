@@ -1442,7 +1442,7 @@ async function scrEmployee(co, empId){
     right: '<span class="pill '+s.key+'"><i></i>'+esc(s.label)+'</span>'
          + '<a class="btn sm ghost" href="'+base+'/team">Back to team</a>',
     body,
-    mount(root){ mountBrain(root, co, emp); },
+    mount(root){ mountBrain(root, co, emp); mountModelPicker(root, 'employee', { employeeId: emp.id }); },
   };
 }
 
@@ -2060,6 +2060,7 @@ function fmtUsd(n){ return (n == null || !isFinite(n)) ? '$0.00' : (n === 0 ? '$
 async function brainSection(co, emp){
   const b = await apiGet('/foundry/brain?employeeId=' + encodeURIComponent(emp.id));
   if (!b || b.ok === false) return '';
+  const routing = await apiGet('/foundry/models');
   const d = b.development || {};
   const pb = b.playbook;
   const base = '#/c/' + encodeURIComponent(co.id);
@@ -2106,6 +2107,11 @@ async function brainSection(co, emp){
   h += '<details class="adv"><summary>Advanced detail</summary><pre>'
     + esc(JSON.stringify({ identity: b.identity, roleKnowledge: b.roleKnowledge, workMemory: b.workMemory }, null, 2))
     + '</pre></details></div>';
+  h += modelPickerCard(routing, 'employee', {
+    employeeId: emp.id,
+    title: 'Model for ' + empName(emp),
+    blurb: 'Overrides the company setting for this one person. Useful for routing coding or drafting work somewhere different from analysis.',
+  });
   return h;
 }
 
@@ -2162,6 +2168,109 @@ function evalCard(e){
     + '</div>';
 }
 
+
+
+/* ---- model selection: portfolio, company, and employee scopes ---- */
+function modelPickerCard(routing, scope, opts){
+  const o = opts || {};
+  const cat = (routing && routing.catalogue) || [];
+  const current =
+    scope === 'portfolio' ? (routing && routing.portfolio) :
+    scope === 'company'   ? (routing && routing.companies && routing.companies[o.workspaceId]) :
+                            (routing && routing.employees && routing.employees[o.employeeId]);
+  const currentId = current ? current.modelId : null;
+  const inheritLabel =
+    scope === 'portfolio' ? 'MIDAS default (OpenAI GPT-4.1)' :
+    scope === 'company'   ? 'Whatever the portfolio uses' :
+                            'Whatever this company uses';
+
+  let h = '<div class="card pad" data-mp="' + esc(scope) + '">'
+    + '<span class="kicker">Which model does the thinking</span>'
+    + '<h3 style="margin:6px 0 0;font-size:15px">' + esc(o.title || 'Model') + '</h3>'
+    + '<p class="note" style="margin:8px 0 0;max-width:72ch">' + esc(o.blurb || '') + '</p>';
+
+  h += '<div class="chips" id="mpChips" style="margin-top:16px">'
+    + '<button type="button" class="chip' + (currentId ? '' : ' on') + '" data-mid="inherit">' + esc(inheritLabel) + '</button>'
+    + cat.map(function(m){
+        const on = currentId === m.id;
+        const t = m.available ? '' : ' title="' + esc(m.note || 'not configured') + '"';
+        return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-mid="' + esc(m.id) + '"'
+          + (m.available ? '' : ' data-unavailable="1"') + t + '>'
+          + esc(m.label) + (m.available ? '' : ' · not set up') + '</button>';
+      }).join('')
+    + '</div>';
+
+  /* the honest disclosure, always visible, not buried */
+  const ox = cat.find(function(m){ return m.provider === 'openrouter'; });
+  if (ox){
+    h += '<div class="quote" style="margin-top:16px;border-left-color:var(--gold)">'
+      + '<b>About Ox Alpha</b><br/>'
+      + esc(ox.warning || '')
+      + '<ul class="bul" style="margin-top:8px">'
+      + '<li>Free today, but the operator is anonymous.</li>'
+      + '<li>It keeps what you send and what it replies. Treat it as public.</li>'
+      + '<li>It does not guarantee JSON shape, so MIDAS checks every reply here before using it.</li>'
+      + '<li>MIDAS never sends it keys, .env contents, customer details, or raw application state.</li>'
+      + '<li>It cannot approve anything or widen a permission.</li>'
+      + '</ul></div>';
+  }
+
+  if (routing && routing.restrictedTasks && routing.restrictedTasks.length){
+    h += '<p class="note" style="margin-top:12px">Always handled by the default model whatever you pick here: '
+      + esc(routing.restrictedTasks.map(humanKind).join(', ').toLowerCase()) + '.</p>';
+  }
+
+  h += '<div id="mpOut" style="margin-top:14px"></div></div>';
+  return h;
+}
+
+function mountModelPicker(root, scope, opts){
+  const o = opts || {};
+  const card = root.querySelector('[data-mp="' + scope + '"]');
+  if (!card) return;
+  const out = card.querySelector('#mpOut');
+
+  card.querySelectorAll('[data-mid]').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      const modelId = btn.getAttribute('data-mid');
+      if (btn.getAttribute('data-unavailable')){
+        out.innerHTML = '<div class="item"><div class="ihd"><h6>Not set up yet</h6>'
+          + '<span class="badge off"><i></i>unavailable</span></div>'
+          + '<p>Add <code>OPENROUTER_API_KEY</code> to the <code>.env</code> file in the MIDAS folder, then restart MIDAS. '
+          + 'Get a key at openrouter.ai.</p></div>';
+        return;
+      }
+      const body = { scope: scope, modelId: modelId };
+      if (o.workspaceId) body.workspaceId = o.workspaceId;
+      if (o.employeeId) body.employeeId = o.employeeId;
+
+      let res = await apiPost('/foundry/models/select', body);
+      if (res.requiresAcknowledgement){
+        out.innerHTML = '<div class="item"><div class="ihd"><h6>Confirm before routing work here</h6>'
+          + '<span class="badge wait"><i></i>needs your OK</span></div>'
+          + '<p>' + esc(res.error) + '</p>'
+          + '<div class="acts" style="margin-top:10px">'
+          + '<button class="btn sm primary" id="mpAck">I understand, use Ox Alpha</button>'
+          + '<button class="btn sm ghost" id="mpCancel">Cancel</button></div></div>';
+        card.querySelector('#mpCancel').addEventListener('click', function(){ out.innerHTML = ''; });
+        card.querySelector('#mpAck').addEventListener('click', async function(){
+          body.acknowledgeDisclosure = true;
+          const r2 = await apiPost('/foundry/models/select', body);
+          if (r2.ok === false || r2.error){ out.innerHTML = '<div class="empty">' + esc(errText(r2)) + '</div>'; return; }
+          toast('Work here now goes to Ox Alpha.');
+          route();
+        });
+        return;
+      }
+      if (res.ok === false || res.error){
+        out.innerHTML = '<div class="item"><p>' + esc(errText(res)) + '</p></div>';
+        return;
+      }
+      toast(res.cleared ? 'Reverted to the inherited model.' : 'Model updated.');
+      route();
+    });
+  });
+}
 
 /* ---- owner-directed source intake, inside the existing Learning engine ---- */
 const SRC_TYPE_HELP = {
@@ -2366,7 +2475,7 @@ function mountSourceIntake(root, co){
 /* ---- the learning engine screen for one company ---- */
 async function scrFoundry(co){
   const base = '#/c/' + encodeURIComponent(co.id);
-  const [ov, evs, lessons, flows, plans, provs, srcs, costs] = await Promise.all([
+  const [ov, evs, lessons, flows, plans, provs, srcs, costs, routing] = await Promise.all([
     apiGet('/foundry/overview?workspaceId=' + encodeURIComponent(co.id)),
     apiGet('/foundry/evaluations?workspaceId=' + encodeURIComponent(co.id)),
     apiGet('/foundry/lessons?workspaceId=' + encodeURIComponent(co.id)),
@@ -2375,6 +2484,7 @@ async function scrFoundry(co){
     apiGet('/foundry/sources/providers'),
     apiGet('/foundry/sources?workspaceId=' + encodeURIComponent(co.id)),
     apiGet('/foundry/costs?workspaceId=' + encodeURIComponent(co.id)),
+    apiGet('/foundry/models'),
   ]);
   const counts = (ov && ov.counts) || {};
   const evals = ((evs && evs.evaluations) || []).slice().sort((a,b) => txtCmp(b.at, a.at));
@@ -2384,6 +2494,11 @@ async function scrFoundry(co){
   const ret = (ov && ov.retrieval) || {};
 
   let body = sourceIntakeCard(co, provs, srcs);
+  body += modelPickerCard(routing, 'company', {
+    workspaceId: co.id,
+    title: 'Model for ' + co.name,
+    blurb: 'Applies to everyone at this business unless you override a single employee.',
+  });
   body += '<div class="stat-grid">'
     + statBox('Learning sessions', String(counts.learningSessions || 0))
     + statBox('Reviewed runs', String(counts.evaluations || 0))
@@ -2505,6 +2620,7 @@ async function scrFoundry(co){
     crumbs: coCrumbs(co, 'Learning engine'), right: coStatusPill(co), body,
     mount(root){
       mountSourceIntake(root, co);
+      mountModelPicker(root, 'company', { workspaceId: co.id });
       const iso = root.querySelector('#isoProbe');
       if (iso) iso.addEventListener('click', async () => {
         const other = (STATE.portfolio.companies.find(c => c.id !== co.id) || {}).id;
@@ -2849,6 +2965,12 @@ async function scrSettings(){
       'Anything marked "not set up" genuinely does not work yet. MIDAS will not pretend otherwise.',
       '<div class="list">'+integrations.concat(adapters).map(integrationRow).join('')+'</div>');
 
+  const routing = await apiGet('/foundry/models');
+  body += modelPickerCard(routing, 'portfolio', {
+    title: 'Default model for everything',
+    blurb: 'Every business and every employee uses this unless you override it for one of them.',
+  });
+
   body += card('Where your data lives','Storage and isolation','',
       '<div class="rows">'
       + rowLine('Storage', 'On this machine')
@@ -2868,7 +2990,8 @@ async function scrSettings(){
 
   return {sideActive:'settings', kicker:'Portfolio', title:'Settings',
     sub:'What MIDAS is connected to, and what it genuinely cannot do yet.',
-    crumbs:[VILLAGE_CRUMB,{label:'Settings'}], body};
+    crumbs:[VILLAGE_CRUMB,{label:'Settings'}], body,
+    mount(root){ mountModelPicker(root, 'portfolio', {}); }};
 }
 
 /* ============================================================================
