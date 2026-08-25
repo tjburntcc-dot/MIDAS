@@ -1,0 +1,20 @@
+{
+  "id": "atlas-judge-calibration-v0.3",
+  "path": "packages/eval/src/fixtures/judge-calibration-v03.json",
+  "n": 78,
+  "sha256": "a5f8cccba4d02fed17e52f3769e4f324e5f52cdfd1a9929fbb42baa89464eb5c",
+  "classes": {
+    "supported": 16,
+    "unsupported": 16,
+    "contradicted": 16,
+    "record_state": 14,
+    "ambiguous": 16
+  },
+  "derivedFrom": "atlas-judge-calibration-v0.2",
+  "predecessorSha256": "f9965cbc05ee1c18d9f3fa5b343bf0fa5c3fcc731cafb7e31fa08807fe2607af",
+  "rubric": "docs/evidence-judge/VERDICT_RUBRIC_V03.md",
+  "labelsChanged": 14,
+  "itemsAuthored": 14,
+  "ambiguousRetainedFromV02": 2,
+  "note": "Labels frozen before running the v0.3 judge instructions."
+}

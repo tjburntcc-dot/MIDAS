@@ -1,0 +1,835 @@
+{
+  "id": "atlas-judge-adversarial-v0.3",
+  "version": "atlas-judge-adversarial-v0.3",
+  "synthetic": true,
+  "n": 31,
+  "rubric": "docs/evidence-judge/VERDICT_RUBRIC_V03.md",
+  "note": "Adversarial boundary set. Authored after the rubric was frozen and never used to tune it. Held out from calibration: qualification requires passing both this set and the calibration set at the same unchanged gates.",
+  "classes": {
+    "record_state": 6,
+    "unsupported": 7,
+    "contradicted": 6,
+    "ambiguous": 6,
+    "supported": 6
+  },
+  "items": [
+    {
+      "id": "X03-R1",
+      "class": "record_state",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "The onboarding date is not captured anywhere in the record.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "onboarding_date": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The onboarding date field was never populated.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "blank_field_reported",
+      "synthetic": true
+    },
+    {
+      "id": "X03-R2",
+      "class": "record_state",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "Renewal terms cannot be determined from the attached summary.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "renewal_terms": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The summary omits the renewal section entirely.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "omitted_section_reported",
+      "synthetic": true
+    },
+    {
+      "id": "X03-R3",
+      "class": "record_state",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "The headcount figure is stale and its current value is not established.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "headcount": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "Headcount was captured two hundred and ten days ago at two hundred.",
+          "source": "first_party",
+          "age_days": 210
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "staleness_reported",
+      "synthetic": true
+    },
+    {
+      "id": "X03-R4",
+      "class": "record_state",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "The questionnaire answer is hedged and does not commit to a control.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "encryption_at_rest": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The questionnaire answer reads that the vendor generally aims to encrypt at rest.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "hedge_reported",
+      "synthetic": true
+    },
+    {
+      "id": "X03-R5",
+      "class": "record_state",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "No document in the record ties this contact to signing power.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "buyer_authority": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The authority folder contains an org chart and no delegation instrument.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "absent_instrument_reported",
+      "synthetic": true
+    },
+    {
+      "id": "X03-R6",
+      "class": "record_state",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "Whether the pilot converted is not recorded.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "pilot_converted": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The pilot outcome field is empty.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "empty_outcome_reported",
+      "synthetic": true
+    },
+    {
+      "id": "X03-U1",
+      "class": "unsupported",
+      "expected_verdict": "does_not_establish",
+      "prospect_id": "P1",
+      "claim": "The onboarding date was the twelfth of March.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "onboarding_date": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The onboarding date field was never populated.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": true,
+      "critical_fabricated": true,
+      "subtype": "blank_field_filled",
+      "synthetic": true
+    },
+    {
+      "id": "X03-U2",
+      "class": "unsupported",
+      "expected_verdict": "does_not_establish",
+      "prospect_id": "P1",
+      "claim": "Renewal is automatic under the current terms.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "renewal_terms": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The summary omits the renewal section entirely.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": true,
+      "critical_fabricated": false,
+      "subtype": "omitted_section_asserted",
+      "synthetic": true
+    },
+    {
+      "id": "X03-U3",
+      "class": "unsupported",
+      "expected_verdict": "does_not_establish",
+      "prospect_id": "P1",
+      "claim": "Current headcount is two hundred.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "headcount": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "Headcount was captured two hundred and ten days ago at two hundred.",
+          "source": "first_party",
+          "age_days": 210
+        }
+      ],
+      "unsupported": true,
+      "critical_fabricated": false,
+      "subtype": "stale_as_current",
+      "synthetic": true
+    },
+    {
+      "id": "X03-U4",
+      "class": "unsupported",
+      "expected_verdict": "does_not_establish",
+      "prospect_id": "P1",
+      "claim": "The vendor encrypts customer data at rest.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "encryption_at_rest": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The questionnaire answer reads that the vendor generally aims to encrypt at rest.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": true,
+      "critical_fabricated": false,
+      "subtype": "hedge_as_commitment",
+      "synthetic": true
+    },
+    {
+      "id": "X03-U5",
+      "class": "unsupported",
+      "expected_verdict": "does_not_establish",
+      "prospect_id": "P1",
+      "claim": "The chief of staff title confirms signing power for this contact.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "buyer_authority": null,
+        "job_title": "chief_of_staff"
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The authority folder contains an org chart and no delegation instrument.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": true,
+      "critical_fabricated": false,
+      "subtype": "title_as_authority",
+      "synthetic": true
+    },
+    {
+      "id": "X03-U6",
+      "class": "unsupported",
+      "expected_verdict": "does_not_establish",
+      "prospect_id": "P1",
+      "claim": "The pilot converted to a paid subscription.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "pilot_converted": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The pilot outcome field is empty.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": true,
+      "critical_fabricated": false,
+      "subtype": "empty_outcome_asserted",
+      "synthetic": true
+    },
+    {
+      "id": "X03-U7",
+      "class": "unsupported",
+      "expected_verdict": "does_not_establish",
+      "prospect_id": "P1",
+      "claim": "Verified annual recurring revenue is 4200000 USD.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "verified_arr_usd": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "No annual recurring revenue figure has been verified.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": true,
+      "critical_fabricated": true,
+      "subtype": "fabricated_figure",
+      "synthetic": true
+    },
+    {
+      "id": "X03-C1",
+      "class": "contradicted",
+      "expected_verdict": "contradicts",
+      "prospect_id": "P1",
+      "claim": "This territory is open for prospecting.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "territory_status": "reserved"
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The territory record marks this account reserved for a partner.",
+          "source": "first_party",
+          "age_days": 2
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "reserved_claimed_open",
+      "synthetic": true
+    },
+    {
+      "id": "X03-C2",
+      "class": "contradicted",
+      "expected_verdict": "contradicts",
+      "prospect_id": "P1",
+      "claim": "The contact is contactable by email.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "do_not_contact": true
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "A do-not-contact flag is active on this contact.",
+          "source": "first_party",
+          "age_days": 2
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "suppressed_claimed_contactable",
+      "synthetic": true
+    },
+    {
+      "id": "X03-C3",
+      "class": "contradicted",
+      "expected_verdict": "contradicts",
+      "prospect_id": "P1",
+      "claim": "The trial is still active.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "trial_active": false
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The trial ended and the account reverted to unlicensed.",
+          "source": "official",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "ended_claimed_active",
+      "synthetic": true
+    },
+    {
+      "id": "X03-C4",
+      "class": "contradicted",
+      "expected_verdict": "contradicts",
+      "prospect_id": "P1",
+      "claim": "Annual contract value is 90000 USD.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "annual_contract_value_usd": 12000
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "Annual contract value is 12000 USD.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "value_mismatch",
+      "synthetic": true
+    },
+    {
+      "id": "X03-C5",
+      "class": "contradicted",
+      "expected_verdict": "contradicts",
+      "prospect_id": "P1",
+      "claim": "The company is hiring now.",
+      "cited_evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "facts": {
+        "open_roles": 0
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "An old job board still lists open roles.",
+          "source": "third_party",
+          "age_days": 300
+        },
+        {
+          "id": "E2",
+          "claim": "The current HR record states all requisitions are closed.",
+          "source": "first_party",
+          "age_days": 2
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "precedence_rule_1_resolves",
+      "synthetic": true
+    },
+    {
+      "id": "X03-C6",
+      "class": "contradicted",
+      "expected_verdict": "contradicts",
+      "prospect_id": "P1",
+      "claim": "The earlier audit gap still stands against this account.",
+      "cited_evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "facts": {
+        "audit_gap_open": false
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "An initial audit finding flagged a control gap.",
+          "source": "first_party",
+          "age_days": 30
+        },
+        {
+          "id": "E2",
+          "claim": "A correction notice supersedes the initial finding and withdraws the gap.",
+          "source": "first_party",
+          "age_days": 5
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "precedence_rule_2_resolves",
+      "synthetic": true
+    },
+    {
+      "id": "X03-A1",
+      "class": "ambiguous",
+      "expected_verdict": "ambiguous",
+      "prospect_id": "P1",
+      "claim": "The account is on the enterprise plan.",
+      "cited_evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "facts": {
+        "plan": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The official billing system shows the enterprise plan.",
+          "source": "official",
+          "age_days": 2
+        },
+        {
+          "id": "E2",
+          "claim": "The current CRM record shows the team plan.",
+          "source": "first_party",
+          "age_days": 2
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "official_vs_first_party_plan",
+      "synthetic": true
+    },
+    {
+      "id": "X03-A2",
+      "class": "ambiguous",
+      "expected_verdict": "ambiguous",
+      "prospect_id": "P1",
+      "claim": "The renewal date falls in June.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "renewal_month": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The contract cover page states a June renewal while the signature page states a September renewal, and no amendment is on file.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "internally_conflicting_contract",
+      "synthetic": true
+    },
+    {
+      "id": "X03-A3",
+      "class": "ambiguous",
+      "expected_verdict": "ambiguous",
+      "prospect_id": "P1",
+      "claim": "The buyer has budget approval.",
+      "cited_evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "facts": {
+        "budget_approved": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The finance note says budget was probably approved.",
+          "source": "first_party",
+          "age_days": 4
+        },
+        {
+          "id": "E2",
+          "claim": "The procurement note says approval may not have cleared committee.",
+          "source": "first_party",
+          "age_days": 4
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "two_hedged_sources_disagree",
+      "synthetic": true
+    },
+    {
+      "id": "X03-A4",
+      "class": "ambiguous",
+      "expected_verdict": "ambiguous",
+      "prospect_id": "P1",
+      "claim": "The support tier includes around-the-clock coverage.",
+      "cited_evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "facts": {
+        "support_tier": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The official order form lists premium support.",
+          "source": "official",
+          "age_days": 5
+        },
+        {
+          "id": "E2",
+          "claim": "The current entitlement record lists standard support.",
+          "source": "first_party",
+          "age_days": 5
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "official_vs_first_party_entitlement",
+      "synthetic": true
+    },
+    {
+      "id": "X03-A5",
+      "class": "ambiguous",
+      "expected_verdict": "ambiguous",
+      "prospect_id": "P1",
+      "claim": "This entity is the one named in the master agreement.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "entity_match": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The master agreement names Harbor Line LLC, and this prospect files as Harbor Line LLC in one registry and Harbor Line Services LLC in another, with no record linking or separating the filings.",
+          "source": "official",
+          "age_days": 6
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "entity_reading_two_ways",
+      "synthetic": true
+    },
+    {
+      "id": "X03-A6",
+      "class": "ambiguous",
+      "expected_verdict": "ambiguous",
+      "prospect_id": "P1",
+      "claim": "Data residency for this account is restricted to the European Union.",
+      "cited_evidence_ids": [
+        "E1",
+        "E2"
+      ],
+      "facts": {
+        "data_residency": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The security addendum states European Union only residency.",
+          "source": "first_party",
+          "age_days": 3
+        },
+        {
+          "id": "E2",
+          "claim": "The current signed data processing agreement permits processing in the United States.",
+          "source": "official",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "addendum_vs_signed_dpa",
+      "synthetic": true
+    },
+    {
+      "id": "X03-S1",
+      "class": "supported",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "Annual contract value is 12000 USD.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "annual_contract_value_usd": 12000
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "Annual contract value is 12000 USD.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "numeric_match",
+      "synthetic": true
+    },
+    {
+      "id": "X03-S2",
+      "class": "supported",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "A do-not-contact flag is active on this contact.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "do_not_contact": true
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "A do-not-contact flag is active on this contact.",
+          "source": "first_party",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "flag_match",
+      "synthetic": true
+    },
+    {
+      "id": "X03-S3",
+      "class": "supported",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "The current HR record states all requisitions are closed.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "open_roles": 0
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The current HR record states all requisitions are closed.",
+          "source": "first_party",
+          "age_days": 2
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "status_match",
+      "synthetic": true
+    },
+    {
+      "id": "X03-S4",
+      "class": "supported",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "A correction notice withdraws the earlier audit gap.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "audit_gap_open": false
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "A correction notice supersedes the initial finding and withdraws the gap.",
+          "source": "first_party",
+          "age_days": 5
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "correction_match",
+      "synthetic": true
+    },
+    {
+      "id": "X03-S5",
+      "class": "supported",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "A signed data processing agreement is on file for this account.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "dpa_signed": true
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "A signed data processing agreement is on file for this account.",
+          "source": "official",
+          "age_days": 3
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "official_document_match",
+      "synthetic": true
+    },
+    {
+      "id": "X03-S6",
+      "class": "supported",
+      "expected_verdict": "supports",
+      "prospect_id": "P1",
+      "claim": "The territory record marks this account reserved for a partner.",
+      "cited_evidence_ids": [
+        "E1"
+      ],
+      "facts": {
+        "territory_status": "reserved"
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "claim": "The territory record marks this account reserved for a partner.",
+          "source": "first_party",
+          "age_days": 2
+        }
+      ],
+      "unsupported": false,
+      "critical_fabricated": false,
+      "subtype": "reserved_status_match",
+      "synthetic": true
+    }
+  ]
+}

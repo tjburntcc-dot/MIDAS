@@ -19,7 +19,7 @@ import { buildApplicabilityTraces, enrichKnowledgeItem } from "./applicability.j
 import { loadRetrievalRelevance, relevanceForCase } from "./relevance-labels.js";
 import {
   extractMaterialClaims,
-  liveJudgeClaims,
+  liveJudgeClaimsBatched,
   scoreSemanticFromJudgments,
   semanticJudgeStatus,
 } from "./evidence-judge.js";
@@ -497,8 +497,14 @@ export async function persistDevelopmentEval(args) {
     let rawSemanticDetail = null;
     if (judgeActivated) {
       try {
+        // Score through the same call path the judge was calibrated on, at the
+        // judge version activation actually approved. Previously this used the
+        // single-claim path with the default prompt version, so an activated
+        // v0.3 judge would have raised the attainable ceiling to 100 while the
+        // scoring itself still ran the older, uncalibrated instructions.
+        const activatedJudgeVersion = judgeInfo.status;
         const servedClaims = extractMaterialClaims(authoringOutput, record);
-        const judged = await liveJudgeClaims({ items: servedClaims });
+        const judged = await liveJudgeClaimsBatched({ items: servedClaims, judgePromptVersion: activatedJudgeVersion });
         if (judged.ok) {
           const scored = scoreSemanticFromJudgments(judged.judgments);
           semanticDetail = { semantic: scored.semantic, judgments: judged.judgments, status: semanticJudge };
@@ -507,7 +513,7 @@ export async function persistDevelopmentEval(args) {
         if (claimsKey(rawAuthoring) === claimsKey(authoringOutput)) {
           rawSemanticDetail = semanticDetail;
         } else {
-          const rawJudged = await liveJudgeClaims({ items: extractMaterialClaims(rawAuthoring, record) });
+          const rawJudged = await liveJudgeClaimsBatched({ items: extractMaterialClaims(rawAuthoring, record), judgePromptVersion: activatedJudgeVersion });
           if (rawJudged.ok) {
             const rawScored = scoreSemanticFromJudgments(rawJudged.judgments);
             rawSemanticDetail = { semantic: rawScored.semantic, judgments: rawJudged.judgments, status: semanticJudge };

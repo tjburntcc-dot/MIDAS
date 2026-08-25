@@ -1,0 +1,16 @@
+{
+  "id": "atlas-judge-adversarial-v0.3",
+  "path": "packages/eval/src/fixtures/judge-adversarial-v03.json",
+  "n": 31,
+  "sha256": "e9217afd80bb38b485bbe606e0e313808df51ac3c5bde68df2f592f353038bc4",
+  "classes": {
+    "record_state": 6,
+    "unsupported": 7,
+    "contradicted": 6,
+    "ambiguous": 6,
+    "supported": 6
+  },
+  "rubric": "docs/evidence-judge/VERDICT_RUBRIC_V03.md",
+  "heldOut": true,
+  "note": "Frozen before the first judge run against it."
+}

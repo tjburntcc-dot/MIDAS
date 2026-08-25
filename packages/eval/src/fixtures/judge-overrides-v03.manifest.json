@@ -1,0 +1,15 @@
+{
+  "id": "atlas-judge-overrides-v0.3",
+  "path": "packages/eval/src/fixtures/judge-overrides-v03.json",
+  "n": 15,
+  "sha256": "e84389fd71276447b5a139f0ea096a11e44ddf91f20e4c186e990ce40c0d4cff",
+  "classes": {
+    "override_empty_cite": 3,
+    "override_boundary": 4,
+    "override_prospect_supplied": 4,
+    "override_relay": 4
+  },
+  "heldOut": true,
+  "rubric": "docs/evidence-judge/VERDICT_RUBRIC_V03.md",
+  "note": "Frozen before the first judge run against it."
+}

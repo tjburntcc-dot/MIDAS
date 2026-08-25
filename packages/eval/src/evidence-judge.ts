@@ -16,6 +16,12 @@ export const CALIBRATION_V02_MANIFEST = join(here, "fixtures/judge-calibration-v
 export const JUDGE_PROMPT_VERSION_V02 = "atlas-evidence-judge-v0.2.0";
 export const JUDGE_CALIBRATION_SET_V02 = "atlas-judge-calibration-v0.2";
 export const JUDGE_CALIBRATION_SET_VERSION = "atlas-judge-calibration-v1";
+export const CALIBRATION_V03_PATH = join(here, "fixtures/judge-calibration-v03.json");
+export const CALIBRATION_V03_MANIFEST = join(here, "fixtures/judge-calibration-v03.manifest.json");
+export const ADVERSARIAL_V03_PATH = join(here, "fixtures/judge-adversarial-v03.json");
+export const OVERRIDES_V03_PATH = join(here, "fixtures/judge-overrides-v03.json");
+export const JUDGE_PROMPT_VERSION_V03 = "atlas-evidence-judge-v0.3.3";
+export const JUDGE_CALIBRATION_SET_V03 = "atlas-judge-calibration-v0.3";
 export const JUDGE_CALIBRATION_OVERALL_GATE = 0.90;
 export const JUDGE_CALIBRATION_CLASS_GATE = 0.80;
 
@@ -41,6 +47,47 @@ export const GRADING_INSTRUCTIONS =
   "A stale third-party listing does not outweigh a fresh first-party status. An opt-out is a hard stop. " +
   "Citing another prospect's evidence is misattribution and does_not_establish. " +
   "Return only the structured judgments. You are not told a version, arm, desired winner, or promotion threshold.";
+
+/**
+ * v0.3 grading instructions: the full rubric, stated once.
+ *
+ * Five prompt/model/batch configurations were measured against the
+ * rubric-aligned calibration set over 23 live runs. Worst per-class agreement:
+ *
+ *   v0.1 text,      gpt-4.1   supported 1.00  unsupported 1.00  contradicted 0.94  record_state 0.50
+ *   full rubric,    gpt-4.1   supported 1.00  unsupported 0.94  contradicted 0.63  record_state 0.93
+ *   ordered steps,  gpt-4.1   supported 0.63  unsupported 0.63  contradicted 0.88  record_state 0.71
+ *   minimal edit,   gpt-4.1   supported 1.00  unsupported 0.75  contradicted 0.56  record_state 0.86
+ *   minimal edit,   gpt-5.4   supported 1.00  unsupported 0.81  contradicted 0.88  record_state 0.79
+ *
+ * On gpt-4.1 every added rule repaired one class and broke another, which is the
+ * signature of an instruction budget being exceeded rather than of a missing
+ * rule. gpt-5.4 held contradicted at 0.88 under the shortest prompt, so it has
+ * headroom the smaller model did not. This version therefore states the whole
+ * rubric plainly and is intended to be run on the stronger judge model.
+ *
+ * No case identifier, fixture phrase or expected answer appears in this text;
+ * judge-v03.test.ts checks that, including an eight-word phrase overlap test.
+ * See docs/evidence-judge/VERDICT_RUBRIC_V03.md.
+ */
+export const GRADING_INSTRUCTIONS_V03 =
+  "You are an evaluator-only evidence judge. For each material factual claim, decide whether the cited prospect evidence supports, contradicts, does_not_establish, or is ambiguous. " +
+  "Judge ONLY from the supplied prospect facts, that prospect's evidence records, cited evidence ids, and the factual rationale. " +
+  "Output one row per claim: the claim text, the evidence ids you used, the class, and a short explanation that names the specific evidence. " +
+  "Judge the claim exactly as written, including any qualifier it carries. A claim may assert a value, assert a negation, or assert something about the state of the record itself, such as that a field is blank, that a note is stale, that a source hedges, or that the record therefore does not settle a question. A claim about the state of the record is an ordinary factual claim and is judged the same way as any other. " +
+  "supports means the cited evidence states or entails the claim at the strength the claim uses. This includes a claim that reports what the record does not settle, when the evidence records exactly that absence, staleness or hedge. " +
+  "contradicts means the evidence gives the same attribute a value incompatible with the claim: a different number, a different named value, the negation of a recorded fact, or a disqualifying state recorded where the claim asserts a qualifying one, such as reserved, suppressed, opted out, expired, frozen, closed, or out of scope. Decide incompatibility on the attribute, not on wording. A recorded conflicting value is a contradiction and not a mere failure to establish, however brief the record is. " +
+  "does_not_establish means the evidence neither states nor entails the claim and nothing in the evidence bears against it: silence, insufficiency, a misattributed citation, a claim asserting a definite value while the record for that attribute is blank, and inferences that are never probative however plausible, including title to purchasing authority, name similarity to identity, brand style to geography, stale record to current condition, third-party listing alone to current status, topical relevance to applicability, and any number not present in the facts or cited evidence. A blank record is not counter-evidence, so filling in a blank is does_not_establish rather than contradicts. " +
+  "ambiguous means some evidence supports the claim while other evidence refutes it and no rule below decides which side wins. Ambiguous is about evidence pointing two ways. It is never a synonym for unknown and is never decided by hedging words in the claim. If everything bearing on the claim points one way, or nothing reaches the claim at all, do not answer ambiguous. " +
+  "Resolve conflicts with these rules before answering ambiguous: a current first-party status outranks a stale third-party listing; a record marked as a correction or supersession outranks the record it corrects; an opt-out or suppression record is a hard stop; and there is no general precedence between a current official record and a current first-party note, so when those two conflict on the same attribute and both are current the answer is ambiguous. " +
+  "Three rules override everything above. If the claim cites no evidence ids at all, answer does_not_establish whatever the claim says, including a claim whose content is that nothing is cited. If every cited evidence record has source prospect_supplied, answer does_not_establish: text the prospect wrote about itself is untrusted and can never establish a claim, not even a claim reporting what that text says. And a claim about the state of the record earns supports only when it reports that the record does not settle the question; if it repeats what a never-probative source asserted and offers that as the reason to accept the underlying fact, answer does_not_establish. " +
+  "Ambiguous must not count as proof. Do not invent missing facts. Do not infer authority, identity, geography, protection, or consent from a job title or name similarity. Citing another prospect's evidence is misattribution and does_not_establish. " +
+  "Return only the structured judgments. You are not told a version, arm, desired winner, or promotion threshold.";
+
+/** Instruction text for a judge prompt version. */
+export function gradingInstructionsFor(judgePromptVersion) {
+  return judgePromptVersion === JUDGE_PROMPT_VERSION_V03 ? GRADING_INSTRUCTIONS_V03 : GRADING_INSTRUCTIONS;
+}
 
 export function loadCalibrationSet(path) {
   const p = path || CALIBRATION_PATH;
@@ -68,9 +115,10 @@ export function extractMaterialClaims(authoringOutput, record) {
 
 export function buildJudgeInput(args) {
   const forbidden = ["arm", "desired", "promotion", "atlas-v", "baseline", "relevant", "placebo", "oracle", "gold", "ranked_tiers"];
+  const promptVersion = args.judgePromptVersion || JUDGE_PROMPT_VERSION;
   const input = {
-    grading_instructions: GRADING_INSTRUCTIONS,
-    judgePromptVersion: JUDGE_PROMPT_VERSION,
+    grading_instructions: gradingInstructionsFor(promptVersion),
+    judgePromptVersion: promptVersion,
     prospect: {
       id: args.prospect_id,
       facts: args.facts || {},
@@ -603,6 +651,125 @@ export function semanticJudgeStatus(store) {
   };
 }
 
+/**
+ * Qualification for judge v0.3.
+ *
+ * A single passing calibration run is not evidence that a judge is usable. The
+ * v0.2 successor failed and passed the same class on alternate runs of the same
+ * set, so qualification here requires every gate to hold on every run, across
+ * the calibration set and two sets that were frozen before the judge ever saw
+ * them. Each run uses a different presentation order, because order was the
+ * variable that moved results most.
+ *
+ * Gates are the published ones and are not restated or relaxed here: this
+ * function only decides how many times they must hold.
+ */
+export async function qualifyJudgeV03(args) {
+  const runs = Math.max(1, Number((args && args.runs) || 3));
+  const seedBase = Number((args && args.seedBase) || 7001);
+  const suites = [
+    { name: "calibration", run: runV03LiveCalibration, heldOut: false },
+    { name: "adversarial", run: runAdversarialV03Live, heldOut: true },
+    { name: "overrides", run: runOverridesV03Live, heldOut: true },
+  ];
+  const results = [];
+  let usd = 0;
+  for (const suite of suites) {
+    for (let i = 0; i < runs; i += 1) {
+      const report = await suite.run({
+        workerModelFamily: (args && args.workerModelFamily) || "gpt-4.1",
+        shuffleSeed: seedBase + i,
+      });
+      if (report.kind !== "live") {
+        return { qualified: false, reason: report.reason || "live judge unavailable", runs: results, usdEstimate: usd };
+      }
+      usd += Number(report.usdEstimate || 0);
+      results.push({
+        suite: suite.name,
+        heldOut: suite.heldOut,
+        orderSeed: report.orderSeed,
+        n: report.n,
+        agreement: report.agreement,
+        perClass: report.perClass,
+        confusion: report.confusion,
+        overallGate: report.overallGate,
+        classGate: report.classGate,
+        criticalFabricated: report.criticalFabricated,
+        criticalFalseAccept: report.criticalFalseAccept,
+        falseAcceptRate: report.falseAcceptRate,
+        falseRejectRate: report.falseRejectRate,
+        official: report.official,
+        misses: report.rows.filter((r) => !r.agree).map((r) => r.id + ":" + r.expected + "->" + r.predicted),
+        model: report.model,
+        judgePromptVersion: report.judgePromptVersion,
+        setVersion: report.setVersion,
+      });
+    }
+  }
+
+  const worstOverall = Math.min(...results.map((r) => r.agreement));
+  const worstPerClass = {};
+  for (const r of results) {
+    for (const [cls, st] of Object.entries(r.perClass || {})) {
+      if (worstPerClass[cls] == null || st.agreement < worstPerClass[cls]) worstPerClass[cls] = st.agreement;
+    }
+  }
+  const criticalFalseAccepts = results.reduce((a, r) => a + Number(r.criticalFalseAccept || 0), 0);
+  const failingRuns = results.filter((r) => !r.official);
+  const qualified = failingRuns.length === 0;
+
+  return {
+    qualified: qualified,
+    judgePromptVersion: JUDGE_PROMPT_VERSION_V03,
+    model: results[0] && results[0].model,
+    runsPerSuite: runs,
+    totalRuns: results.length,
+    worstOverall: worstOverall,
+    worstPerClass: worstPerClass,
+    criticalFalseAccepts: criticalFalseAccepts,
+    gates: { overall: JUDGE_CALIBRATION_OVERALL_GATE, perClass: JUDGE_CALIBRATION_CLASS_GATE, criticalFalseAccept: 0, everyRunMustPass: true },
+    heldOutSuites: ["adversarial", "overrides"],
+    usdEstimate: Number(usd.toFixed(4)),
+    runs: results,
+    reason: qualified ? null : ("runs below gate: " + failingRuns.map((r) => r.suite + "@" + r.orderSeed).join(", ")),
+  };
+}
+
+/**
+ * Write the activation record from a qualification result. Activation is a
+ * consequence of the evidence, never a value someone sets: the record carries
+ * every run that produced it so the decision can be re-read later.
+ */
+export function persistJudgeQualification(store, qualification) {
+  if (!store || !store.dir) return null;
+  const path = join(store.dir, "judge_activation.json");
+  mkdirSync(store.dir, { recursive: true });
+  const record = {
+    activated: qualification.qualified === true,
+    judgeVersion: qualification.judgePromptVersion || JUDGE_PROMPT_VERSION_V03,
+    calibrationSetVersion: JUDGE_CALIBRATION_SET_V03,
+    model: qualification.model || null,
+    agreement: qualification.worstOverall ?? null,
+    falseAcceptRate: Math.max(0, ...(qualification.runs || []).map((r) => Number(r.falseAcceptRate || 0))),
+    falseRejectRate: Math.max(0, ...(qualification.runs || []).map((r) => Number(r.falseRejectRate || 0))),
+    criticalFalseAccept: qualification.criticalFalseAccepts ?? null,
+    perClass: Object.fromEntries(Object.entries(qualification.worstPerClass || {}).map(([k, v]) => [k, { agreement: v }])),
+    sameModelFamily: true,
+    at: new Date().toISOString(),
+    gates: qualification.gates,
+    heldOutSuites: qualification.heldOutSuites,
+    runsPerSuite: qualification.runsPerSuite,
+    totalRuns: qualification.totalRuns,
+    usdEstimate: qualification.usdEstimate,
+    evidence: qualification.runs,
+    note: qualification.qualified
+      ? ("Every gate held on all " + qualification.totalRuns + " runs across the calibration set and two held-out sets, each run under a different presentation order. Reported figures are worst-case across runs, not best-case. Worker and judge share the gpt-4.1 family - disclose. Not a sealed-promotion claim.")
+      : ("Not activated. " + (qualification.reason || "gates not met") + ". Gates were not weakened."),
+  };
+  writeFileSync(path, JSON.stringify(record, null, 2) + "\n");
+  return record;
+}
+
 export function persistActivationSafe(store, report) {
   if (!store || !store.dir) return null;
   const path = join(store.dir, "judge_activation.json");
@@ -626,30 +793,73 @@ export function persistActivationSafe(store, report) {
   return record;
 }
 
+/**
+ * Retry only transport failures: rate limits and server errors. This never
+ * retries a judgment the model actually produced, so it cannot launder an
+ * unstable verdict into a stable-looking one. Instability of the judgments
+ * themselves is measured by repeating whole calibration runs.
+ */
+const TRANSPORT_RETRYABLE = /\b(429|500|502|503|504)\b|rate_limit|overloaded|timeout|ETIMEDOUT|ECONNRESET|UND_ERR_SOCKET|ECONNREFUSED|EAI_AGAIN|fetch failed|socket hang up/i;
+
+async function callWithTransportRetry(fn, attempts) {
+  const max = Number(attempts || 6);
+  let lastError = null;
+  for (let attempt = 0; attempt < max; attempt += 1) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (!TRANSPORT_RETRYABLE.test(String(err && err.message))) throw err;
+      const waitMs = Math.min(30000, 2000 * Math.pow(2, attempt));
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+  }
+  throw lastError;
+}
+
 export async function liveJudgeClaimsBatched(args) {
   const sess = liveSession();
   if (sess.verified !== true) {
     return { ok: false, unavailable: true, reason: "Live session not verified. Official judge remains unavailable." };
   }
   const { OpenAIResponsesProvider } = await import("@midas/model");
-  const provider = new OpenAIResponsesProvider();
-  const items = args.items || [];
+  // The judge should be able to run on a different model from the worker it
+  // grades. Sharing a family is a disclosed weakness in the activation record,
+  // not a design goal, so the model is selectable here rather than inherited.
+  const judgeModel = args.judgeModel || process.env.MIDAS_JUDGE_MODEL || process.env.OPENAI_MODEL || sess.model;
+  const provider = new OpenAIResponsesProvider(undefined, judgeModel);
+  const supplied = args.items || [];
   const batchSize = Number(args.batchSize || 8);
+  // Presentation order changes verdicts. A batch of structurally similar claims
+  // gives the model no contrast to calibrate against and it drifts to one reading
+  // for the whole block; the same claims judged beside dissimilar ones are graded
+  // correctly. Measured directly: grouped presentation scored 0.57 on one class
+  // across two runs and 1.00 on a third, while permuted presentation held.
+  // Permuting here rather than in the calibration harness means production
+  // scoring gets the same protection, and the seed is recorded so any run can be
+  // reproduced exactly. Judgments are returned in the caller's original order.
+  const orderSeed = args.orderSeed == null ? claimOrderSeed(supplied) : Number(args.orderSeed);
+  const order = permutationFor(supplied.length, orderSeed);
+  const items = order.map((idx) => supplied[idx]);
   const judgments = [];
   const usage = { inputTokens: 0, outputTokens: 0 };
   const promptVersion = args.judgePromptVersion || JUDGE_PROMPT_VERSION_V02;
   for (let i = 0; i < items.length; i += batchSize) {
     const chunk = items.slice(i, i + batchSize);
+    // The instruction text must match the reported prompt version. v0.2 runs sent
+    // the v0.1 text while recording a v0.2 label, which made the recorded result
+    // unattributable to the prompt it named.
+    const instructions = gradingInstructionsFor(promptVersion);
     const input = {
-      grading_instructions: GRADING_INSTRUCTIONS,
+      grading_instructions: instructions,
       judgePromptVersion: promptVersion,
-      claims: chunk.map((item) => buildJudgeInput(item)),
+      claims: chunk.map((item) => buildJudgeInput({ ...item, judgePromptVersion: promptVersion })),
     };
-    const completion = await provider.complete({
+    const completion = await callWithTransportRetry(() => provider.complete({
       input: input,
-      instructions: GRADING_INSTRUCTIONS + " Return one judgment per supplied claim, in the same order.",
+      instructions: instructions + " Return one judgment per supplied claim, in the same order.",
       outputSchema: { name: "atlas_evidence_judge", strict: true, schema: JUDGE_OUTPUT_SCHEMA },
-    });
+    }));
     if (completion.kind !== "live") {
       throw new Error("Judge provider returned a non-live kind");
     }
@@ -671,14 +881,129 @@ export async function liveJudgeClaimsBatched(args) {
     }
     for (let j = 0; j < chunk.length; j += 1) judgments.push(rows[j]);
   }
+  const restored = new Array(judgments.length);
+  for (let k = 0; k < judgments.length; k += 1) restored[order[k]] = judgments[k];
   return {
     ok: true,
-    judgments: judgments,
+    judgments: restored,
     judgeKind: "live",
     judgePromptVersion: promptVersion,
-    model: sess.model,
+    model: judgeModel,
+    orderSeed: orderSeed,
     usage: usage,
   };
+}
+
+export function runV03FixtureCalibration() {
+  const set = loadCalibrationSet(CALIBRATION_V03_PATH);
+  const predicted = set.items.map((item) => rubricJudgeClaim(item));
+  const report = evaluateCalibration(predicted, set.items);
+  return {
+    kind: "fixture_rubric_v03",
+    official: false,
+    judgePromptVersion: JUDGE_PROMPT_VERSION_V03,
+    setVersion: set.version || JUDGE_CALIBRATION_SET_V03,
+    n: set.items.length,
+    gates: { overall: JUDGE_CALIBRATION_OVERALL_GATE, perClass: JUDGE_CALIBRATION_CLASS_GATE, criticalFalseAccept: 0 },
+    ...report,
+    note: "Deterministic rubric over the v0.3 set. Diagnostic only. The deterministic rubric keys off claim wording and is not a semantic judge; official activation requires a live pass.",
+  };
+}
+
+/**
+ * Live calibration against an arbitrary labelled set. Used for both the v0.3
+ * calibration set and the separately authored adversarial boundary set, so the
+ * two are scored by identical machinery and identical gates.
+ */
+/** Reproducible permutation of 0..n-1 from a seed. */
+function permutationFor(n, seed) {
+  const out = [];
+  for (let i = 0; i < n; i += 1) out.push(i);
+  let state = (Number(seed) >>> 0) || 1;
+  const next = () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    const tmp = out[i];
+    out[i] = out[j];
+    out[j] = tmp;
+  }
+  return out;
+}
+
+/**
+ * Default order seed derived from the claims themselves, so the same input is
+ * always presented in the same order and a scoring run stays reproducible.
+ */
+function claimOrderSeed(items) {
+  const digest = createHash("sha256").update(JSON.stringify((items || []).map((i) => i.claim))).digest("hex");
+  return parseInt(digest.slice(0, 8), 16) >>> 0;
+}
+
+export async function runLabelledSetLive(args) {
+  const path = (args && args.path) || CALIBRATION_V03_PATH;
+  const set = loadCalibrationSet(path);
+  const sess = liveSession();
+  if (sess.verified !== true) {
+    return { kind: "unavailable", official: false, passed: false, reason: "Live session not verified. Official semantic judge not activated." };
+  }
+  const ordered = set.items.slice();
+  const items = ordered.map((item) => ({
+    prospect_id: item.prospect_id,
+    claim: item.claim,
+    cited_evidence_ids: item.cited_evidence_ids,
+    facts: item.facts,
+    evidence: item.evidence,
+  }));
+  const live = await liveJudgeClaimsBatched({
+    items: items,
+    batchSize: Number((args && args.batchSize) || 8),
+    judgePromptVersion: (args && args.judgePromptVersion) || JUDGE_PROMPT_VERSION_V03,
+    orderSeed: (args && args.shuffleSeed != null) ? Number(args.shuffleSeed) : undefined,
+    judgeModel: (args && args.judgeModel) || undefined,
+  });
+  if (!live.ok) return { kind: "unavailable", official: false, passed: false, reason: live.reason };
+  const report = evaluateCalibration(live.judgments, ordered);
+  const officialPass = Boolean(report.expandedPassed);
+  const failedClasses = Object.entries(report.perClass || {})
+    .filter(([, st]) => st.n && st.agreement < JUDGE_CALIBRATION_CLASS_GATE)
+    .map(([cls, st]) => cls + " " + st.agreement);
+  const { estimateUsd } = await import("./spend.js");
+  return {
+    kind: "live",
+    official: officialPass,
+    judgePromptVersion: (args && args.judgePromptVersion) || JUDGE_PROMPT_VERSION_V03,
+    setVersion: set.version || set.id,
+    setPath: path,
+    judgeModel: live.model,
+    workerModel: sess.model,
+    batchSize: Number((args && args.batchSize) || 8),
+    orderSeed: live.orderSeed,
+    model: live.model,
+    usage: live.usage,
+    usdEstimate: estimateUsd(live.usage && live.usage.inputTokens, live.usage && live.usage.outputTokens),
+    sameModelFamily: Boolean(args && args.workerModelFamily && String(live.model || "").includes(String(args.workerModelFamily))),
+    failedClasses: failedClasses,
+    judgments: live.judgments,
+    ...report,
+    note: officialPass
+      ? ("Live calibration passed on " + (set.version || set.id) + " (>=90% overall, >=80% each class, 0 false accepts on critical fabricated evidence).")
+      : ("Live calibration failed on " + (set.version || set.id) + " (>=90% overall, >=80% each class, 0 FA on critical fabricated). Gates were not weakened. Failed classes: " + (failedClasses.join(", ") || "none") + "."),
+  };
+}
+
+export async function runV03LiveCalibration(args) {
+  return runLabelledSetLive({ ...(args || {}), path: CALIBRATION_V03_PATH, judgePromptVersion: JUDGE_PROMPT_VERSION_V03 });
+}
+
+export async function runAdversarialV03Live(args) {
+  return runLabelledSetLive({ ...(args || {}), path: ADVERSARIAL_V03_PATH, judgePromptVersion: JUDGE_PROMPT_VERSION_V03 });
+}
+
+export async function runOverridesV03Live(args) {
+  return runLabelledSetLive({ ...(args || {}), path: OVERRIDES_V03_PATH, judgePromptVersion: JUDGE_PROMPT_VERSION_V03 });
 }
 
 export async function runV02LiveCalibration(args) {
