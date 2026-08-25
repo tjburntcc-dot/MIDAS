@@ -98,6 +98,62 @@ function consumeType(s, i) {
   return i;
 }
 
+// A `/` is a regex literal, not division, when the previous significant token
+// cannot end an expression. Without this the scanner walked into regex bodies and
+// treated any quote inside a character class (e.g. /["']/) as the start of a
+// string, silently desynchronising and corrupting every literal that followed.
+const REGEX_PRECEDERS = "(,=:[!&|?{};+-*%^~<>";
+const REGEX_KEYWORDS = [
+  "return", "typeof", "case", "in", "of", "do", "else", "yield",
+  "void", "delete", "instanceof", "new", "throw", "await",
+];
+
+function regexAllowedAt(s, i) {
+  let j = i - 1;
+  while (j >= 0 && /\s/.test(s[j])) j -= 1;
+  if (j < 0) return true;
+  const ch = s[j];
+  if (REGEX_PRECEDERS.includes(ch)) return true;
+  if (!/[A-Za-z0-9_$]/.test(ch)) return false;
+  let k = j;
+  while (k >= 0 && /[A-Za-z0-9_$]/.test(s[k])) k -= 1;
+  return REGEX_KEYWORDS.includes(s.slice(k + 1, j + 1));
+}
+
+function skipRegex(s, i) {
+  let j = i + 1;
+  let inClass = false;
+  while (j < s.length) {
+    const ch = s[j];
+    if (ch === "\\") { j += 2; continue; }
+    if (ch === "\\n") return -1;
+    if (inClass) {
+      if (ch === "]") inClass = false;
+    } else if (ch === "[") {
+      inClass = true;
+    } else if (ch === "/") {
+      j += 1;
+      while (j < s.length && /[a-z]/.test(s[j])) j += 1;
+      return j;
+    }
+    j += 1;
+  }
+  return -1;
+}
+
+// `type` is a contextual keyword. `type X = ...` is a declaration to strip;
+// `{ type: type }` and `obj.type` are ordinary code. Require the shape
+// `type <Identifier>` followed by `=` or `<` before consuming a declaration.
+function looksLikeTypeAlias(s, afterKeyword) {
+  let j = afterKeyword;
+  while (j < s.length && /\s/.test(s[j])) j += 1;
+  const start = j;
+  while (j < s.length && /[A-Za-z0-9_$]/.test(s[j])) j += 1;
+  if (j === start) return false;
+  while (j < s.length && /\s/.test(s[j])) j += 1;
+  return s[j] === "=" || s[j] === "<";
+}
+
 function wordAt(s, i, w) {
   if (!s.startsWith(w, i)) return false;
   const a = s[i - 1] || " ";
@@ -139,11 +195,19 @@ function isTernaryColon(s, i) {
   let d = 0;
   for (let j = i - 1; j >= 0; j -= 1) {
     const ch = s[j];
-    if (ch === ")" || ch === "}" || ch === "]") d += 1;
-    else if (ch === "(" || ch === "{" || ch === "[") {
+    if (ch === ")" || ch === "}" || ch === "]") {
+      d += 1;
+    } else if (ch === "(" || ch === "{" || ch === "[") {
       d -= 1;
       if (d < 0) return false;
-    } else if (d === 0 && ch === "?" && s[j + 1] !== "." && s[j + 1] !== "?") {
+    } else if (d === 0 && ch === ";") {
+      // A ternary cannot span a statement boundary. Without this the scan ran
+      // backwards into earlier statements and adopted their punctuation.
+      return false;
+    } else if (d === 0 && ch === "?" && s[j + 1] !== "." && s[j + 1] !== "?" && s[j - 1] !== "?") {
+      // `s[j - 1] !== "?"` skips the second `?` of a nullish coalesce. Matching it
+      // made `x ?? y` look like an open ternary, so the next `:` was emitted as a
+      // ternary colon and the type annotation after it survived into the output.
       const beforeQ = prevNonWs(s, j);
       if (/[A-Za-z0-9_]/.test(beforeQ) && (s[j + 1] === ":" || /\s/.test(s[j + 1]) && s[skipWs(s, j + 1)] === ":")) {
         return false;
@@ -153,6 +217,8 @@ function isTernaryColon(s, i) {
   }
   return false;
 }
+
+const IDENTIFIER_USE = ["=", ",", ";", ":", ")", "]", "}", ".", "(", "?"];
 
 export function stripTypes(source) {
   const s = source.replace(/^\uFEFF/, "");
@@ -179,6 +245,10 @@ export function stripTypes(source) {
     const c = s[i];
     if (c === '"' || c === "'") {
       const a = i; i = skipString(s, i); out += s.slice(a, i); continue;
+    }
+    if (c === "/" && regexAllowedAt(s, i)) {
+      const end = skipRegex(s, i);
+      if (end !== -1) { out += s.slice(i, end); i = end; continue; }
     }
     if (c === "`") {
       out += "`"; i += 1;
@@ -217,10 +287,16 @@ export function stripTypes(source) {
         i = consumeUntilSemi(s, j + 4);
         continue;
       }
-      if (kw === "import") {
+      // `import.meta.url` and dynamic `import(...)` are expressions, not import
+      // statements. Treating them as statements made the scanner adopt an
+      // unrelated `{` from further down the file as an import clause.
+      const isImportExpression = kw === "import" && (s[j] === "." || s[j] === "(");
+      if (kw === "import" && !isImportExpression) {
         const brace = s.indexOf("{", j);
         const from = s.indexOf("from", j);
-        if (brace !== -1 && (from === -1 || brace < from)) {
+        const between = brace === -1 ? "" : s.slice(j, brace);
+        const clauseIsPlausible = brace !== -1 && !/[;()=]/.test(between);
+        if (clauseIsPlausible && (from === -1 || brace < from)) {
           const endBrace = skipBalanced(s, brace, "{", "}");
           const inner = s.slice(brace + 1, endBrace - 1);
           const cleaned = inner
@@ -233,13 +309,20 @@ export function stripTypes(source) {
             i = consumeUntilSemi(s, endBrace);
             continue;
           }
+          // Emit the named-import clause verbatim. Falling through to the generic
+          // scanner made the `as` handler treat `{ a as b }` as a type assertion
+          // and silently drop the local rename, producing a module that referenced
+          // an undefined binding at runtime.
+          out += s.slice(save, brace) + "{ " + cleaned + " }";
+          i = endBrace;
+          continue;
         }
       }
       if (kw === "export") {
         if (s.startsWith("interface", j) && !/[A-Za-z0-9_]/.test(s[j + 9] || " ")) {
           i = consumeDecl(s, j + 9); continue;
         }
-        if (s.startsWith("type", j) && !/[A-Za-z0-9_]/.test(s[j + 4] || " ")) {
+        if (s.startsWith("type", j) && !/[A-Za-z0-9_]/.test(s[j + 4] || " ") && looksLikeTypeAlias(s, j + 4)) {
           i = consumeDecl(s, j + 4); continue;
         }
       }
@@ -249,20 +332,24 @@ export function stripTypes(source) {
     if (wordAt(s, i, "interface")) { i = consumeDecl(s, i + 9); continue; }
     if (wordAt(s, i, "type")) {
       const p = prevNonWs(s, i);
-      if (!p || ";{}".includes(p)) { i = consumeDecl(s, i + 4); continue; }
+      if ((!p || ";{}".includes(p)) && looksLikeTypeAlias(s, i + 4)) { i = consumeDecl(s, i + 4); continue; }
     }
 
     {
       const mods = ["declare", "abstract", "override", "public", "private", "protected", "readonly"];
       let hit = false;
       for (const w of mods) {
-        if (wordAt(s, i, w)) {
-          i += w.length;
-          i = skipWs(s, i);
-          out += " ";
-          hit = true;
-          break;
-        }
+        if (!wordAt(s, i, w)) continue;
+        // These words are also legal identifiers and object keys. Only strip them
+        // when what follows can start a declaration; `const override = 1` and
+        // `{ private: true }` must survive untouched.
+        const after = skipWs(s, i + w.length);
+        if (IDENTIFIER_USE.includes(s[after])) break;
+        i += w.length;
+        i = skipWs(s, i);
+        out += " ";
+        hit = true;
+        break;
       }
       if (hit) continue;
     }

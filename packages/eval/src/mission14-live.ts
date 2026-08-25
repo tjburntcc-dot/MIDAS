@@ -1,7 +1,7 @@
 /** Mission 14 live runner. FILE_STORE. No secrets. No Offer Strategist unless Stage I passes. */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { FileStore } from "@midas/db";
+import { FileStore, stateDir } from "@midas/db";
 import { correctProvisionalEffective } from "./contribution.ts";
 import { submitObjective, runUntilBlocked, decideApproval, objectiveView, resolveServingAtlasVersion } from "./conductor.ts";
 import { runScoutResearch, reviewFinding } from "./scout.ts";
@@ -13,7 +13,7 @@ import { looksLikeVideoPlaceholder } from "./html-extract.ts";
 import { HANDOFF_FICTIONAL_PROSPECTS, handoffQualificationPolicy } from "./handoff-scenario.ts";
 import { ownerSpendView } from "./spend-ledger.ts";
 
-const STATE = process.env.MIDAS_STATE_DIR || "/workspace/midas/var/state";
+const STATE = process.env.MIDAS_STATE_DIR || stateDir();
 const BUYING_Q = "What operational buying signals matter for estimating software candidacy?";
 const OPERATIONAL_BODY = [
   "US roofing contractors produce estimates from takeoffs of roof area, pitch, and materials.",

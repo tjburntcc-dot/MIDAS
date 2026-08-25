@@ -1,3 +1,4 @@
+import { artifactsDir as midasArtifactsDir, repoPath as midasRepoPath, stateDir as midasStateDir } from "@midas/db";
 /** Section 23 — honest pass/partial/fail against owner's 25 acceptance criteria. */
 import { writeFileSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -37,7 +38,7 @@ function row(id, title, status, evidenceIds, notes) {
  * Honest audit. Do not claim complete if anything is partial/fail.
  */
 export function auditSection23Acceptance(store, extras) {
-  const stateDir = (extras && extras.stateDir) || store.dir || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || store.dir || midasStateDir();
   const finch = extras && extras.finchResult;
 
   const plans = asList(loadJson(stateDir, "command_plans.json"));
@@ -51,9 +52,9 @@ export function auditSection23Acceptance(store, extras) {
   const jobs = asList(loadJson(stateDir, "scheduled_jobs.json"));
   const spend = asList(loadJson(stateDir, "spend_ledger.json"));
   const workspaces = asList(loadJson(stateDir, "workspaces.json"));
-  const artifactsHarbor = existsSync("/workspace/midas/var/artifacts/ws-own-004/landing.html");
-  const artifactsFinch = existsSync("/workspace/midas/var/artifacts/ws-own-005/ops-close-checklist.html");
-  const flyerStaged = existsSync("/workspace/midas/var/artifacts/ws-own-004/library-bulletin-flyer-staged.html");
+  const artifactsHarbor = existsSync(join(midasArtifactsDir("ws-own-004"), "landing.html"));
+  const artifactsFinch = existsSync(join(midasArtifactsDir("ws-own-005"), "ops-close-checklist.html"));
+  const flyerStaged = existsSync(join(midasArtifactsDir("ws-own-004"), "library-bulletin-flyer-staged.html"));
   const cm = loadJson(stateDir, "capability-matrix.json") || {};
   const jobsLive = loadJson(stateDir, "jobs-stage-live.json") || {};
   const teachLive = loadJson(stateDir, "teach-retrieve-live.json") || {};
@@ -335,7 +336,7 @@ export function auditSection23Acceptance(store, extras) {
   // Re-evaluate 25 more carefully: mark pass if command+overview exist in product-app
   let productApp = "";
   try {
-    productApp = readFileSync("/workspace/midas/apps/api/src/product-app.html", "utf8");
+    productApp = readFileSync(midasRepoPath("apps", "api", "src", "product-app.html"), "utf8");
   } catch {
     productApp = "";
   }

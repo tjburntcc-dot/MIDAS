@@ -4,10 +4,12 @@
  * launch readiness, adapters, artifacts, UI hooks, Section 21 report.
  * Prefer $0 live. Do not decide APR-005 / TPK-001. FILE_STORE stays FILE_STORE.
  */
+import { artifactsDir as midasArtifactsDir, repoPath as midasRepoPath, repoRoot as midasRepoRoot, stateDir as midasStateDir } from "@midas/db";
 import { createHash } from "node:crypto";
-import { writeFileSync, mkdirSync, readFileSync, existsSync, statSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync, readdirSync, existsSync, statSync, rmSync, cpSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { join } from "node:path";
+import { join, sep } from "node:path";
+import { tmpdir } from "node:os";
 import {
   planFromNaturalLanguage,
   persistCommandPlan,
@@ -285,7 +287,7 @@ export function investmentCommitteePerspectives(rec) {
 }
 
 export function demonstrateSeriousOpportunities(store, extras) {
-  const stateDir = (extras && extras.stateDir) || store.dir || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || store.dir || midasStateDir();
   const rubricPath = join(stateDir, "opportunity_rubric.json");
   if (!existsSync(rubricPath)) writeFileSync(rubricPath, JSON.stringify(OPPORTUNITY_RUBRIC_V1, null, 2));
   const frozen = JSON.parse(readFileSync(rubricPath, "utf8"));
@@ -374,7 +376,7 @@ export function buildSourceProviderRegistry(store, extras) {
     { id: "youtube_transcripts", status: "NOT_CONFIGURED", note: "Do not claim video/transcript ingestion unless truly ingested." },
   ];
   const record = { id: "SPR-001", updatedAt: nowIso(), persistence: "FILE_STORE", ssrfProtection: true, providers };
-  const stateDir = (extras && extras.stateDir) || store.dir || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || store.dir || midasStateDir();
   writeFileSync(join(stateDir, "source_provider_registry.json"), JSON.stringify(record, null, 2));
   return record;
 }
@@ -382,7 +384,7 @@ export function buildSourceProviderRegistry(store, extras) {
 export function persistFetchMetadata(store, meta) {
   const block = isBlockedFetchUrl(meta && meta.url);
   if (block.blocked) return { ok: false, blocked: true, reason: block.reason, status: "PERMISSION_REQUIRED" };
-  const stateDir = store.dir || "/workspace/midas/var/state";
+  const stateDir = store.dir || midasStateDir();
   const all = loadJson(stateDir, "fetch_metadata.json") || [];
   const list = asList(all);
   const row = {
@@ -450,7 +452,7 @@ export function assembleCompanyTeamDiff(store) {
     ownerAuthRequiredToCreateSeat: true,
     noSeatsCreatedForSaas: true,
   };
-  writeFileSync(join(store.dir || "/workspace/midas/var/state", "company_team_specs.json"), JSON.stringify(out, null, 2));
+  writeFileSync(join(store.dir || midasStateDir(), "company_team_specs.json"), JSON.stringify(out, null, 2));
   return out;
 }
 
@@ -520,7 +522,7 @@ export function trainingLabIngest(store, payload) {
 
 /* ========== 6. Embeddings ========== */
 export async function runEmbeddingsProofOrBoundary(store, extras) {
-  const stateDir = (extras && extras.stateDir) || store.dir || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || store.dir || midasStateDir();
   const embedFn = extras && extras.embedFn;
   const harborKnowledge = (store.listKnowledge ? store.listKnowledge() : []).filter((k) => k.workspaceId === HARBOR_WORKSPACE_ID).slice(0, 5);
   const chunks = harborKnowledge.map((k) => ({ id: k.id, text: String(k.text || k.content || k.title || "").slice(0, 500) })).filter((c) => c.text.trim());
@@ -578,7 +580,7 @@ export const FROZEN_MINI_EXAMS = {
 };
 
 export function buildCompetencyProgress(store) {
-  const stateDir = store.dir || "/workspace/midas/var/state";
+  const stateDir = store.dir || midasStateDir();
   const teachLive = loadJson(stateDir, "teach-retrieve-live.json") || {};
   const progress = {};
   for (const [roleId, cmap] of Object.entries(COMPETENCY_MAPS)) {
@@ -598,7 +600,7 @@ export function buildCompetencyProgress(store) {
 }
 
 export function demonstrateExtendedTeaching(store) {
-  const stateDir = store.dir || "/workspace/midas/var/state";
+  const stateDir = store.dir || midasStateDir();
   const packets = asList(loadJson(stateDir, "teaching_packets.json") || []);
   const mk = (id, fromRole, toRole, workspaceId, lesson) => {
     const existing = packets.find((p) => p.id === id);
@@ -647,10 +649,10 @@ export const LAUNCH_READINESS_QUESTIONS = [
 export function launchReadinessView(store, workspaceId) {
   const ws = store.getWorkspace(workspaceId);
   const demo = /^ws-own-/.test(workspaceId) || workspaceId === "ws-ridgeline";
-  const artifactsDir = "/workspace/midas/var/artifacts/" + workspaceId;
+  const workspaceArtifacts = midasArtifactsDir(workspaceId);
   let deliverables = [];
-  if (existsSync(artifactsDir)) {
-    try { deliverables = execFileSync("ls", [artifactsDir], { encoding: "utf8" }).trim().split("\n").filter(Boolean); } catch { deliverables = []; }
+  if (existsSync(workspaceArtifacts)) {
+    try { deliverables = readdirSync(workspaceArtifacts).filter(Boolean); } catch { deliverables = []; }
   }
   const team = (store.listAgents ? store.listAgents() : []).filter((a) => a.workspaceId === workspaceId);
   const answers = {
@@ -757,7 +759,7 @@ function commandPlanById(stateDir, store, id) {
 
 /** Harbor launch pack — deterministic assembly from persisted Harbor records only. */
 export function assembleHarborLaunchPackHtml(store, extras) {
-  const stateDir = (extras && extras.stateDir) || (store && store.dir) || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || (store && store.dir) || midasStateDir();
   const lse009 = specialistStructured(stateDir, store, HARBOR_WORKSPACE_ID, "LSE-009");
   const lse014 = specialistStructured(stateDir, store, HARBOR_WORKSPACE_ID, "LSE-014");
   const lse016 = specialistStructured(stateDir, store, HARBOR_WORKSPACE_ID, "LSE-016");
@@ -911,7 +913,7 @@ export function assembleHarborLaunchPackHtml(store, extras) {
 
 /** Finch client cadence — deterministic from OWNER_REPORTED intake + LSE-015 + CPL-014. */
 export function assembleFinchClientCadenceHtml(store, extras) {
-  const stateDir = (extras && extras.stateDir) || (store && store.dir) || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || (store && store.dir) || midasStateDir();
   const lse015 = specialistStructured(stateDir, store, FINCH_WORKSPACE_ID, "LSE-015");
   const plan = commandPlanById(stateDir, store, "CPL-014");
   const known = Array.isArray(lse015.known_costs_restated) ? lse015.known_costs_restated : [
@@ -1019,10 +1021,10 @@ export const FINCH_CADENCE_REQUIRED_SECTIONS = [
 ];
 
 export function improveHarborAndFinchArtifacts(store, extras) {
-  const harborPath = "/workspace/midas/var/artifacts/ws-own-004/launch-pack.html";
-  const finchPath = "/workspace/midas/var/artifacts/ws-own-005/client-cadence-draft.html";
-  mkdirSync("/workspace/midas/var/artifacts/ws-own-004", { recursive: true });
-  mkdirSync("/workspace/midas/var/artifacts/ws-own-005", { recursive: true });
+  const harborPath = join(midasArtifactsDir("ws-own-004"), "launch-pack.html");
+  const finchPath = join(midasArtifactsDir("ws-own-005"), "client-cadence-draft.html");
+  mkdirSync(midasArtifactsDir("ws-own-004"), { recursive: true });
+  mkdirSync(midasArtifactsDir("ws-own-005"), { recursive: true });
   const harborHtml = assembleHarborLaunchPackHtml(store, extras);
   const finchHtml = assembleFinchClientCadenceHtml(store, extras);
   writeFileSync(harborPath, harborHtml);
@@ -1100,10 +1102,10 @@ export function artifactsPageView(store, q) {
   const files = [];
   const workspaces = ws ? [ws] : [HARBOR_WORKSPACE_ID, FINCH_WORKSPACE_ID];
   for (const id of workspaces) {
-    const dir = "/workspace/midas/var/artifacts/" + id;
+    const dir = midasArtifactsDir(id);
     if (!existsSync(dir)) continue;
     try {
-      const names = execFileSync("ls", [dir], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+      const names = readdirSync(dir).filter(Boolean);
       for (const name of names) {
         const abs = join(dir, name);
         let size = 0;
@@ -1162,9 +1164,9 @@ export function readWorkspaceArtifactFile(workspaceId, name) {
   if (!/^[A-Za-z0-9._-]+$/.test(file) || file.includes("..")) {
     return { ok: false, errorStatus: 400, error: "invalid file name" };
   }
-  const abs = join("/workspace/midas/var/artifacts", ws, file);
-  const root = join("/workspace/midas/var/artifacts", ws);
-  if (!abs.startsWith(root + "/") && abs !== root) {
+  const abs = join(midasArtifactsDir(ws), file);
+  const root = midasArtifactsDir(ws);
+  if (abs !== root && !abs.startsWith(root + sep)) {
     return { ok: false, errorStatus: 403, error: "path refused" };
   }
   if (!existsSync(abs)) return { ok: false, errorStatus: 404, error: "artifact not found" };
@@ -1236,24 +1238,24 @@ export function researchView(store, extras) {
   };
 }
 export function teachingView(store) {
-  const stateDir = store.dir || "/workspace/midas/var/state";
+  const stateDir = store.dir || midasStateDir();
   const packets = asList(loadJson(stateDir, "teaching_packets.json") || []).filter((p) => ["TPK-003","TPK-004","TPK-005","TPK-006","TPK-007"].includes(p.id));
   return { built: true, title: "Teaching", pairs: TEACHING_PAIRS, packets: packets.map((p) => ({ id: p.id, from: p.fromRole, to: p.toRole, status: p.status })), tpk001Untouched: true, note: "TPK-001 untouched." };
 }
 
 export function refreshPortableArchive() {
-  const dist = "/workspace/midas/dist";
+  const dist = midasRepoPath("dist");
   mkdirSync(dist, { recursive: true });
-  const staging = "/tmp/midas-portable-src";
-  execFileSync("rm", ["-rf", staging]);
+  const staging = join(tmpdir(), "midas-portable-src");
+  rmSync(staging, { recursive: true, force: true });
   mkdirSync(staging, { recursive: true });
   const include = ["apps","packages","contracts","docs","evals","tools","package.json","pnpm-workspace.yaml","tsconfig.json","tsconfig.base.json","README.md","ws.yaml",".gitignore",".npmrc"];
   for (const item of include) {
-    const src = join("/workspace/midas", item);
+    const src = join(midasRepoRoot(), item);
     if (!existsSync(src)) continue;
-    execFileSync("cp", ["-a", src, join(staging, item)]);
+    cpSync(src, join(staging, item), { recursive: true });
   }
-  try { execFileSync("rm", ["-f", join(staging, ".env")]); } catch (e) { /* */ }
+  rmSync(join(staging, ".env"), { force: true });
   const out = join(dist, "midas-portable-src.tar.gz");
   execFileSync("tar", ["-czf", out, "-C", staging, "."]);
   const st = statSync(out);
@@ -1266,7 +1268,7 @@ export function refreshPortableArchive() {
 }
 
 export function apr005Status(store) {
-  const stateDir = store.dir || "/workspace/midas/var/state";
+  const stateDir = store.dir || midasStateDir();
   const aprs = asList(loadJson(stateDir, "approval_requests.json") || loadJson(stateDir, "approval_decisions.json") || []);
   const apr = aprs.find((a) => a && a.id === "APR-005");
   const tpk = asList(loadJson(stateDir, "teaching_packets.json") || []).find((t) => t && t.id === "TPK-001");
@@ -1335,7 +1337,7 @@ export function buildSection21Answers(ctx) {
 }
 
 export function writeSection21Report(ctx) {
-  const stateDir = "/workspace/midas/var/state";
+  const stateDir = midasStateDir();
   const answers = buildSection21Answers(ctx);
   const writtenAt = nowIso();
   const lines = [
@@ -1396,7 +1398,7 @@ export function writeSection21Report(ctx) {
 }
 
 export function updateCapabilityMatrix(ctx) {
-  const stateDir = "/workspace/midas/var/state";
+  const stateDir = midasStateDir();
   const cm = loadJson(stateDir, "capability-matrix.json") || {};
   cm.writtenAt = nowIso();
   cm.persistence = "FILE_STORE";
@@ -1472,9 +1474,9 @@ export async function runRevenueFoundrySlice(store, extras = {}) {
   const taskGraph = buildObjectiveTaskGraph({ id: "OBJ-RF-HARBOR", tasks: null });
   const launchReadiness = launchReadinessView(store, HARBOR_WORKSPACE_ID);
   const launchFinch = launchReadinessView(store, FINCH_WORKSPACE_ID);
-  writeFileSync(join(store.dir || "/workspace/midas/var/state", "task_graphs.json"), JSON.stringify([taskGraph], null, 2));
-  writeFileSync(join(store.dir || "/workspace/midas/var/state", "external_adapters.json"), JSON.stringify(EXTERNAL_ADAPTERS, null, 2));
-  writeFileSync(join(store.dir || "/workspace/midas/var/state", "launch_readiness_harbor.json"), JSON.stringify(launchReadiness, null, 2));
+  writeFileSync(join(store.dir || midasStateDir(), "task_graphs.json"), JSON.stringify([taskGraph], null, 2));
+  writeFileSync(join(store.dir || midasStateDir(), "external_adapters.json"), JSON.stringify(EXTERNAL_ADAPTERS, null, 2));
+  writeFileSync(join(store.dir || midasStateDir(), "launch_readiness_harbor.json"), JSON.stringify(launchReadiness, null, 2));
   const artifacts = improveHarborAndFinchArtifacts(store);
   const archive = refreshPortableArchive();
   const ctx = {

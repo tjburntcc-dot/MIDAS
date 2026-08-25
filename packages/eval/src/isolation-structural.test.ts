@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FileStore } from "@midas/db";
+import { FileStore, stateDir } from "@midas/db";
 import { FROZEN_HASHES } from "./stage-i-gate.ts";
 import { createNewBusiness, createExistingBusiness } from "./product-shell.ts";
 import { retrieveWorkspaceContext } from "./live-specialists.ts";
@@ -245,7 +245,7 @@ describe("structural workspace isolation", () => {
   });
 
   test("historical LSE-001-004 contamination stays identifiable and is not rewritten", () => {
-    const store = new FileStore("/workspace/midas/var/state");
+    const store = new FileStore(stateDir());
     const view = historicalContaminationView(store);
     const found = view.records.filter((r) => r.present);
     assert.ok(found.length >= 1, "expected historical LSE records in live FILE_STORE");

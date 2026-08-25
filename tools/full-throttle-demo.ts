@@ -1,5 +1,5 @@
 /** Compact full-throttle live demos. New company + existing company. No restart of Cedar Path. No AutoShop. */
-import { createStore } from "@midas/db";
+import { createStore, stateDir } from "@midas/db";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { OpenAIResponsesProvider } from "@midas/model";
@@ -38,7 +38,7 @@ import {
 import { flagInsufficientKnowledge, teachingPipelineView, watcherScopeFinding, conductorRouteTeaching } from "../packages/eval/src/teaching-pipeline.ts";
 
 const LIVE_CALL_CAP = 10;
-const STATE = "/workspace/midas/var/state";
+const STATE = stateDir();
 
 function makeSpecialistResponder() {
   const provider = new OpenAIResponsesProvider();

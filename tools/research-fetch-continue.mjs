@@ -1,5 +1,5 @@
 /** Continue MIDAS: fetch SRCH-002 page bodies for Harbor Oak. $0 model. Do not decide APR-005. */
-import { FileStore } from "@midas/db";
+import { FileStore, repoPath, stateDir } from "@midas/db";
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -7,9 +7,9 @@ import {
   writeResearchFetchReports,
   updateCapabilityMatrixForResearchFetch,
   HARBOR_WORKSPACE_ID,
-} from "/workspace/midas/packages/eval/src/research-fetch.ts";
+} from "../packages/eval/src/research-fetch.ts";
 
-const STATE = "/workspace/midas/var/state";
+const STATE = stateDir();
 const store = new FileStore(STATE);
 
 function apr005Status() {

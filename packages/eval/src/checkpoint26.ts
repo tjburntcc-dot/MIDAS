@@ -1,7 +1,7 @@
 /** Checkpoint 26 dual complete product workflows. Real modules, real FILE_STORE records. */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { FileStore } from "@midas/db";
+import { FileStore, artifactsDir } from "@midas/db";
 import { FROZEN_HASHES } from "./stage-i-gate.ts";
 import { frozenHashCheck } from "./founder-opportunity-brief.ts";
 import { APPLICATION_ISOLATION } from "./company-intake.ts";
@@ -622,7 +622,7 @@ function backfillDeliverableDrafts(store, workspaceId) {
 }
 
 function backfillLandingDraftBanner(workspaceId) {
-  const root = process.env.MIDAS_STATE_DIR ? join(process.env.MIDAS_STATE_DIR, "../artifacts") : "/workspace/midas/var/artifacts";
+  const root = process.env.MIDAS_STATE_DIR ? join(process.env.MIDAS_STATE_DIR, "../artifacts") : artifactsDir();
   const path = join(root, workspaceId, "landing.html");
   if (!existsSync(path)) return false;
   const html = readFileSync(path, "utf8");

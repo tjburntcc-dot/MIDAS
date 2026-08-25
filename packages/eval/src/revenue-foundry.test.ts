@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, existsSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FileStore } from "@midas/db";
+import { FileStore, artifactsDir, stateDir } from "@midas/db";
 import {
   validateProposedPlan,
   planDeterministicValidated,
@@ -240,7 +240,7 @@ describe("revenue-foundry teaching launch adapters", () => {
 
 describe("revenue-foundry enriched draft artifacts", () => {
   test("Harbor launch pack meets min size, sections, draft banner", () => {
-    const html = assembleHarborLaunchPackHtml(null, { stateDir: "/workspace/midas/var/state" });
+    const html = assembleHarborLaunchPackHtml(null, { stateDir: stateDir() });
     assert.ok(Buffer.byteLength(html, "utf8") >= HARBOR_LAUNCH_PACK_MIN_BYTES);
     assert.match(html, /DRAFT/i);
     assert.match(html, /Not deployed/i);
@@ -252,11 +252,11 @@ describe("revenue-foundry enriched draft artifacts", () => {
     }
     assert.ok(html.includes("ws-own-004"));
     assert.equal(html.includes("ws-own-005"), false);
-    assert.equal(html.includes("/workspace/midas/var/artifacts/ws-own-005"), false);
+    assert.equal(html.includes(artifactsDir("ws-own-005")), false);
   });
 
   test("Finch cadence meets min size, sections, draft banner, no invented profitability", () => {
-    const html = assembleFinchClientCadenceHtml(null, { stateDir: "/workspace/midas/var/state" });
+    const html = assembleFinchClientCadenceHtml(null, { stateDir: stateDir() });
     assert.ok(Buffer.byteLength(html, "utf8") >= FINCH_CADENCE_MIN_BYTES);
     assert.match(html, /DRAFT/i);
     assert.match(html, /Not deployed/i);
@@ -275,8 +275,8 @@ describe("revenue-foundry enriched draft artifacts", () => {
   });
 
   test("persisted artifact files and workspace isolation of paths", () => {
-    const harbor = "/workspace/midas/var/artifacts/ws-own-004/launch-pack.html";
-    const finch = "/workspace/midas/var/artifacts/ws-own-005/client-cadence-draft.html";
+    const harbor = join(artifactsDir("ws-own-004"), "launch-pack.html");
+    const finch = join(artifactsDir("ws-own-005"), "client-cadence-draft.html");
     assert.equal(existsSync(harbor), true);
     assert.equal(existsSync(finch), true);
     assert.ok(statSync(harbor).size >= HARBOR_LAUNCH_PACK_MIN_BYTES);
@@ -307,7 +307,7 @@ describe("revenue-foundry enriched draft artifacts", () => {
 
   test("improveHarborAndFinchArtifacts writes both drafts at $0", () => {
     const { store } = tmpStore();
-    const out = improveHarborAndFinchArtifacts(store, { stateDir: "/workspace/midas/var/state" });
+    const out = improveHarborAndFinchArtifacts(store, { stateDir: stateDir() });
     assert.equal(out.costUsd, 0);
     assert.equal(out.deployed, false);
     assert.ok(out.harborBytes >= HARBOR_LAUNCH_PACK_MIN_BYTES);

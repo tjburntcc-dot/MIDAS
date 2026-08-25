@@ -1,13 +1,13 @@
 
-import { FileStore } from "@midas/db";
+import { FileStore, repoPath, stateDir } from "@midas/db";
 import { join } from "node:path";
 import { writeFileSync } from "node:fs";
 import {
   approveCommandPlan, runCommandPlan, founderSpendingView, scoutFromAcceptedUsefulSearch,
   proveRestartSurvival, listFounderEmployees, founderOpportunityCompare,
-} from "/workspace/midas/packages/eval/src/founder-depth.ts";
-import { enrichOpportunityInvestment } from "/workspace/midas/packages/eval/src/master-os.ts";
-const store = new FileStore("/workspace/midas/var/state");
+} from "../packages/eval/src/founder-depth.ts";
+import { enrichOpportunityInvestment } from "../packages/eval/src/master-os.ts";
+const store = new FileStore(stateDir());
 const harbor = "ws-own-004";
 const writtenAt = new Date().toISOString();
 const plans = (store.listCommandPlans && store.listCommandPlans(harbor)) || [];
@@ -27,7 +27,7 @@ if (opps.length >= 2) {
   for (const o of opps) { try { enrichOpportunityInvestment(store, o.id); } catch {} }
   compare = founderOpportunityCompare(store, opps.map((o) => o.id));
 }
-const restart = proveRestartSurvival(new FileStore("/workspace/midas/var/state"));
+const restart = proveRestartSurvival(new FileStore(stateDir()));
 const snap = {
   writtenAt, planId: plan.id, planStatus: store.getCommandPlan(plan.id).status,
   executed: run.executedCount, paused: run.pausedCount,

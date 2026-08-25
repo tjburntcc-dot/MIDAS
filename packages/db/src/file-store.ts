@@ -1,6 +1,8 @@
-import { mkdirSync, readFileSync, renameSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { stateDir } from "./locate.js";
+const NEWLINE = "\n";
 export const KIND = "FILE_STORE";
 export const FILE_STORE_KIND = KIND;
 
@@ -93,18 +95,49 @@ function readJson(path, fallback) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+const TRANSIENT_RENAME_ERRORS = ["EPERM", "EACCES", "EBUSY", "ENOTEMPTY"];
+let atomicWriteCounter = 0;
+
+/** Block briefly without pulling in a timer. Used only for rename backoff. */
+function sleepMs(ms) {
+  const shared = new SharedArrayBuffer(4);
+  Atomics.wait(new Int32Array(shared), 0, 0, ms);
+}
+
+/**
+ * Write JSON durably: full content to a private temp file, then one rename.
+ *
+ * Two properties this has to hold and previously did not.
+ *
+ * 1. The temp name must be unique per writer. A fixed `<path>.tmp` meant two
+ *    processes writing the same store clobbered each other's half-written file
+ *    and could rename a truncated document into place.
+ * 2. Rename must tolerate transient locks. On Windows a virus scanner or search
+ *    indexer holding the destination open makes renameSync throw EPERM even
+ *    though nothing is wrong; a single attempt turned that into a lost write.
+ */
 function atomicWrite(path, value) {
   mkdirSync(dirname(path), { recursive: true });
-  const tmp = `${path}.tmp`;
-  writeFileSync(tmp, JSON.stringify(value, null, 2) + "\n", "utf8");
-  renameSync(tmp, path);
+  atomicWriteCounter += 1;
+  const tmp = path + ".tmp." + process.pid + "." + atomicWriteCounter;
+  writeFileSync(tmp, JSON.stringify(value, null, 2) + NEWLINE, "utf8");
+  let lastError = null;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    try {
+      renameSync(tmp, path);
+      return;
+    } catch (err) {
+      lastError = err;
+      if (!TRANSIENT_RENAME_ERRORS.includes(err && err.code)) break;
+      sleepMs(5 + attempt * 5);
+    }
+  }
+  try { rmSync(tmp, { force: true }); } catch (cleanupError) { /* the rename failure is the real error */ }
+  throw lastError;
 }
 
 export function defaultStateDir(): string {
-  if (process.env.MIDAS_STATE_DIR) return process.env.MIDAS_STATE_DIR;
-  if (process.env.MIDAS_FILE_STORE_DIR) return process.env.MIDAS_FILE_STORE_DIR;
-  const here = dirname(fileURLToPath(import.meta.url));
-  return join(here, "../../../var/state");
+  return stateDir();
 }
 
 export function createStore(dir) {

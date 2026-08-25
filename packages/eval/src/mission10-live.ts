@@ -1,5 +1,6 @@
+import { join } from "node:path";
 import { writeFileSync } from "node:fs";
-import { createStore } from "@midas/db";
+import { createStore, stateDir } from "@midas/db";
 import { loadWorkspaceEnv, OpenAIResponsesProvider, probeLiveResponses } from "@midas/model";
 import { runScoutResearch, reviewFinding, trainAtlasFromScout, scoutPrompt } from "./scout.ts";
 import { runWorkbench } from "./workspace.ts";
@@ -69,7 +70,7 @@ const scoutHashBefore = scoutV0 && scoutV0.contentHash;
 
 const probe = await probeLiveResponses();
 if (!probe.ok) {
-  writeFileSync("/workspace/midas/var/state/mission10-live.json", JSON.stringify({ ok: false, error: probe.error, note: "Live probe failed. Not falling back to fixture silently." }, null, 2));
+  writeFileSync(join(stateDir(), "mission10-live.json"), JSON.stringify({ ok: false, error: probe.error, note: "Live probe failed. Not falling back to fixture silently." }, null, 2));
   throw new Error("Live probe failed: " + probe.error);
 }
 
@@ -184,5 +185,5 @@ const summary = {
   watcher: { id: audit.report.id, status: audit.report.status, versionId: audit.watcher.versionId, blocking: (audit.report.blocking || []).map((c) => c.code) },
   usage: { workbench: wb.run.usage || null },
 };
-writeFileSync("/workspace/midas/var/state/mission10-live.json", JSON.stringify(noSecrets(summary), null, 2) + "\n");
+writeFileSync(join(stateDir(), "mission10-live.json"), JSON.stringify(noSecrets(summary), null, 2) + "\n");
 console.log(JSON.stringify(noSecrets(summary), null, 2));

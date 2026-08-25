@@ -1,3 +1,4 @@
+import { stateDir as midasStateDir } from "@midas/db";
 /** Finch & Copper (ws-own-005) existing-business depth. Prefer $0 live. Do not decide APR-005. */
 import { writeFileSync, mkdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -186,7 +187,7 @@ export function buildFinchCloseChecklistHtml(extras) {
 }
 
 export function writeFinchCloseChecklistArtifact(store, extras) {
-  const root = store.dir || store.stateDir || "/workspace/midas/var/state";
+  const root = store.dir || store.stateDir || midasStateDir();
   const artifactsRoot = root.endsWith("/state") || root.endsWith("\\state")
     ? join(root, "..", "artifacts")
     : join(root, "artifacts");
@@ -278,7 +279,7 @@ export function proveFinchIsolation(store) {
 }
 
 export function runFinchExistingBusinessDepth(store, opts) {
-  const stateDir = (opts && opts.stateDir) || store.dir || "/workspace/midas/var/state";
+  const stateDir = (opts && opts.stateDir) || store.dir || midasStateDir();
   const ws = store.getWorkspace(FINCH_WORKSPACE_ID);
   if (!ws || !/Finch/i.test(ws.name || "")) {
     throw new Error("Expected Finch & Copper at " + FINCH_WORKSPACE_ID + ", got " + (ws && ws.name));
@@ -459,7 +460,7 @@ function afterAfterTaskId(beforeAfter) {
 }
 
 export function writeMilestoneFinchReports(result, extras) {
-  const stateDir = (extras && extras.stateDir) || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || midasStateDir();
   const tests = (extras && extras.tests) || "pending";
   const acceptance = (extras && extras.acceptance) || null;
   const archive = (extras && extras.archive) || null;
@@ -599,7 +600,7 @@ export function writeMilestoneFinchReports(result, extras) {
 }
 
 export function updateCapabilityMatrixForFinchDepth(patch) {
-  const path = "/workspace/midas/var/state/capability-matrix.json";
+  const path = join(midasStateDir(), "capability-matrix.json");
   const raw = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
   const next = {
     ...raw,
@@ -625,7 +626,7 @@ export function updateCapabilityMatrixForFinchDepth(patch) {
 
 
 export function runMilestoneFinchContinue(store, extras) {
-  const stateDir = (extras && extras.stateDir) || store.dir || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || store.dir || midasStateDir();
   const beforeAprRows = (store.listApprovalRequests && store.listApprovalRequests()) || [];
   const beforeApr = (beforeAprRows.find((a) => a.id === "APR-005") || {}).status;
   let beforeHcl = false;

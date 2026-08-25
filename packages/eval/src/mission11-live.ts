@@ -1,5 +1,6 @@
+import { join } from "node:path";
 import { writeFileSync } from "node:fs";
-import { createStore } from "@midas/db";
+import { createStore, stateDir } from "@midas/db";
 import { loadWorkspaceEnv, OpenAIResponsesProvider, probeLiveResponses } from "@midas/model";
 import { scoutPrompt } from "./scout.ts";
 import { atlasTaskOutputApiSchema } from "./schemas.ts";
@@ -163,5 +164,5 @@ const summary = {
   disclosure: CONDUCTOR_DISCLOSURE,
   doneStatus: done.objective && done.objective.status,
 };
-writeFileSync("/workspace/midas/var/state/mission11-live.json", JSON.stringify(noSecrets(summary), null, 2) + "\n");
+writeFileSync(join(stateDir(), "mission11-live.json"), JSON.stringify(noSecrets(summary), null, 2) + "\n");
 console.log(JSON.stringify(noSecrets(summary), null, 2));

@@ -1,3 +1,4 @@
+export { repoRoot, repoPath, stateDir, artifactsDir, rehomeLegacyPath, LEGACY_REPO_ROOT } from "./locate.js";
 export { FUTURE_PG_CONTRACT } from "./schema.js";
 export {
   FileStore,

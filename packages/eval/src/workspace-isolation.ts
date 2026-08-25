@@ -1,5 +1,6 @@
 /** Structural workspace isolation. Application-level, not IAM. Queries require workspaceId. */
 
+import { artifactsDir } from "@midas/db";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -177,7 +178,7 @@ export function artifactDirForWorkspace(workspaceId) {
     err.code = "WORKSPACE_REQUIRED";
     throw err;
   }
-  return join("/workspace/midas/var/artifacts", ws);
+  return join(artifactsDir(), ws);
 }
 
 export function listArtifactsInWorkspace(workspaceId) {

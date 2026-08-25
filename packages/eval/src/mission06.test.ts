@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   FileStore,
+  stateDir,
   ensureAtlasV0,
   freezeAtlasV1,
   ensureAtlasV2,
@@ -358,8 +359,11 @@ describe("attribution taxonomy on new runs", () => {
   });
 
   test("historical case_results still use old stage names when present", () => {
-    assert.equal(existsSync(HISTORICAL_RESULTS), true);
-    const rows = JSON.parse(readFileSync(HISTORICAL_RESULTS, "utf8"));
+    // The live FILE_STORE is private and gitignored, so a fresh checkout may hold
+    // no historical case results at all. Asserting the file exists made this a
+    // machine-specific test. What the migration actually has to guarantee is that
+    // every historical failureAttribution is readable under either the current
+    // taxonomy or the frozen legacy stage names -- never an unknown third thing.
     const oldStages = new Set([
       "not_retrieved",
       "retrieved_ignored",
@@ -370,13 +374,23 @@ describe("attribution taxonomy on new runs", () => {
       "semantic_judge",
       "benchmark_defect",
       "model_reasoning",
-      null,
+      "complete",
     ]);
+    const store = new FileStore(stateDir());
+    const present = existsSync(HISTORICAL_RESULTS);
+    const rows = present ? JSON.parse(readFileSync(HISTORICAL_RESULTS, "utf8")) : [];
+    if (!present) {
+      // Absent file and a non-empty store would mean results moved somewhere this
+      // check no longer inspects. Fail loudly in that case instead of passing.
+      assert.equal(store.listCaseResults().length, 0, "case_results.json is missing but the store reports case results");
+      return;
+    }
     const sample = rows.filter((r) => r.agentVersionId === "atlas-v8" || String(r.evalRunId || "").length > 0).slice(0, 30);
     for (const row of sample) {
-      if (row.failureAttribution == null || row.failureAttribution === "complete") continue;
-      if (ATTRIBUTION_TAXONOMY.includes(row.failureAttribution)) continue;
-      assert.ok(oldStages.has(row.failureAttribution) || typeof row.failureAttribution === "string");
+      const value = row.failureAttribution;
+      if (value == null) continue;
+      const known = ATTRIBUTION_TAXONOMY.includes(value) || oldStages.has(value);
+      assert.ok(known, "unknown historical failureAttribution: " + String(value));
     }
   });
 });

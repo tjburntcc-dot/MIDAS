@@ -1,5 +1,5 @@
 /** New-workspace live foundry demo. Fail-closed. No fixture-as-live. Not a rebuild. */
-import { createStore } from "@midas/db";
+import { createStore, stateDir } from "@midas/db";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { OpenAIResponsesProvider } from "@midas/model";
@@ -409,8 +409,8 @@ function writeReports(store, report) {
     "- offer_strategist-ws-ridgeline-v0: " + ((hashes["offer_strategist-ws-ridgeline-v0"] && hashes["offer_strategist-ws-ridgeline-v0"].expected) || FROZEN_HASHES["offer_strategist-ws-ridgeline-v0"]),
     "- Tests: live-foundry 9/9 plus CP21–26 / foundry-gaps at write time. See live-foundry-live.json for counts.",
   ].join("\n") + "\n";
-  writeFileSync(join("/workspace/midas/var/state/live-foundry-report.md"), md, "utf8");
-  writeFileSync(join("/workspace/midas/var/state/live-foundry-live.json"), JSON.stringify(report, null, 2) + "\n", "utf8");
+  writeFileSync(join(join(stateDir(), "live-foundry-report.md")), md, "utf8");
+  writeFileSync(join(join(stateDir(), "live-foundry-live.json")), JSON.stringify(report, null, 2) + "\n", "utf8");
   console.log(JSON.stringify({
     workspace: report.newWorkspaceId,
     provider: report.providerAfter || report.providerBefore,

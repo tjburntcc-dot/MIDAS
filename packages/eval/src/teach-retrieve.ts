@@ -1,3 +1,4 @@
+import { repoRoot as midasRepoRoot } from "@midas/db";
 /** Teach-retrieve slice: Scout SBR-002 → classified lessons → Harbor Marketing before/after proof. $0 preferred. APR-005/TPK-001 untouched. */
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -47,7 +48,7 @@ export const TEACH_RETRIEVE_HONESTY = {
   liveModelPreferredUsd: 0,
 };
 
-const ROOT = "/workspace/midas";
+const ROOT = midasRepoRoot();
 
 function nowIso() {
   return new Date().toISOString();

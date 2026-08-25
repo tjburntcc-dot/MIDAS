@@ -1,3 +1,4 @@
+import { stateDir as midasStateDir } from "@midas/db";
 /**
  * Jobs-stage slice: runnable FILE_STORE worker tick + LEVEL 3 staged Harbor flyer
  * + action catalog boundary. Honest local foundations — NOT always-on / HA / Postgres / IAM.
@@ -605,7 +606,7 @@ function escapeHtml(s) {
 export function stageHarborLibraryFlyer(store, extras) {
   const o = extras || {};
   const workspaceId = o.workspaceId || HARBOR_WORKSPACE_ID;
-  const stateDir = o.stateDir || store.dir || "/workspace/midas/var/state";
+  const stateDir = o.stateDir || store.dir || midasStateDir();
   const artifactsRoot = o.artifactsDir || join(stateDir, "..", "artifacts", workspaceId);
   mkdirSync(artifactsRoot, { recursive: true });
   const facts = loadHarborFacts(store);
@@ -766,7 +767,7 @@ export function jobsStageView(store, query) {
 }
 
 export function writeJobsStageReports(result, extras) {
-  const stateDir = (extras && extras.stateDir) || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || midasStateDir();
   const tests = (extras && extras.tests) || "pending";
   const live = {
     writtenAt: nowIso(),
@@ -908,7 +909,7 @@ Written: ${live.writtenAt}
 }
 
 export function updateCapabilityMatrixForJobsStage(summary) {
-  const path = "/workspace/midas/var/state/capability-matrix.json";
+  const path = join(midasStateDir(), "capability-matrix.json");
   let matrix = {};
   if (existsSync(path)) matrix = JSON.parse(readFileSync(path, "utf8"));
   matrix.writtenAt = nowIso();
@@ -932,7 +933,7 @@ export function updateCapabilityMatrixForJobsStage(summary) {
 }
 
 export function runJobsStageHarbor(store, extras) {
-  const stateDir = (extras && extras.stateDir) || store.dir || "/workspace/midas/var/state";
+  const stateDir = (extras && extras.stateDir) || store.dir || midasStateDir();
   const aprRows = (store.listApprovalRequests && store.listApprovalRequests()) || [];
   const apr = aprRows.find((r) => r.id === "APR-005");
   const apr005 = apr && apr.status;

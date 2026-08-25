@@ -181,7 +181,18 @@ function seedProduct(store) {
 
 describe("checkpoint 19 product shell", () => {
   test("nav labels and routes exist in module, HTML, and server", () => {
-    assert.equal(PRODUCT_NAV.length, 12);
+    // Checkpoint 19 froze twelve nav destinations. Later slices legitimately add
+    // more (Command, Jobs, Treasury, Launch Readiness, Research, Teaching, Brain,
+    // Artifacts), so this guards the checkpoint-19 set and nav integrity rather
+    // than a total count that every later slice would have to break.
+    assert.ok(PRODUCT_NAV.length >= NAV_LABELS.length, "nav shrank below the checkpoint 19 set");
+    const navIds = PRODUCT_NAV.map((n) => n.id);
+    assert.equal(new Set(navIds).size, navIds.length, "duplicate nav id");
+    assert.deepEqual(
+      PRODUCT_NAV.slice(0, 1).map((n) => n.label),
+      ["Overview"],
+      "Overview must stay the first nav destination",
+    );
     for (const label of NAV_LABELS) {
       assert.ok(PRODUCT_NAV.some((n) => n.label === label), "nav missing " + label);
       assert.match(HTML, new RegExp(label));

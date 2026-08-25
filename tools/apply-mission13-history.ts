@@ -1,3 +1,4 @@
+import { stateDir } from "@midas/db";
 import { createStore } from "../packages/db/src/file-store.ts";
 import { applyMission13History } from "../packages/eval/src/mission13-history.ts";
 
@@ -10,7 +11,7 @@ const FROZEN = {
   "conductor-ws-ridgeline-v0": "5b7e2673fac69dab1603c19a9751bf375fd0bce7cb2802254f02b58b2b947102",
 };
 
-const store = createStore(process.env.MIDAS_STATE_DIR || "/workspace/midas/var/state");
+const store = createStore(process.env.MIDAS_STATE_DIR || stateDir());
 function checkHashes(label) {
   const bad = [];
   for (const [id, hash] of Object.entries(FROZEN)) {

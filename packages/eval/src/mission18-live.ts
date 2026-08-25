@@ -1,7 +1,7 @@
 /** Mission 18 live runner. FILE_STORE. Tests first already ran. Bounded public fetches only. No Strategist. No Approve click. */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { FileStore } from "@midas/db";
+import { FileStore, stateDir } from "@midas/db";
 import { submitObjective, runUntilBlocked, objectiveView, resolveServingAtlasVersion } from "./conductor.ts";
 import { auditTeachingChain } from "./watcher.ts";
 import { FROZEN_HASHES } from "./stage-i-gate.ts";
@@ -20,7 +20,7 @@ import {
   RETRIEVAL_METHOD,
 } from "./teaching-engine.ts";
 
-const STATE = process.env.MIDAS_STATE_DIR || "/workspace/midas/var/state";
+const STATE = process.env.MIDAS_STATE_DIR || stateDir();
 
 function isoEt(d = new Date()) {
   const utc = d.toISOString();
@@ -279,7 +279,7 @@ async function main() {
   const md = [
     "# Mission 18 report",
     "",
-    "Written " + clock.et + " (" + clock.utc + " UTC). Persistence: FILE_STORE at `/workspace/midas/var/state`. Not IAM. Not Postgres.",
+    "Written " + clock.et + " (" + clock.utc + " UTC). Persistence: FILE_STORE at `" + stateDir() + "`. Not IAM. Not Postgres.",
     "",
     "## Research objective",
     "",

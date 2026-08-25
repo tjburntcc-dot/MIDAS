@@ -1,7 +1,7 @@
 /** Finish Mission 14 live records. No new live URL shopping. */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { FileStore } from "@midas/db";
+import { FileStore, stateDir } from "@midas/db";
 import { runUntilBlocked, objectiveView, resolveServingAtlasVersion } from "./conductor.ts";
 import { runScoutResearch, reviewFinding } from "./scout.ts";
 import { shadowCompile } from "./shadow-compile.ts";
@@ -12,7 +12,7 @@ import { looksLikeVideoPlaceholder } from "./html-extract.ts";
 import { HANDOFF_FICTIONAL_PROSPECTS } from "./handoff-scenario.ts";
 import { ownerSpendView } from "./spend-ledger.ts";
 
-const STATE = "/workspace/midas/var/state";
+const STATE = stateDir();
 const BUYING_Q = "What operational buying signals matter for estimating software candidacy?";
 const OPERATIONAL_BODY = [
   "US roofing contractors produce estimates from takeoffs of roof area, pitch, and materials.",

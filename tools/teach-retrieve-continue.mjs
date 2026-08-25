@@ -1,5 +1,5 @@
 /** Continue MIDAS: teach-retrieve from LIVE SBR-002. $0 model. Do not decide APR-005. */
-import { FileStore } from "@midas/db";
+import { FileStore, repoPath, stateDir } from "@midas/db";
 import { writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -7,9 +7,9 @@ import {
   writeTeachRetrieveReports,
   updateCapabilityMatrixForTeachRetrieve,
   HARBOR_WORKSPACE_ID,
-} from "/workspace/midas/packages/eval/src/teach-retrieve.ts";
+} from "../packages/eval/src/teach-retrieve.ts";
 
-const STATE = "/workspace/midas/var/state";
+const STATE = stateDir();
 const store = new FileStore(STATE);
 
 function apr005Status() {

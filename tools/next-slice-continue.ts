@@ -1,6 +1,7 @@
 /** Continue MIDAS. Do not restart. Harbor Oak executive + search persist + landing. */
 import { writeFileSync } from "node:fs";
-import { createStore } from "@midas/db";
+import { join } from "node:path";
+import { createStore, stateDir, artifactsDir } from "@midas/db";
 import { OpenAIResponsesProvider } from "@midas/model";
 import { ensureLiveProvider } from "../packages/eval/src/provider-gateway.ts";
 import { writeAuthorizedArtifact } from "../packages/eval/src/deliverables.ts";
@@ -24,7 +25,7 @@ import {
   historicalContaminationView,
 } from "../packages/eval/src/workspace-isolation.ts";
 
-const STATE = "/workspace/midas/var/state";
+const STATE = stateDir();
 const HARBOR = "ws-own-004";
 const FINCH = "ws-own-005";
 const CEDAR = "ws-own-003";
@@ -280,7 +281,7 @@ async function main() {
     "4. Sources: owner policy K-TRAIN-004 plus Harbor facts/correction K-TRAIN-005/006/007; official web_search pages only if accepted URLs persisted; no embeddings; owner-URL fetch is not search.",
     "5. Employees: Harbor EMP-023 executive live (if ran). Marketing/product results reused from LSE-009 and LSE-014. Demo A and RidgeLine EMP-001 untouched.",
     "6. Retrieved: " + JSON.stringify(report.retrievedIds) + ". Leak ids forbidden and " + ((report.executive && report.executive.leakedIds && report.executive.leakedIds.length) ? "PRESENT — blocker" : "absent") + ".",
-    "7. Artifacts: /workspace/midas/var/artifacts/ws-own-004/landing.html draft, not deployed, landingImproved=" + report.landingImproved + ".",
+    "7. Artifacts: " + join(artifactsDir("ws-own-004"), "landing.html") + " draft, not deployed, landingImproved=" + report.landingImproved + ".",
     "8. Cost this slice: probe $" + report.costs.probe + " · search $" + report.costs.searchRetry + " · executive $" + report.costs.executive + " · total $" + report.costs.total + " · paidCalls=" + report.costs.paidCalls + ".",
     "9. Missing: " + ((report.missing && report.missing.length) ? report.missing.join(" | ") : "none of the requested slice items") + ". Search connected=" + report.search.connected + ". Embeddings=false.",
     "10. Next: " + report.next.join(" "),

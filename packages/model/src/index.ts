@@ -39,7 +39,7 @@ export function sanitizeOpenAiKey(raw) {
   return v;
 }
 
-/** Load KEY=VALUE from gitignored /workspace/midas/.env if process.env is empty. Never log values. */
+/** Load KEY=VALUE from the gitignored repo-root .env if process.env is empty. Never log values. */
 export function loadWorkspaceEnv() {
   // A project-local .env is authoritative for this project. A machine-wide
   // OPENAI_API_KEY left over from another tool must not silently win: that
