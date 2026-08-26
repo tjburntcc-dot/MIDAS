@@ -96,7 +96,11 @@ export function questionsFromSource(segments: SourceSegment[]): SourceDerivedQue
           question: questionFor(p.kind, seg.heading),
           whyItMatters: p.why,
         });
-        break; // one element kind per sentence keeps the output readable
+        // No break. A sentence can carry more than one element, and taking only
+        // the first loses the others silently. Found by dogfooding: "Controllers
+        // may retain audit logs where required by law" was filed as an obligation
+        // because "required" was tested before "may", and the permission -- the
+        // exact class this layer exists to catch -- disappeared.
       }
     }
   }

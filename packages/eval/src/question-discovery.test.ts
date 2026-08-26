@@ -60,6 +60,16 @@ describe("questions come out of the source's own structure", () => {
     assert.deepEqual(a, b);
   });
 
+  test("REGRESSION: a sentence carrying two elements raises both", () => {
+    // Found by dogfooding. "required" was tested before "may", so this sentence
+    // was filed as an obligation and the permission vanished -- the precise
+    // failure this layer exists to prevent, reproduced inside the fix for it.
+    const qs = questionsFromSource([{ id: "m1", heading: "Processing", text: "Controllers may retain audit logs where required by law." }]);
+    const kinds = qs.map((q) => q.elementKind);
+    assert.ok(kinds.includes("permission"), "the permission must not be swallowed by the obligation");
+    assert.ok(kinds.includes("obligation"));
+  });
+
   test("a clause repeated across pages is raised once, not once per page", () => {
     const repeated = [
       { id: "p1", heading: "Terms", text: "The supplier may request an extension." },
