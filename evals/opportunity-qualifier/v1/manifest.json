@@ -1,0 +1,46 @@
+{
+  "specVersion": "v2",
+  "dev": {
+    "id": "hemmer-opportunity-qualifier-dev-v1",
+    "path": "evals/opportunity-qualifier/v1/dev_cases_v1.json",
+    "n": 16,
+    "sha256": "10c8e1970586ef40bc9aafa44bff738048f582fd8cd469708d87cd3b6a32dab3"
+  },
+  "sealed": {
+    "id": "hemmer-opportunity-qualifier-sealed-v1",
+    "path": "var/state/sealed/opportunity-qualifier-sealed-v1.json",
+    "n": 24,
+    "sha256": "202a73c969a183467d9b96fae3fa73af4083d235ca8ca3a2afdb53c7762ab484",
+    "committed": false,
+    "note": "Sealed cases live in gitignored private state. Only this hash is committed."
+  },
+  "decisionMix": {
+    "pursue": 8,
+    "hold_for_info": 4,
+    "decline": 12
+  },
+  "disqualifierCoverage": [
+    "advance_fee_request",
+    "below_minimum_value",
+    "identity_unverifiable",
+    "illegal_or_deceptive_work",
+    "no_decision_maker_contact",
+    "off_platform_payment_push",
+    "opportunity_expired",
+    "out_of_scope_capability",
+    "unpaid_spec_work"
+  ],
+  "expiryCases": {
+    "expired": [
+      "OQ-S19",
+      "OQ-S20",
+      "OQ-S21"
+    ],
+    "liveButNearDeadline": [
+      "OQ-S22",
+      "OQ-S23",
+      "OQ-S24"
+    ],
+    "note": "Two-sided by construction: adding the code must not make the worker start declaring live opportunities expired."
+  }
+}

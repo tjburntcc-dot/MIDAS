@@ -1,0 +1,685 @@
+{
+  "id": "hemmer-opportunity-qualifier-dev-v1",
+  "version": "hemmer-opportunity-qualifier-dev-v1",
+  "specVersion": "v2",
+  "derivedFrom": "hemmer-opportunity-qualifier-dev-v0",
+  "synthetic": true,
+  "n": 16,
+  "note": "Development cases plus expiry coverage. v0 is unchanged on disk so the promoted-v1 evidence stays reproducible.",
+  "cases": [
+    {
+      "case_id": "OQ-D01",
+      "title": "Five-page marketing site for a landscaping firm",
+      "source": "job_board",
+      "brief": "We need a 5 page marketing website for our landscaping company. Budget is 2500 USD. We want it live before spring bookings open in about 8 weeks.",
+      "facts": {
+        "posted_budget_usd": 2500,
+        "client_payment_verified": true,
+        "client_prior_hires": 12,
+        "deadline_days": 56
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Client payment method is verified and 12 prior contracts are on record.",
+          "source": "platform_profile",
+          "age_days": 1
+        },
+        {
+          "id": "E2",
+          "text": "Posted budget is 2500 USD for a five page marketing website.",
+          "source": "opportunity_post",
+          "age_days": 1
+        },
+        {
+          "id": "E3",
+          "text": "Requested launch is before spring bookings, roughly eight weeks out.",
+          "source": "opportunity_post",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "pursue",
+        "disqualifiers": [],
+        "bands": {
+          "estimated_value_usd": {
+            "low": 1800,
+            "high": 3200
+          },
+          "ai_fulfillment_pct": {
+            "low": 60,
+            "high": 95
+          },
+          "human_minutes": {
+            "low": 60,
+            "high": 300
+          }
+        },
+        "required_missing": [],
+        "rationale": "Verified payer, clear scope, budget above the floor, squarely inside the web capability boundary."
+      }
+    },
+    {
+      "case_id": "OQ-D02",
+      "title": "Local dental practice wants search presence and blog posts",
+      "source": "job_board",
+      "brief": "Dental practice looking to improve our Google Business listing and publish 10 blog articles. We can pay 1800 USD.",
+      "facts": {
+        "posted_budget_usd": 1800,
+        "client_payment_verified": true,
+        "client_prior_hires": 3,
+        "deadline_days": 30
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Budget stated as 1800 USD for listing optimisation and ten articles.",
+          "source": "opportunity_post",
+          "age_days": 1
+        },
+        {
+          "id": "E2",
+          "text": "Payment method verified; three prior contracts completed.",
+          "source": "platform_profile",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "pursue",
+        "disqualifiers": [],
+        "bands": {
+          "estimated_value_usd": {
+            "low": 1400,
+            "high": 2200
+          },
+          "ai_fulfillment_pct": {
+            "low": 70,
+            "high": 100
+          },
+          "human_minutes": {
+            "low": 30,
+            "high": 240
+          }
+        },
+        "required_missing": [],
+        "rationale": "Content and listing work is high AI fulfilment, verified payer, above the floor."
+      }
+    },
+    {
+      "case_id": "OQ-D03",
+      "title": "Referral: automate invoice reminder emails",
+      "source": "referral",
+      "brief": "Referred by a past client. They want automated invoice reminder emails from their existing billing export. Scope is clear. They mentioned around 1200 USD.",
+      "facts": {
+        "posted_budget_usd": 1200,
+        "client_payment_verified": true,
+        "client_prior_hires": null,
+        "referral": true,
+        "deadline_days": 21
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Referral from a completed prior engagement.",
+          "source": "owner_note",
+          "age_days": 2
+        },
+        {
+          "id": "E2",
+          "text": "Scope is automated reminder emails driven by an existing billing export.",
+          "source": "inbound_email",
+          "age_days": 1
+        },
+        {
+          "id": "E3",
+          "text": "Buyer indicated a budget near 1200 USD.",
+          "source": "inbound_email",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "pursue",
+        "disqualifiers": [],
+        "bands": {
+          "estimated_value_usd": {
+            "low": 900,
+            "high": 1600
+          },
+          "ai_fulfillment_pct": {
+            "low": 65,
+            "high": 100
+          },
+          "human_minutes": {
+            "low": 45,
+            "high": 300
+          }
+        },
+        "required_missing": [],
+        "rationale": "Automation work inside scope, referral lowers payment risk, value above the floor."
+      }
+    },
+    {
+      "case_id": "OQ-D04",
+      "title": "Bare request with no budget or timeline",
+      "source": "inbound_email",
+      "brief": "Hi, we need a website. Can you help? Let me know what you charge.",
+      "facts": {
+        "posted_budget_usd": null,
+        "client_payment_verified": null,
+        "client_prior_hires": null,
+        "deadline_days": null
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Inbound message asks for a website with no budget, scope, or timeline stated.",
+          "source": "inbound_email",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "hold_for_info",
+        "disqualifiers": [],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [
+          "budget",
+          "timeline",
+          "scope"
+        ],
+        "rationale": "Nothing disqualifying, but nothing estimable either. The record cannot support a value."
+      }
+    },
+    {
+      "case_id": "OQ-D05",
+      "title": "Advance fee for a software licence",
+      "source": "inbound_email",
+      "brief": "We want to hire you for a 5000 USD project. First you need to purchase the licence for our proprietary CMS, it is 200 USD, send it to the address below and we will reimburse with the first milestone.",
+      "facts": {
+        "posted_budget_usd": 5000,
+        "client_payment_verified": false,
+        "client_prior_hires": 0,
+        "requires_upfront_payment_usd": 200
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Buyer asks the contractor to pay 200 USD up front for a licence before work begins.",
+          "source": "inbound_email",
+          "age_days": 1
+        },
+        {
+          "id": "E2",
+          "text": "No verified payment method and no completed contracts on the account.",
+          "source": "platform_profile",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "advance_fee_request",
+          "identity_unverifiable"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "Contractor-pays-first is the classic advance fee pattern; unverified account compounds it."
+      }
+    },
+    {
+      "case_id": "OQ-D06",
+      "title": "Move to Telegram and pay in crypto",
+      "source": "job_board",
+      "brief": "Great profile. Let us continue this on Telegram, and we will pay in USDT so we both avoid the platform fees. Project is around 3000 USD.",
+      "facts": {
+        "posted_budget_usd": 3000,
+        "client_payment_verified": false,
+        "client_prior_hires": 0
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Buyer proposes moving off platform and paying in cryptocurrency to avoid fees.",
+          "source": "opportunity_post",
+          "age_days": 1
+        },
+        {
+          "id": "E2",
+          "text": "Account has no verified payment method and no contract history.",
+          "source": "platform_profile",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "off_platform_payment_push",
+          "identity_unverifiable"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "Off-platform payment removes every recovery mechanism and is a standard non-payment setup."
+      }
+    },
+    {
+      "case_id": "OQ-D07",
+      "title": "Build the demo first, we pick a winner",
+      "source": "job_board",
+      "brief": "We are evaluating three agencies. Please build a working demo of the dashboard so we can compare. The winner gets the 15000 USD contract.",
+      "facts": {
+        "posted_budget_usd": 15000,
+        "client_payment_verified": true,
+        "client_prior_hires": 4,
+        "spec_work_requested": true
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Buyer requests an unpaid working demo as a condition of selection.",
+          "source": "opportunity_post",
+          "age_days": 1
+        },
+        {
+          "id": "E2",
+          "text": "Payment method is verified and four prior contracts are recorded.",
+          "source": "platform_profile",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "unpaid_spec_work"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "A legitimate payer can still ask for unpaid speculative build. Policy declines it regardless of contract size."
+      }
+    },
+    {
+      "case_id": "OQ-D08",
+      "title": "Full storefront for fifty dollars",
+      "source": "job_board",
+      "brief": "Need a complete online store with payments, inventory and shipping integration. Budget 50 USD, should be quick for an expert.",
+      "facts": {
+        "posted_budget_usd": 50,
+        "client_payment_verified": true,
+        "client_prior_hires": 1
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Posted budget is 50 USD for a full storefront with payments and inventory.",
+          "source": "opportunity_post",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "below_minimum_value"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "Below the engagement floor by a wide margin; scope and budget are irreconcilable."
+      }
+    },
+    {
+      "case_id": "OQ-D09",
+      "title": "Native mobile app with live video",
+      "source": "rfp",
+      "brief": "Seeking a partner to build native iOS and Android apps with real-time video calling and offline sync. Budget 40000 USD.",
+      "facts": {
+        "posted_budget_usd": 40000,
+        "client_payment_verified": true,
+        "client_prior_hires": 9
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Requirement is native iOS and Android with real-time video calling and offline sync.",
+          "source": "rfp",
+          "age_days": 3
+        },
+        {
+          "id": "E2",
+          "text": "Budget is 40000 USD and the payer is verified with nine prior contracts.",
+          "source": "rfp",
+          "age_days": 3
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "out_of_scope_capability"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "Attractive budget and a real buyer, but native mobile and real-time video sit outside the capability boundary."
+      }
+    },
+    {
+      "case_id": "OQ-D10",
+      "title": "Five hundred five-star reviews",
+      "source": "inbound_email",
+      "brief": "We need 500 positive reviews posted across Google and Yelp for our new locations. Pay is 2000 USD.",
+      "facts": {
+        "posted_budget_usd": 2000,
+        "client_payment_verified": true,
+        "client_prior_hires": 2
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Buyer requests 500 fabricated positive reviews on third-party platforms.",
+          "source": "inbound_email",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "illegal_or_deceptive_work"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "Fabricated reviews are deceptive and barred regardless of payer quality."
+      }
+    },
+    {
+      "case_id": "OQ-D11",
+      "title": "Clear scope, buyer is not the decision maker",
+      "source": "rfp",
+      "brief": "Marketing coordinator here. We want a 12 page site refresh with a CMS migration, budget approved at 9000 USD. I am gathering quotes; the director signs off.",
+      "facts": {
+        "posted_budget_usd": 9000,
+        "client_payment_verified": true,
+        "client_prior_hires": 6,
+        "contact_is_decision_maker": false
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Contact states the director holds sign-off and the contact is collecting quotes.",
+          "source": "rfp",
+          "age_days": 2
+        },
+        {
+          "id": "E2",
+          "text": "Budget of 9000 USD is described as approved.",
+          "source": "rfp",
+          "age_days": 2
+        }
+      ],
+      "gold": {
+        "decision": "hold_for_info",
+        "disqualifiers": [
+          "no_decision_maker_contact"
+        ],
+        "bands": {
+          "estimated_value_usd": {
+            "low": 6000,
+            "high": 12000
+          },
+          "ai_fulfillment_pct": {
+            "low": 50,
+            "high": 85
+          },
+          "human_minutes": {
+            "low": 240,
+            "high": 900
+          }
+        },
+        "required_missing": [
+          "decision maker contact"
+        ],
+        "rationale": "Real and in scope, but pursuing without the signer wastes the cycle. Hold rather than decline."
+      }
+    },
+    {
+      "case_id": "OQ-D12",
+      "title": "Good scope, unstated payment terms, brand new account",
+      "source": "job_board",
+      "brief": "Need a landing page and email capture for a product launch in 3 weeks. We can spend about 1500 USD.",
+      "facts": {
+        "posted_budget_usd": 1500,
+        "client_payment_verified": false,
+        "client_prior_hires": 0,
+        "deadline_days": 21
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Scope is a landing page with email capture, launch in three weeks.",
+          "source": "opportunity_post",
+          "age_days": 1
+        },
+        {
+          "id": "E2",
+          "text": "Account has no verified payment method and no prior contracts, but no adverse signal either.",
+          "source": "platform_profile",
+          "age_days": 1
+        }
+      ],
+      "gold": {
+        "decision": "hold_for_info",
+        "disqualifiers": [],
+        "bands": {
+          "estimated_value_usd": {
+            "low": 1000,
+            "high": 2000
+          },
+          "ai_fulfillment_pct": {
+            "low": 70,
+            "high": 100
+          },
+          "human_minutes": {
+            "low": 30,
+            "high": 180
+          }
+        },
+        "required_missing": [
+          "payment method verification"
+        ],
+        "rationale": "In scope and above the floor, but an unverified payer needs escrow or a deposit confirmed first."
+      }
+    },
+    {
+      "case_id": "OQ-D13",
+      "title": "Redesign RFP whose deadline passed two months ago",
+      "source": "rfp",
+      "brief": "Regional association seeks proposals for a website redesign. Proposals were due by 5 p.m. on a date that has now passed by roughly sixty days. Budget stated as 14000 USD.",
+      "facts": {
+        "posted_budget_usd": 14000,
+        "client_payment_verified": true,
+        "deadline_days": -60,
+        "posted_days_ago": 95
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Proposals for the website redesign were due at 5 p.m., a date now sixty days in the past.",
+          "source": "rfp",
+          "age_days": 95
+        },
+        {
+          "id": "E2",
+          "text": "The stated budget for the engagement is 14000 USD.",
+          "source": "rfp",
+          "age_days": 95
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "opportunity_expired"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "In scope, well funded, real buyer, but the submission window closed. Value is not estimable for an engagement that cannot be entered."
+      }
+    },
+    {
+      "case_id": "OQ-D14",
+      "title": "Expired posting that states no budget at all",
+      "source": "rfp",
+      "brief": "A professional chapter sought a website redesign. Submissions closed on a date now long past. The posting states no budget figure anywhere.",
+      "facts": {
+        "posted_budget_usd": null,
+        "client_payment_verified": null,
+        "deadline_days": -210,
+        "posted_days_ago": 235
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Submissions were to be sent by a deadline now two hundred and ten days in the past, and late submissions would not be considered.",
+          "source": "rfp",
+          "age_days": 235
+        },
+        {
+          "id": "E2",
+          "text": "The posting states no budget figure.",
+          "source": "rfp",
+          "age_days": 235
+        }
+      ],
+      "gold": {
+        "decision": "decline",
+        "disqualifiers": [
+          "opportunity_expired"
+        ],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [],
+        "rationale": "Reproduces the live failure. The reason is the closed window. No value is stated, so a value-floor breach cannot be asserted."
+      }
+    },
+    {
+      "case_id": "OQ-D15",
+      "title": "Open posting with a deadline three weeks out",
+      "source": "rfp",
+      "brief": "A public agency published a website redesign and accessibility RFP last week. Submittals are due in about three weeks. A named project manager is listed for questions. No budget figure is given.",
+      "facts": {
+        "posted_budget_usd": null,
+        "client_payment_verified": null,
+        "deadline_days": 21,
+        "posted_days_ago": 6,
+        "buyer_type": "public_agency"
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "Submittals must be received by the principal contact in approximately three weeks.",
+          "source": "rfp",
+          "age_days": 6
+        },
+        {
+          "id": "E2",
+          "text": "A named project manager is listed to receive questions about the solicitation.",
+          "source": "rfp",
+          "age_days": 6
+        },
+        {
+          "id": "E3",
+          "text": "The notice states no budget figure.",
+          "source": "rfp",
+          "age_days": 6
+        }
+      ],
+      "gold": {
+        "decision": "hold_for_info",
+        "disqualifiers": [],
+        "bands": {
+          "estimated_value_usd": null,
+          "ai_fulfillment_pct": null,
+          "human_minutes": null
+        },
+        "required_missing": [
+          "budget"
+        ],
+        "rationale": "Live and in scope. A deadline that is merely near is not expiry. The blocker is the missing budget."
+      }
+    },
+    {
+      "case_id": "OQ-D16",
+      "title": "Rolling engagement with no stated deadline",
+      "source": "inbound_email",
+      "brief": "A returning client asks for ongoing monthly content support starting whenever we have capacity. They mention 1500 USD per month. No deadline is stated because the engagement is rolling.",
+      "facts": {
+        "posted_budget_usd": 1500,
+        "client_payment_verified": true,
+        "deadline_days": null,
+        "posted_days_ago": 2
+      },
+      "evidence": [
+        {
+          "id": "E1",
+          "text": "The engagement is ongoing monthly content support beginning when capacity allows.",
+          "source": "inbound_email",
+          "age_days": 2
+        },
+        {
+          "id": "E2",
+          "text": "The buyer mentions 1500 USD per month and has paid on prior engagements.",
+          "source": "inbound_email",
+          "age_days": 2
+        }
+      ],
+      "gold": {
+        "decision": "pursue",
+        "disqualifiers": [],
+        "bands": {
+          "estimated_value_usd": {
+            "low": 1100,
+            "high": 2000
+          },
+          "ai_fulfillment_pct": {
+            "low": 70,
+            "high": 100
+          },
+          "human_minutes": {
+            "low": 30,
+            "high": 300
+          }
+        },
+        "required_missing": [],
+        "rationale": "An absent deadline on a rolling engagement is not expiry. Guards against reading a null deadline as a closed window."
+      }
+    }
+  ]
+}

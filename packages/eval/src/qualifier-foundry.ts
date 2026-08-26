@@ -10,16 +10,22 @@ import { createHash } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { stateDir, repoPath, contentHash } from "@midas/db";
-import { OPPORTUNITY_QUALIFIER_SPEC, QUALIFIER_V0_PROMPT, QUALIFIER_ROLE_ID, QUALIFIER_OUTPUT_SCHEMA } from "./opportunity-qualifier.ts";
+import { OPPORTUNITY_QUALIFIER_SPEC, QUALIFIER_SPEC_V1, QUALIFIER_SPEC_V2, qualifierSpec, QUALIFIER_V0_PROMPT, QUALIFIER_ROLE_ID } from "./opportunity-qualifier.ts";
 import { runWorkerEval, workerSpecHash } from "./worker-spec.ts";
 
 export const QUALIFIER_AGENT_ID = "opportunity_qualifier";
 export const QUALIFIER_V0_ID = "oq-v0";
 export const QUALIFIER_V1_ID = "oq-v1";
 export const QUALIFIER_PLACEBO_ID = "oq-v1-placebo";
+/** Control: v1 knowledge with the v2 output contract. Isolates having the code from knowing the policy. */
+export const QUALIFIER_V1_SCHEMA2_ID = "oq-v1-schema2";
+/** Control: v1 knowledge plus irrelevant text the same length as the expiry policy. */
+export const QUALIFIER_V2_PLACEBO_ID = "oq-v2-placebo";
+export const QUALIFIER_V2_ID = "oq-v2";
 
 export const DEV_CASES_PATH = repoPath("evals", "opportunity-qualifier", "v0", "dev_cases_v0.json");
 export const SEALED_CASES_PATH = join(stateDir(), "sealed", "opportunity-qualifier-sealed-v0.json");
+export const SEALED_CASES_V1_PATH = join(stateDir(), "sealed", "opportunity-qualifier-sealed-v1.json");
 export const CASES_MANIFEST_PATH = repoPath("evals", "opportunity-qualifier", "v0", "manifest.json");
 
 /**
@@ -83,6 +89,36 @@ export const HEMMER_POLICY_KNOWLEDGE = [
   },
 ];
 
+/**
+ * Added after live use. `opportunity_expired` did not exist in the v1 taxonomy,
+ * so a solicitation past its deadline had to be labelled with some other code,
+ * and the worker chose a value-floor breach on a record that stated no value.
+ * Both halves of that failure are addressed: the expiry rule, and the rule that
+ * an absent figure is not a low figure.
+ */
+export const HEMMER_EXPIRY_KNOWLEDGE = [
+  {
+    id: "K-HD-011", type: "decision_rule",
+    statement: "An opportunity whose stated submission deadline or response window has already passed is opportunity_expired and is declined. Judge this against the deadline stated in the record and the age of the posting. Do not record an expired opportunity under a different reason, and do not treat a deadline that is merely soon as expired.",
+  },
+  {
+    id: "K-HD-012", type: "constraint",
+    statement: "An absent figure is not a low figure. Where the record states no budget at all, do not record below_minimum_value; that code applies only where a value is stated or is genuinely inferable from the scope. Where no value is stated and none is inferable, name the missing budget instead.",
+  },
+];
+
+/** Irrelevant text matched to the length of the expiry knowledge, for the v2 placebo arm. */
+export const V2_PLACEBO_KNOWLEDGE = [
+  {
+    id: "K-PL-016", type: "procedure",
+    statement: "A document that will be revisited benefits from a short change log at the foot rather than the head, because a reader arriving for the current state should not have to scroll past the history of states that no longer apply in order to reach it, and because the writer updating it can append without disturbing the opening paragraph that most readers rely on.",
+  },
+  {
+    id: "K-PL-017", type: "principle",
+    statement: "A list that mixes items of different granularity is harder to act on than two lists, because the reader must silently reclassify each entry before deciding whether it is a task, a topic, or a decision that was already taken somewhere else, and that reclassification is repeated by every reader rather than done once by the writer.",
+  },
+];
+
 /** Irrelevant, length-matched knowledge for the placebo arm. */
 export const PLACEBO_KNOWLEDGE = [
   { id: "K-PL-001", type: "principle", statement: "Written communication is clearer when sentences carry one idea each and paragraphs open with their subject rather than their qualification." },
@@ -101,6 +137,29 @@ export const PLACEBO_KNOWLEDGE = [
   { id: "K-PL-014", type: "principle", statement: "Written status updates age better than spoken ones because the reader can check what was actually claimed at the time rather than relying on a recollection of the conversation." },
   { id: "K-PL-015", type: "procedure", statement: "Keeping a single running list rather than several topic lists reduces the effort of deciding where an item belongs, which is usually a larger cost than the effort of scanning a longer list." },
 ];
+
+export const DEV_CASES_V1_PATH = repoPath("evals", "opportunity-qualifier", "v1", "dev_cases_v1.json");
+export const CASES_MANIFEST_V1_PATH = repoPath("evals", "opportunity-qualifier", "v1", "manifest.json");
+
+/** Load a sealed set by version, verifying it against its committed manifest hash. */
+export function loadSealedSet(setVersion) {
+  const path = setVersion === "v1" ? SEALED_CASES_V1_PATH : SEALED_CASES_PATH;
+  const manifestPath = setVersion === "v1" ? CASES_MANIFEST_V1_PATH : CASES_MANIFEST_PATH;
+  if (!existsSync(path)) {
+    throw new Error("Sealed case set " + setVersion + " is not present on this machine. Promotion cannot be decided without it.");
+  }
+  const raw = readFileSync(path);
+  const sha = createHash("sha256").update(raw).digest("hex");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  if (sha !== manifest.sealed.sha256) {
+    throw new Error("Sealed set " + setVersion + " hash does not match the committed manifest. Refusing to score against a modified holdout.");
+  }
+  return { cases: JSON.parse(raw.toString("utf8")).cases, sha256: sha, version: setVersion };
+}
+
+export function loadDevCasesV1() {
+  return JSON.parse(readFileSync(DEV_CASES_V1_PATH, "utf8")).cases;
+}
 
 export function loadDevCases() {
   return JSON.parse(readFileSync(DEV_CASES_PATH, "utf8")).cases;
@@ -163,14 +222,23 @@ export function knowledgeBlock(items: any[]) {
 
 /** Version definitions. v0 is frozen first and never rewritten. */
 export function qualifierVersionDefs() {
-  const base = {
+  // Each version is bound to the spec it was frozen under. Extending the
+  // taxonomy changes the output contract, so it must not retroactively alter
+  // the content hash of a version that shipped before the extension existed.
+  const baseFor = (specVersion) => ({
     agentId: QUALIFIER_AGENT_ID,
     roleId: QUALIFIER_ROLE_ID,
+    specVersion,
     modelProfile: { provider: "openai", model: process.env.MIDAS_QUALIFIER_MODEL || "gpt-4.1" },
-    outputSchema: { $id: "https://midas.local/schemas/opportunity-qualifier-v0.json" },
-    workerSpecHash: workerSpecHash(OPPORTUNITY_QUALIFIER_SPEC),
+    // Spec v1 keeps its original schema id verbatim. The id is part of the frozen
+    // content hash, so renaming it would invalidate versions already on disk.
+    outputSchema: { $id: specVersion === "v1" ? "https://midas.local/schemas/opportunity-qualifier-v0.json" : "https://midas.local/schemas/opportunity-qualifier-v2.json" },
+    workerSpecHash: workerSpecHash(qualifierSpec(specVersion)),
     allowedTools: [],
-  };
+  });
+  const base = baseFor("v1");
+  const base2 = baseFor("v2");
+  const v1System = QUALIFIER_V0_PROMPT.system + "\n\n" + knowledgeBlock(HEMMER_POLICY_KNOWLEDGE);
   return {
     [QUALIFIER_V0_ID]: {
       ...base,
@@ -184,10 +252,7 @@ export function qualifierVersionDefs() {
       ...base,
       id: QUALIFIER_V1_ID,
       parentVersionId: QUALIFIER_V0_ID,
-      promptBundle: {
-        system: QUALIFIER_V0_PROMPT.system + "\n\n" + knowledgeBlock(HEMMER_POLICY_KNOWLEDGE),
-        developer: QUALIFIER_V0_PROMPT.developer,
-      },
+      promptBundle: { system: v1System, developer: QUALIFIER_V0_PROMPT.developer },
       knowledgeIds: HEMMER_POLICY_KNOWLEDGE.map((k) => k.id),
       declaredChange: "Adds owner-authored Hemmer Digital engagement policy as operating knowledge. Prompt otherwise unchanged from v0.",
     },
@@ -201,6 +266,36 @@ export function qualifierVersionDefs() {
       },
       knowledgeIds: PLACEBO_KNOWLEDGE.map((k) => k.id),
       declaredChange: "Placebo arm. Same shape and comparable length of added text, none of it relevant to qualifying an opportunity.",
+    },
+    [QUALIFIER_V1_SCHEMA2_ID]: {
+      ...base2,
+      id: QUALIFIER_V1_SCHEMA2_ID,
+      parentVersionId: QUALIFIER_V1_ID,
+      promptBundle: { system: v1System, developer: QUALIFIER_V0_PROMPT.developer },
+      knowledgeIds: HEMMER_POLICY_KNOWLEDGE.map((k) => k.id),
+      declaredChange: "Control arm. Identical knowledge to the promoted v1, but the v2 output contract so the expiry code is available. Isolates having the code from knowing when to use it.",
+    },
+    [QUALIFIER_V2_PLACEBO_ID]: {
+      ...base2,
+      id: QUALIFIER_V2_PLACEBO_ID,
+      parentVersionId: QUALIFIER_V1_SCHEMA2_ID,
+      promptBundle: {
+        system: v1System + "\n" + knowledgeBlock(V2_PLACEBO_KNOWLEDGE).replace("Operating knowledge available to you:\n", ""),
+        developer: QUALIFIER_V0_PROMPT.developer,
+      },
+      knowledgeIds: HEMMER_POLICY_KNOWLEDGE.map((k) => k.id).concat(V2_PLACEBO_KNOWLEDGE.map((k) => k.id)),
+      declaredChange: "Placebo for the expiry increment. Same added length as the expiry policy, none of it about expiry or value floors.",
+    },
+    [QUALIFIER_V2_ID]: {
+      ...base2,
+      id: QUALIFIER_V2_ID,
+      parentVersionId: QUALIFIER_V1_SCHEMA2_ID,
+      promptBundle: {
+        system: v1System + "\n" + knowledgeBlock(HEMMER_EXPIRY_KNOWLEDGE).replace("Operating knowledge available to you:\n", ""),
+        developer: QUALIFIER_V0_PROMPT.developer,
+      },
+      knowledgeIds: HEMMER_POLICY_KNOWLEDGE.map((k) => k.id).concat(HEMMER_EXPIRY_KNOWLEDGE.map((k) => k.id)),
+      declaredChange: "Adds the expiry decision rule and the absent-figure constraint, both written in response to an observed live failure. Prompt otherwise identical to the control arm.",
     },
   };
 }
@@ -247,8 +342,8 @@ export function buildQualifierRequest(versionId: string, record: any) {
   return {
     instructions: def.promptBundle.system + "\n\n" + def.promptBundle.developer,
     input: { opportunity: presented },
-    outputSchema: { name: "opportunity_qualification", strict: false, schema: QUALIFIER_OUTPUT_SCHEMA },
+    outputSchema: { name: "opportunity_qualification", strict: false, schema: qualifierSpec(def.specVersion).outputSchema },
   };
 }
 
-export { OPPORTUNITY_QUALIFIER_SPEC, runWorkerEval };
+export { OPPORTUNITY_QUALIFIER_SPEC, QUALIFIER_SPEC_V1, QUALIFIER_SPEC_V2, qualifierSpec, runWorkerEval };

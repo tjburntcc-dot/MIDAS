@@ -42,8 +42,18 @@ export const QUALIFIER_AUTHORITY_BOUNDARY =
   "Recommendation only. This worker never contacts a buyer, never commits to price or scope, " +
   "and never moves money. Every outbound action requires owner approval.";
 
-/** Hard disqualifiers. Missing one of these is the expensive failure. */
-export const DISQUALIFIER_CODES = [
+/**
+ * Hard disqualifiers. Missing one of these is the expensive failure.
+ *
+ * The taxonomy is versioned because it is part of the worker's output contract.
+ * Spec v1 shipped without an expiry code, and live use exposed the cost of that
+ * gap: given a solicitation whose deadline had passed, the worker still had to
+ * emit some code, and picked `below_minimum_value` on a record that stated no
+ * budget at all. A missing taxonomy entry produced a confidently wrong label.
+ *
+ * v1 is kept frozen so the versions evaluated under it stay reproducible.
+ */
+export const DISQUALIFIER_CODES_V1 = [
   "advance_fee_request",
   "off_platform_payment_push",
   "identity_unverifiable",
@@ -54,9 +64,31 @@ export const DISQUALIFIER_CODES = [
   "no_decision_maker_contact",
 ];
 
+export const DISQUALIFIER_CODES_V2 = DISQUALIFIER_CODES_V1.concat(["opportunity_expired"]);
+
+/** Current taxonomy. Existing callers and tests read this. */
+export const DISQUALIFIER_CODES = DISQUALIFIER_CODES_V2;
+
 export const QUALIFIER_DECISIONS = ["pursue", "hold_for_info", "decline"];
 
-export const QUALIFIER_OUTPUT_SCHEMA = {
+/**
+ * Built key by key rather than by spreading and overriding, because the version
+ * content hash serialises this object: reordering `properties` would change the
+ * hash of versions that were frozen before the taxonomy was extended, and the
+ * immutability guard would then refuse to load them.
+ */
+function outputSchemaFor(codes: string[]) {
+  const shape = QUALIFIER_OUTPUT_SCHEMA_SHAPE;
+  const properties: Record<string, unknown> = {};
+  for (const key of Object.keys(shape.properties)) {
+    properties[key] = key === "disqualifiers"
+      ? { type: "array", items: { enum: codes.slice() } }
+      : (shape.properties as any)[key];
+  }
+  return { type: shape.type, additionalProperties: shape.additionalProperties, required: shape.required, properties };
+}
+
+const QUALIFIER_OUTPUT_SCHEMA_SHAPE = {
   type: "object",
   additionalProperties: false,
   required: [
@@ -89,12 +121,17 @@ export const QUALIFIER_OUTPUT_SCHEMA = {
     close_probability_pct: { type: ["number", "null"] },
     payment_probability_pct: { type: ["number", "null"] },
     fraud_risk: { enum: ["low", "medium", "high"] },
-    disqualifiers: { type: "array", items: { enum: DISQUALIFIER_CODES } },
+    disqualifiers: { type: "array", items: { enum: DISQUALIFIER_CODES_V2 } },
     missing_information: { type: "array", items: { type: "string" } },
     cited_evidence_ids: { type: "array", items: { type: "string" } },
     rationale: { type: "string" },
   },
 };
+
+export const QUALIFIER_OUTPUT_SCHEMA_V1 = outputSchemaFor(DISQUALIFIER_CODES_V1);
+export const QUALIFIER_OUTPUT_SCHEMA_V2 = outputSchemaFor(DISQUALIFIER_CODES_V2);
+/** Current schema. */
+export const QUALIFIER_OUTPUT_SCHEMA = QUALIFIER_OUTPUT_SCHEMA_V2;
 
 function gold(ctx: WorkerScoreContext) {
   return (ctx.record && ctx.record.gold) || {};
@@ -258,11 +295,46 @@ function scoreEvidenceSemanticAdvisory(ctx: WorkerScoreContext) {
   };
 }
 
-export const OPPORTUNITY_QUALIFIER_SPEC: WorkerSpec = {
+/**
+ * Claiming a value floor breach on a record that states no value at all is a
+ * fabricated basis, not a judgement call. This is the exact failure live use
+ * produced when the taxonomy had no expiry code, so it is promoted to a critical
+ * failure rather than left to the precision penalty.
+ */
+function claimsBelowMinimumWithoutAnyValue(ctx: WorkerScoreContext) {
+  const dq = ctx.output.disqualifiers || [];
+  if (!dq.includes("below_minimum_value")) return false;
+  const facts = ctx.record.facts || {};
+  const stated = facts.posted_budget_usd;
+  if (stated != null) return false;
+  // No budget on the record. Allow it only if gold agrees the value is genuinely
+  // below the floor, which can happen when scope makes it inferable.
+  return !((gold(ctx).disqualifiers || []).includes("below_minimum_value"));
+}
+
+function buildQualifierSpec(specVersion: "v1" | "v2"): WorkerSpec {
+  const codes = specVersion === "v1" ? DISQUALIFIER_CODES_V1 : DISQUALIFIER_CODES_V2;
+  const spec = {
+    ...QUALIFIER_SPEC_BASE,
+    specVersion,
+    outputSchema: outputSchemaFor(codes),
+    disqualifierCodes: codes.slice(),
+    criticalFailures: specVersion === "v1"
+      ? QUALIFIER_SPEC_BASE.criticalFailures.slice()
+      : QUALIFIER_SPEC_BASE.criticalFailures.concat([{
+          code: "CF-UNSUPPORTED-BELOW-MINIMUM",
+          title: "Claims the value is below the floor on a record that states no value",
+          detect: claimsBelowMinimumWithoutAnyValue,
+        }]),
+  };
+  return spec as WorkerSpec;
+}
+
+const QUALIFIER_SPEC_BASE: WorkerSpec = {
   roleId: QUALIFIER_ROLE_ID,
   name: "Opportunity Qualifier",
   objective: QUALIFIER_OBJECTIVE,
-  outputSchema: QUALIFIER_OUTPUT_SCHEMA,
+  outputSchema: QUALIFIER_OUTPUT_SCHEMA_V2,
   authorityBoundary: QUALIFIER_AUTHORITY_BOUNDARY,
   prohibitions: QUALIFIER_PROHIBITIONS.slice(),
   budgets: { usdPerCase: 0.05, latencyMs: 60000 },
@@ -305,6 +377,18 @@ export const OPPORTUNITY_QUALIFIER_SPEC: WorkerSpec = {
     },
   ],
 };
+
+export const QUALIFIER_SPEC_V1 = buildQualifierSpec("v1");
+export const QUALIFIER_SPEC_V2 = buildQualifierSpec("v2");
+
+/** Current scoring model. Runs record which spec version scored them. */
+export const OPPORTUNITY_QUALIFIER_SPEC = QUALIFIER_SPEC_V2;
+
+export function qualifierSpec(specVersion) {
+  if (specVersion === "v1") return QUALIFIER_SPEC_V1;
+  if (specVersion === "v2") return QUALIFIER_SPEC_V2;
+  throw new Error("unknown qualifier spec version " + specVersion);
+}
 
 /** Prompt bundles. v0 is the frozen generic baseline: role statement and schema, no trained knowledge. */
 export const QUALIFIER_V0_PROMPT = {
