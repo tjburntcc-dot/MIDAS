@@ -1,0 +1,31 @@
+{
+  "dev": {
+    "id": "hemmer-opportunity-qualifier-dev-v0",
+    "path": "evals/opportunity-qualifier/v0/dev_cases_v0.json",
+    "n": 12,
+    "sha256": "0a7d6140a3b5a0dd7155bbe5026c8a75d737e673fa3c30824d4e4d7966e54a90"
+  },
+  "sealed": {
+    "id": "hemmer-opportunity-qualifier-sealed-v0",
+    "path": "var/state/sealed/opportunity-qualifier-sealed-v0.json",
+    "n": 18,
+    "sha256": "c7a1dc193facea7f4334e39dc749cb9e903b3a0564f1f1c210e62460e9ba186d",
+    "committed": false,
+    "note": "Sealed cases live in gitignored private state. Only this hash is committed, so a promotion run can be checked against the set it claims without publishing the set."
+  },
+  "decisionMix": {
+    "pursue": 5,
+    "hold_for_info": 4,
+    "decline": 9
+  },
+  "disqualifierCoverage": [
+    "advance_fee_request",
+    "below_minimum_value",
+    "identity_unverifiable",
+    "illegal_or_deceptive_work",
+    "no_decision_maker_contact",
+    "off_platform_payment_push",
+    "out_of_scope_capability",
+    "unpaid_spec_work"
+  ]
+}
