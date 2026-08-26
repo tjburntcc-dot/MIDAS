@@ -26,6 +26,8 @@ export const QUALIFIER_V2_ID = "oq-v2";
 export const DEV_CASES_PATH = repoPath("evals", "opportunity-qualifier", "v0", "dev_cases_v0.json");
 export const SEALED_CASES_PATH = join(stateDir(), "sealed", "opportunity-qualifier-sealed-v0.json");
 export const SEALED_CASES_V1_PATH = join(stateDir(), "sealed", "opportunity-qualifier-sealed-v1.json");
+export const SEALED_CASES_V2_PATH = join(stateDir(), "sealed", "opportunity-qualifier-sealed-v2.json");
+export const CASES_MANIFEST_V2_PATH = repoPath("evals", "opportunity-qualifier", "v2", "manifest.json");
 export const CASES_MANIFEST_PATH = repoPath("evals", "opportunity-qualifier", "v0", "manifest.json");
 
 /**
@@ -143,8 +145,8 @@ export const CASES_MANIFEST_V1_PATH = repoPath("evals", "opportunity-qualifier",
 
 /** Load a sealed set by version, verifying it against its committed manifest hash. */
 export function loadSealedSet(setVersion) {
-  const path = setVersion === "v1" ? SEALED_CASES_V1_PATH : SEALED_CASES_PATH;
-  const manifestPath = setVersion === "v1" ? CASES_MANIFEST_V1_PATH : CASES_MANIFEST_PATH;
+  const path = setVersion === "v2" ? SEALED_CASES_V2_PATH : setVersion === "v1" ? SEALED_CASES_V1_PATH : SEALED_CASES_PATH;
+  const manifestPath = setVersion === "v2" ? CASES_MANIFEST_V2_PATH : setVersion === "v1" ? CASES_MANIFEST_V1_PATH : CASES_MANIFEST_PATH;
   if (!existsSync(path)) {
     throw new Error("Sealed case set " + setVersion + " is not present on this machine. Promotion cannot be decided without it.");
   }

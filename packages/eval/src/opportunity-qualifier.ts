@@ -18,6 +18,7 @@
  * with zero weight and can never move a promotion decision.
  */
 import type { WorkerSpec, WorkerScoreContext } from "./worker-spec.ts";
+import { scoreBandedSubskill, scoreAbstention, STATED_SOURCES, pointOf } from "./calibration-v2.ts";
 
 export const QUALIFIER_ROLE_ID = "opportunity_qualifier";
 
@@ -341,12 +342,53 @@ function claimsBelowMinimumWithoutAnyValue(ctx: WorkerScoreContext) {
   return !((gold(ctx).disqualifiers || []).includes("below_minimum_value"));
 }
 
-function buildQualifierSpec(specVersion: "v1" | "v2" | "v3"): WorkerSpec {
+/**
+ * Calibration v2 subskill scorers.
+ *
+ * Each returns null when the case exercises no field of that kind, and the
+ * worker spine skips a null dimension for that case rather than scoring it zero.
+ * Recovering a printed figure, estimating one from scope, and knowing when to
+ * abstain are three abilities, and collapsing them hid a defective gold rule for
+ * an entire evaluation cycle.
+ */
+function scoreStatedValueExtraction(ctx: WorkerScoreContext) {
+  return scoreBandedSubskill(ctx.record, ctx.output, { fields: ["estimated_value_usd"], sources: STATED_SOURCES });
+}
+function scoreValueRangeEstimation(ctx: WorkerScoreContext) {
+  return scoreBandedSubskill(ctx.record, ctx.output, { fields: ["estimated_value_usd"], sources: ["scope_inferred"] });
+}
+function scoreAiFulfilmentEstimation(ctx: WorkerScoreContext) {
+  return scoreBandedSubskill(ctx.record, ctx.output, { fields: ["ai_fulfillment_pct"] });
+}
+function scoreHumanEffortEstimation(ctx: WorkerScoreContext) {
+  return scoreBandedSubskill(ctx.record, ctx.output, { fields: ["human_minutes"] });
+}
+function scoreAbstentionDim(ctx: WorkerScoreContext) {
+  return scoreAbstention(ctx.record, ctx.output);
+}
+
+/**
+ * Asserting a confident figure where the record cannot support one is the
+ * numeric twin of the fabricated-basis failure already caught on disqualifiers.
+ * It is the estimation error that does real economic damage, because a
+ * fabricated value propagates into every downstream comparison.
+ */
+function fabricatesUnsupportedNumber(ctx: WorkerScoreContext) {
+  const numeric = (ctx.record && ctx.record.gold && ctx.record.gold.numeric) || {};
+  for (const [field, g] of Object.entries(numeric)) {
+    if (!(g as any).unknowable) continue;
+    if (pointOf(field, ctx.output[field]) != null) return true;
+  }
+  return false;
+}
+
+function buildQualifierSpec(specVersion: "v1" | "v2" | "v3" | "v4"): WorkerSpec {
   const codes = specVersion === "v1" ? DISQUALIFIER_CODES_V1 : DISQUALIFIER_CODES_V2;
+  const wideFraudRule = specVersion === "v1" || specVersion === "v2";
   const spec = {
     ...QUALIFIER_SPEC_BASE,
     specVersion,
-    objective: specVersion === "v3" ? QUALIFIER_OBJECTIVE_V3 : QUALIFIER_SPEC_BASE.objective,
+    objective: specVersion === "v1" || specVersion === "v2" ? QUALIFIER_SPEC_BASE.objective : QUALIFIER_OBJECTIVE_V3,
     outputSchema: outputSchemaFor(codes),
     disqualifierCodes: codes.slice(),
     criticalFailures: specVersion === "v1"
@@ -357,6 +399,33 @@ function buildQualifierSpec(specVersion: "v1" | "v2" | "v3"): WorkerSpec {
           detect: claimsBelowMinimumWithoutAnyValue,
         }]),
   };
+  if (specVersion === "v4") {
+    // Calibration is replaced by five separately gated subskills. Weights are
+    // rebalanced across the whole set rather than carved out of the old
+    // calibration block, so no dimension silently changes meaning.
+    const keep = QUALIFIER_SPEC_BASE.dimensions.filter((d) => d.id !== "calibration" && !d.advisory);
+    const advisory = QUALIFIER_SPEC_BASE.dimensions.filter((d) => d.advisory);
+    const reweighted = keep.map((d) => {
+      if (d.id === "decision") return { ...d, weight: 28 };
+      if (d.id === "disqualifier_detection") return { ...d, weight: 24 };
+      if (d.id === "evidence_discipline") return { ...d, weight: 14 };
+      if (d.id === "uncertainty") return { ...d, weight: 8 };
+      if (d.id === "compliance") return { ...d, weight: 4 };
+      return d;
+    });
+    spec.dimensions = reweighted.concat([
+      { id: "stated_value_extraction", title: "Recovers a value the record states", weight: 6, score: scoreStatedValueExtraction },
+      { id: "value_range_estimation", title: "Estimates a defensible range where value is not stated", weight: 4, score: scoreValueRangeEstimation },
+      { id: "ai_fulfillment_estimation", title: "AI fulfilment share inside the category band", weight: 4, score: scoreAiFulfilmentEstimation },
+      { id: "human_effort_estimation", title: "Human minutes inside the category band", weight: 4, score: scoreHumanEffortEstimation },
+      { id: "abstention", title: "Declines to estimate where the record cannot support one", weight: 4, score: scoreAbstentionDim },
+    ]).concat(advisory);
+    spec.criticalFailures = spec.criticalFailures.concat([{
+      code: "CF-FABRICATED-ESTIMATE",
+      title: "States a confident figure where the record cannot support one",
+      detect: fabricatesUnsupportedNumber,
+    }]);
+  }
   return spec as WorkerSpec;
 }
 
@@ -389,7 +458,7 @@ const QUALIFIER_SPEC_BASE: WorkerSpec = {
       detect: (ctx) => {
         const dq = gold(ctx).disqualifiers || [];
         const fraud = COUNTERPARTY_FRAUD_CODES.some((c) => dq.includes(c))
-          || (ctx.spec && ctx.spec.specVersion !== "v3" && dq.includes("illegal_or_deceptive_work"));
+          || (ctx.spec && (ctx.spec.specVersion === "v1" || ctx.spec.specVersion === "v2") && dq.includes("illegal_or_deceptive_work"));
         return fraud && ctx.output.fraud_risk === "low";
       },
     },
@@ -416,14 +485,21 @@ export const QUALIFIER_SPEC_V2 = buildQualifierSpec("v2");
  * wide rule so every decision already taken under them stays reproducible.
  */
 export const QUALIFIER_SPEC_V3 = buildQualifierSpec("v3");
+/**
+ * v4 replaces the single calibration dimension with five subskills and adds a
+ * critical failure for stating a figure the record cannot support. v1 to v3 keep
+ * their scoring models so every decision taken under them stays reproducible.
+ */
+export const QUALIFIER_SPEC_V4 = buildQualifierSpec("v4");
 
 /** Current scoring model. Runs record which spec version scored them. */
-export const OPPORTUNITY_QUALIFIER_SPEC = QUALIFIER_SPEC_V3;
+export const OPPORTUNITY_QUALIFIER_SPEC = QUALIFIER_SPEC_V4;
 
 export function qualifierSpec(specVersion) {
   if (specVersion === "v1") return QUALIFIER_SPEC_V1;
   if (specVersion === "v2") return QUALIFIER_SPEC_V2;
   if (specVersion === "v3") return QUALIFIER_SPEC_V3;
+  if (specVersion === "v4") return QUALIFIER_SPEC_V4;
   throw new Error("unknown qualifier spec version " + specVersion);
 }
 

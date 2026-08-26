@@ -45,8 +45,11 @@ describe("the worker spine is profession-neutral", () => {
   });
 
   test("a spec with mis-weighted dimensions is rejected", () => {
-    const bad = { ...OPPORTUNITY_QUALIFIER_SPEC, dimensions: OPPORTUNITY_QUALIFIER_SPEC.dimensions.map((d) => ({ ...d, weight: d.advisory ? 0 : 10 })) };
+    // 7 cannot total 100 for any dimension count the spec uses, so this stays a
+    // real assertion as the dimension set grows.
+    const bad = { ...OPPORTUNITY_QUALIFIER_SPEC, dimensions: OPPORTUNITY_QUALIFIER_SPEC.dimensions.map((d) => ({ ...d, weight: d.advisory ? 0 : 7 })) };
     assert.equal(validateWorkerSpec(bad).ok, false);
+    assert.match(validateWorkerSpec(bad).problems.join(" "), /expected 100/);
   });
 
   test("the qualifier does not reuse Atlas's dimensions", () => {
@@ -57,8 +60,15 @@ describe("the worker spine is profession-neutral", () => {
     const shared = mine.filter((d) => atlas.has(d));
     assert.deepEqual(shared.sort(), ["compliance", "uncertainty"]);
     assert.equal(mine.includes("ranking"), false, "a single-opportunity worker has nothing to rank");
-    assert.ok(mine.includes("calibration"));
     assert.ok(mine.includes("disqualifier_detection"));
+    // The single calibration dimension was replaced by separately gated
+    // subskills, because collapsing them hid a defective gold rule for a whole
+    // evaluation cycle.
+    assert.equal(mine.includes("calibration"), false, "calibration must stay decomposed");
+    for (const sub of ["stated_value_extraction", "value_range_estimation",
+      "ai_fulfillment_estimation", "human_effort_estimation", "abstention"]) {
+      assert.ok(mine.includes(sub), "missing calibration subskill " + sub);
+    }
   });
 
   test("advisory dimensions are computed but never enter the weighted total", () => {

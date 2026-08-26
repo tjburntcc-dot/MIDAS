@@ -1,0 +1,109 @@
+{
+  "id": "hemmer-opportunity-qualifier-sealed-v2",
+  "specVersion": "v4",
+  "sealed": {
+    "id": "hemmer-opportunity-qualifier-sealed-v2",
+    "path": "var/state/sealed/opportunity-qualifier-sealed-v2.json",
+    "n": 40,
+    "sha256": "01f8d98e785eb4c1324c934597c12d3a5e62204b4a6d8aa0ab330d14dd0a6938",
+    "committed": false
+  },
+  "authoredBeforeAnyModelRun": true,
+  "frozenAt": "2026-08-26T14:46:10.959Z",
+  "decisionMix": {
+    "pursue": 17,
+    "hold_for_info": 8,
+    "decline": 15
+  },
+  "disqualifierCoverage": {
+    "no_decision_maker_contact": 1,
+    "opportunity_expired": 5,
+    "out_of_scope_capability": 3,
+    "below_minimum_value": 2,
+    "illegal_or_deceptive_work": 3,
+    "advance_fee_request": 1,
+    "identity_unverifiable": 3,
+    "off_platform_payment_push": 2,
+    "unpaid_spec_work": 1
+  },
+  "numericGoldMix": {
+    "stated_budget": 34,
+    "stated_range": 1,
+    "scope_inferred": 67,
+    "unknowable": 18
+  },
+  "tagCoverage": {
+    "decision_pursue": 9,
+    "value_stated": 17,
+    "fraud_legit_work_permissible": 1,
+    "ai_high": 4,
+    "value_range": 1,
+    "ai_low": 2,
+    "decision_hold": 6,
+    "value_scope_inferred": 1,
+    "abstention": 9,
+    "dq_no_decision_maker": 1,
+    "dq_identity_soft": 1,
+    "expiry_clearly_expired": 4,
+    "dq_expired": 5,
+    "fabricated_basis_trap": 3,
+    "expiry_closing_today": 1,
+    "live_deadline": 8,
+    "expiry_closing_tomorrow": 1,
+    "expiry_future_deadline": 1,
+    "expiry_ambiguous_date": 1,
+    "expiry_no_deadline": 1,
+    "expiry_stale_posting_future_deadline": 1,
+    "expiry_old_posting_confirmed_open": 1,
+    "dq_out_of_scope": 3,
+    "dq_below_minimum": 2,
+    "fraud_legit_work_prohibited": 2,
+    "dq_deceptive": 3,
+    "fraud_fraud_work_permissible": 2,
+    "dq_advance_fee": 1,
+    "dq_identity": 2,
+    "fraud_fraud_work_prohibited": 1,
+    "dq_off_platform": 2,
+    "dq_unpaid_spec": 1,
+    "evidence_discipline": 1,
+    "technical_feasibility": 1,
+    "expiry_closing_soon": 1,
+    "expiry_just_expired": 1
+  },
+  "expiry": {
+    "expired": [
+      "Q2-012",
+      "Q2-013",
+      "Q2-021",
+      "Q2-022",
+      "Q2-040"
+    ],
+    "liveDeadline": [
+      "Q2-014",
+      "Q2-015",
+      "Q2-016",
+      "Q2-017",
+      "Q2-018",
+      "Q2-019",
+      "Q2-020",
+      "Q2-039"
+    ]
+  },
+  "fraudMatrix": {
+    "legit_work_permissible": [
+      "Q2-001"
+    ],
+    "legit_work_prohibited": [
+      "Q2-023",
+      "Q2-026"
+    ],
+    "fraud_work_permissible": [
+      "Q2-024",
+      "Q2-027"
+    ],
+    "fraud_work_prohibited": [
+      "Q2-025"
+    ]
+  },
+  "note": "Sealed cases live in gitignored private state. Only this hash is committed."
+}

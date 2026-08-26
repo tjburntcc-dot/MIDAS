@@ -26,7 +26,8 @@ export interface WorkerDimension {
   title: string;
   weight: number;
   advisory?: boolean;
-  score: (ctx: WorkerScoreContext) => number | { value: number; detail?: unknown };
+  /** Return null when the dimension does not apply to this case. */
+  score: (ctx: WorkerScoreContext) => number | { value: number; detail?: unknown } | null;
 }
 
 export interface WorkerCriticalFailure {
@@ -99,21 +100,35 @@ export function scoreWorkerCase(spec: WorkerSpec, args: { record: any; output: a
   const dimensions: Record<string, number> = {};
   const advisory: Record<string, number> = {};
   const details: Record<string, unknown> = {};
+  // A scorer returning null means the dimension does not apply to this case --
+  // a case exercising no stated-value field cannot demonstrate stated-value
+  // extraction. Scoring that as zero would punish the worker for a property of
+  // the case, so the dimension is dropped and the remaining weights renormalise.
+  const notApplicable: string[] = [];
   for (const d of spec.dimensions) {
     const raw = d.score(ctx);
+    if (raw == null) {
+      notApplicable.push(d.id);
+      continue;
+    }
     const value = typeof raw === "number" ? raw : raw.value;
     const clamped = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
-    if (typeof raw !== "number" && raw.detail !== undefined) details[d.id] = raw.detail;
+    if (typeof raw !== "number" && (raw as any).detail !== undefined) details[d.id] = { value: clamped, detail: (raw as any).detail };
     if (d.advisory) advisory[d.id] = clamped;
     else dimensions[d.id] = clamped;
   }
   const weights: Record<string, number> = {};
-  let weighted = 0;
+  let weightSum = 0;
   for (const d of spec.dimensions) {
-    if (d.advisory) continue;
+    if (d.advisory || notApplicable.includes(d.id)) continue;
     weights[d.id] = d.weight;
-    weighted += d.weight * dimensions[d.id];
+    weightSum += d.weight;
   }
+  let weighted = 0;
+  for (const [id, w] of Object.entries(weights)) weighted += w * dimensions[id];
+  // Renormalise so a case with fewer applicable dimensions is still out of 100
+  // and remains comparable with a case that exercises all of them.
+  if (weightSum > 0 && weightSum !== 100) weighted = (weighted * 100) / weightSum;
   const criticalFailures = spec.criticalFailures
     .filter((c) => {
       try { return c.detect(ctx); } catch { return false; }
@@ -124,6 +139,7 @@ export function scoreWorkerCase(spec: WorkerSpec, args: { record: any; output: a
     dimensions,
     advisoryDimensions: advisory,
     weights,
+    notApplicableDimensions: notApplicable,
     weightedTotal: weighted / 100,
     criticalFailures,
     details,
@@ -277,16 +293,36 @@ export async function runWorkerEval(args: {
   };
 }
 
-/** Per-dimension means for one run, used by the promotion report. */
+/**
+ * Per-dimension means for one run.
+ *
+ * Each dimension is averaged over the cases that actually exercise it, not over
+ * every scored case. Dividing by the whole run deflates any dimension that is
+ * often not applicable -- a subskill present in one case out of forty would
+ * report near zero however well the worker performed on it, which reads as a
+ * competence failure and is really an arithmetic one.
+ */
 export function dimensionMeans(results: any[]): Record<string, number> {
   const scored = results.filter((r) => r.scoreStatus === "scored" && r.dimensions);
   const sums: Record<string, number> = {};
+  const counts: Record<string, number> = {};
   for (const r of scored) {
     for (const [k, v] of Object.entries(r.dimensions)) {
       sums[k] = (sums[k] || 0) + Number(v);
+      counts[k] = (counts[k] || 0) + 1;
     }
   }
   const out: Record<string, number> = {};
-  for (const [k, v] of Object.entries(sums)) out[k] = v / (scored.length || 1);
+  for (const [k, v] of Object.entries(sums)) out[k] = v / counts[k];
   return out;
+}
+
+/** How many cases exercised each dimension, so a mean can be read with its n. */
+export function dimensionCounts(results: any[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const r of results) {
+    if (r.scoreStatus !== "scored" || !r.dimensions) continue;
+    for (const k of Object.keys(r.dimensions)) counts[k] = (counts[k] || 0) + 1;
+  }
+  return counts;
 }
