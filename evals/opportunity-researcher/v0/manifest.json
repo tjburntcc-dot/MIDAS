@@ -1,0 +1,23 @@
+{
+  "id": "hemmer-opportunity-researcher-v0",
+  "dev": {
+    "path": "evals/opportunity-researcher/v0/dev_cases_v0.json",
+    "n": 4,
+    "sha256": "cb53aaa63f64cd335b7e7f58f535560c55f1017c85bcb34a577fccd2f5338bea"
+  },
+  "sealed": {
+    "id": "hemmer-opportunity-researcher-sealed-v0",
+    "path": "var/state/sealed/opportunity-researcher-sealed-v0.json",
+    "n": 8,
+    "sha256": "a528a084812114fd3c2846bb34110e44a974dd6853a00b1f0e8f11404c474baa",
+    "committed": false
+  },
+  "goldMethod": "Deterministic span detection over the captured page text. A fact is present only if a pattern matched, and the matched span is the expected evidence. Presence of a string in a supplied document is objectively checkable, unlike an author's numeric estimate.",
+  "sealedPresentFactMix": {
+    "budget": 4,
+    "deadline": 8,
+    "contact": 5
+  },
+  "sealedAbsentFactCount": 7,
+  "note": "Pages are real and captured once. Evaluation replays the frozen text and makes no network calls."
+}

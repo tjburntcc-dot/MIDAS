@@ -1,0 +1,136 @@
+{
+  "id": "hemmer-opportunity-researcher-dev-v0",
+  "version": "hemmer-opportunity-researcher-dev-v0",
+  "n": 4,
+  "synthetic": false,
+  "realPages": true,
+  "note": "Development cases. Real captured pages; gold derived by deterministic detection of fact spans in the supplied text.",
+  "cases": [
+    {
+      "case_id": "OR-1CA855",
+      "title": "RWA / SGA website redesign and ADA compliance consultant",
+      "url": "https://rwah2o.org/rfp-consultant-support-for-the-website-redesign-and-ada-compliance-project/",
+      "workItemId": "WI-83ca1902",
+      "page_text": "Request for Proposal (RFP): Consultant support for the Website Redesign and ADA Compliance Project – RWA Skip to main content Search Close Search Menu Home About RWA RWA Members Regional Collaboration Awards Programs How To Join Financial Reports Employment Policies Employee Compensation Board Board Members Board Meetings Programs Advocacy Federal Stimulus Funding Water Efficiency Integrated Regional Water Management Regional Water Reliability and Drought Contingency Plan Grant Successes News & Info Publications Public Notices Contact Us Request for Proposal (RFP): Consultant support for the Website Redesign and ADA Compliance Project By chris August 24, 2026 News , News & Info , Public Notices No Comments The Regional Water Authority (RWA) and Sacramento Groundwater Authority (SGA) are seeking Consultant support for the Website Redesign and ADA Compliance Project . The Project has two distinct components: 1) The redesign and update to the two websites rwah2o.org and sgah2o.org, and 2) Updating the web content to support ADA Compliance under the new state-mandated laws. Website Redesign and ADA Compliance Project RFP (pdf) Sample Services Agreement (pdf) To be considered, one electronic version of the submittal (send via email) must be received by the principal contact listed below by 3:00 p.m. PT on September 15, 2026 . The RWA and SGA reserve the right to reject any or all submittals after the deadline. Questions regarding the RFP shall be directed to the RWA Project Manager, Ashley Flores, by e-mail to aflores@rwah2o.org Thank you for your interest and efforts in providing the RWA/SGA with the services outlined in the RFP. Comments are closed. --> Share Share Share Share Pin Contact Us Regional Water Authority 2295 Gateway Oaks Drive, Suite 100 Sacramento, CA 95833 (916) 967-7692 (916) 967-7322 fax &copy; 2026 RWA. Close Menu Home About RWA RWA Members Regional Collaboration Awards Programs How To Join Financial Reports Employment Policies Employee Compensation Board Board Members Board Meetings Programs Advocacy Federal Stimulus Funding Water Efficiency Integrated Regional Water Management Regional Water Reliability and Drought Contingency Plan Grant Successes News & Info Publications Public Notices Contact Us",
+      "gold": {
+        "facts": {
+          "budget": {
+            "present": false,
+            "span": null,
+            "redacted": false
+          },
+          "deadline": {
+            "present": true,
+            "span": "deadline"
+          },
+          "contact": {
+            "present": true,
+            "span": "aflores@rwah2o.org"
+          }
+        },
+        "presentFacts": [
+          "deadline",
+          "contact"
+        ],
+        "absentFacts": [
+          "budget"
+        ]
+      }
+    },
+    {
+      "case_id": "OR-51523F",
+      "title": "Website Design And Development RFP",
+      "url": "https://capitalizealbany.com/news-events/2026/08/rfp-website-design-and-development/",
+      "workItemId": "WI-026634f9",
+      "page_text": "RFP: Website Design And Development | Capitalize Albany Search Search User Password Submit Login Search Social Media Facebook Twitter About Contact Membership News & Events Albany Overview Doing Business Partners Downtown Residential Downtown Residential Impact Downtown Albany RFP: Website Design And Development August 17, 2026 Capitalize Albany Corporation is seeking proposals from qualified, creative and experienced firms and professionals to provide website design and development services in designing and launching its new website. Please find a Request For Proposals at the link below. Responses to this RFP are due to Corporation staff by 4 p.m. on Sept. 24 and the successful Respondent to this RFP would be expected to begin work in 2027. RFP: Website Design And Development For Capitalize Albany Corporation As the City of Albany’s economic development organization, for more than four decades the work of Capitalize Albany has elevated New York’s capital city and Capital Region. Our team recognizes the importance of having a website that provides effective engagement as a communications channel, news and information source, form of contact and home for important Corporation-related public documents. To continue to build on Capitalize Albany’s communication strategy, the Corporation wants to redesign the website to incorporate new website technologies with simple navigation. The Corporation requires this website to be highly attractive, modern, functional, mobile friendly, accessible, and responsive. From an administrative perspective, the site must be easy to update by users of varied technical expertise. The current site was launched in 2011. For any and all inquiries related to this RFP please contact Communications Manager Michael Bohne at [email protected] using the subject line Capitalize Albany Website Design RFP. #DowntownWorks Albany's All Business Back To Business Business Development Downtown Residential Employment Featured Topics Impact Downtown Albany News Real Estate Development Uncategorized Photos Videos Broadway Dove Street Downtown Next Photo Next Photo Next Photo Next Photo Next Photo Next Photo Next Photo Next Photo Next Photo Lunch Time in Albany State Street Phone (518) 434-2532 Contact Us Privacy Sitemap Public Docs &copy; 2026 Capitalize Albany Corporation. All Rights Reserved. Social Media Facebook Twitter",
+      "gold": {
+        "facts": {
+          "budget": {
+            "present": false,
+            "span": null,
+            "redacted": false
+          },
+          "deadline": {
+            "present": false,
+            "span": null,
+            "redacted": false
+          },
+          "contact": {
+            "present": false,
+            "span": null,
+            "redacted": true
+          }
+        },
+        "presentFacts": [],
+        "absentFacts": [
+          "budget",
+          "deadline",
+          "contact"
+        ]
+      }
+    },
+    {
+      "case_id": "OR-99B395",
+      "title": "Contract Content Writer & Storytelling Strategist",
+      "url": "https://meopar.ca/contract-content-writer-strategist/",
+      "workItemId": "WI-7223e5b2",
+      "page_text": "Request for Proposals: Contract Content Writer & Storytelling Strategist - MEOPAR --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> Skip to main content Home EN EN FR search Menu Home About About Us Governance Research Themes Research Cores Member Institutions Key Documents & Policies Job opportunities – MEOPAR MEOPAR Logos MEOPAR Merch Research Calls for Proposals Expedition Fund Research Projects MEOPAR Early Career Faculty Tracer Release Experiment Project Fathom Fund Training Opportunities Science Art Showcase Webinars Partnerships Calls for Partnerships Canadian Integrated Ocean Observing System CIOOS Modular Ocean Research Infrastructure (MORI) National Research Vessel Task Team Knowledge Mobilization MEOPAR’s CoP Symposium Communities of Practice National Forum on Coastal Community Resilience MEOPAR’s Ocean Decade Activities MEOPeer Science Videos How to make a research video News Stories Contact Join Our Network EN EN FR search Press enter to begin your search Search Close Search News Request for Proposals: Contract Content Writer & Storytelling Strategist By Odette July 27, 2026 July 29th, 2026 No Comments Request for Proposals (RFP) Contract Content Writer & Storytelling Strategist MEOPAR is seeking proposals from experienced freelance writers to support its communications through the creation of compelling written content and the strategic distribution of its stories. MEOPAR currently publishes content on its website, social media channels, and newsletter, and is looking to expand its reach to new audiences and platforms. The successful contractor will not only produce high quality written content but also bring strategic thinking about where and how MEOPAR’s stories should be shared to maximize reach, relevance, and impact. This is a part-time, remote contract engagement expected to run for six months, with the possibility of extension based on fit and performance. Scope of work includes: Writing two original long-form articles per month, developed through interviews, light research, and collaboration with MEOPAR staff and researchers Repurposing each article into shorter formats, including website news summaries, social media copy, and newsletter teasers Identifying and recommending new pathways for content distribution, such as partner newsletters, external blogs, and industry publications Providing brief, actionable monthly recommendations on content reach and audience growth Supporting a limited amount of ad hoc writing as needed MEOPAR is committed to strengthening Canada’s ocean research, resilience, and innovation by connecting people, science, and data. This contract supports MEOPAR’s broader communications evolution, including a current website refresh, and this role should help bring that strategy to life through clear, engaging, and well distributed storytelling. Please refer to the Request for Proposals document for more information. ( English / French ) Proposals must be submitted by August 17th, 2026. For any questions regarding the RFP, please contact communications@meopar.ca . Apply Here (English) Apply here (French) Next Post Request for Proposals: Event Planner Comments are closed. --> Help shape the future of our oceans. Join the MEOPAR Network. Join now Share Share Share Share Pin Language Selector Contact MEOPAR Steele Ocean Sciences Building 6375 Edzell Castle Circle, 2nd Floor Halifax NS B3H 4J1 info@meopar.ca Latest News Request for Proposals: Contract Content Writer & Storytelling Strategist July 27, 2026 &copy; 2026 MEOPAR. twitter facebook phone email Close Menu About About Us Governance Research Themes Research Cores Member Institutions Key Documents & Policies Job opportunities – MEOPAR MEOPAR Logos MEOPAR Merch Research Calls for Proposals Expedition Fund Research Projects MEOPAR Early Career Faculty Tracer Release Experiment Project Fathom Fund Training Opportunities Science Art Showcase Webinars Partnerships Calls for Partnerships Canadian Integrated Ocean Observing System CIOOS Modular Ocean Research Infrastructure (MORI) National Research Vessel Task Team Knowledge Mobilization MEOPAR’s CoP Symposium Communities of Practice National Forum on Coastal Community Resilience MEOPAR’s Ocean Decade Activities MEOPeer Science Videos How to make a research video News Stories Contact Join Our Network EN EN FR",
+      "gold": {
+        "facts": {
+          "budget": {
+            "present": false,
+            "span": null,
+            "redacted": false
+          },
+          "deadline": {
+            "present": false,
+            "span": null,
+            "redacted": false
+          },
+          "contact": {
+            "present": true,
+            "span": "communications@meopar.ca . Apply"
+          }
+        },
+        "presentFacts": [
+          "contact"
+        ],
+        "absentFacts": [
+          "budget",
+          "deadline"
+        ]
+      }
+    },
+    {
+      "case_id": "OR-DE295D",
+      "title": "Freelance Content Contributor for Reading & Language Arts (RLA)",
+      "url": "https://www.lightrfp.com/marketplace/bid/DEMANDSTAR-538798/freelance-content-contributor-for-reading-language-arts-rla-small-contractor-ser",
+      "workItemId": "WI-9d7f9d70",
+      "page_text": "Freelance Content Contributor for Reading & Language Arts (RLA) (Small Contractor Services) — Light RFP Marketplace Owners & Operators ▾ Property Developers Renovation & improvement procurement Property Managers RFPs for turns, repairs & capex Business Insurance Protect the whole portfolio Vendors ▾ The Procurement Platform Find work, bid, win & get paid Surety Bonds Free bid bonds · flat-3% P&P Contractor Insurance Coverage matched to the bid spec Browse RFPs Surety Bonds Book a Demo Log in Sign up free → Loading bid details Procurement and risk management for the built environment. Vendor sourcing, surety bonding, and business insurance, all in one AI-powered platform. Owners & Operators Property Developers Property Managers Business Insurance Vendors The Procurement Platform Surety Bonds Contractor Insurance Browse RFPs Resources FAQ Privacy © 2026 Light RFP, Inc. Light RFP Risk Management Services LLC — NY DFS License # PC-1978982. Light RFP partners with Propeller Bonds, a managing general agency licensed in all 50 states, to provide surety bonds nationwide. Back Marketplace / Texas / Training & Education / 538798 National · DemandStar · Houston, TX Freelance Content Contributor for Reading & Language Arts (RLA) (Small Contractor Services) Houston ISD, TX Issuing agency · Houston, TX · via the DemandStar (Euna) national bid aggregator 115 days left Due Dec 18, 2026 · Posted Jun 12, 2026 Save bid Add to calendar Share AI takeaways Regenerate Houston ISD seeks a freelance content contributor for Reading & Language Arts (RLA) services, to be performed in Houston, TX. The RFP is open to individual contractors only; all services must be self-performed and no subcontracting is allowed. The tentative contract term is from June 15, 2026, through June 30, 2027, with one automatic renewal not extending beyond June 30, 2028. Proposals are due by December 18, 2026, at 4:00 PM Central Time. The solicitation is issued as a Request for Proposals (RFP) by Houston ISD, TX. Required vendor forms include fingerprint appointment registration, pre-employment service affidavit, criminal history background check, conflict of interest, W-9, and HB 1295 certificate. Requirement: The W-9 must be in the individual's name, not a company/business. Requirement: District employees are not eligible to respond to this solicitation. Show more ↓ Term June 15, 2026 through June… Method Request for Proposals These takeaways are AI-generated and may be incomplete or wrong. Always verify every detail against the official documents before you bid. Contact the buyer David Teer dteer@houstonisd.org Email (713) 556-6556 Phone Location: Houston, TX Open in Maps ↗ Bid 538798 PIN RFP-26-10-09-B Method Request for Proposals Duration June 15, 2026 through June 30, 2027, with one (1) automatic renewal remaining, not to extend beyond June 30, 2028 Posted Jun 12, 2026 Source DemandStar What this bid is asking for AI-generated Provide freelance content contribution services for Reading & Language Arts (RLA) as specified in the RFP. Submit all required vendor forms including fingerprint appointment registration, pre-employment service affidavit, criminal history background check, conflict of interest, W-9, and HB 1295 certificate. Ensure all services are self-performed; no subcontracting is allowed. Comply with the requirement that the W-9 be in the individual's name, not a company/business. Posted Scope of Work REQUEST FOR PROPOSALS (RFP) INVITATION FOR VENDOR RESPONSE Dear Vendor, The Houston Independent School District is interested in receiving proposals from qualified individuals (\"Vendor\") for the procurement of select services, as specified within this Request for Proposals (\"RFP\" or \"Solicitation\"). This Request for Proposal (RFP) is open to individual contractors only and no portion of services provided can be subcontracted. All services must be self-performed by the individual responding to this RFP. Please note the W-9 required as part of your submission must be in your individual name, NOT a company/business District employees are not eligible to respond to this solicitation HISD Project Number: 26-10-09-B Project Name: Freelance Content Contributor for Reading & Language Arts (RLA) (Small Contractor Services) In accordance with Houston ISD policies and procedures, HISD schools and/or departments are authorized to engage with \"Approved Vendors\" only. An HISD Approved Vendor is one that has been authorized for use upon having met a set of pre-determined criteria through a formal procurement process and awarded a contract (\"Contract\", \"Agreement\", or \"Project\"). The first step in obtaining Approved Vendor status is to respond to this solicitation and submit all required information and documentation. Upon completion of the Project evaluation process, vendors will be recommended. The HISD Purchasing Services department will issue a Notice of Award letter, affirming the awarded Vendor(s) status as an Approved Vendor for this specific Project. The tentative term of this Project is from June 15, 2026, through June 30, 2027, with one (1) automatic renewal remaining, not to extend beyond June 30, 2028. The HISD Purchasing Coordinator assigned to this solicitation is listed below. Any questions or concerns arising out of this RFP are to be directed to such individual in writing. Questions pertaining to the solicitation process or related to the scope or specifications contained in this RFP should be submitted via the electronic bidding portal by the deadline specified within the RFP. Answers to all questions received will be posted as an Addendum to this RFP within the electronic bidding portal. Thank you in advance for your participation in this solicitation. Sincerely, Purchasing Coordinator: David Contreras Email Address: David.Contreras@houstonisd.org Office Main Number: 713-556-6515 Direct Line: 713-556-6514 Purchasing Services Department Houston Independent School District Hattie Mae White Educational Support Center 4400 West 18th Street Houston, TX 77092 Keep up with the latest news from HISD: www.HoustonISD.org Bid #: 26-10-09-B · RFP · FY 2026 · Bid writer: David Teer · County: Harris County Documents (8): 26-10-09-B - VENDOR FORM - HISD Fingerprint Appointment Registration.pdf, 26-10-09-B - VENDOR FORM Pre Employment - Service Affidavit - FILLABLE.pdf, 26-10-09-B - VENDOR FORM - Criminal History Background Check.pdf, 26-10-09-B - VENDOR FORM Conflict of Interest (CIQ).pdf, 26-10-09-B - VENDOR FORM - W-9 March 2024.pdf, 26-10-09-B - VENDOR_FORM_- HB_1295 -_Certificate_of_Interested_Parties_Rev.11.2024 (2).pdf, 26-10-09-B RFP Part II HISD Standard Terms & Conditions 12.16.2025 (2).pdf, 26-10-09-B RFP Part I Scope of Work - Specific Conditions (2).pdf — download at https://www.demandstar.com/app/limited/bids/538798/details Scope, read from the documents AI-generated The selected contractor will provide freelance content contribution services for Reading & Language Arts (RLA) as specified in the RFP. The work must be self-performed by the individual contractor, with no subcontracting allowed. The contractor must comply with all required vendor forms and documentation. More training & education bids in Texas, weekly. We post new training & education opportunities in Texas as agencies publish them. Get them in one email — free, and unsubscribe whenever. Get alerts → Questions & answers AI-generated Who is the contact person for this solicitation? The Purchasing Coordinator is David Contreras, email David.Contreras@houstonisd.org, phone 713-556-6515. Can I subcontract any of the work? No, this RFP is open to individual contractors only and no portion of services provided can be subcontracted. All services must be self-performed by the individual responding. What is the contract term? The tentative term is from June 15, 2026, through June 30, 2027, with one automatic renewal remaining, not to extend beyond June 30, 2028. What is the due date for proposals? Proposals are due by December 18, 2026, at 4:00 PM Central Time. Full source record Every field DemandStar published, untouched Member C United States of America P (713)556-6556 A1 4400 West 18th Street Ca USA Ci 1 Ct Houston Cu Harris County Ic 0 Jt Main Contact Mi 2573195 Mn Houston ISD, TX Ms AC Mt AB Pc 77092 St Texas Ahc No Cui 522 Dnd No Eml dteer@houstonisd.org Ifd No Mtn Agency Nfy Yes Sta TX Sti 44 Tzi 9 Tzn Central Phdt AG Sdbd No Tzfn Central Time (US & Canada) Metro Id 0 Addresses C United States of America A1 4400 West 18th Street Ca USA Ci 1 Ct Houston Cu Harris County Pc 77092 St Texas Cui 522 Sta TX Sti 44 Metro Id 34194 Addr Type BA C United States of America A1 4400 West 18th Street Ca USA Ci 1 Ct Houston Cu Harris County Pc 77092 St Texas Cui 522 Sta TX Sti 44 Metro Id 34194 Addr Type MA Is External Agency Yes Is Import Available Yes Search Mi 2573195 City Houston Tzfn Central Time (US & Canada) Bid Id 538798 State TX Agency Houston ISD, TX County Harris County Status Active Bid Name Freelance Content Contributor for Reading & Language Arts (RLA) (Small Contractor Services) Due Date Dec 18, 2026 Watches # Status Type AC Planholders # Show Minimum No Bid Identifier RFP-26-10-09-B Broad Cast Date Jun 12, 2026 Is External Bid Yes Watchers Count 0 Internal Status BR Planholders Count 2 Summary Aph No Tse 0 Tzn Central Cost 0.0000 Tzfn Central Time (US & Canada) Bid ID 538798 County Harris County Bid Name Freelance Content Contributor for Reading & Language Arts (RLA) (Small Contractor Services) Bid Type RFP Due Date Dec 18, 2026 Pbc Memo No Pre-Bid Conference Data Found E Bidding No Filtered No Member ID 2573195 Account ID 2485042 Bid County Harris County Bid Number 26-10-09-B Bid Writer David Teer Agency Name Houston ISD, TX Doc Formats Icon pdf.gif Mime Type application/pdf Doc Format PDF Description Adobe Acrobat (*.PDF ) Icon shx.gif Mime Type application/octet-stream Doc Format SHX Description Auto CAD Shape (*.SHX ) Icon dwf.gif Mime Type image/vnd.dwg Doc Format DWG Description AutoCAD Drawing (*.DWG ) Icon dwf.gif Mime Type drawing/x-dwf Doc Format DWF Description AutoCAD Drawing Web Format (*.DWF ) Icon csv.gif Mime Type text/csv Doc Format CSV Description Comma Separated Values (*.CSV ) Icon gif.gif Mime Type image/gif Doc Format GIF Description GIF Image (*.GIF ) Icon htm.gif Mime Type text/html Doc Format HTML Description HTML (*.HTML) Icon jpg.gif Mime Type image/jpeg Doc Format JPG Description JPEG Image (*.JPG ) Icon jpg.gif Mime Type image/jpeg Doc Format JPEG Description JPEG Image (*.JPEG) Icon m4a.gif Mime Type audio/m4a Doc Format M4A Description M4A Audio (*.M4A ) Icon xltx.gif Mime Type application/vnd.openxmlformats-officedocument.spreadsheetml.template Doc Format XLTX Description Microsoft Excel (*.XLTX) Icon xlsm.gif Mime Type application/vnd.ms-excel.sheet.macroEnabled.12 Doc Format XLSM Description Microsoft Excel (*.XLSM) Icon xlsb.gif Mime Type application/vnd.ms-excel.sheet.binary.macroEnabled.12 Doc Format XLSB Description Microsoft Excel (*.XLSB) Icon xls.gif Mime Type application/vnd.openxmlformats-officedocument.spreadsheetml.sheet Doc Format XLSX Description Microsoft Excel (*.XLSX) Icon xls.gif Mime Type application/vnd.ms-excel Doc Format XLS Description Microsoft Excel (*.XLS ) Icon ppt.gif Mime Type application/ppt Doc Format PPT Description Microsoft PowerPoint (*.PPT ) Icon ppt.gif Mime Type application/vnd.openxmlformats-officedocument.presentationml.presentation Doc Format PPTX Description Microsoft PowerPoint (*.PPTX) Icon doc.gif Mime Type application/vnd.openxmlformats-officedocument.wordprocessingml.document Doc Format DOCX Description Microsoft Word (*.DOCX) Icon doc.gif Mime Type application/msword Doc Format DOC Description Microsoft Word (*.DOC ) Icon doc.gif Mime Type application/vnd.openxmlformats-officedocument.wordprocessingml.document Doc Format DOT Description Microsoft Word (*.DOT ) Icon xlr.gif Mime Type application/vnd.ms-works application/x-msworks Doc Format XLR Description Microsoft ",
+      "gold": {
+        "facts": {
+          "budget": {
+            "present": false,
+            "span": null,
+            "redacted": false
+          },
+          "deadline": {
+            "present": true,
+            "span": "Proposals are due by December 18, 2026, at 4:00 PM Central Time"
+          },
+          "contact": {
+            "present": true,
+            "span": "dteer@houstonisd.org"
+          }
+        },
+        "presentFacts": [
+          "deadline",
+          "contact"
+        ],
+        "absentFacts": [
+          "budget"
+        ]
+      }
+    }
+  ]
+}
