@@ -512,3 +512,57 @@ describe("the taxonomy and combined gates are declared before they run", () => {
     });
   }
 });
+
+
+describe("the calibration instrument defect stays visible until it is fixed", () => {
+  // These do not assert the instrument is correct. They assert that a known
+  // defect cannot be quietly forgotten, and that nobody trains against it while
+  // it stands. The doc is the record; the test keeps the doc honest.
+  const DOC = repoPath("docs", "opportunity-qualifier", "CALIBRATION_INSTRUMENT.md");
+  const AFFECTED = ["OQ-S08", "OQ-S09", "OQ-S10", "OQ-S11", "OQ-S12", "OQ-S13",
+    "OQ-S14", "OQ-S15", "OQ-S17", "OQ-S18", "OQ-S19", "OQ-S21"];
+
+  test("the defect is documented with its evidence and its remedy", () => {
+    const doc = readFileSync(DOC, "utf8");
+    assert.match(doc, /must not be[\s\S]{0,20}trained against/);
+    assert.match(doc, /92\.0%/, "the true estimation figure must be recorded");
+    for (const id of AFFECTED) assert.ok(doc.includes(id), "doc omits affected case " + id);
+    assert.match(doc, /unknowable/, "the corrected design must name the abstention marker");
+  });
+
+  test("the affected cases are exactly those the doc lists", () => {
+    // If gold is corrected, this fails and forces the doc to be updated with it,
+    // rather than leaving a stale defect report behind.
+    const manifest = JSON.parse(readFileSync(CASES_MANIFEST_V1_PATH, "utf8"));
+    const sealedPath = repoPath(manifest.sealed.path);
+    if (!existsSync(sealedPath)) return; // sealed set is private and may be absent
+    const cases = JSON.parse(readFileSync(sealedPath, "utf8")).cases;
+    const found = cases
+      .filter((c) => c.facts.posted_budget_usd != null && (c.gold.bands || {}).estimated_value_usd === null)
+      .map((c) => c.case_id)
+      .sort();
+    assert.deepEqual(found, AFFECTED.slice().sort(),
+      "the set of cases demanding null value despite a stated budget changed; update CALIBRATION_INSTRUMENT.md");
+  });
+
+  test("a stated budget with a null gold band is a contradiction the scorer cannot resolve", () => {
+    // Demonstrates the defect directly rather than by reference: the same worker
+    // answer is right on one case and wrong on its twin purely because of the
+    // gold band, with nothing else differing.
+    const record = {
+      facts: { posted_budget_usd: 6000 }, evidence: [{ id: "E1", text: "Budget is 6000 USD." }],
+      gold: { decision: "decline", disqualifiers: ["advance_fee_request"], bands: { estimated_value_usd: null } },
+    };
+    const twin = { ...record, gold: { ...record.gold, bands: { estimated_value_usd: { low: 4500, high: 7500 } } } };
+    const output = {
+      decision: "decline", buyer_legitimacy: "suspect", task_clarity: "clear",
+      estimated_value_usd: { low: 5500, high: 6500 }, ai_fulfillment_pct: null, human_minutes: null,
+      close_probability_pct: null, payment_probability_pct: null, fraud_risk: "high",
+      disqualifiers: ["advance_fee_request"], missing_information: [], cited_evidence_ids: ["E1"], rationale: "r",
+    };
+    const a = scoreWorkerCase(QUALIFIER_SPEC_V3, { record, output, schemaOk: true });
+    const b = scoreWorkerCase(QUALIFIER_SPEC_V3, { record: twin, output, schemaOk: true });
+    assert.equal(a.dimensions.calibration, 0, "null gold marks a correct restatement of the stated budget wrong");
+    assert.equal(b.dimensions.calibration, 100, "a rule-derived band marks the same answer right");
+  });
+});
