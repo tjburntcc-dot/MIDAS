@@ -125,7 +125,7 @@ const GENERATORS: Generator[] = [
     emit: (d) => [
       { q: "What are the materially distinct legitimate ways to approach this " + subject(d) + " decision, including narrower and staged ones?", category: "options", why: "Rejecting the obvious option is not the same as there being no option." },
       { q: "For each option, is it permitted, feasible, and economically worthwhile, separately?", category: "options", why: "These fail independently and collapsing them hides which one actually binds." },
-      ...(d.attributes.irreversible ? [{ q: "What is the reversible version of this " + subject(d) + " decision, and is it available?", category: "options", why: "A reversible option with slightly lower expected value is usually better under uncertainty, and this decision is marked irreversible." }] : []),
+      ...(d.attributes.irreversible ? [{ q: "What is the reversible version of this " + subject(d) + " decision, and is it available?", category: "reversibility", why: "A reversible option with slightly lower expected value is usually better under uncertainty, and this decision is marked irreversible." }] : []),
       { q: "What does not acting on " + subject(d) + " cost, and is that the best option?", category: "options", why: "Declining is a legitimate outcome and must be compared, not assumed away." },
     ],
   },
@@ -191,7 +191,7 @@ const GENERATORS: Generator[] = [
     id: "data_sensitivity",
     applies: (d) => d.attributes.handlesPersonalOrSensitiveData === true,
     emit: () => [
-      { q: "What personal or sensitive data enters scope, and whose is it?", category: "security", why: "Obligations attach to the data, not to the size of the contract." },
+      { q: "What personal or sensitive data enters scope, and whose is it?", category: "data_governance", why: "Obligations attach to the data, not to the size of the contract." },
       { q: "What are we responsible for securing, and what remains the other party's responsibility?", category: "security", why: "Silent assumption of another party's controls is how liability appears unannounced." },
       { q: "Would a specialist review be warranted before promising anything about security or privacy?", category: "security", why: "A security claim beyond evidence is the most expensive kind of unsupported claim." },
     ],
@@ -243,6 +243,26 @@ const GENERATORS: Generator[] = [
     emit: () => [
       { q: "What is the ongoing cost of this decision after the initial change, and who carries it?", category: "economics", why: "Recurring decisions are usually judged on setup cost and paid for in maintenance." },
       { q: "How will we detect that this has stopped working?", category: "measurement", why: "An operational change with no detection path fails silently." },
+      { q: "Who operates and maintains this once the change is made, and have they agreed?", category: "downstream_effects", why: "Work that lands on an unconsulted operator is a commitment made on someone else's behalf." },
+    ],
+  },
+  {
+    // Surfaced by coverage analysis: builds were interrogated for capability and
+    // never for what they leave behind.
+    id: "build_aftermath",
+    applies: (d) => d.attributes.technicalBuild === true,
+    emit: (d) => [
+      { q: "After this " + subject(d) + " is built, who keeps it running, and for how long are we on the hook?", category: "downstream_effects", why: "Build effort is estimated; the maintenance tail is usually assumed away." },
+      { q: "What does the other party have to keep doing for this to keep working?", category: "downstream_effects", why: "A handover that depends on unstated effort from the recipient fails after we leave." },
+    ],
+  },
+  {
+    // Surfaced by coverage analysis: a stated deadline was accepted as given.
+    id: "timing",
+    applies: (d) => d.attributes.timeBounded === true,
+    emit: () => [
+      { q: "Is the stated timing constraint exact, and where does it come from?", category: "timing", why: "A deadline inherited from a summary rather than the source has been wrong before." },
+      { q: "What has to be true for us to meet it, and what happens if we miss by a week?", category: "timing", why: "The consequence of lateness is what determines whether the date is a constraint or a preference." },
     ],
   },
   {
