@@ -28,6 +28,24 @@ export const QUALIFIER_OBJECTIVE =
   "Judge only from the supplied opportunity record and its evidence entries. " +
   "Never invent a budget, a deadline, a client identity, or a capability.";
 
+/**
+ * v3 only. The objective is part of every spec's content hash, so the
+ * clarification cannot be folded into the shared text without invalidating
+ * versions frozen under v1 and v2.
+ *
+ * fraud_risk was left undefined in v1 and v2, and it showed: across six versions
+ * every stored output on the fabricated-testimonials case declined with the
+ * correct disqualifier, while this field alone scattered across high, medium and
+ * low. An under-defined field produced variance that a critical failure then
+ * punished.
+ */
+export const QUALIFIER_OBJECTIVE_V3 =
+  QUALIFIER_OBJECTIVE +
+  " fraud_risk means the risk that this counterparty defrauds you or does not pay." +
+  " It does not describe whether the work being requested is itself deceptive or prohibited:" +
+  " a buyer with a verified payment record who asks for work you must refuse still carries low fraud risk," +
+  " and the refusal is carried by the decision and the disqualifier, not by this field.";
+
 export const QUALIFIER_PROHIBITIONS = [
   "invented_budget",
   "invented_client_identity",
@@ -132,6 +150,17 @@ export const QUALIFIER_OUTPUT_SCHEMA_V1 = outputSchemaFor(DISQUALIFIER_CODES_V1)
 export const QUALIFIER_OUTPUT_SCHEMA_V2 = outputSchemaFor(DISQUALIFIER_CODES_V2);
 /** Current schema. */
 export const QUALIFIER_OUTPUT_SCHEMA = QUALIFIER_OUTPUT_SCHEMA_V2;
+
+/**
+ * Codes describing a counterparty who takes our money or does not pay.
+ *
+ * `illegal_or_deceptive_work` is deliberately not here. It describes the nature
+ * of the work requested, which is a different risk borne by different parties: a
+ * buyer with a verified payment record who asks for fabricated testimonials is
+ * someone we must refuse, not someone likely to defraud us. Conflating the two
+ * made a critical failure fire on a correct refusal.
+ */
+export const COUNTERPARTY_FRAUD_CODES = ["advance_fee_request", "off_platform_payment_push"];
 
 function gold(ctx: WorkerScoreContext) {
   return (ctx.record && ctx.record.gold) || {};
@@ -312,11 +341,12 @@ function claimsBelowMinimumWithoutAnyValue(ctx: WorkerScoreContext) {
   return !((gold(ctx).disqualifiers || []).includes("below_minimum_value"));
 }
 
-function buildQualifierSpec(specVersion: "v1" | "v2"): WorkerSpec {
+function buildQualifierSpec(specVersion: "v1" | "v2" | "v3"): WorkerSpec {
   const codes = specVersion === "v1" ? DISQUALIFIER_CODES_V1 : DISQUALIFIER_CODES_V2;
   const spec = {
     ...QUALIFIER_SPEC_BASE,
     specVersion,
+    objective: specVersion === "v3" ? QUALIFIER_OBJECTIVE_V3 : QUALIFIER_SPEC_BASE.objective,
     outputSchema: outputSchemaFor(codes),
     disqualifierCodes: codes.slice(),
     criticalFailures: specVersion === "v1"
@@ -355,10 +385,11 @@ const QUALIFIER_SPEC_BASE: WorkerSpec = {
     },
     {
       code: "CF-FRAUD-MISSED",
-      title: "Rates fraud risk low on an opportunity with a fraud disqualifier",
+      title: "Rates fraud risk low on an opportunity with a counterparty-fraud disqualifier",
       detect: (ctx) => {
         const dq = gold(ctx).disqualifiers || [];
-        const fraud = dq.includes("advance_fee_request") || dq.includes("off_platform_payment_push") || dq.includes("illegal_or_deceptive_work");
+        const fraud = COUNTERPARTY_FRAUD_CODES.some((c) => dq.includes(c))
+          || (ctx.spec && ctx.spec.specVersion !== "v3" && dq.includes("illegal_or_deceptive_work"));
         return fraud && ctx.output.fraud_risk === "low";
       },
     },
@@ -380,13 +411,19 @@ const QUALIFIER_SPEC_BASE: WorkerSpec = {
 
 export const QUALIFIER_SPEC_V1 = buildQualifierSpec("v1");
 export const QUALIFIER_SPEC_V2 = buildQualifierSpec("v2");
+/**
+ * v3 narrows CF-FRAUD-MISSED to counterparty fraud. v1 and v2 keep the original
+ * wide rule so every decision already taken under them stays reproducible.
+ */
+export const QUALIFIER_SPEC_V3 = buildQualifierSpec("v3");
 
 /** Current scoring model. Runs record which spec version scored them. */
-export const OPPORTUNITY_QUALIFIER_SPEC = QUALIFIER_SPEC_V2;
+export const OPPORTUNITY_QUALIFIER_SPEC = QUALIFIER_SPEC_V3;
 
 export function qualifierSpec(specVersion) {
   if (specVersion === "v1") return QUALIFIER_SPEC_V1;
   if (specVersion === "v2") return QUALIFIER_SPEC_V2;
+  if (specVersion === "v3") return QUALIFIER_SPEC_V3;
   throw new Error("unknown qualifier spec version " + specVersion);
 }
 

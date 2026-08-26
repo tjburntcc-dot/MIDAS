@@ -17,7 +17,8 @@ import { FileStore, repoPath } from "@midas/db";
 import { validateWorkerSpec, workerSpecHash, scoreWorkerCase, runWorkerEval, dimensionMeans } from "./worker-spec.ts";
 import {
   OPPORTUNITY_QUALIFIER_SPEC, DISQUALIFIER_CODES, DISQUALIFIER_CODES_V1, DISQUALIFIER_CODES_V2,
-  QUALIFIER_DECISIONS, QUALIFIER_SPEC_V1, QUALIFIER_SPEC_V2, qualifierSpec,
+  QUALIFIER_DECISIONS, QUALIFIER_SPEC_V1, QUALIFIER_SPEC_V2, QUALIFIER_SPEC_V3, qualifierSpec,
+  COUNTERPARTY_FRAUD_CODES, QUALIFIER_OBJECTIVE, QUALIFIER_OBJECTIVE_V3,
 } from "./opportunity-qualifier.ts";
 import {
   presentQualifierCase, assertNoGoldLeak, buildQualifierRequest, loadDevCases,
@@ -415,4 +416,99 @@ describe("the v2 promotion gate is declared before it runs", () => {
     // The reference arm must be excluded from the gate.
     assert.match(src, /gated: false/);
   });
+});
+
+
+describe("CF-FRAUD-MISSED separates counterparty fraud from prohibited work", () => {
+  const cfFor = (spec) => spec.criticalFailures.find((c) => c.code === "CF-FRAUD-MISSED");
+  const output = (fraudRisk) => ({
+    decision: "decline", buyer_legitimacy: "verified", task_clarity: "clear",
+    estimated_value_usd: null, ai_fulfillment_pct: null, human_minutes: null,
+    close_probability_pct: null, payment_probability_pct: null, fraud_risk: fraudRisk,
+    disqualifiers: [], missing_information: [], cited_evidence_ids: [], rationale: "r",
+  });
+  const ctx = (spec, goldCodes, fraudRisk) => ({
+    record: { facts: {}, evidence: [], gold: { decision: "decline", disqualifiers: goldCodes } },
+    output: output(fraudRisk), schemaOk: true, spec,
+  });
+
+  test("the counterparty-fraud list excludes prohibited-work codes", () => {
+    assert.deepEqual(COUNTERPARTY_FRAUD_CODES, ["advance_fee_request", "off_platform_payment_push"]);
+    assert.equal(COUNTERPARTY_FRAUD_CODES.includes("illegal_or_deceptive_work"), false);
+  });
+
+  test("v3 still fires on a counterparty who takes money or will not pay", () => {
+    const cf = cfFor(QUALIFIER_SPEC_V3);
+    assert.equal(cf.detect(ctx(QUALIFIER_SPEC_V3, ["advance_fee_request"], "low")), true);
+    assert.equal(cf.detect(ctx(QUALIFIER_SPEC_V3, ["off_platform_payment_push"], "low")), true);
+    // Rating that risk correctly is not a failure.
+    assert.equal(cf.detect(ctx(QUALIFIER_SPEC_V3, ["advance_fee_request"], "high")), false);
+  });
+
+  test("v3 no longer fires on a correct refusal of prohibited work", () => {
+    // The observed misfire: a buyer with a verified payment record asking for
+    // fabricated testimonials. Declining with the right code is correct, and the
+    // counterparty genuinely is not a payment risk.
+    const cf = cfFor(QUALIFIER_SPEC_V3);
+    assert.equal(cf.detect(ctx(QUALIFIER_SPEC_V3, ["illegal_or_deceptive_work"], "low")), false);
+    // The dangerous outcome on such a case is pursuing it, which a different
+    // critical failure already covers, so nothing is left unguarded.
+    const pursue = QUALIFIER_SPEC_V3.criticalFailures.find((c) => c.code === "CF-PURSUE-DISQUALIFIED");
+    const pursuing = { ...ctx(QUALIFIER_SPEC_V3, ["illegal_or_deceptive_work"], "low") };
+    pursuing.output = { ...pursuing.output, decision: "pursue" };
+    assert.equal(pursue.detect(pursuing), true);
+  });
+
+  test("v1 and v2 keep the original wide rule so past decisions stay reproducible", () => {
+    for (const spec of [QUALIFIER_SPEC_V1, QUALIFIER_SPEC_V2]) {
+      assert.equal(cfFor(spec).detect(ctx(spec, ["illegal_or_deceptive_work"], "low")), true,
+        spec.specVersion + " must keep the rule it was run under");
+    }
+  });
+
+  test("the fraud_risk definition is scoped to v3 so frozen hashes survive", () => {
+    // Folding the clarification into the shared objective would change the
+    // content hash of every version frozen under v1 and v2.
+    assert.equal(QUALIFIER_SPEC_V1.objective, QUALIFIER_OBJECTIVE);
+    assert.equal(QUALIFIER_SPEC_V2.objective, QUALIFIER_OBJECTIVE);
+    assert.equal(QUALIFIER_SPEC_V3.objective, QUALIFIER_OBJECTIVE_V3);
+    assert.ok(QUALIFIER_OBJECTIVE_V3.startsWith(QUALIFIER_OBJECTIVE));
+    assert.match(QUALIFIER_OBJECTIVE_V3, /does not describe whether the work being requested is itself deceptive/);
+    assert.equal(workerSpecHash(QUALIFIER_SPEC_V1), workerSpecHash(qualifierSpec("v1")));
+  });
+
+  test("correcting the rule changes no aggregate score", () => {
+    // Critical failures never enter weighted_total, so narrowing one cannot move
+    // any arm's mean. This is what makes the correction safe to apply to a gate:
+    // it can remove a spurious flag but cannot manufacture a score improvement.
+    const record = DEV[0];
+    const out = {
+      decision: "decline", buyer_legitimacy: "verified", task_clarity: "clear",
+      estimated_value_usd: null, ai_fulfillment_pct: null, human_minutes: null,
+      close_probability_pct: null, payment_probability_pct: null, fraud_risk: "low",
+      disqualifiers: [], missing_information: [], cited_evidence_ids: ["E1"], rationale: "r",
+    };
+    const a = scoreWorkerCase(QUALIFIER_SPEC_V2, { record, output: out, schemaOk: true });
+    const b = scoreWorkerCase(QUALIFIER_SPEC_V3, { record, output: out, schemaOk: true });
+    assert.equal(a.weightedTotal, b.weightedTotal);
+    assert.deepEqual(a.dimensions, b.dimensions);
+  });
+});
+
+describe("the taxonomy and combined gates are declared before they run", () => {
+  for (const [file, marker] of [
+    ["qualifier-promote-taxonomy.mjs", "TAXONOMY_PROMOTION_CRITERIA"],
+    ["qualifier-promote-combined.mjs", "COMBINED_PROMOTION_CRITERIA"],
+  ]) {
+    test(file + " declares its criteria above its runs", () => {
+      const src = readFileSync(repoPath("tools", file), "utf8");
+      assert.match(src, new RegExp(marker));
+      assert.ok(src.indexOf(marker) < src.indexOf("runWorkerEval("), "criteria must precede runs");
+      // A structural repair is gated on non-inferiority, never on a borrowed
+      // aggregate-gain threshold from a knowledge experiment.
+      assert.match(src, /maxNonExpiryRegression/);
+      assert.equal(/minGainOverControl/.test(src), false, "must not inherit the knowledge-experiment threshold");
+      assert.match(src, /maxFalseExpiryDeclarations/);
+    });
+  }
 });
