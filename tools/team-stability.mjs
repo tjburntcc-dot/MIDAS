@@ -22,8 +22,27 @@ import { estimateUsd } from "../packages/eval/src/spend.ts";
 loadWorkspaceEnv("ws-hemmer");
 const model = process.env.MIDAS_TEAM_MODEL || process.env.MIDAS_ACADEMY_MODEL || "gpt-4.1";
 const REPEATS = Number(process.env.MIDAS_TEAM_REPEATS || 3);
-const provider = new OpenAIResponsesProvider(undefined, model);
+
+/**
+ * Per-stage model routing.
+ *
+ * MIDAS_TEAM_STAGE_MODELS overrides individual stages while every other stage
+ * stays on the base model. That is what makes attribution possible: change one
+ * stage, hold the rest, and any difference belongs to the stage that changed.
+ */
+let stageModels = {};
+try { stageModels = JSON.parse(process.env.MIDAS_TEAM_STAGE_MODELS || "{}"); } catch { stageModels = {}; }
+
+const providers = new Map();
+function providerFor(stage) {
+  const m = stageModels[stage] || model;
+  if (!providers.has(m)) providers.set(m, new OpenAIResponsesProvider(undefined, m));
+  return { provider: providers.get(m), model: m };
+}
+
 let usd = 0, inTok = 0, outTok = 0;
+/** Tokens per model, so a mixed team is costed per model rather than in aggregate. */
+const tokensByModel = {};
 
 const SOURCES = {
   qualifierKnowledge: HEMMER_POLICY_KNOWLEDGE.concat(HEMMER_EXPIRY_KNOWLEDGE),
@@ -116,19 +135,23 @@ async function runStage(stage, upstream) {
     + "Return JSON matching the schema.";
 
   const input = [DOSSIER, "", upstream ? "UPSTREAM STAGES:\n" + upstream : "You are the first stage."].join("\n");
+  const routed = providerFor(stage);
   try {
-    const out = await provider.complete({
+    const out = await routed.provider.complete({
       instructions, input,
       outputSchema: { name: "stage_output", strict: false, schema: STAGE_SCHEMA },
     });
     const u = out.usage || {};
     usd += estimateUsd(u.inputTokens, u.outputTokens);
     inTok += Number(u.inputTokens || 0); outTok += Number(u.outputTokens || 0);
+    const tm = tokensByModel[routed.model] || { input: 0, output: 0 };
+    tm.input += Number(u.inputTokens || 0); tm.output += Number(u.outputTokens || 0);
+    tokensByModel[routed.model] = tm;
     const text = String(out.text || "");
     const a = text.indexOf("{"), b = text.lastIndexOf("}");
     const parsed = a >= 0 ? JSON.parse(text.slice(a, b + 1)) : {};
     return {
-      stage,
+      stage, model: routed.model,
       disposition: String(parsed.disposition || "unknown").toLowerCase().trim(),
       claims: (parsed.claims || []).map((c) => ({ text: String(c.text || ""), strength: String(c.strength || "unverified").toLowerCase(), source: String(c.source || "") })),
       unknowns: (parsed.unknowns || []).map(String),
@@ -138,11 +161,13 @@ async function runStage(stage, upstream) {
       raw: text.slice(0, 1500),
     };
   } catch (e) {
-    return { stage, disposition: "error", claims: [], unknowns: [], commitments: [], authority: "unstated", nextAction: String(e.message).slice(0, 120) };
+    return { stage, model: routed.model, disposition: "error", claims: [], unknowns: [], commitments: [], authority: "unstated", nextAction: String(e.message).slice(0, 120) };
   }
 }
 
-console.log("model:", model, "| repeats:", REPEATS, "| chain:", CHAIN.join(" -> "));
+const routing = CHAIN.map((c) => c + "=" + (stageModels[c] || model)).join("  ");
+console.log("base model:", model, "| repeats:", REPEATS);
+console.log("routing:", routing);
 console.log("opportunity:", target.title.slice(0, 60));
 console.log("");
 
@@ -168,6 +193,7 @@ for (let r = 0; r < REPEATS; r++) {
 const analysis = analyseTeamRuns(runs);
 const prices = loadPrices();
 const cost = costFor({ model, inputTokens: inTok, outputTokens: outTok }, prices);
+const costByModel = Object.entries(tokensByModel).map(([m, t]) => costFor({ model: m, inputTokens: t.input, outputTokens: t.output }, prices));
 
 console.log("");
 console.log("distinct chains:", analysis.distinctChains + "/" + analysis.runs,
@@ -189,7 +215,8 @@ if (analysis.commitments.length) {
 if (analysis.provenanceLoss.length) console.log("  provenance lost on " + analysis.provenanceLoss.length + " claim(s)");
 console.log("");
 console.log(analysis.ruling);
-console.log("tokens in/out:", inTok + "/" + outTok, "| cost:", cost.status === "computed" ? "$" + cost.usd : cost.status);
+for (const [m, t] of Object.entries(tokensByModel)) console.log("  tokens " + m + ": " + t.input + " in / " + t.output + " out");
+for (const c of costByModel) console.log("  cost " + c.model + ": " + (c.status === "computed" ? "$" + c.usd : c.status));
 
 writeFileSync(repoPath("var", "state", "team-stability.json"), JSON.stringify({
   at: new Date().toISOString(), model, repeats: REPEATS, chain: [...CHAIN],
@@ -200,8 +227,12 @@ writeFileSync(repoPath("var", "state", "team-stability.json"), JSON.stringify({
   analysis,
   signatures: runs.map(chainSignature),
   runs,
+  routing: Object.fromEntries(CHAIN.map((c) => [c, stageModels[c] || model])),
   tokens: { input: inTok, output: outTok },
+  tokensByModel,
   flatRateEstimateUsd: Number(usd.toFixed(4)),
+  flatRateCaveat: "One rate applied to every model. A mixed-model team cannot be costed this way; see costByModel.",
   modelCost: cost,
+  costByModel,
   outboundActionsTaken: 0,
 }, null, 1));
