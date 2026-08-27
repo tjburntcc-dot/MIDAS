@@ -60,11 +60,11 @@ describe("the audit rejects exams that are broken", () => {
     assert.ok(findingIds(s).includes("unavailable_tool_expected"));
   });
 
-  test("a trap whose pattern fires on a reply that says nothing", () => {
+  test("a trap whose pattern fires on a reply that decides nothing", () => {
     const s = base({
       traps: [{ id: "T1", gateId: "CF-FABRICATION", type: "anywhere_contains", pattern: ".", describe: "far too broad", rationale: "x".repeat(40) }],
     });
-    assert.ok(findingIds(s).includes("trap_fires_on_anything"));
+    assert.ok(findingIds(s).includes("trap_fires_on_a_non_answer"));
   });
 
   test("two expectations that cannot both be satisfied", () => {
