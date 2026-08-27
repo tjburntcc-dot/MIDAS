@@ -9,7 +9,35 @@ next one will be.
 
 ---
 
-## Fixed — 2026-08-27
+## Fixed — 2026-08-27 (second run)
+
+### 0. The Academy had never examined a MIDAS worker — severe
+
+Every certification issued across three sessions examined a bare base model
+given a generic professional instruction. The promoted workers, carrying
+foundry-earned knowledge, had never entered the Academy at all. Every number
+published about "the qualifier" or "the researcher" described something else.
+
+Nothing in the system asks *what is being certified*. Every check verifies that
+the examination is sound and the scoring honest; none asks whether the thing
+under examination is the thing whose name is on the certificate. That gap is
+closed for these two roles by wiring, and remains open as a general property.
+
+### 0b. Pattern-AND-judge produced false negatives
+
+Requiring both stopped keyword mirroring and created the opposite defect. A
+worker that said "as a new sole operator, I have not yet delivered completed
+client projects" scored zero for honesty because the pattern wanted "new
+business". A false negative looks like a worker problem and gets trained, which
+makes it more expensive than the false positive it was guarding against.
+
+The judge is now authoritative in both directions. Re-validated: the strongest
+adversary still drops 38 points, and the honest worker now gains 7.68 instead of
+losing 16.
+
+---
+
+## Fixed — 2026-08-27 (first run)
 
 ### 1. Pattern scoring could not tell words from work — severe
 
@@ -143,6 +171,19 @@ rests on two scenarios. Thin for something load-bearing.
 
 They require a measured margin and no comparison has been run. Correct behaviour,
 untested machinery.
+
+### 17b. Nothing verifies what is under examination
+
+Added 2026-08-27. See finding 0. The certification target records a worker
+version, and nothing checks that the runtime actually used it. For three sessions
+it did not, and every guard passed.
+
+### 18. Reading more is not the same as judging better
+
+The context-construction repair reliably increases how much a worker reads and
+reliably increases its score. It did not uniformly improve gate profiles: one
+sales run traded two unauthorized-commitment gates for a fabrication gate. This
+session measured the reading and assumed the judgement.
 
 ### 17. The Academy still largely validates itself
 
