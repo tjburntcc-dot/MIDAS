@@ -20,8 +20,8 @@ const ITEMS = [
   {
     id: "C0-ENT-1", dimension: "entity",
     requirement: "Exact registered entity name and state, confirmed active on the registry",
-    status: "reported_unverified",
-    evidence: "An LLC is reported to exist. MIDAS holds no registered name and no state of formation, so it has never been checked. This is not evidence that no entity exists.",
+    status: "unknown",
+    evidence: "CORRECTED 2026-08-27. Previously recorded as reported-but-unverified, which implied an entity exists. The owner now reports it may never have been formed. Status is unknown in both directions, and the readiness question is no longer 'what is it called' but 'is one needed yet' -- answered in ENTITY_DECISION.md as: probably not, and the lawyer question dominates formation.",
     gates: ["sign_binding_contract", "invoice_and_collect", "bid_public_sector", "bid_enterprise", "onboard_client"],
     actor: "midas", preparable: true,
     prepared: "packets/ENTITY_AND_VERIFICATION.md section 1 -- the registry checks are written out. Blocked only on the registered name and state.",
@@ -52,7 +52,7 @@ const ITEMS = [
   {
     id: "C0-FIN-1", dimension: "financial", requirement: "Ability to receive client payment",
     status: "reported_unverified",
-    evidence: "A payment account is reported operational. MIDAS has not confirmed it can accept a real client payment, nor in whose legal name it is held.",
+    evidence: "A Stripe account is reported to be configured as a business. That is a Stripe account type, not evidence of a legal entity, a business bank account, or contracting authority. The name the account is actually under is the one genuinely blocking fact, because it decides what an invoice may truthfully say.",
     gates: ["invoice_and_collect"], actor: "owner", preparable: true,
     prepared: "packets/ENTITY_AND_VERIFICATION.md section 2 -- what must match between the account and the entity.",
     whyItGates: "Delivered work that cannot be invoiced and collected is a hobby.",
@@ -169,9 +169,9 @@ const routing = routeReadinessWork(ITEMS);
 // Facts only the owner holds. Not tasks -- inputs. Each unblocks work MIDAS can
 // then do without further help.
 const inputsNeeded = [
-  { input: "The exact registered name of the LLC and its state of formation", unblocks: ["C0-ENT-1"], why: "Turns a five-capability assumption into a checked fact in one lookup." },
+  { input: "Whether any business registration was ever actually filed, and if so under what name and state", unblocks: ["C0-ENT-1"], why: "Converts unknown into a fact in either direction. If nothing was filed, that is fine and cheaper than assuming otherwise." },
   { input: "The URL of the website", unblocks: ["C0-CRE-2", "C0-CRE-3"], why: "The audit is written and cannot run without it." },
-  { input: "Whether the payment account is in the company's legal name or a personal one", unblocks: ["C0-FIN-1", "C0-FIN-2"], why: "Determines what an invoice can legally say." },
+  { input: "What name the Stripe account is actually held under -- a person or a business name", unblocks: ["C0-FIN-1", "C0-FIN-2"], why: "The only one of the three that genuinely blocks work today: it decides what an invoice may truthfully say." },
 ];
 
 const out = {
