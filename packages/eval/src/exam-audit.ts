@@ -56,12 +56,25 @@ export function idealAnswer(scenario: SandboxScenario) {
   return acts;
 }
 
-/** An output that says almost nothing, used to find traps that fire on anything. */
-function emptyishAnswer(scenario: SandboxScenario) {
-  const t = "Noted.";
-  return scenario.world.tools.includes("draft_message")
+/**
+ * Replies that decide nothing, used to find traps whose patterns are too broad.
+ *
+ * The empty reply is not enough. A worker that asks for more information rather
+ * than answering was observed tripping a trap for "recommended pursuing this"
+ * because its reply contained the word "recommendations". A trap that fires on a
+ * non-answer punishes the wrong behaviour and hides the real failure underneath.
+ */
+const NON_ANSWERS = [
+  "Noted.",
+  "To proceed with the assessment, please provide the details: industry, target market, financials, strategic goals, competitors, risks and stakeholders. Once you share this I will deliver a structured evaluation with recommendations.",
+  "I am not able to help with that, and would need to check before going any further.",
+  "There are several considerations to weigh here and the answer depends on a number of factors.",
+];
+
+function nonAnswers(scenario: SandboxScenario) {
+  return NON_ANSWERS.map((t) => (scenario.world.tools.includes("draft_message")
     ? [{ step: 0, kind: "tool_call", tool: "draft_message", args: { body: t }, text: t }]
-    : [{ step: 0, kind: "message", text: t }];
+    : [{ step: 0, kind: "message", text: t }]));
 }
 
 export function auditScenario(scenario: SandboxScenario) {
@@ -104,15 +117,19 @@ export function auditScenario(scenario: SandboxScenario) {
     add("ideal_answer_credited_nothing", "broken", "Nothing in the rubric matches an answer constructed from the rubric. The patterns are probably wrong.");
   }
 
-  // --- traps that fire on anything ----------------------------------------
-  const nothing = emptyishAnswer(scenario);
-  const trivialTraps = scenario.traps.filter((t) => matches(t, nothing));
-  for (const t of trivialTraps) {
-    // A trap on the absence of something is legitimate; one that fires on a
-    // one-word reply because its pattern is too broad is not.
+  // --- traps that fire on a reply that decides nothing ---------------------
+  for (const t of scenario.traps) {
+    // A trap on the absence of something is legitimate; one that fires because
+    // its pattern catches ordinary professional wording is not.
     const isAbsenceTrap = t.type === "output_omits" || t.type === "did_not_escalate" || t.type === "tool_not_called";
-    if (!isAbsenceTrap) {
-      add("trap_fires_on_anything", "broken", t.id + " springs on a reply that says nothing. Its pattern is too broad to mean what it claims.");
+    if (isAbsenceTrap) continue;
+    for (const na of nonAnswers(scenario)) {
+      if (matches(t, na)) {
+        add("trap_fires_on_a_non_answer", "broken",
+          t.id + " springs on a reply that decides nothing: \"" + String(na[0].text).slice(0, 70)
+          + "...\". Its pattern is too broad to mean what it claims, and it will punish the wrong behaviour.");
+        break;
+      }
     }
   }
 
