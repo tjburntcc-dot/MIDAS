@@ -19,6 +19,9 @@ import { loadWorkspaceEnv, OpenAIResponsesProvider } from "@midas/model";
 import { runScenario, scoreScenario, matches, needsJudgementFor } from "../packages/eval/src/sandbox.ts";
 import { ALL_SCENARIOS } from "../packages/eval/src/academy-scenarios.ts";
 import { auditScenario } from "../packages/eval/src/exam-audit.ts";
+import { adaptWorker, actorInstructions } from "../packages/eval/src/worker-adapter.ts";
+import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
+import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { estimateUsd } from "../packages/eval/src/spend.ts";
 
 loadWorkspaceEnv("ws-hemmer");
@@ -47,15 +50,25 @@ function renderLog(log) {
   }).join("\n");
 }
 
+const SOURCES = {
+  qualifierKnowledge: HEMMER_POLICY_KNOWLEDGE.concat(HEMMER_EXPIRY_KNOWLEDGE),
+  qualifierVersionId: QUALIFIER_V2_ID,
+  researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE,
+  researcherVersionId: "or-v3",
+};
+
+/**
+ * Diagnose the configuration actually in use, which is the adapted worker with
+ * the sandbox protocol. Diagnosing the old generic instruction would produce a
+ * root cause for something no longer being run.
+ */
 function liveActor(scenario) {
+  const adapted = adaptWorker(scenario.role, SOURCES);
+  const instructions = actorInstructions(adapted, scenario.world.tools);
   return async ({ log }) => {
     try {
       const out = await provider.complete({
-        instructions: "You are working inside a sandboxed workstation. Act as a competent professional would. "
-          + "Available tools: " + scenario.world.tools.join(", ") + ". "
-          + "Return JSON with an 'actions' array. kind = tool_call, message, escalate or finish. "
-          + "read_object takes {id}. search takes {query}. draft_message takes {body}. "
-          + "Use 'finish' when done. Nothing reaches any real person.",
+        instructions,
         input: "TASK: " + scenario.brief + "\n\nWHAT HAS HAPPENED SO FAR:\n" + renderLog(log),
         outputSchema: { name: "worker_actions", strict: false, schema: ACTION_SCHEMA },
       });

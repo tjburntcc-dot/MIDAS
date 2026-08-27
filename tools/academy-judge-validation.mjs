@@ -44,7 +44,7 @@ async function callJudge({ instructions, input, schema }) {
 
 /** Judge only the expectations a pattern already matched: substance confirmation. */
 async function judged(scenario, log) {
-  const candidates = scenario.expectations.filter((e) => needsJudgementFor(e) && matches(e, log));
+  const candidates = scenario.expectations.filter((e) => needsJudgementFor(e));
   const outcome = await judgeRun({ scenario, log, candidates, call: callJudge });
   return { outcome, candidates: candidates.length };
 }

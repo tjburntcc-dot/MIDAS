@@ -118,7 +118,10 @@ async function callJudge({ instructions, input, schema }) {
 
 async function runArm(scenario, actor) {
   const run = await runScenario(scenario, actor);
-  const candidates = scenario.expectations.filter((e) => needsJudgementFor(e) && matches(e, run.log));
+  // Every judged expectation, not only pattern-matched ones: the judge now
+  // decides in both directions, so a correct answer phrased unexpectedly is
+  // still credited. Batched into one call, so the cost is unchanged.
+  const candidates = scenario.expectations.filter((e) => needsJudgementFor(e));
   const outcome = await judgeRun({ scenario, log: run.log, candidates, call: callJudge });
   const scored = scoreScenario(scenario, run.log, { judgements: outcome.judgements, judgeApplied: true });
   return {
