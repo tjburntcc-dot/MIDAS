@@ -71,6 +71,36 @@ describe("a chain of passing workers can still fail", () => {
       "promoting a hedge to a certainty is how a chain invents a fact without any worker lying");
   });
 
+
+  test("REGRESSION: an intermediate summary that omits a fact has not lost it", () => {
+    // Found by running the chain on real pipeline artifacts. A feasibility stage
+    // that discusses readiness without restating the budget, followed by stages
+    // that restate it, delivered the fact. Treating any gap as a loss produced a
+    // failed chain that had actually preserved everything.
+    const full = "Requires insurance of $1,000,000. Budget reported around 40,000, unconfirmed. Delivery by year end.";
+    const r = certifyTeam(chain({
+      discovery: full, research: full, qualification: full,
+      feasibility: "Capacity assessment only; nothing new on requirements.",
+      commercial: full, audit: full, manager: full,
+    }, { feasibility: [] }));
+    assert.equal(r.passed, true, "the facts reached the manager: " + JSON.stringify(r.decisiveLost));
+    assert.equal(r.fidelity, 100);
+    const f1 = r.factFates.find((f) => f.factId === "F1");
+    assert.equal(f1.verdict, "dropped_and_recovered");
+    assert.equal(f1.droppedAt, "feasibility");
+    assert.equal(f1.presentAtEnd, true);
+  });
+
+  test("a fact absent from the final stage is lost however often it appeared earlier", () => {
+    const full = "Requires insurance of $1,000,000. Budget reported around 40,000, unconfirmed. Delivery by year end.";
+    const r = certifyTeam(chain({
+      discovery: full, research: full, qualification: full, feasibility: full, commercial: full,
+      audit: full, manager: "Proceed. Budget around 40,000, unconfirmed. Year end.",
+    }));
+    assert.equal(r.passed, false, "what the owner sees is what survived");
+    assert.deepEqual(r.decisiveLost, ["F1"]);
+  });
+
   test("a chain that carries everything at its stated strength passes", () => {
     const honest = "Requires insurance of $1,000,000. Budget reported around 40,000, unconfirmed. Delivery by year end.";
     const r = certifyTeam(chain({

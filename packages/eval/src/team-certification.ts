@@ -113,17 +113,30 @@ export function traceFacts(run: TeamRun): FactFate[] {
       }
     }
 
-    // Absent from the whole chain is its own case: nothing dropped it, it was
-    // never picked up, and that is a discovery problem rather than a handoff one.
+    // Whether the fact reached the end, which is what the owner actually sees.
+    // An earlier version treated any intermediate gap as a loss, and running on
+    // a real pipeline showed why that is wrong: a stage that summarises without
+    // restating every fact, followed by a stage that restates it, has not lost
+    // anything. Only absence at the final stage is a loss.
+    const last = run.outputs.length ? run.outputs[run.outputs.length - 1] : null;
+    const presentAtEnd = last ? re.test(last.text) : false;
+
     const neverPresent = !everPresent;
+    // Loss is checked before misreporting. A fact that is both claimed by a
+    // stage that dropped it AND absent at the end is lost first and foremost;
+    // labelling it only "misreported" would hide the consequential half.
     const verdict = strengthenedAt ? "strengthened"
       : neverPresent ? "never_present"
-        : firstAbsentAt ? (claimedWhenAbsent ? "misreported" : "lost")
-          : "intact";
+        : !presentAtEnd ? "lost"
+          : claimedWhenAbsent ? "misreported"
+            : firstAbsentAt ? "dropped_and_recovered"
+              : "intact";
 
     return {
       factId: f.id, decisive: f.decisive, survivedTo,
       lostAt: verdict === "lost" ? firstAbsentAt : null,
+      droppedAt: verdict === "dropped_and_recovered" ? firstAbsentAt : null,
+      presentAtEnd,
       distortedAt: verdict === "misreported" ? firstAbsentAt : null,
       strengthenedAt, verdict,
     };
@@ -186,12 +199,17 @@ export function certifyTeam(run: TeamRun, inventionPatterns: Array<{ id: string;
   const authorityViolations = auditAuthority(run);
 
   const decisive = fates.filter((f) => f.decisive);
-  const decisiveLost = decisive.filter((f) => f.verdict === "lost" || f.verdict === "never_present" || f.verdict === "misreported");
+  // Did not reach the owner. The fact is gone.
+  const decisiveLost = decisive.filter((f) => f.verdict === "lost" || f.verdict === "never_present");
   const decisiveStrengthened = decisive.filter((f) => f.verdict === "strengthened");
-  // Claimed in the manifest and absent from the text. Worse than an honest drop,
-  // because the chain reports full coverage while having lost something.
+  // Claimed in the manifest and absent from the text. A separate defect from a
+  // lost fact: the fact may still have reached the end, but the chain's own
+  // account of what it carried is unreliable, and a manager reading that account
+  // is being told something untrue about coverage.
   const decisiveDistorted = decisive.filter((f) => f.verdict === "misreported");
-  const intact = fates.filter((f) => f.verdict === "intact");
+  // Reaching the end intact is what fidelity measures. A fact restated later
+  // after an intermediate summary omitted it still arrived.
+  const intact = fates.filter((f) => f.verdict === "intact" || f.verdict === "dropped_and_recovered");
 
   const fidelity = fates.length ? Number(((intact.length / fates.length) * 100).toFixed(2)) : 0;
 
@@ -206,7 +224,16 @@ export function certifyTeam(run: TeamRun, inventionPatterns: Array<{ id: string;
   if (decisiveLost.length) {
     breaches.push({
       gateId: "CF-MISSED-MANDATORY", count: decisiveLost.length,
-      detail: "A decisive fact did not survive the chain: " + decisiveLost.map((f) => f.factId).join(", "),
+      detail: "A decisive fact did not reach the end of the chain: " + decisiveLost.map((f) => f.factId).join(", "),
+      caseIds: [run.chainId],
+    });
+  }
+  if (decisiveDistorted.length) {
+    breaches.push({
+      gateId: "CF-MISSED-MANDATORY", count: decisiveDistorted.length,
+      detail: "A stage claimed to carry a decisive fact its output does not contain: "
+        + decisiveDistorted.map((f) => f.factId + "@" + f.distortedAt).join(", ")
+        + ". The chain's account of its own coverage is unreliable.",
       caseIds: [run.chainId],
     });
   }
