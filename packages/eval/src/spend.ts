@@ -1,4 +1,17 @@
-/** Estimated live-model spend. Pricing must be checked at execution time. No secrets stored. */
+/**
+ * Estimated live-model spend at ONE FLAT RATE for every model.
+ *
+ * This is a token-weighted proxy, not a per-model cost. A comparison between two
+ * models using this function tracks token count and not dollars, and a mission
+ * once nearly claimed a cost advantage on exactly that basis.
+ *
+ * For anything that compares models or routes work on price, use `model-cost.ts`,
+ * which requires a configured rate with provenance and returns COST_NOT_COMPUTED
+ * rather than guessing. This function stays for aggregate run budgeting, where a
+ * rough single-model total is what is wanted.
+ *
+ * No secrets stored.
+ */
 
 export const DEFAULT_USD_PER_1M_INPUT = 2;
 export const DEFAULT_USD_PER_1M_OUTPUT = 8;
@@ -7,7 +20,8 @@ export function pricingRates() {
   return {
     inputUsdPer1M: Number(process.env.MIDAS_USD_PER_1M_INPUT ?? DEFAULT_USD_PER_1M_INPUT),
     outputUsdPer1M: Number(process.env.MIDAS_USD_PER_1M_OUTPUT ?? DEFAULT_USD_PER_1M_OUTPUT),
-    note: "Estimated USD using MIDAS_USD_PER_1M_INPUT/OUTPUT or gpt-4.1-class defaults. Check provider pricing at execution time.",
+    note: "FLAT RATE across all models. A token-weighted proxy for budgeting a single-model run, not a per-model cost. Cross-model comparison must use model-cost.ts.",
+    flatRateAcrossModels: true,
   };
 }
 
