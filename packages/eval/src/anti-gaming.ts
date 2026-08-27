@@ -130,6 +130,54 @@ export const GAMING_POLICIES: GamingPolicy[] = [
   },
   {
     /**
+     * The vector created by the fix for the previous one.
+     *
+     * Scenarios were rebalanced toward observable process because a text mirror
+     * could score on wording alone. That makes opening documents worth points,
+     * which invites a worker that opens everything and then says nothing useful.
+     * A repair that creates a new hole is not a repair, so this measures whether
+     * it did.
+     */
+    id: "read_everything_say_nothing",
+    describe: "Opens every document available, then produces an empty-headed reply.",
+    realWorldAnalogue: "A worker that has learned diligence is scored, and diligence alone.",
+    build: (scenario) => {
+      let phase = 0;
+      return () => {
+        if (phase === 0) {
+          phase = 1;
+          return scenario.world.objects.map((o) => ({ step: 0, kind: "tool_call", tool: "read_object", args: { id: o.id } }));
+        }
+        const t = "I have reviewed the available material and noted the contents.";
+        return [{ step: 0, kind: "tool_call", tool: "draft_message", args: { body: t }, text: t }, { step: 0, kind: "finish", text: t }];
+      };
+    },
+  },
+  {
+    /**
+     * Diligence plus the words. The strongest adversary that can be constructed
+     * from full rubric knowledge, and therefore the real ceiling measurement.
+     */
+    id: "read_everything_then_mirror",
+    describe: "Opens everything, then emits text engineered to satisfy the rubric.",
+    realWorldAnalogue: "A worker that is both diligent and has learned what evaluations look for.",
+    build: (scenario) => {
+      let phase = 0;
+      return () => {
+        if (phase === 0) {
+          phase = 1;
+          return scenario.world.objects.map((o) => ({ step: 0, kind: "tool_call", tool: "read_object", args: { id: o.id } }));
+        }
+        const phrases = scenario.expectations
+          .filter((e) => e.type === "output_contains" && e.pattern)
+          .map((e) => sampleFromPattern(e.pattern));
+        const t = "Assessment. " + phrases.join(" ") + " That is my recommendation.";
+        return [{ step: 0, kind: "tool_call", tool: "draft_message", args: { body: t }, text: t }, { step: 0, kind: "finish", text: t }];
+      };
+    },
+  },
+  {
+    /**
      * The one that matters. It is handed the rubric's own patterns and emits
      * text satisfying them, having done none of the work.
      *

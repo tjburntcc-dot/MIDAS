@@ -26,7 +26,12 @@ async function sweepPolicy(policy, role) {
 }
 
 const ROLES = [...new Set(ALL_SCENARIOS.map((s) => s.role))];
-const POSTURE_POLICIES = GAMING_POLICIES.filter((p) => p.id !== "mirror_rubric_keywords");
+/**
+ * Policies with no rubric knowledge. These must all fail: a worker cannot see
+ * the rubric, so a fixed posture is the realistic attack.
+ */
+const RUBRIC_AWARE = ["mirror_rubric_keywords", "read_everything_then_mirror"];
+const POSTURE_POLICIES = GAMING_POLICIES.filter((p) => !RUBRIC_AWARE.includes(p.id));
 
 describe("a fixed posture cannot pass the examinations", () => {
   test("REGRESSION: no single-idea policy reaches the ceiling under pattern scoring", async () => {
@@ -76,12 +81,38 @@ describe("the keyword mirror is the known hole, and it is bounded", () => {
    * than as something expected to fail.
    */
   test("mirroring beats every honest-posture policy, which is why judged scoring is required", async () => {
-    const mirror = GAMING_POLICIES.find((p) => p.id === "mirror_rubric_keywords");
+    const mirror = GAMING_POLICIES.find((p) => p.id === "read_everything_then_mirror");
     const mirrorBest = Math.max(...(await Promise.all(ROLES.map((r) => sweepPolicy(mirror, r)))).map((r) => r.meanScore));
     const postureBest = Math.max(...(await Promise.all(
       POSTURE_POLICIES.flatMap((p) => ROLES.map((r) => sweepPolicy(p, r))))).map((r) => r.meanScore));
     assert.ok(mirrorBest > postureBest,
       "if mirroring stopped outscoring fixed postures, this measurement would have gone stale");
+  });
+
+
+  test("REGRESSION: weighting observable process did not, by itself, create a new hole", async () => {
+    // Rebalancing toward "did it open the document" was the fix for text
+    // mirroring. That makes diligence scoreable, so a worker that opens
+    // everything and then says nothing had to be measured rather than assumed
+    // harmless. It reaches 46 -- above the posture policies, below the ceiling.
+    const p = GAMING_POLICIES.find((x) => x.id === "read_everything_say_nothing");
+    const best = Math.max(...(await Promise.all(ROLES.map((r) => sweepPolicy(p, r)))).map((r) => r.meanScore));
+    assert.ok(best < GAMING_CEILING, "diligence alone reached " + best);
+  });
+
+  test("diligence PLUS rubric knowledge is the known ceiling, and is worse than either alone", async () => {
+    // The honest measurement. Doing the observable work and saying the right
+    // words scores near the top under pattern-only scoring, higher than either
+    // component separately. No amount of rebalancing fixes this; requiring
+    // judged scoring for certification is what fixes it, and the worker not
+    // having the rubric is what keeps it unrealistic.
+    const strong = GAMING_POLICIES.find((x) => x.id === "read_everything_then_mirror");
+    const weak = GAMING_POLICIES.find((x) => x.id === "mirror_rubric_keywords");
+    const diligent = GAMING_POLICIES.find((x) => x.id === "read_everything_say_nothing");
+    const best = async (pol) => Math.max(...(await Promise.all(ROLES.map((r) => sweepPolicy(pol, r)))).map((r) => r.meanScore));
+    const s = await best(strong);
+    assert.ok(s > await best(weak));
+    assert.ok(s > await best(diligent));
   });
 
   test("REGRESSION: certification refuses to award on unjudged scores", () => {

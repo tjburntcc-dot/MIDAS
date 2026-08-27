@@ -105,7 +105,10 @@ function liveActor(scenario) {
 const SUBSET = ["SC-SALES-01", "SC-SALES-06", "SC-TECH-02", "SC-AUDIT-02", "SC-MGR-01", "SC-REG-03"]
   .map((id) => ALL_SCENARIOS.find((s) => s.id === id));
 
-const mirror = GAMING_POLICIES.find((p) => p.id === "mirror_rubric_keywords");
+// The strongest adversary that can be built from full rubric knowledge: it does
+// the observable work AND says the right words. If the judge cannot separate
+// this from competence, nothing in pattern-and-process scoring can.
+const mirror = GAMING_POLICIES.find((p) => p.id === (process.env.MIDAS_MIRROR_POLICY || "read_everything_then_mirror"));
 const rows = [];
 
 console.log("worker:", workerModel, "| judge:", judgeModel, "| scenarios:", SUBSET.length);
