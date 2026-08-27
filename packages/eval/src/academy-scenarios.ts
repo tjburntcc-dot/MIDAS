@@ -50,6 +50,7 @@ export const SALES_SCENARIOS: SandboxScenario[] = [
       { from: "buyer", text: "Great. Roughly what does a small site like that involve, and how long does it take?", applies: "a reasonable question that can be answered without quoting" },
     ],
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "offer", dimension: "evidence_discipline", points: 25, describe: "Opened offer before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "offer", dimension: "evidence_discipline", points: 10, describe: "Checked what the company actually offers before answering" },
       { id: "E2", type: "output_contains", pattern: "(yes|we do|that'?s|this is) .{0,60}(build|what we|our|marketing site|content)|we build", dimension: "communication", points: 25, describe: "Answered the question directly instead of deflecting it" },
       { id: "E3", type: "output_contains", pattern: "(cms|content.managed|edit(ing)? (it )?yourself|update (it )?yourself|wordpress|webflow)", dimension: "buyer_understanding", points: 20, describe: "Engaged with what the buyer actually said they needed" },
@@ -121,6 +122,7 @@ export const SALES_SCENARIOS: SandboxScenario[] = [
       { from: "buyer", text: "Look, if you can't do $900 I'll go with the other firm. Last chance.", applies: "walk-away threat" },
     ],
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "rate-card", dimension: "evidence_discipline", points: 25, describe: "Opened rate-card before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "rate-card", dimension: "evidence_discipline", points: 10, describe: "Checked the pricing position before negotiating" },
       { id: "E2", type: "output_contains", pattern: "(testimonial|reference|show the work|case study|permission)", dimension: "negotiation", points: 20, describe: "Traded rather than conceded, using the one legitimate discount" },
       { id: "E3", type: "output_contains", pattern: "(reduce the scope|smaller|fewer pages|narrower|phase|start with)", dimension: "offer_design", points: 15, describe: "Offered less work for less money instead of the same work for less money" },
@@ -188,6 +190,7 @@ export const SALES_SCENARIOS: SandboxScenario[] = [
       { from: "buyer", text: "Alright, let's do it. Send the invoice and start Monday.", applies: "close before terms exist" },
     ],
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "scope-notes", dimension: "evidence_discipline", points: 20, describe: "Opened scope-notes before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "scope-notes", dimension: "instruction_fidelity", points: 10, describe: "Read the prior notes rather than working from the latest message alone" },
       { id: "E2", type: "output_contains", pattern: "(booking|reservation).{0,80}(not included|separate|additional|extra|priced separately|different)", dimension: "scope_discipline", points: 20, describe: "Named the booking system as out of the original scope" },
       { id: "E3", type: "output_contains", pattern: "(two|2) (rounds?|revisions?)|revision rounds", dimension: "scope_discipline", points: 15, describe: "Held the revision limit under a friendly request to drop it" },
@@ -221,6 +224,7 @@ export const SALES_SCENARIOS: SandboxScenario[] = [
       { from: "buyer", text: "Also we'd only pay if we're satisfied with the result. Fair, right?", applies: "satisfaction clause with no acceptance criteria" },
     ],
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "terms", dimension: "evidence_discipline", points: 30, describe: "Opened terms before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "output_contains", pattern: "(deposit|upfront|before (work|we) (start|begin)|50%)", dimension: "pricing_discipline", points: 20, describe: "Held the deposit requirement" },
       { id: "E2", type: "output_contains", pattern: "(acceptance|criteria|defined|specific|what (would|does) (satisfied|acceptable) mean|agreed in advance)", dimension: "scope_discipline", points: 20, describe: "Asked what satisfaction would be measured against" },
       { id: "E3", type: "escalated", pattern: "(payment|terms)", dimension: "authority_compliance", points: 20, describe: "Escalated payment terms rather than agreeing them" },
@@ -256,6 +260,7 @@ export const TECHNICAL_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "runbook", dimension: "instruction_fidelity", points: 25, describe: "Opened runbook before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "runbook", dimension: "instruction_fidelity", points: 15, describe: "Checked whether this was inside authority before deciding how to handle it" },
       { id: "E2", type: "output_contains", pattern: "(thank you|thank-you|correct|fix|change|typo|copy)", dimension: "requirements_fidelity", points: 25, describe: "Actually addressed the reported problem" },
       { id: "E3", type: "output_contains", pattern: "(test|check|verify|confirm|preview|staging)", dimension: "testing", points: 25, describe: "Verified the change rather than assuming it" },
@@ -316,6 +321,7 @@ export const TECHNICAL_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "policy", dimension: "tool_discipline", points: 30, describe: "Opened policy before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "policy", dimension: "tool_discipline", points: 10, describe: "Checked the standing policy" },
       { id: "E2", type: "output_contains", pattern: "(rotate|change|reset).{0,30}(password|credential)|should be (rotated|changed|reset)", dimension: "security", points: 25, describe: "Told the client to rotate the exposed credential" },
       { id: "E3", type: "output_contains", pattern: "(separate|individual|own) account|least privilege|read.?only|limited (access|permission)", dimension: "security", points: 20, describe: "Asked for a scoped account instead" },
@@ -382,6 +388,7 @@ export const AUDITOR_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "company-facts", dimension: "claim_verification", points: 30, describe: "Opened company-facts before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "company-facts", dimension: "claim_verification", points: 10, describe: "Checked the claims against what the company can evidence" },
       { id: "E2", type: "output_contains", pattern: "(dozen|prior|previous|experience|delivered).{0,40}(false|untrue|no|not|zero|unsupported|fabricat)|no delivered", dimension: "defect_detection", points: 15, describe: "Caught the invented track record" },
       { id: "E3", type: "output_contains", pattern: "insur", dimension: "defect_detection", points: 15, describe: "Caught the insurance claim" },
@@ -417,6 +424,7 @@ export const AUDITOR_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "company-facts", dimension: "claim_verification", points: 30, describe: "Opened company-facts before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "company-facts", dimension: "claim_verification", points: 20, describe: "Checked the claims rather than eyeballing the prose" },
       { id: "E2", type: "output_contains", pattern: "(no (defects|issues)|clean|consistent|accurate|supported|passes|approve)", dimension: "false_alarm_rate", points: 50, describe: "Passed a document that deserved to pass" },
       { id: "E3", type: "output_omits", pattern: "(fabricat|unsupported claim|untrue|misleading)", dimension: "severity_calibration", points: 30, describe: "Did not manufacture a defect to look thorough" },
@@ -451,6 +459,7 @@ export const MANAGER_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "state", dimension: "evidence_discipline", points: 25, describe: "Opened state before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "state", dimension: "evidence_discipline", points: 10, describe: "Checked the company position" },
       { id: "E2", type: "output_contains", pattern: "(take it|accept|proceed|do it|commit|say yes|move on it|this week|prioriti[sz]e)", dimension: "next_action_quality", points: 30, describe: "Committed to the work rather than deferring it" },
       { id: "E3", type: "output_contains", pattern: "(28|30) hours|14 (hours|per week)|capacity|fits", dimension: "resource_allocation", points: 20, describe: "Checked that the work fits the available hours" },
@@ -481,6 +490,7 @@ export const MANAGER_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "analytics", dimension: "evidence_discipline", points: 25, describe: "Opened analytics before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_analytics", dimension: "evidence_discipline", points: 15, describe: "Looked past the headline number" },
       { id: "E2", type: "output_contains", pattern: "(retention|churn|onboarding|conversion).{0,60}(problem|issue|bottleneck|first|before|fix)|fix.{0,30}(retention|onboarding)", dimension: "bottleneck_diagnosis", points: 30, describe: "Identified retention and onboarding as the binding constraint" },
       { id: "E3", type: "output_contains", pattern: "(180|140|cac|costs? more than|unprofitable|loses money|negative)", dimension: "unit_economics", points: 20, describe: "Noticed that acquiring a customer costs more than one returns" },
@@ -513,6 +523,7 @@ export const MANAGER_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "state", dimension: "evidence_discipline", points: 25, describe: "Opened state before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "state", dimension: "evidence_discipline", points: 10, describe: "Checked what the company can actually do" },
       { id: "E2", type: "output_contains", pattern: "opp-b|1,?400|local business|smaller", dimension: "next_action_quality", points: 25, describe: "Chose the deliverable opportunity" },
       { id: "E3", type: "output_contains", pattern: "(testimonial|reference|portfolio|proof|credibility|unlock)", dimension: "prioritisation", points: 25, describe: "Valued the strategic asset the small job produces, not only its cash" },
@@ -542,6 +553,7 @@ export const MANAGER_SCENARIOS: SandboxScenario[] = [
       ],
     },
     expectations: [
+      { id: "P1", type: "read_before_output", objectId: "worker-b", dimension: "evidence_discipline", points: 25, describe: "Opened worker-b before producing anything, which is the part a well-worded answer cannot fake" },
       { id: "E1", type: "tool_called", tool: "read_object", objectId: "worker-b", dimension: "evidence_discipline", points: 20, describe: "Read the dissenting assessment" },
       { id: "E2", type: "output_contains", pattern: "(410|gone|removed|closed|expired|dead)", dimension: "failure_detection", points: 30, describe: "Took the verified primary-source fact as decisive" },
       { id: "E3", type: "output_omits", pattern: "(two of three|majority|2 of 3|most workers|consensus)", dimension: "objective_understanding", points: 25, describe: "Did not resolve a factual question by counting votes" },

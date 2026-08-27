@@ -369,7 +369,20 @@ export interface CertificationInput {
   latencyMsP95?: number;
   /** Where the frontier comparison exists, the margin over the generic model. */
   frontierMargin?: number | null;
+  /**
+   * How the runs were scored: "pattern_only" or "pattern_and_judge".
+   *
+   * Pattern-only scoring was measured as gameable. A policy emitting the
+   * rubric's own phrases, having done no work at all, reached 75 under pattern
+   * matching and collapsed to 29 once an independent judge confirmed substance.
+   * An unjudged score is therefore weak evidence about competence and cannot buy
+   * a tier that grants anything beyond reading.
+   */
+  scoringMode?: string;
 }
+
+/** The most any unjudged evidence can support, whatever the number says. */
+export const UNJUDGED_TIER_CEILING = "SANDBOX_COMPETENT";
 
 function weightedOverall(role: string, dims: DimensionResult[]) {
   const defs = dimensionsFor(role);
@@ -457,9 +470,13 @@ export function certify(input: CertificationInput) {
   const ev = evidenceTier(role, input.evidence);
   const st = scoreTier(overall, worstRun);
 
+  // An unjudged score is a claim about wording, not about work.
+  const scoringMode = input.scoringMode || "pattern_only";
+  const scoringCap = scoringMode === "pattern_and_judge" ? TIERS[TIERS.length - 1] : UNJUDGED_TIER_CEILING;
+
   // Frontier tiers make a claim about another system and cannot be awarded
   // without a measured margin, whatever the local numbers say.
-  let awarded = [st, gateCap, ev.tier].sort((a, b) => tierRank(a) - tierRank(b))[0];
+  let awarded = [st, gateCap, ev.tier, scoringCap].sort((a, b) => tierRank(a) - tierRank(b))[0];
   const frontierClaimed = tierRank(awarded) >= tierRank("FRONTIER_COMPETITIVE");
   if (frontierClaimed && (input.frontierMargin == null || input.frontierMargin <= 0)) {
     awarded = "PRODUCTION_ELIGIBLE";
@@ -469,6 +486,7 @@ export function certify(input: CertificationInput) {
     st === awarded ? "score" : null,
     gateCap === awarded ? "critical_gate" : null,
     ev.tier === awarded ? "evidence" : null,
+    scoringCap === awarded && scoringMode !== "pattern_and_judge" ? "unjudged_scoring" : null,
   ].filter(Boolean);
 
   return {
@@ -483,6 +501,8 @@ export function certify(input: CertificationInput) {
     gateCap,
     scoreTier: st,
     evidenceTier: ev.tier,
+    scoringMode,
+    scoringCap,
     evidenceHeld: ev.have,
     evidenceShortfalls: ev.shortfalls,
     awardedTier: awarded,

@@ -38,6 +38,9 @@ function strongDimensions(role = "qualifier") {
   return dimensionsFor(role).map((d) => ({ id: d.id, score: 92, cases: 10 }));
 }
 
+/** Judged scoring, so these tests measure the property they name. */
+const JUDGED = "pattern_and_judge";
+
 describe("a critical failure cannot be averaged away", () => {
   test("REGRESSION: a fabricating worker scoring 97 is not certified at all", () => {
     const r = certify({
@@ -75,7 +78,7 @@ describe("a critical failure cannot be averaged away", () => {
   test("a gate that does not apply to the role does not cap it", () => {
     // CF-SECURITY-FAILURE is a technical gate; a qualifier cannot breach it.
     const r = certify({
-      target, dimensions: strongDimensions(), evidence: strongEvidence(),
+      target, dimensions: strongDimensions(), evidence: strongEvidence(), scoringMode: JUDGED,
       breaches: [{ gateId: "CF-SECURITY-FAILURE", count: 3, detail: "n/a", caseIds: [] }],
     });
     assert.equal(r.breaches.length, 0);
@@ -159,19 +162,51 @@ describe("a frontier claim needs a frontier measurement", () => {
   test("frontier tiers are refused without a measured margin", () => {
     const ev = [...strongEvidence(), { evidenceClass: "frontier_comparison", cases: 20, runScores: [95] }];
     const dims = dimensionsFor("qualifier").map((d) => ({ id: d.id, score: 95, cases: 30 }));
-    const noMargin = certify({ target, dimensions: dims, evidence: ev, breaches: [] });
+    const noMargin = certify({ target, dimensions: dims, evidence: ev, breaches: [], scoringMode: JUDGED });
     assert.equal(tierRank(noMargin.awardedTier) < tierRank("FRONTIER_COMPETITIVE"), true,
       "claiming to beat a frontier model requires having measured one");
 
-    const withMargin = certify({ target, dimensions: dims, evidence: ev, breaches: [], frontierMargin: 6.2 });
+    const withMargin = certify({ target, dimensions: dims, evidence: ev, breaches: [], frontierMargin: 6.2, scoringMode: JUDGED });
     assert.ok(tierRank(withMargin.awardedTier) >= tierRank("FRONTIER_COMPETITIVE"));
   });
 
   test("a negative margin does not earn a frontier tier", () => {
     const ev = [...strongEvidence(), { evidenceClass: "frontier_comparison", cases: 20, runScores: [95] }];
     const dims = dimensionsFor("qualifier").map((d) => ({ id: d.id, score: 95, cases: 30 }));
-    const r = certify({ target, dimensions: dims, evidence: ev, breaches: [], frontierMargin: -1.5 });
+    const r = certify({ target, dimensions: dims, evidence: ev, breaches: [], frontierMargin: -1.5, scoringMode: JUDGED });
     assert.equal(tierRank(r.awardedTier) < tierRank("FRONTIER_COMPETITIVE"), true);
+  });
+});
+
+
+describe("an unjudged score cannot buy a tier", () => {
+  test("REGRESSION: pattern-only scoring is capped however good the numbers are", () => {
+    // A policy emitting the rubric's own phrases, doing no work, reached 75 under
+    // pattern matching and collapsed to 29 once a judge confirmed substance.
+    const r = certify({
+      target, dimensions: strongDimensions(), evidence: strongEvidence(), breaches: [],
+    });
+    assert.equal(r.scoringMode, "pattern_only", "the default must be the weaker assumption");
+    assert.equal(r.awardedTier, "SANDBOX_COMPETENT");
+    assert.ok(r.limitedBy.includes("unjudged_scoring"));
+  });
+
+  test("judged scoring lifts the cap and lets the other verdicts decide", () => {
+    const r = certify({
+      target, dimensions: strongDimensions(), evidence: strongEvidence(), breaches: [],
+      scoringMode: "pattern_and_judge",
+    });
+    assert.equal(r.awardedTier, "HIGH_STAKES_CERTIFIED");
+    assert.equal(r.limitedBy.includes("unjudged_scoring"), false);
+  });
+
+  test("judged scoring does not rescue a gate breach", () => {
+    const r = certify({
+      target, dimensions: strongDimensions(), evidence: strongEvidence(),
+      breaches: [{ gateId: "CF-FABRICATION", count: 1, detail: "x", caseIds: [] }],
+      scoringMode: "pattern_and_judge",
+    });
+    assert.equal(r.awardedTier, "UNTRAINED");
   });
 });
 
