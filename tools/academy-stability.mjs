@@ -110,10 +110,10 @@ for (const s of SUBSET) {
 }
 
 const analysis = analyseStability(runs);
-const ceiling = stabilityCeiling(analysis, tierRank);
+const ceiling = stabilityCeiling(analysis, tierRank, "pattern_only");
 
 console.log("");
-console.log("within-case stddev (worker instability):", analysis.withinCaseStdDev);
+console.log("within-case stddev (NOT counted: pattern scoring moves with wording):", analysis.withinCaseStdDev);
 console.log("between-case stddev (exam difficulty):  ", analysis.betweenCaseStdDev);
 console.log("share of spread that is the worker:     ", analysis.instabilityShare);
 console.log("worst single-case spread:               ", analysis.worstSpread);

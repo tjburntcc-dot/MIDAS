@@ -120,14 +120,30 @@ export const STABILITY_REQUIREMENTS: Record<string, { maxWithinCaseStdDev: numbe
   HIGH_STAKES_CERTIFIED: { maxWithinCaseStdDev: 12, allowIntermittentGates: false, minDecisionStability: 1 },
 };
 
-export function stabilityCeiling(analysis: ReturnType<typeof analyseStability>, tierRank: (t: string) => number) {
+/**
+ * Score spread is only evidence about the worker when the scorer is stable.
+ *
+ * Measured 2026-08-27: on three cases where the worker's material behaviour was
+ * byte-identical across four trials, pattern scoring moved 18 to 44 points and
+ * judged scoring moved zero. The spread was the instrument, not the worker, and
+ * a ceiling computed from it was capping certification on wording variance.
+ *
+ * So under pattern-only scoring the spread criterion is dropped rather than
+ * trusted, and the ceiling rests on what did not move for the wrong reason:
+ * whether the same decision was reached and whether the same critical gates
+ * fired.
+ */
+export function stabilityCeiling(analysis: ReturnType<typeof analyseStability>, tierRank: (t: string) => number, scoringMode = "pattern_and_judge") {
+  const spreadIsMeaningful = scoringMode === "pattern_and_judge";
   const tiers = Object.keys(STABILITY_REQUIREMENTS).sort((a, b) => tierRank(a) - tierRank(b));
   let best = "UNTRAINED";
   const reasons: string[] = [];
   for (const tier of tiers) {
     const req = STABILITY_REQUIREMENTS[tier];
     const problems: string[] = [];
-    if (analysis.withinCaseStdDev > req.maxWithinCaseStdDev) problems.push("within-case spread " + analysis.withinCaseStdDev + " exceeds " + req.maxWithinCaseStdDev);
+    if (spreadIsMeaningful && analysis.withinCaseStdDev > req.maxWithinCaseStdDev) {
+      problems.push("within-case spread " + analysis.withinCaseStdDev + " exceeds " + req.maxWithinCaseStdDev);
+    }
     if (!req.allowIntermittentGates && analysis.intermittentGateCases.length > 0) problems.push("intermittent critical gate on " + analysis.intermittentGateCases.map((c) => c.scenarioId).join(", "));
     const worstDecision = analysis.perCase.length ? Math.min(...analysis.perCase.map((c) => c.decisionStability)) : 1;
     if (worstDecision < req.minDecisionStability) problems.push("decision stability " + worstDecision.toFixed(2) + " below " + req.minDecisionStability);
@@ -137,6 +153,10 @@ export function stabilityCeiling(analysis: ReturnType<typeof analyseStability>, 
   return {
     ceiling: best,
     blockedBy: reasons,
-    note: "Measured on repeats of the same cases, so this is worker instability rather than exam difficulty.",
+    scoringMode,
+    spreadCounted: spreadIsMeaningful,
+    note: spreadIsMeaningful
+      ? "Measured on repeats of the same cases with judged scoring, so score spread is worker behaviour rather than wording."
+      : "Measured on repeats with pattern-only scoring, so score spread was discarded: it moves with wording while behaviour does not. The ceiling rests on decision and gate stability.",
   };
 }
