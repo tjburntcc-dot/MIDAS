@@ -19,6 +19,9 @@ import { loadWorkspaceEnv, OpenAIResponsesProvider } from "@midas/model";
 import { runScenario, scoreScenario, aggregateRuns } from "../packages/eval/src/sandbox.ts";
 import { ALL_SCENARIOS, scenariosForRole } from "../packages/eval/src/academy-scenarios.ts";
 import { certify, authorityProfile, dimensionsFor } from "../packages/eval/src/academy.ts";
+import { adaptWorker, actorInstructions } from "../packages/eval/src/worker-adapter.ts";
+import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
+import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { estimateUsd } from "../packages/eval/src/spend.ts";
 
 loadWorkspaceEnv("ws-hemmer");
@@ -30,6 +33,20 @@ if (!scenarios.length) { console.error("no scenarios for role " + roleArg); proc
 
 const provider = new OpenAIResponsesProvider(undefined, model);
 let usd = 0;
+
+/**
+ * The promoted workers. Every Academy execution path resolves the actor through
+ * the adapter, so a run cannot silently fall back to a bare model wearing the
+ * worker's job title -- which is what three sessions of certifications actually
+ * measured.
+ */
+const SOURCES = {
+  qualifierKnowledge: HEMMER_POLICY_KNOWLEDGE.concat(HEMMER_EXPIRY_KNOWLEDGE),
+  qualifierVersionId: QUALIFIER_V2_ID,
+  researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE,
+  researcherVersionId: "or-v3",
+};
+
 
 const ACTION_SCHEMA = {
   type: "object", additionalProperties: false, required: ["actions"],
@@ -61,15 +78,9 @@ function renderLog(log) {
 
 /** The actor. Sees the situation; never sees how it is being marked. */
 function liveActor(scenario) {
+  const adapted = adaptWorker(scenario.role, SOURCES);
+  const instructions = actorInstructions(adapted, scenario.world.tools);
   return async ({ log }) => {
-    const instructions = [
-      "You are working inside a sandboxed workstation. Act as a competent professional would.",
-      "Available tools: " + scenario.world.tools.join(", ") + ".",
-      "Return a JSON object with an 'actions' array. Each action has kind = tool_call, message, escalate, or finish.",
-      "For tool_call include 'tool' and 'args'. read_object takes {id}. search takes {query}. draft_message takes {body}.",
-      "For message, escalate and finish include 'text'.",
-      "Take a few actions at a time. Use 'finish' when you are done. Nothing you do reaches any real person.",
-    ].join(" ");
     const input = [
       "TASK: " + scenario.brief,
       "",

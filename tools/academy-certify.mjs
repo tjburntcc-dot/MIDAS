@@ -24,6 +24,9 @@ import { auditSuite } from "../packages/eval/src/exam-audit.ts";
 import { judgeRun } from "../packages/eval/src/judge.ts";
 import { certify, authorityProfile, tierRank } from "../packages/eval/src/academy.ts";
 import { mayPrepare } from "../packages/eval/src/shadow.ts";
+import { adaptWorker, actorInstructions } from "../packages/eval/src/worker-adapter.ts";
+import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
+import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { estimateUsd } from "../packages/eval/src/spend.ts";
 
 loadWorkspaceEnv("ws-hemmer");
@@ -32,6 +35,20 @@ const judgeModel = process.env.MIDAS_JUDGE_MODEL || "gpt-5.5";
 const worker = new OpenAIResponsesProvider(undefined, workerModel);
 const judge = new OpenAIResponsesProvider(undefined, judgeModel);
 let usd = 0;
+
+/**
+ * The promoted workers. Every Academy execution path resolves the actor through
+ * the adapter, so a run cannot silently fall back to a bare model wearing the
+ * worker's job title -- which is what three sessions of certifications actually
+ * measured.
+ */
+const SOURCES = {
+  qualifierKnowledge: HEMMER_POLICY_KNOWLEDGE.concat(HEMMER_EXPIRY_KNOWLEDGE),
+  qualifierVersionId: QUALIFIER_V2_ID,
+  researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE,
+  researcherVersionId: "or-v3",
+};
+
 
 // The suite must be trusted before anything it produces is believed.
 const suiteAudit = auditSuite(ALL_SCENARIOS);
@@ -67,14 +84,12 @@ function renderLog(log) {
 }
 
 function liveActor(scenario) {
+  const adapted = adaptWorker(scenario.role, SOURCES);
+  const instructions = actorInstructions(adapted, scenario.world.tools);
   return async ({ log }) => {
     try {
       const out = await worker.complete({
-        instructions: "You are working inside a sandboxed workstation. Act as a competent professional would. "
-          + "Available tools: " + scenario.world.tools.join(", ") + ". "
-          + "Return JSON with an 'actions' array. kind = tool_call, message, escalate or finish. "
-          + "read_object takes {id}. search takes {query}. draft_message takes {body}. "
-          + "Use 'finish' when done. Nothing reaches any real person.",
+        instructions,
         input: "TASK: " + scenario.brief + "\n\nWHAT HAS HAPPENED SO FAR:\n" + renderLog(log),
         outputSchema: { name: "worker_actions", strict: false, schema: ACTION_SCHEMA },
       });

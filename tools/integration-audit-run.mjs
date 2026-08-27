@@ -44,6 +44,11 @@ const CAPABILITIES = [
     whyItMatters: "It decides whether a configuration may prepare an action class at all.",
   },
   {
+    id: "worker_adapter", module: "worker-adapter", exports: ["adaptWorker", "actorInstructions"],
+    promoted: false,
+    whyItMatters: "Without it an Academy run executes a bare base model wearing the worker's job title, and the certification describes something that is not MIDAS. That happened for three sessions and every guard passed.",
+  },
+  {
     id: "shadow_mode", module: "shadow", exports: ["recordIntent", "mayPrepare"],
     promoted: false,
     whyItMatters: "It is the guarantee that buyer-facing material does not leave the system.",
@@ -66,6 +71,16 @@ const PATHS = [
     purpose: "Raises questions from a captured primary source." },
   { id: "meta_learning", file: "tools/assurance-meta-learning.mjs", requires: ["decision_assurance", "question_discovery"],
     purpose: "Analyses corrections and promotes candidate question classes." },
+  { id: "academy_certify", file: "tools/academy-certify.mjs", requires: ["worker_adapter", "certification"],
+    purpose: "Issues certifications." },
+  { id: "academy_certify_midas", file: "tools/academy-certify-midas.mjs", requires: ["worker_adapter", "certification"],
+    purpose: "Compares the promoted worker against the bare model." },
+  { id: "academy_stability", file: "tools/academy-stability.mjs", requires: ["worker_adapter"],
+    purpose: "Measures run-to-run stability, which caps every certification." },
+  { id: "academy_run", file: "tools/academy-run.mjs", requires: ["worker_adapter", "certification"],
+    purpose: "Runs the examinations." },
+  { id: "academy_diagnose", file: "tools/academy-diagnose.mjs", requires: ["worker_adapter"],
+    purpose: "Diagnoses a failure before anything is trained." },
   { id: "pursuit_assured", file: "tools/pursuit-rerun-assured.mjs", requires: ["decision_assurance", "high_stakes"],
     purpose: "Re-runs a live pursuit through the assurance loop." },
   // Requires nothing: its whole value is that an independent model attacks the
@@ -79,7 +94,7 @@ const paths = PATHS.filter((p) => existsSync(repoPath(p.file)))
   .map((p) => ({ ...p, source: readFileSync(repoPath(p.file), "utf8") }));
 
 // Wrapper modules a path may reach a capability through.
-const WRAPPERS = ["assurance", "decision-assurance", "question-discovery", "readiness", "qualifier-foundry", "academy", "shadow", "high-stakes"];
+const WRAPPERS = ["worker-adapter", "assurance", "decision-assurance", "question-discovery", "readiness", "qualifier-foundry", "academy", "shadow", "high-stakes"];
 const modules = WRAPPERS
   .filter((m) => existsSync(repoPath("packages", "eval", "src", m + ".ts")))
   .map((m) => ({ module: m, source: readFileSync(repoPath("packages", "eval", "src", m + ".ts"), "utf8") }));

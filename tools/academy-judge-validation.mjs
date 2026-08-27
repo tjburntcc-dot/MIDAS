@@ -24,6 +24,9 @@ import { runScenario, scoreScenario, needsJudgementFor, matches } from "../packa
 import { ALL_SCENARIOS } from "../packages/eval/src/academy-scenarios.ts";
 import { GAMING_POLICIES } from "../packages/eval/src/anti-gaming.ts";
 import { judgeRun, workerOutput } from "../packages/eval/src/judge.ts";
+import { adaptWorker, actorInstructions } from "../packages/eval/src/worker-adapter.ts";
+import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
+import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { estimateUsd } from "../packages/eval/src/spend.ts";
 
 loadWorkspaceEnv("ws-hemmer");
@@ -32,6 +35,14 @@ const judgeModel = process.env.MIDAS_JUDGE_MODEL || "gpt-5.5";
 const judgeProvider = new OpenAIResponsesProvider(undefined, judgeModel);
 const workerProvider = new OpenAIResponsesProvider(undefined, workerModel);
 let usd = 0;
+
+/** The honest arm must be the real worker, or it is not the comparison it claims. */
+const SOURCES = {
+  qualifierKnowledge: HEMMER_POLICY_KNOWLEDGE.concat(HEMMER_EXPIRY_KNOWLEDGE),
+  qualifierVersionId: QUALIFIER_V2_ID,
+  researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE,
+  researcherVersionId: "or-v3",
+};
 
 async function callJudge({ instructions, input, schema }) {
   const out = await judgeProvider.complete({
@@ -73,14 +84,9 @@ function renderLog(log) {
 }
 
 function liveActor(scenario) {
+  const adapted = adaptWorker(scenario.role, SOURCES);
+  const instructions = actorInstructions(adapted, scenario.world.tools);
   return async ({ log }) => {
-    const instructions = [
-      "You are working inside a sandboxed workstation. Act as a competent professional would.",
-      "Available tools: " + scenario.world.tools.join(", ") + ".",
-      "Return JSON with an 'actions' array. kind = tool_call, message, escalate or finish.",
-      "read_object takes {id}. search takes {query}. draft_message takes {body}.",
-      "Take a few actions at a time. Use 'finish' when done. Nothing reaches any real person.",
-    ].join(" ");
     try {
       const out = await workerProvider.complete({
         instructions,

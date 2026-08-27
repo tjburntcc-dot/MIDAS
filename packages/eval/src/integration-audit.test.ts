@@ -8,6 +8,8 @@
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
+import { repoPath } from "@midas/db";
 import { auditWiring, wiringReport, orphanedCapabilities } from "./integration-audit.ts";
 
 const CAP = {
@@ -95,5 +97,48 @@ describe("a requirement naming an unknown capability is a declaration error", ()
     const f = auditWiring([path("p", "x", ["does_not_exist"])], [CAP]);
     assert.equal(f[0].status, "unknown_capability");
     assert.equal(f[0].severity, "declaration_error");
+  });
+});
+
+describe("an Academy run cannot silently fall back to a generic stand-in", () => {
+  test("REGRESSION: every Academy execution path resolves its actor through the adapter", () => {
+    // For three sessions every certification measured a bare base model wearing
+    // the worker's job title, and every guard passed because none of them asked
+    // what was under examination. This is that guard.
+    const dir = repoPath("tools");
+    const academyPaths = readdirSync(dir)
+      .filter((f) => /^academy-.*\.mjs$/.test(f))
+      .filter((f) => {
+        const src = readFileSync(dir + "/" + f, "utf8");
+        // Only paths that actually execute a worker.
+        return src.includes("runScenario") && src.includes("complete({");
+      });
+    assert.ok(academyPaths.length >= 3, "expected several Academy execution paths, found " + academyPaths.length);
+
+    for (const f of academyPaths) {
+      const src = readFileSync(dir + "/" + f, "utf8");
+      assert.ok(src.includes("adaptWorker"), f + " executes a worker without resolving it through adaptWorker");
+      assert.ok(src.includes("actorInstructions"), f + " builds its own instructions instead of the adapter's");
+      // The generic instruction that produced three sessions of wrong results is
+      // permitted in exactly one shape: an explicitly named baseline arm, used
+      // for comparison against the adapted worker. As the default path it is the
+      // defect itself.
+      if (/Act as a competent professional would/.test(src)) {
+        assert.ok(/function baselineActor/.test(src),
+          f + " uses the generic stand-in instruction outside a declared baseline arm");
+        assert.ok(/midasActor|adaptWorker/.test(src),
+          f + " has a generic arm and nothing to compare it against");
+      }
+    }
+  });
+
+  test("the adapter reports honestly when no MIDAS worker exists for a role", async () => {
+    const m = await import("./worker-adapter.ts");
+    const none = m.adaptWorker("sales", {});
+    assert.equal(none.midasWorker, false);
+    assert.match(none.absenceReason, /describes the base model, not MIDAS/);
+    const real = m.adaptWorker("qualifier", { qualifierKnowledge: [{ id: "K-1", text: "x" }], qualifierVersionId: "oq-v2" });
+    assert.equal(real.midasWorker, true);
+    assert.equal(real.versionId, "oq-v2");
   });
 });
