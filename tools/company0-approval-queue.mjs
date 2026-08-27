@@ -1,139 +1,178 @@
 /**
  * Build the owner approval queue.
  *
- * Every candidate is assessed against three separate things, because they fail
- * independently and collapsing them hides which one actually binds:
+ * Rewritten after the integration audit found this path reimplementing, in
+ * regular expressions, work that a foundry-promoted worker already does. That is
+ * how a dead listing reached the owner: the qualifier holds an expiry
+ * disqualifier earned through measured training, and this file had its own
+ * hand-written checks instead.
  *
- *   1. Is it real, and is it a buyer? Some postings are suppliers advertising.
- *   2. Are we eligible to participate in the venue at all?
- *   3. Is the work worth doing at the stated price?
+ * The order now is: the promoted worker decides, readiness decides whether the
+ * company could act on it, certification decides whether anything may be
+ * prepared, and only the classes the worker's taxonomy genuinely does not cover
+ * are handled here -- explicitly, as a temporary overlay with candidates already
+ * queued for the foundry.
  *
- * Nothing here contacts anyone. The queue is a list of things awaiting the
- * owner's decision, and the owner's approval is required before any external
- * action of any kind.
+ * No outbound action. Nothing here has been sent, applied to, or registered for.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { repoPath } from "@midas/db";
+import { readinessProfile, assessOpportunityFit } from "../packages/eval/src/readiness.ts";
+import { mayPrepare } from "../packages/eval/src/shadow.ts";
+import { tierRank } from "../packages/eval/src/academy.ts";
 
 const disc = JSON.parse(readFileSync(repoPath("var", "state", "company0-discovery-aligned.json"), "utf8"));
-const MIN_ENGAGEMENT_USD = 500;
+const verdicts = JSON.parse(readFileSync(repoPath("var", "state", "company0-qualifier-verdicts.json"), "utf8"));
+const liveness = JSON.parse(readFileSync(repoPath("var", "state", "company0-liveness.json"), "utf8")).checks;
+const readinessItems = JSON.parse(readFileSync(repoPath("var", "state", "company0-readiness.json"), "utf8")).items;
+const profile = readinessProfile(readinessItems);
 
 /**
- * Liveness checked directly against the source, not inferred from a discovery
- * summary. The discovery pass reported this posting with a budget, a scope and a
- * date; the page itself returns 410 Gone. Nothing reaches an owner without this
- * check, because the first run of this queue would otherwise have handed over a
- * dead listing described in convincing detail.
+ * The overlay. Two classes the promoted worker has no code for, evidenced on
+ * real candidates and queued for the foundry rather than bolted into the
+ * worker's taxonomy by hand.
  */
-const LIVENESS = {
-  "https://www.craigslist.org/view/d/eastport-part-time-content-marketing/hZDgWh7Ak6cP7KkdEhh5Td": {
-    checkedAt: "2026-08-26", result: "gone", detail: "HTTP 410 Gone. The posting has expired or been removed.",
-  },
-};
-
-/** Venues whose own terms decide participation before any posting matters. */
 const PLATFORM = /upwork|freelancer\.com|fiverr|alignerr|toptal|guru\.com|peopleperhour/i;
-/** Postings that are somebody offering services rather than seeking them. */
 const SUPPLIER_SIDE = /\[for hire\]|for hire|_forhire|\/consulting\b|our services/i;
 
-function firstDollar(text) {
-  const m = String(text || "").replace(/[‐-―−]/g, "-").match(/\$\s?([\d,]+(?:\.\d+)?)/);
-  return m ? Number(m[1].replace(/,/g, "")) : null;
+/** What a venue of this shape requires the company to be able to do. */
+function requiredCapabilities(url, howToApply) {
+  const caps = ["onboard_client", "invoice_and_collect", "quote_confidently"];
+  if (/\bcontract|agreement|sign/i.test(String(howToApply))) caps.push("sign_binding_contract");
+  return caps;
 }
 
-const assessed = disc.candidates.map((c) => {
+// Provenance: the verdicts artifact must describe these candidates, not an
+// earlier run of discovery. Matching by array position would break silently the
+// first time discovery returns a different set, which is the quiet version of
+// the bypass this rewrite exists to fix.
+const verdictByUrl = new Map(verdicts.results.map((r) => [r.url, r]));
+const stale = disc.candidates.filter((c) => !verdictByUrl.has(c.url));
+if (stale.length) {
+  console.log("PROVENANCE: " + stale.length + " candidate(s) have no verdict in the artifact. They will be blocked as unassessed.");
+}
+
+const queue = disc.candidates.map((c, i) => {
+  const v = verdictByUrl.get(c.url);
   const hay = [c.title, c.url, c.organisation, c.summary].join(" ");
   const blockers = [];
   const notes = [];
 
-  // 1. Is it a buyer at all?
-  if (SUPPLIER_SIDE.test(hay)) {
-    blockers.push({
-      kind: "not_a_buyer",
-      detail: "This reads as a supplier advertising services, or a firm's own services page, rather than someone seeking to hire.",
-    });
+  // 1. The promoted worker's decision, which is the primary input rather than
+  //    one opinion among several.
+  const decision = v?.verdict?.decision || "unknown";
+  const workerCodes = (v?.verdict?.disqualifiers || []).map((d) => (typeof d === "string" ? d : d.code));
+  if (decision === "decline") {
+    blockers.push({ kind: "qualifier_declined", source: "promoted_worker", detail: "oq-v2 declined: " + (workerCodes.join(", ") || "no disqualifier code given") + "." });
+  }
+  if (decision === "unknown") {
+    blockers.push({ kind: "not_assessed", source: "pipeline", detail: "The promoted qualifier has not assessed this candidate. An unassessed candidate does not reach the owner." });
   }
 
-  // 2. Venue eligibility, which is separate from fitness for the work.
+  // 2. Liveness against the primary source. A discovery summary is not evidence
+  //    that a posting is still open.
+  const live = liveness[c.url];
+  if (!live) {
+    blockers.push({ kind: "liveness_unverified", source: "gate", detail: "Not fetched from its own source." });
+  } else if (live.result !== "live") {
+    blockers.push({ kind: "posting_gone", source: "gate", detail: live.detail + " Checked " + live.checkedAt + "." });
+  }
+
+  // 3. The overlay, marked as such.
   if (PLATFORM.test(hay)) {
     blockers.push({
-      kind: "channel_eligibility_unverified",
-      detail: "This is a freelance marketplace. Marketplaces that handle payments commonly require account holders to be 18 or older. "
-        + "That has NOT been verified against this platform's current terms and must be, before any time is spent. "
-        + "If the requirement exists, this channel is closed -- and the only honest responses are a different channel, or an "
-        + "adult account holder who is genuinely the contracting party. Creating an account that misstates age is not an option.",
+      kind: "channel_eligibility_unverified", source: "rules_overlay",
+      detail: "Freelance marketplace. Marketplaces handling payments commonly require account holders to be 18 or older, and that has NOT been verified against this platform's current terms. "
+        + "If it holds, the honest routes are a different channel or an adult who is genuinely the contracting party. Misstating age to open an account is not one of them.",
+      foundryCandidate: "channel_ineligible",
     });
     notes.push("Account creation is the owner's action, never MIDAS's.");
   }
-
-  // 3. Economics, judged against the company's own stated floor.
-  const stated = firstDollar(c.stated_budget_text);
-  const hourly = /hour|hr|\/h\b/i.test(String(c.stated_budget_text));
-  if (stated != null && !hourly && stated < MIN_ENGAGEMENT_USD) {
+  if (SUPPLIER_SIDE.test(hay)) {
     blockers.push({
-      kind: "below_minimum_engagement",
-      detail: "Stated at $" + stated + ", below the $" + MIN_ENGAGEMENT_USD + " floor. Below the floor, scoping, contracting, revisions and invoicing consume the job.",
+      kind: "not_a_buyer", source: "rules_overlay",
+      detail: "Reads as a supplier advertising, or a firm's own services page, rather than someone seeking to hire.",
+      foundryCandidate: "not_a_buyer",
     });
   }
-  if (stated != null && hourly && stated < 20) {
-    blockers.push({
-      kind: "rate_below_viability",
-      detail: "Stated at $" + stated + "/hour. Competing at that rate is a race against people who can live on it.",
-    });
-  }
-  if (stated == null) notes.push("No budget stated on the page. Not an objection; it means the number is set in conversation.");
 
-  // Liveness is a gate, not a note. An unchecked posting is not queueable.
-  const live = LIVENESS[c.url];
-  if (!live) {
-    blockers.push({ kind: "liveness_unverified", detail: "The posting has not been fetched from its own source. A discovery summary is not evidence that a posting is still open." });
-  } else if (live.result !== "live") {
-    blockers.push({ kind: "posting_gone", detail: live.detail + " Checked " + live.checkedAt + "." });
+  // 4. Could the company act on it if it wanted to?
+  const fit = assessOpportunityFit({
+    opportunityId: "CAND-" + (i + 1),
+    requiredCapabilities: requiredCapabilities(c.url, c.how_to_apply),
+    items: readinessItems,
+  });
+  if (!fit.eligibleNow) {
+    blockers.push({ kind: "readiness_blocked", source: "readiness", detail: fit.ruling });
   }
+
+  // 5. Certification: may anything buyer-facing even be prepared for this?
+  const gate = mayPrepare({
+    actionClass: "shadow_external_draft",
+    workerTier: "SANDBOX_COMPETENT",
+    teamCertified: false,
+    auditorCertified: false,
+    minTierRequired: "SHADOW_ELIGIBLE",
+    tierRank,
+  });
 
   return {
     title: c.title, organisation: c.organisation, url: c.url,
-    liveness: live || { result: "unchecked" },
     statedBudget: c.stated_budget_text, howToApply: c.how_to_apply,
+    qualifier: { version: verdicts.version, decision, disqualifiers: workerCodes, fraudRisk: v?.verdict?.fraud_risk || null },
+    liveness: live || { result: "unverified" },
+    readiness: { eligibleNow: fit.eligibleNow, missing: fit.missing },
+    certificationGate: { allowed: gate.allowed, reasons: gate.reasons },
     blockers, notes,
-    status: blockers.length === 0 ? "AWAITING_OWNER_APPROVAL" : "BLOCKED",
-    // The single question that would resolve the most of these at once.
+    status: blockers.length === 0 && gate.allowed ? "AWAITING_OWNER_APPROVAL" : "BLOCKED",
     decisiveQuestion: blockers.some((b) => b.kind === "channel_eligibility_unverified")
       ? "Does this platform permit an account holder under 18?" : null,
   };
 });
 
-const awaiting = assessed.filter((a) => a.status === "AWAITING_OWNER_APPROVAL");
-const blocked = assessed.filter((a) => a.status === "BLOCKED");
+const awaiting = queue.filter((a) => a.status === "AWAITING_OWNER_APPROVAL");
+const blocked = queue.filter((a) => a.status === "BLOCKED");
 const platformBlocked = blocked.filter((a) => a.blockers.some((b) => b.kind === "channel_eligibility_unverified"));
+const bySource = {};
+for (const a of queue) for (const b of a.blockers) bySource[b.source] = (bySource[b.source] || 0) + 1;
 
 const out = {
   at: new Date().toISOString(),
   discipline: "No external action of any kind without explicit owner approval. Nothing here has been sent, applied to, or registered for.",
   outboundActionsTaken: 0,
-  assessed: assessed.length,
+  pipeline: "discovery -> liveness -> promoted qualifier (oq-v2) -> rules overlay -> readiness -> certification gate -> queue",
+  provenance: {
+    verdictsArtifact: "company0-qualifier-verdicts.json",
+    verdictsVersion: verdicts.version,
+    candidatesWithoutVerdict: stale.length,
+    check: "Verdicts are matched to candidates by URL, so an artifact from an earlier discovery run cannot be mistaken for a current one.",
+  },
+  assessed: queue.length,
   awaitingOwnerApproval: awaiting.length,
   blocked: blocked.length,
   blockedOnOneQuestion: platformBlocked.length,
+  blockersBySource: bySource,
   findings: [
-    "The one candidate that cleared every other test was a dead posting. Discovery described it in convincing detail -- budget, scope, hours, how to apply -- and the page returns 410 Gone. Primary-source verification is now a gate on this queue rather than a later step.",
-    "Discovery bypassed the promoted Opportunity Qualifier, which already carries an opportunity_expired disqualifier earned through the foundry. A trained worker existed for exactly this failure and the new path did not call it. That is an integration gap, not a knowledge gap.",
-    "Seven of nine blocked candidates turn on a single unanswered question about platform age requirements. One answer opens or closes that entire channel.",
+    "This path previously reimplemented, in regular expressions, checks a promoted worker already performed. The integration audit found it; the worker is now the primary input.",
+    "Nothing currently clears the certification gate: no worker holds SHADOW_ELIGIBLE, no chain is team-certified, and no auditor is certified. Buyer-facing preparation is refused on that basis alone, before any opportunity is considered.",
+    "Seven of the blocked candidates turn on a single unanswered question about platform age requirements.",
   ],
   preservedDecisions: [
-    { id: "WI-39f6b3ce", decision: "NO-BID", note: "Idaho pursuit. Unchanged; the source-derived correction did not move it." },
+    { id: "WI-39f6b3ce", decision: "NO-BID", note: "Idaho pursuit. Frozen as regression and assurance evidence." },
     { id: "WI-77181040", decision: "BLOCKED", note: "Re-verification blocked by bot protection; remains demoted rather than queued." },
   ],
-  queue: assessed,
+  readinessSummary: profile.summary,
+  queue,
 };
 writeFileSync(repoPath("var", "state", "company0-approval-queue.json"), JSON.stringify(out, null, 1));
 
-console.log("assessed:", assessed.length, "| awaiting owner approval:", awaiting.length, "| blocked:", blocked.length);
-console.log("of the blocked,", platformBlocked.length, "turn on one unanswered question.");
+console.log("pipeline:", out.pipeline);
+console.log("assessed:", queue.length, "| awaiting owner approval:", awaiting.length, "| blocked:", blocked.length);
+console.log("blockers by source:", JSON.stringify(bySource));
 console.log("");
-for (const a of assessed) {
-  console.log(a.status === "BLOCKED" ? "BLOCK" : "QUEUE", "|", a.title.slice(0, 62));
-  for (const b of a.blockers) console.log("        - " + b.kind);
+for (const a of queue) {
+  console.log(a.status === "BLOCKED" ? "BLOCK" : "QUEUE", "|", String(a.qualifier.decision).padEnd(13), "|", a.title.slice(0, 48));
+  for (const b of a.blockers) console.log("        -", b.kind, "(" + b.source + ")");
 }
 console.log("");
 console.log("outbound actions taken:", 0);

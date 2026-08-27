@@ -24,7 +24,8 @@ loadWorkspaceEnv("ws-hemmer");
 const store = new FileStore(stateDir());
 ensureQualifierVersion(store, QUALIFIER_V2_ID);
 
-const queue = JSON.parse(readFileSync(repoPath("var", "state", "company0-approval-queue.json"), "utf8"));
+const disc = JSON.parse(readFileSync(repoPath("var", "state", "company0-discovery-aligned.json"), "utf8"));
+const liveness = JSON.parse(readFileSync(repoPath("var", "state", "company0-liveness.json"), "utf8")).checks;
 
 /**
  * Build a case from what discovery actually captured. Fields the source does not
@@ -32,15 +33,16 @@ const queue = JSON.parse(readFileSync(repoPath("var", "state", "company0-approva
  * than invent it, and supplying a guess here would be testing the guess.
  */
 function toCase(entry, i) {
-  const gone = entry.liveness?.result === "gone";
+  const live = liveness[entry.url];
+  const gone = live && live.result !== "live";
   const evidence = [
     { id: "E1", text: entry.title + ". " + (entry.statedBudget ? "Stated compensation: " + entry.statedBudget + "." : "No compensation stated."), source: "posting", age_days: null },
-    { id: "E2", text: "Application route as stated: " + (entry.howToApply || "not stated") + ".", source: "posting", age_days: null },
+    { id: "E2", text: "Application route as stated: " + (entry.how_to_apply || "not stated") + ".", source: "posting", age_days: null },
   ];
   if (gone) {
     evidence.push({
       id: "E-LIVENESS",
-      text: "The posting URL was fetched directly and returned HTTP 410 Gone. The listing has expired or been removed.",
+      text: "The posting URL was fetched directly. " + live.detail,
       source: "midas_verification", age_days: 0,
     });
   }
@@ -50,8 +52,8 @@ function toCase(entry, i) {
     source: /craigslist/i.test(entry.url) ? "marketplace" : "job_board",
     url: entry.url,
     brief: entry.title + " -- " + (entry.organisation || "organisation not stated")
-      + ". " + (entry.statedBudget ? "Compensation stated as " + entry.statedBudget + "." : "No compensation stated.")
-      + (gone ? " The posting URL now returns HTTP 410 Gone." : ""),
+      + ". " + (entry.stated_budget_text ? "Compensation stated as " + entry.stated_budget_text + "." : "No compensation stated.")
+      + (gone ? " " + live.detail : ""),
     facts: {
       posted_budget_usd: null,
       client_payment_verified: null,
@@ -66,7 +68,7 @@ function toCase(entry, i) {
 }
 
 const provider = new OpenAIResponsesProvider(undefined, process.env.MIDAS_QUALIFIER_MODEL || "gpt-4.1");
-const cases = queue.queue.map(toCase);
+const cases = disc.candidates.map(toCase);
 
 console.log("running promoted qualifier", QUALIFIER_V2_ID, "over", cases.length, "candidates");
 let usd = 0;
@@ -112,6 +114,7 @@ const out = {
   expiredCaughtByWorker: expiredCaught.map((r) => r.case_id),
   declined: declined.length,
   notDeclined: pursue.map((r) => ({ case_id: r.case_id, decision: r.verdict.decision, title: r.title })),
+  livenessVerified: Object.keys(liveness).length,
   results,
 };
 writeFileSync(repoPath("var", "state", "company0-qualifier-verdicts.json"), JSON.stringify(out, null, 1));
