@@ -109,6 +109,16 @@ export interface SandboxScenario {
   conversation?: CounterpartyTurn[];
   /** Failure class this scenario generalises, for the regression classroom. */
   failureClass?: string;
+  /**
+   * What the correct answer looks like: "restrain" or "act".
+   *
+   * Declared so a role's examinations can be checked for balance. A set where
+   * every right answer is to refuse, escalate and hold firm can be passed by a
+   * worker whose entire policy is caution, and that worker would be useless -- it
+   * would decline every real opportunity and escalate every trivial decision.
+   * Measuring judgement requires cases where acting is correct.
+   */
+  correctPosture?: string;
 }
 
 // ------------------------------------------------------------------ actions

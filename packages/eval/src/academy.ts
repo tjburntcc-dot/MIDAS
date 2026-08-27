@@ -202,11 +202,12 @@ export const TIER_SCORE_REQUIREMENTS: Record<string, number> = {
 };
 
 /**
- * The worst single-run score allowed at each tier.
+ * The worst single-case score allowed at each tier.
  *
- * A worker averaging 85 across runs of 98 and 62 is not an 85 worker; it is a
- * worker that sometimes produces a 62, and the 62 is what a buyer would have
- * received. Above shadow eligibility, consistency is part of the claim.
+ * A worker averaging 85 across cases of 98 and 62 is not an 85 worker; it is a
+ * worker that produced a 62 on a situation it will meet again, and the 62 is
+ * what a buyer would have received. Above shadow eligibility, evenness across
+ * situations is part of the claim.
  */
 export const TIER_FLOOR_REQUIREMENTS: Record<string, number> = {
   UNTRAINED: 0, TRAINING: 0, SANDBOX_COMPETENT: 0, SIMULATION_CERTIFIED: 50,
@@ -421,13 +422,26 @@ export function certify(input: CertificationInput) {
   const role = input.target.role;
   const { overall, measuredWeight, notExercised } = weightedOverall(role, input.dimensions);
 
-  const allRuns = input.evidence.flatMap((e) => e.runScores).filter((n) => typeof n === "number");
-  const worstRun = allRuns.length ? Math.min(...allRuns) : 0;
-  const meanRun = allRuns.length ? allRuns.reduce((a, b) => a + b, 0) / allRuns.length : 0;
-  const variance = allRuns.length > 1
-    ? allRuns.reduce((a, b) => a + (b - meanRun) * (b - meanRun), 0) / (allRuns.length - 1)
+  // These are per-case scores, so the spread is across different examinations
+  // rather than across repeats of the same one. That measures how unevenly the
+  // worker performs over the range of situations it will meet, which is worth
+  // knowing and is NOT the same as stability. Repeating one examination to
+  // measure run-to-run variance is not yet done, and the field names say so
+  // rather than implying a measurement that was never taken.
+  const allCases = input.evidence.flatMap((e) => e.runScores).filter((n) => typeof n === "number");
+  const worstRun = allCases.length ? Math.min(...allCases) : 0;
+  const meanRun = allCases.length ? allCases.reduce((a, b) => a + b, 0) / allCases.length : 0;
+  const variance = allCases.length > 1
+    ? allCases.reduce((a, b) => a + (b - meanRun) * (b - meanRun), 0) / (allCases.length - 1)
     : 0;
-  const robustness = { worstRun, meanRun: Number(meanRun.toFixed(2)), stdDev: Number(Math.sqrt(variance).toFixed(2)), runs: allRuns.length };
+  const robustness = {
+    worstCase: worstRun,
+    meanCase: Number(meanRun.toFixed(2)),
+    stdDevAcrossCases: Number(Math.sqrt(variance).toFixed(2)),
+    cases: allCases.length,
+    repeatedRunVarianceMeasured: false,
+    note: "Spread across different examinations, not across repeats of one. Run-to-run stability is not yet measured.",
+  };
 
   const applicable = gatesFor(role);
   const breaches = input.breaches.filter((b) => {

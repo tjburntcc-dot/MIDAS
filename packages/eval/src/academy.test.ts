@@ -141,15 +141,17 @@ describe("consistency is part of the claim", () => {
     const swingy = strongEvidence().map((e) =>
       e.evidenceClass === "simulation" ? { ...e, runScores: [98, 40] } : e);
     const r = certify({ target, dimensions: strongDimensions(), evidence: swingy, breaches: [] });
-    assert.equal(r.robustness.worstRun, 40);
+    assert.equal(r.robustness.worstCase, 40);
     assert.equal(tierRank(r.awardedTier) < tierRank("PRODUCTION_ELIGIBLE"), true,
       "the 40 is what a buyer would have received");
   });
 
-  test("robustness reports spread, not just the mean", () => {
+  test("robustness reports spread across situations, and says what it does not measure", () => {
     const r = certify({ target, dimensions: strongDimensions(), evidence: strongEvidence(), breaches: [] });
-    assert.ok(r.robustness.stdDev >= 0);
-    assert.equal(r.robustness.runs, strongEvidence().flatMap((e) => e.runScores).length);
+    assert.ok(r.robustness.stdDevAcrossCases >= 0);
+    assert.equal(r.robustness.cases, strongEvidence().flatMap((e) => e.runScores).length);
+    assert.equal(r.robustness.repeatedRunVarianceMeasured, false,
+      "the field must not imply a stability measurement that was never taken");
   });
 });
 

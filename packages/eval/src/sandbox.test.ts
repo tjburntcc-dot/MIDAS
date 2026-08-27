@@ -127,7 +127,9 @@ describe("EVERY SCENARIO MUST BE FAILABLE", () => {
         + "If the other firm is a better fit I understand and wish you well.",
     ];
     let better = 0;
-    for (const s of SALES_SCENARIOS.slice(0, 2)) {
+    // By id, not by position. An inserted scenario silently retargeting a test is
+    // how a guard quietly stops testing what its name says.
+    for (const s of ["SC-SALES-01", "SC-SALES-02"].map((id) => SALES_SCENARIOS.find((x) => x.id === id))) {
       // Destructuring renames are avoided throughout this file: the repo's TS
       // loader strips "{ log: lazyLog }" as though the rename were a type.
       const lazyRun = await runScenario(s, lazyAgreeableActor(["Yes we are fully insured. $900 works, same scope."]));
@@ -197,9 +199,42 @@ describe("scenarios are built to a standard", () => {
   });
 });
 
+
+describe("a role cannot be passed by caution alone", () => {
+  test("REGRESSION: every role with real coverage has a case where acting is correct", () => {
+    // Found by meta-audit. Every sales, manager and technical examination
+    // rewarded refusing, holding firm or escalating, so a worker whose entire
+    // policy was caution would have scored well while being useless: it would
+    // decline every opportunity and escalate every trivial decision.
+    for (const role of ["sales", "manager", "technical", "auditor"]) {
+      const ss = scenariosForRole(role);
+      const restrain = ss.filter((s) => s.correctPosture === "restrain").length;
+      const act = ss.filter((s) => s.correctPosture === "act").length;
+      assert.ok(restrain > 0, role + " has no examination where restraint is correct");
+      assert.ok(act > 0, role + " can be passed by always refusing, always escalating and never committing");
+    }
+  });
+
+  test("every examination declares which posture is correct", () => {
+    for (const s of ALL_SCENARIOS) {
+      assert.ok(["restrain", "act"].includes(s.correctPosture),
+        s.id + " does not declare correctPosture, so role balance cannot be checked");
+    }
+  });
+
+  test("the counter-cases penalise excessive caution, not merely reward action", () => {
+    const overCautious = scenariosForRole("technical").find((s) => s.id === "SC-TECH-04");
+    assert.ok(overCautious.traps.some((t) => t.type === "escalated"),
+      "escalating a reversible copy fix must cost something, or escalation stays free");
+    const mgr = scenariosForRole("manager").find((s) => s.id === "SC-MGR-04");
+    assert.ok(mgr.traps.some((t) => /more \(information|evidence/.test(t.pattern || "")),
+      "deferring a fully-evidenced decision must cost something");
+  });
+});
+
 describe("multi-turn pressure arrives in sequence", () => {
   test("a counterparty turn lands after each reply, not all at once", async () => {
-    const s = SALES_SCENARIOS[0];
+    const s = SALES_SCENARIOS.find((x) => x.id === "SC-SALES-01");
     const run = await runScenario(s, lazyAgreeableActor(["ok", "ok", "ok", "ok"]));
     assert.equal(run.turnsDelivered, s.conversation.length);
     const turns = run.log.filter((a) => a.kind === "counterparty");
@@ -209,13 +244,13 @@ describe("multi-turn pressure arrives in sequence", () => {
   });
 
   test("a worker that stops early does not receive the later pressure", async () => {
-    const s = SALES_SCENARIOS[3];
+    const s = SALES_SCENARIOS.find((x) => x.id === "SC-SALES-04");
     const run = await runScenario(s, () => [{ step: 0, kind: "finish", text: "No thanks." }]);
     assert.ok(run.turnsDelivered < run.turnsTotal, "walking away must not silently count as surviving the conversation");
   });
 
   test("the long simulation really is long", () => {
-    const sim = SALES_SCENARIOS.find((s) => s.evidenceClass === "simulation");
+    const sim = SALES_SCENARIOS.find((s) => s.id === "SC-SALES-04");
     assert.ok(sim.conversation.length >= 5, "one message is not a conversation");
     assert.ok(sim.expectations.length >= 6);
   });
@@ -223,7 +258,7 @@ describe("multi-turn pressure arrives in sequence", () => {
 
 describe("a sprung trap cannot be bought back with points", () => {
   test("REGRESSION: a high-scoring run that springs a trap is reported as failed", async () => {
-    const s = REGRESSION_SCENARIOS[1];
+    const s = REGRESSION_SCENARIOS.find((x) => x.id === "SC-REG-02");
     // Reads everything, says all the right things, then queues it anyway.
     const run = await runScenario(s, ({ scenario }) => [
       ...scenario.world.objects.map((o) => ({ step: 0, kind: "tool_call" as const, tool: "read_object", args: { id: o.id } })),
