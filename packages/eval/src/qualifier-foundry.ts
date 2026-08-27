@@ -22,6 +22,8 @@ export const QUALIFIER_V1_SCHEMA2_ID = "oq-v1-schema2";
 /** Control: v1 knowledge plus irrelevant text the same length as the expiry policy. */
 export const QUALIFIER_V2_PLACEBO_ID = "oq-v2-placebo";
 export const QUALIFIER_V2_ID = "oq-v2";
+export const QUALIFIER_V2_SCHEMA3_ID = "oq-v2-schema3";
+export const QUALIFIER_V3_ID = "oq-v3";
 
 export const DEV_CASES_PATH = repoPath("evals", "opportunity-qualifier", "v0", "dev_cases_v0.json");
 export const SEALED_CASES_PATH = join(stateDir(), "sealed", "opportunity-qualifier-sealed-v0.json");
@@ -110,6 +112,17 @@ export const HEMMER_EXPIRY_KNOWLEDGE = [
 ];
 
 /** Irrelevant text matched to the length of the expiry knowledge, for the v2 placebo arm. */
+/**
+ * The buyer-side rule, written from three real discovery records the worker had
+ * no way to classify: two people advertising their own availability and one
+ * consulting firm's services page.
+ */
+export const HEMMER_BUYER_KNOWLEDGE = [
+  { id: "K-HD-013", text: "A record is only an opportunity if someone is seeking to hire. A person or firm advertising their own availability, a services page, a directory entry, or a job seeker's post is not a buyer, however well it matches what we sell." },
+  { id: "K-HD-014", text: "When a record is not a buyer, decline with not_a_buyer. Do not hold for information: no additional information turns an advertisement into a client." },
+  { id: "K-HD-015", text: "A genuine buyer states, or clearly implies, a need they want someone else to fulfil. Uncertainty about who is buying is a reason to hold; evidence that the poster is selling is a reason to decline." },
+];
+
 export const V2_PLACEBO_KNOWLEDGE = [
   {
     id: "K-PL-016", type: "procedure",
@@ -234,12 +247,15 @@ export function qualifierVersionDefs() {
     modelProfile: { provider: "openai", model: process.env.MIDAS_QUALIFIER_MODEL || "gpt-4.1" },
     // Spec v1 keeps its original schema id verbatim. The id is part of the frozen
     // content hash, so renaming it would invalidate versions already on disk.
-    outputSchema: { $id: specVersion === "v1" ? "https://midas.local/schemas/opportunity-qualifier-v0.json" : "https://midas.local/schemas/opportunity-qualifier-v2.json" },
+    outputSchema: { $id: specVersion === "v1" ? "https://midas.local/schemas/opportunity-qualifier-v0.json"
+      : specVersion === "v5" ? "https://midas.local/schemas/opportunity-qualifier-v3.json"
+        : "https://midas.local/schemas/opportunity-qualifier-v2.json" },
     workerSpecHash: workerSpecHash(qualifierSpec(specVersion)),
     allowedTools: [],
   });
   const base = baseFor("v1");
   const base2 = baseFor("v2");
+  const base3 = baseFor("v5");
   const v1System = QUALIFIER_V0_PROMPT.system + "\n\n" + knowledgeBlock(HEMMER_POLICY_KNOWLEDGE);
   return {
     [QUALIFIER_V0_ID]: {
@@ -298,6 +314,31 @@ export function qualifierVersionDefs() {
       },
       knowledgeIds: HEMMER_POLICY_KNOWLEDGE.map((k) => k.id).concat(HEMMER_EXPIRY_KNOWLEDGE.map((k) => k.id)),
       declaredChange: "Adds the expiry decision rule and the absent-figure constraint, both written in response to an observed live failure. Prompt otherwise identical to the control arm.",
+    },
+    [QUALIFIER_V2_SCHEMA3_ID]: {
+      ...base3,
+      id: QUALIFIER_V2_SCHEMA3_ID,
+      parentVersionId: QUALIFIER_V2_ID,
+      promptBundle: {
+        system: v1System + "\n" + knowledgeBlock(HEMMER_EXPIRY_KNOWLEDGE).replace("Operating knowledge available to you:\n", ""),
+        developer: QUALIFIER_V0_PROMPT.developer,
+      },
+      knowledgeIds: HEMMER_POLICY_KNOWLEDGE.map((k) => k.id).concat(HEMMER_EXPIRY_KNOWLEDGE.map((k) => k.id)),
+      declaredChange: "Control arm for the buyer-side increment. Identical knowledge to the promoted v2, with the v3 output contract so not_a_buyer is available. Isolates having the code from knowing when to use it.",
+    },
+    [QUALIFIER_V3_ID]: {
+      ...base3,
+      id: QUALIFIER_V3_ID,
+      parentVersionId: QUALIFIER_V2_SCHEMA3_ID,
+      promptBundle: {
+        system: v1System + "\n" + knowledgeBlock(HEMMER_EXPIRY_KNOWLEDGE).replace("Operating knowledge available to you:\n", "")
+          + "\n" + knowledgeBlock(HEMMER_BUYER_KNOWLEDGE).replace("Operating knowledge available to you:\n", ""),
+        developer: QUALIFIER_V0_PROMPT.developer,
+      },
+      knowledgeIds: HEMMER_POLICY_KNOWLEDGE.map((k) => k.id)
+        .concat(HEMMER_EXPIRY_KNOWLEDGE.map((k) => k.id))
+        .concat(HEMMER_BUYER_KNOWLEDGE.map((k) => k.id)),
+      declaredChange: "Adds the buyer-side rule: a record is only an opportunity if someone is seeking to hire. Written from three real discovery records the worker could not classify.",
     },
   };
 }

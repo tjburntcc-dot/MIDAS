@@ -32,6 +32,27 @@ const profile = readinessProfile(readinessItems);
  * real candidates and queued for the foundry rather than bolted into the
  * worker's taxonomy by hand.
  */
+/**
+ * Channel eligibility is decided by each platform's own verified terms rather
+ * than by a blanket assumption. The assumption was that marketplaces handling
+ * payments require account holders to be 18. It was wrong for one of three, and
+ * asserting it without checking was the same failure as trusting an aggregator
+ * summary: a general claim standing in for a specific fact.
+ */
+const channels = JSON.parse(readFileSync(repoPath("var", "state", "company0-channel-eligibility.json"), "utf8"));
+
+function channelRuling(url) {
+  for (const host of Object.keys(channels.channels)) {
+    if (String(url).includes(host)) return Object.assign({ host }, channels.channels[host]);
+  }
+  // A venue nobody has read is not a venue that is open.
+  if (/upwork|freelancer|fiverr|alignerr|toptal|guru\.com|peopleperhour/i.test(String(url))) {
+    return { host: "unknown_marketplace", eligibleForPrincipal: null, confidence: "unchecked",
+      ruling: "This venue's terms have not been read. Unchecked is not open." };
+  }
+  return null;
+}
+
 const PLATFORM = /upwork|freelancer\.com|fiverr|alignerr|toptal|guru\.com|peopleperhour/i;
 const SUPPLIER_SIDE = /\[for hire\]|for hire|_forhire|\/consulting\b|our services/i;
 
@@ -79,15 +100,24 @@ const queue = disc.candidates.map((c, i) => {
   }
 
   // 3. The overlay, marked as such.
-  if (PLATFORM.test(hay)) {
-    blockers.push({
-      kind: "channel_eligibility_unverified", source: "rules_overlay",
-      detail: "Freelance marketplace. Marketplaces handling payments commonly require account holders to be 18 or older, and that has NOT been verified against this platform's current terms. "
-        + "If it holds, the honest routes are a different channel or an adult who is genuinely the contracting party. Misstating age to open an account is not one of them.",
-      foundryCandidate: "channel_ineligible",
-    });
+  const channel = channelRuling(c.url);
+  if (channel) {
+    if (channel.eligibleForPrincipal === false) {
+      blockers.push({
+        kind: "channel_ineligible", source: "verified_terms",
+        detail: channel.host + " requires " + channel.minimumAge + "+. " + channel.ruling,
+        quote: String(channel.quote || "").slice(0, 200),
+        foundryCandidate: "channel_ineligible",
+      });
+    } else if (channel.eligibleForPrincipal === null) {
+      blockers.push({ kind: "channel_eligibility_unchecked", source: "gate", detail: channel.ruling, foundryCandidate: "channel_ineligible" });
+    } else {
+      notes.push("Channel open: " + channel.ruling);
+      notes.push("Platform access is not contract capacity. Holding an account does not make a minor able to bind the company to what is agreed there.");
+    }
     notes.push("Account creation is the owner's action, never MIDAS's.");
   }
+
   if (SUPPLIER_SIDE.test(hay)) {
     blockers.push({
       kind: "not_a_buyer", source: "rules_overlay",
@@ -125,14 +155,15 @@ const queue = disc.candidates.map((c, i) => {
     certificationGate: { allowed: gate.allowed, reasons: gate.reasons },
     blockers, notes,
     status: blockers.length === 0 && gate.allowed ? "AWAITING_OWNER_APPROVAL" : "BLOCKED",
-    decisiveQuestion: blockers.some((b) => b.kind === "channel_eligibility_unverified")
-      ? "Does this platform permit an account holder under 18?" : null,
+    channel: channel ? { host: channel.host, eligible: channel.eligibleForPrincipal, confidence: channel.confidence } : null,
+    decisiveQuestion: blockers.some((b) => b.kind === "channel_eligibility_unchecked")
+      ? "What do this venue's own terms say about minimum age?" : null,
   };
 });
 
 const awaiting = queue.filter((a) => a.status === "AWAITING_OWNER_APPROVAL");
 const blocked = queue.filter((a) => a.status === "BLOCKED");
-const platformBlocked = blocked.filter((a) => a.blockers.some((b) => b.kind === "channel_eligibility_unverified"));
+const platformBlocked = blocked.filter((a) => a.blockers.some((b) => b.kind === "channel_ineligible" || b.kind === "channel_eligibility_unchecked"));
 const bySource = {};
 for (const a of queue) for (const b of a.blockers) bySource[b.source] = (bySource[b.source] || 0) + 1;
 
@@ -155,7 +186,8 @@ const out = {
   findings: [
     "This path previously reimplemented, in regular expressions, checks a promoted worker already performed. The integration audit found it; the worker is now the primary input.",
     "Nothing currently clears the certification gate: no worker holds SHADOW_ELIGIBLE, no chain is team-certified, and no auditor is certified. Buyer-facing preparation is refused on that basis alone, before any opportunity is considered.",
-    "Seven of the blocked candidates turn on a single unanswered question about platform age requirements.",
+    "Channel eligibility was verified against each platform's own terms instead of assumed. Freelancer.com states a minimum age of 16 and is OPEN to the principal in their own name; Upwork and Fiverr state 18 and are closed. The blanket assumption that marketplaces require 18 was wrong for one of three.",
+    "Platform eligibility is not contract capacity. Being permitted to hold an account does not make a minor able to bind the company to what is agreed there, and the signer question is untouched by this.",
   ],
   preservedDecisions: [
     { id: "WI-39f6b3ce", decision: "NO-BID", note: "Idaho pursuit. Frozen as regression and assurance evidence." },

@@ -85,6 +85,23 @@ export const DISQUALIFIER_CODES_V1 = [
 
 export const DISQUALIFIER_CODES_V2 = DISQUALIFIER_CODES_V1.concat(["opportunity_expired"]);
 
+/**
+ * v3 adds `not_a_buyer`.
+ *
+ * Discovery returned two records that were somebody advertising services and one
+ * firm's own services page. The worker had no code for "this is not an
+ * opportunity at all" and returned hold_for_info on all of them, which spends a
+ * full assessment and an owner's attention on something that can never convert.
+ *
+ * Deliberately NOT added here: `channel_ineligible`. Whether a venue's terms
+ * permit the company to participate is a fact to be read from those terms, not a
+ * judgement to be made about a posting. Putting it in the worker's taxonomy would
+ * invite a model to state what a platform's terms say, and inventing the contents
+ * of a terms-of-service page is a worse failure than the gap it would close. It
+ * stays in the gate layer, backed by verified data.
+ */
+export const DISQUALIFIER_CODES_V3 = DISQUALIFIER_CODES_V2.concat(["not_a_buyer"]);
+
 /** Current taxonomy. Existing callers and tests read this. */
 export const DISQUALIFIER_CODES = DISQUALIFIER_CODES_V2;
 
@@ -382,8 +399,10 @@ function fabricatesUnsupportedNumber(ctx: WorkerScoreContext) {
   return false;
 }
 
-function buildQualifierSpec(specVersion: "v1" | "v2" | "v3" | "v4"): WorkerSpec {
-  const codes = specVersion === "v1" ? DISQUALIFIER_CODES_V1 : DISQUALIFIER_CODES_V2;
+function buildQualifierSpec(specVersion: "v1" | "v2" | "v3" | "v4" | "v5"): WorkerSpec {
+  const codes = specVersion === "v1" ? DISQUALIFIER_CODES_V1
+    : specVersion === "v5" ? DISQUALIFIER_CODES_V3
+      : DISQUALIFIER_CODES_V2;
   const wideFraudRule = specVersion === "v1" || specVersion === "v2";
   const spec = {
     ...QUALIFIER_SPEC_BASE,
@@ -399,7 +418,7 @@ function buildQualifierSpec(specVersion: "v1" | "v2" | "v3" | "v4"): WorkerSpec 
           detect: claimsBelowMinimumWithoutAnyValue,
         }]),
   };
-  if (specVersion === "v4") {
+  if (specVersion === "v4" || specVersion === "v5") {
     // Calibration is replaced by five separately gated subskills. Weights are
     // rebalanced across the whole set rather than carved out of the old
     // calibration block, so no dimension silently changes meaning.
@@ -491,6 +510,7 @@ export const QUALIFIER_SPEC_V3 = buildQualifierSpec("v3");
  * their scoring models so every decision taken under them stays reproducible.
  */
 export const QUALIFIER_SPEC_V4 = buildQualifierSpec("v4");
+export const QUALIFIER_SPEC_V5 = buildQualifierSpec("v5");
 
 /** Current scoring model. Runs record which spec version scored them. */
 export const OPPORTUNITY_QUALIFIER_SPEC = QUALIFIER_SPEC_V4;
@@ -500,6 +520,7 @@ export function qualifierSpec(specVersion) {
   if (specVersion === "v2") return QUALIFIER_SPEC_V2;
   if (specVersion === "v3") return QUALIFIER_SPEC_V3;
   if (specVersion === "v4") return QUALIFIER_SPEC_V4;
+  if (specVersion === "v5") return QUALIFIER_SPEC_V5;
   throw new Error("unknown qualifier spec version " + specVersion);
 }
 
