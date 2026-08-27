@@ -57,6 +57,27 @@ describe("questions are generated before answers exist", () => {
   });
 });
 
+describe("the venue can exclude us regardless of the work", () => {
+  test("REGRESSION: an external commitment asks what the channel itself requires", () => {
+    // Found by dogfooding: discovery returned correctly-sized work on platforms
+    // whose own terms may exclude the company entirely.
+    const qs = generateQuestions(sourceGoverned);
+    assert.ok(qs.some((q) => /eligibility requirements of the venue itself/i.test(q.question)),
+      "channel eligibility is separate from fitness for the work");
+    assert.ok(qs.some((q) => /read the venue's own terms, or only the posting/i.test(q.question)));
+  });
+
+  test("the honest routes out are a different channel or arrangement, never a misrepresentation", () => {
+    const q = generateQuestions(sourceGoverned).find((x) => /does this channel close/i.test(x.question));
+    assert.match(q.whyItMatters, /never a misrepresentation/);
+  });
+
+  test("a purely internal decision is not asked about venues", () => {
+    const qs = generateQuestions(routine);
+    assert.equal(qs.some((q) => /eligibility requirements of the venue/i.test(q.question)), false);
+  });
+});
+
 describe("depth is bought with stakes, not spent everywhere", () => {
   test("a routine decision is interrogated less than a critical one", () => {
     const few = generateQuestions(routine).length;

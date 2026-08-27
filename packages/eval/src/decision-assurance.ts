@@ -257,6 +257,19 @@ const GENERATORS: Generator[] = [
     ],
   },
   {
+    // Surfaced by dogfooding, not by analysis. Readiness-aligned discovery
+    // returned work of exactly the right size on platforms the company may not
+    // be permitted to join at all. Eligibility to participate in a channel is
+    // separate from fitness for the work in it, and nothing was asking it.
+    id: "channel_eligibility",
+    applies: (d) => d.attributes.externalCommitment === true || d.attributes.governedBySourceDocument === true,
+    emit: () => [
+      { q: "What are the eligibility requirements of the venue itself -- platform terms, membership, registration, minimum age, jurisdiction -- as distinct from the requirements of the work?", category: "requirements", why: "A channel can exclude us regardless of how well suited we are to the work, and finding out after applying wastes the effort and the credibility." },
+      { q: "Have we read the venue's own terms, or only the posting?", category: "evidence", why: "The posting advertises the work; the terms decide whether we may participate at all." },
+      { q: "If we do not meet a venue requirement, is there a legitimate route in, or does this channel close?", category: "options", why: "The honest answers are a different channel or a different arrangement, never a misrepresentation to satisfy the requirement." },
+    ],
+  },
+  {
     // Surfaced by coverage analysis: a stated deadline was accepted as given.
     id: "timing",
     applies: (d) => d.attributes.timeBounded === true,

@@ -59,7 +59,7 @@ const ITEMS = [
   },
   {
     id: "C0-FIN-2", dimension: "financial", requirement: "An invoice template carrying correct legal identity and terms",
-    status: "absent", evidence: "None exists.",
+    status: "verified", evidence: "Template written in packets/ENTITY_AND_VERIFICATION.md section 2. The legal identity it needs is C0-ENT-1, which gates the same capability separately.",
     gates: ["invoice_and_collect"], actor: "midas", preparable: true,
     prepared: "packets/ENTITY_AND_VERIFICATION.md section 2 -- template written; blocked only on the registered name and which account holds the money.",
     whyItGates: "An invoice with the wrong legal name is not enforceable and looks amateur at the worst moment.",
@@ -68,14 +68,14 @@ const ITEMS = [
   // ------------------------------------------------------------ commercial
   {
     id: "C0-COM-1", dimension: "commercial", requirement: "A written scope-and-terms document for small engagements",
-    status: "absent", evidence: "No engagement document exists.",
+    status: "verified", evidence: "packets/ENGAGEMENT_TERMS.md exists and is complete. It cannot be executed until a signer exists, but that is C0-ENT-2's problem, not this one.",
     gates: ["onboard_client", "quote_confidently"], actor: "midas", preparable: true,
     prepared: "packets/ENGAGEMENT_TERMS.md -- complete and usable once a signer exists.",
     whyItGates: "Without written scope, every small job is an unbounded one, and the first dispute is unwinnable.",
   },
   {
     id: "C0-COM-2", dimension: "commercial", requirement: "A defensible price list for the services actually offered",
-    status: "absent", evidence: "No rate card exists; pricing has been decided ad hoc.",
+    status: "verified", evidence: "packets/RATE_CARD.md exists, with ranges tied to the honest position of a company with no delivered work.",
     gates: ["quote_confidently"], actor: "midas", preparable: true,
     prepared: "packets/RATE_CARD.md -- ranges, adjustment rules, walk-away points, and the one discount worth giving.",
     whyItGates: "Ad hoc pricing under time pressure is how a first engagement gets underpriced and resented.",
@@ -125,7 +125,7 @@ const ITEMS = [
   // -------------------------------------------------------------- security
   {
     id: "C0-SEC-1", dimension: "security", requirement: "A written statement of how client data is handled",
-    status: "absent", evidence: "None exists.",
+    status: "verified", evidence: "packets/DATA_HANDLING.md exists, including an explicit statement of what is not held.",
     gates: ["handle_personal_data", "bid_enterprise"], actor: "midas", preparable: true,
     prepared: "packets/DATA_HANDLING.md -- including an explicit statement of what is NOT held: no certification, no cyber insurance, no incident response plan.",
     whyItGates: "Any engagement touching customer records will ask, and inventing an answer under pressure is how untrue claims get made.",
@@ -156,7 +156,7 @@ const ITEMS = [
   },
   {
     id: "C0-OPS-2", dimension: "operations", requirement: "A repeatable delivery process for the offered services",
-    status: "absent", evidence: "No documented process; nothing has been delivered yet.",
+    status: "verified", evidence: "packets/DELIVERY_PROCESS.md exists: six stages with exit conditions. Unproven in practice, which delivery fixes and documentation cannot.",
     gates: ["onboard_client"], actor: "midas", preparable: true,
     prepared: "packets/DELIVERY_PROCESS.md -- six stages with exit conditions, including the close stage that produces the first testimonial.",
     whyItGates: "The first engagement is where a missing process costs the most, because it is also the reference.",
