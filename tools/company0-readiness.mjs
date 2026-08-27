@@ -41,10 +41,10 @@ const ITEMS = [
     id: "C0-ENT-3", dimension: "entity",
     requirement: "Legal position on whether an LLC whose only member is a minor can bind itself",
     status: "unknown",
-    evidence: "Never assessed. MIDAS is not able to answer this and should not attempt to.",
+    evidence: "UNRESOLVED and must stay that way until a professional answers it. MIDAS has repeatedly reached this question and must not resolve it by inference. No dollar threshold below which work is acceptable has any authoritative basis yet.",
     gates: ["sign_binding_contract"],
     actor: "third_party", preparable: true,
-    prepared: "packets/ENTITY_AND_VERIFICATION.md section 3 -- five questions, written so the consultation needs no preparation.",
+    prepared: "LEGAL_REVIEW_PACKET.md -- seventeen questions for a Pennsylvania small-business attorney, covering capacity, structure, invoice identity, liability, insurance timing, platform terms and the forward question of what would make adult participation reasonable. One consultation, no preparation needed.",
     whyItGates: "It determines whether the signer problem is solved by an entity wrapper or only by an adult signer.",
   },
 
