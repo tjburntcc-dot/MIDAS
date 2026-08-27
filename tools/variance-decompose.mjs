@@ -31,6 +31,7 @@ const provider = new OpenAIResponsesProvider(undefined, model);
 const JUDGE = process.env.MIDAS_VARIANCE_JUDGE === "1";
 const judgeProvider = JUDGE ? new OpenAIResponsesProvider(undefined, process.env.MIDAS_JUDGE_MODEL || "gpt-5.5") : null;
 let usd = 0;
+let inTok = 0, outTok = 0;
 
 /**
  * Scoring the same run two ways.
@@ -93,6 +94,7 @@ function liveActor(scenario) {
       const out = await provider.complete(req);
       const u = out.usage || {};
       usd += estimateUsd(u.inputTokens, u.outputTokens);
+      inTok += Number(u.inputTokens || 0); outTok += Number(u.outputTokens || 0);
       const text = String(out.text || "");
       const a = text.indexOf("{"), b = text.lastIndexOf("}");
       if (a < 0) return [{ kind: "finish", text: "" }];
@@ -151,7 +153,7 @@ console.log("by severity:", JSON.stringify(summary.bySeverity));
 console.log("where divergence enters:", JSON.stringify(summary.byDivergence));
 console.log("dominant:", summary.dominantDivergence);
 console.log(summary.ruling);
-console.log("estimated $" + usd.toFixed(4));
+console.log("tokens in/out:", inTok, "/", outTok, "| flat-rate estimate $" + usd.toFixed(4) + " (NOT model-adjusted)");
 
 writeFileSync(repoPath("var", "state", "variance-decomposition.json"), JSON.stringify({
   at: new Date().toISOString(), model, temperature: temperature ?? null, trials: TRIALS,
@@ -166,5 +168,9 @@ writeFileSync(repoPath("var", "state", "variance-decomposition.json"), JSON.stri
     behaviours: a.behaviours,
     pairs: a.pairs.map((p) => ({ i: p.i, j: p.j, severity: p.severity, reasons: p.reasons, divergence: p.divergence })),
   })),
-  summary, estimatedUsd: Number(usd.toFixed(4)), outboundActionsTaken: 0,
+  summary,
+  tokens: { input: inTok, output: outTok },
+  estimatedUsd: Number(usd.toFixed(4)),
+  pricingCaveat: "estimateUsd applies one flat rate to every model, so this figure tracks token count rather than actual cost. A cross-model dollar comparison needs per-model pricing this ledger does not carry.",
+  outboundActionsTaken: 0,
 }, null, 1));
