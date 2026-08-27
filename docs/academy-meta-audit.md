@@ -1,149 +1,181 @@
 # Meta-audit of the Academy
 
-2026-08-26 · run before reporting any result as PASS
+Last run 2026-08-27, before reporting any result as PASS.
 
-The point of this document is to answer, honestly, whether the certification
-infrastructure measures anything. Two defects were found and fixed. Nine more are
-recorded here unfixed, because naming a weakness is worth more than a report that
-implies there are none.
-
----
-
-## Fixed
-
-### 1. The examinations could be passed by caution alone — serious
-
-Every sales, manager and technical examination rewarded the same posture: refuse,
-hold firm, escalate, decline. A worker whose entire policy was "never commit,
-always escalate" would have scored well while being useless in practice.
-
-The auditor was the only role with a counter-case, and that is the one the model
-failed hardest — scoring 30 by manufacturing defects in a clean document.
-
-Three counter-cases added where acting is correct and excessive caution is
-trapped. Two caught new failures immediately (50 on answering a plain question,
-45 on making a reversible fix). A guard now fails the suite if any role lacks a
-case where acting is correct.
-
-**This defect made the numbers before it partly meaningless**, and it was
-invisible from inside the results: every score looked reasonable.
-
-### 2. Robustness implied a measurement never taken
-
-`robustness` computed spread across *different* examinations and called them
-"runs", which reads as run-to-run stability. It is not. Renamed, with
-`repeatedRunVarianceMeasured: false` stated on the record.
+The purpose is to answer honestly whether the certification infrastructure
+measures anything. Findings are carried forward across runs; fixed ones stay
+recorded, because a defect that was once real is the best guide to where the
+next one will be.
 
 ---
 
-## Not fixed, and why they matter
+## Fixed — 2026-08-27
 
-### 3. Scoring is regex over output — gameable
+### 1. Pattern scoring could not tell words from work — severe
 
-A worker that pads its reply with the right phrases scores well without the
-behaviour. Traps use the same mechanism and partly counteract it, since gaming
-for points tends to produce text that also trips a trap, but this is a real
-ceiling on what the current scoring can claim. Semantic scoring, or a second
-model judging against the rubric, would be the repair.
+A policy handed the rubric's own patterns, emitting text that satisfies them
+while doing none of the work, scored 65 to 86 across every role. Higher than a
+real model scored in most of them. Every tier award rested on a distinction the
+scoring could not make.
 
-### 4. Every scenario has one author, written in one session
+Three repairs, in increasing order of how structural they are:
 
-The buyer messages share a register and a rhythm. A worker that generalises
-poorly outside that register would not be caught. Real diversity requires
-scenarios written by other people, or drawn from real transcripts.
+- **An independent judge** on a different model confirms substance behind
+  expectations a pattern already matched. Credit needs pattern AND substance; a
+  trap fires on pattern OR substance.
+- **Scenarios rebalanced toward observable process.** Twelve of twenty scored
+  under a quarter of their points on anything a well-worded answer could not
+  fake. Opening the document you needed is not fakeable in prose.
+- **Certification refuses to award above SANDBOX_COMPETENT on unjudged scores.**
+  This is the repair that does not depend on the judge being good.
 
-### 5. One run per examination
+### 2. Weighting process created a stronger adversary
 
-No examination is repeated, so nothing here measures stability. A worker that
-would have answered differently on a second attempt looks deterministic. This is
-now stated in the output rather than implied away, but it is not measured.
+The fix for (1) made diligence scoreable, so it was attacked in turn. Diligence
+alone reaches 46 — sound. Diligence *plus* rubric knowledge reaches 87 to 100,
+worse than either component alone.
 
-### 6. Nothing audits the scenario gold
+The judge cuts that adversary from 92.58 to 49.26 while costing an honest worker
+exactly zero. Separation is still −5.59: **a rubric-omniscient worker that also
+does the work still outscores the real model.** See finding 12 below for why part
+of that is irreducible.
 
-The foundry cycle run this session had 2 contestable cases out of 10 in its
-sealed set — a 20% defect rate in an instrument built carefully. The Academy's own
-gold has had no equivalent scrutiny. Given the four prior occasions where a
-suspected worker failure turned out to be a measurement failure, the base rate
-here is not low.
+### 3. The Academy could not reject a bad exam
 
-### 7. Frontier tiers are unreachable in practice
+It can now, and immediately rejected one of mine. `SC-SALES-04` trapped
+"absorbed the booking system into the price" with a pattern matching *booking*
+near *included* — which is what "the booking system is **not** included" says.
+The trap fired on the correct answer, failing every competent worker while
+looking rigorous.
 
-FRONTIER_COMPETITIVE and above require a measured margin against a strong generic
-model. None has been run, so those tiers are structurally unreachable and the top
-of the ladder is currently decorative. That is the correct behaviour — a frontier
-claim without a frontier measurement is refused — but it means the ladder above
-HIGH_STAKES is untested machinery.
+Four briefs also satisfied their own rubrics. The check that found the first is
+the one worth having: construct the answer a rubric-perfect worker would give and
+ask whether it springs the scenario's own traps.
 
-### 8. Team certification has never run on a real chain
+### 4. Traps fired on replies that decided nothing
 
-The mechanism is tested against synthetic chains. No real pursuit has been passed
-through it end to end, so the fact-tracing patterns are unvalidated against how
-real stages actually phrase things. The patterns are the weak point: a fact
-restated in different words counts as lost.
+Found by diagnosing a real failure. A worker that recommended nothing tripped
+"recommended pursuing this" because its reply contained "recommendations".
+Generalised rather than patched: every trap is now tested against four replies
+that decide nothing. Two more of the same class surfaced immediately.
 
-### 9. There is no whole-organisation examination
+### 5. Robustness measured the wrong thing
 
-The manager scenarios are the closest thing, and they are single decisions. There
-is no sealed simulated company with a hidden trap, a budget, staff and a
-multi-month objective. The mission asks for the minimum mechanism, not a
-simulator; the minimum mechanism does not exist yet either.
+It measured spread across different examinations and called it stability. Now
+measured on repeats of the same case, and it is a fourth certification veto.
+Worker instability accounts for 47% of total spread; the old metric attributed
+all of it to exam difficulty.
 
-### 10. Certification does not expire in time
+### 6. The evidence validator punished honest work
 
-A certification is invalidated by configuration change and by nothing else. A
-result from six months ago on an unchanged configuration is treated as current.
-Model providers change behaviour behind a stable version string, so this is not
-theoretical.
+The judge's quote had to appear verbatim, and an honest run was zeroed because
+the judge elided a clause and quoted across a JSON boundary. Word-overlap now.
+The check exists to catch an evaluator inventing support, not to punish it for
+tidying a quote.
 
-### 11. The auditor gates other certifications on two examinations
+### 7. Team certification treated any gap as a loss
 
-An auditor must be certified before external preparation is permitted, and
-auditor certification currently rests on two scenarios. That is thin for
-something load-bearing.
-
-### 12. The Academy validates itself
-
-The auditor is certified by the Academy; the Academy's gates were written by the
-same author as its scenarios; the meta-audit was performed by that author. There
-is no independent check that the examinations test what they claim. The nearest
-thing to independence used so far — a bounded review on a stronger model — has
-overturned a verdict once and is worth repeating here.
+Found by running it on real pipeline artifacts for the first time. A stage that
+summarises without restating every fact, followed by stages that restate it, has
+delivered the fact. Loss is now absence at the final stage, with misreporting as
+a separate breach.
 
 ---
 
-## What an experienced practitioner would say is missing
+## Fixed — 2026-08-26
 
-**A sales leader** would ask where qualification-out is rewarded. Every sales
-examination is about handling a buyer; none is about deciding early that a buyer
-is not worth the time. That is most of the job.
+### 8. The examinations could be passed by caution alone
 
-**An engineer** would ask why there is no examination with an ambiguous
-requirement and no one to ask. Every technical scenario has a discoverable right
-answer somewhere in the world. Real work often does not.
+Every sales, manager and technical examination rewarded refusing, holding firm or
+escalating. Three counter-cases added where acting is correct; two caught new
+failures immediately. A guard now fails the suite if any role lacks one.
 
-**A security professional** would note that the credential scenario tests
-recognising a leak, not the harder skill: noticing that a task quietly requires
-access it should not need.
+---
 
-**An operator** would ask what happens on the seventh day of a delayed project
-with an unhappy client, which is where delivery reputation is actually made or
-lost. Nothing here runs longer than one conversation.
+## Open, and what each one costs
 
-**A procurement professional** would note that the mandatory-requirement
-examinations all involve requirements the company plainly cannot meet. The
-expensive real case is the requirement it *nearly* meets, where the temptation is
-to describe a partial capability as a whole one.
+### 9. Nothing independently audits the scenario gold
 
-Those five are the strongest candidates for the next round of examinations, and
-they are gaps in coverage rather than defects in the machinery.
+The mechanical checks catch structural defects. They cannot catch a case whose
+*label* is wrong — an agency roster labelled "not a buyer" when it is arguably
+buying. That class has a measured 20% incidence in a sealed set built carefully.
+
+### 10. One author, one register
+
+Every scenario was written by the same author in the same voice. A worker that
+generalises poorly outside that register would not be caught. The AutoShop
+failure history is the nearest available second source, which is the strongest
+argument for that harvest.
+
+### 11. Stability is measured on five cases, one configuration
+
+Enough to establish that instability is large. Not enough to characterise it per
+role, and the certification run applies a single ceiling across all roles as a
+result — conservative, but coarse.
+
+### 12. A rubric-omniscient adversary is partly irreducible
+
+On the clean-document audit the strongest adversary scores 100 before and after
+judging, and the judge is right. It read the facts and concluded the document was
+clean, which is the correct answer. When the right output is a short conclusion,
+doing the work and stating it *is* competence.
+
+The remaining defence is that a real worker does not have the rubric. That is
+real, unquantified, and would be maintained by sealed-scenario rotation, which
+does not exist.
+
+### 13. Certification does not expire in time
+
+Invalidated by configuration change and nothing else. Providers change behaviour
+behind a stable version string.
+
+### 14. The integration audit only checks declared paths
+
+A path added tomorrow and not declared is invisible to it. The audit found a real
+bypass, and would not find one nobody thought to list.
+
+### 15. The auditor gates other certifications on two examinations
+
+An auditor must be certified before external preparation is permitted, and that
+rests on two scenarios. Thin for something load-bearing.
+
+### 16. Frontier tiers are unreachable
+
+They require a measured margin and no comparison has been run. Correct behaviour,
+untested machinery.
+
+### 17. The Academy still largely validates itself
+
+The judge is a second model, which is real independence on the scoring axis. The
+gates, scenarios, gold and this audit remain single-author. The caution-gaming
+vector and the process-weight vector were both found by deliberate attack, not by
+any automated check — and a third of that kind is likely to exist.
+
+---
+
+## What an experienced practitioner would still say is missing
+
+Carried forward unaddressed from the previous run:
+
+- **Sales**: no examination rewards qualifying out early, which is most of the job.
+- **Engineering**: no examination has an ambiguous requirement and nobody to ask.
+- **Security**: the credential case tests recognising a leak, not noticing that a
+  task quietly requires access it should not need.
+- **Operations**: nothing runs longer than one conversation, and delivery
+  reputation is made on day seven of a slipping project.
+- **Procurement**: every mandatory-requirement case involves a requirement the
+  company plainly cannot meet. The expensive real case is the one it nearly meets.
 
 ---
 
 ## Verdict
 
-The infrastructure measures something real: it capped a fluent, confident model
-at TRAINING in five roles and UNTRAINED in one, on evidence, and the two defects
-found above were both found by attacking it rather than by running it.
+The instrument is materially better than it was, and the improvement is measured
+rather than asserted: a policy that beat the real model by 32 points now loses to
+it, an exam that failed competent workers has been found and fixed, and
+instability that was invisible now caps certification on its own.
 
-It is a floor, not a guarantee. Nothing here should be read as saying a certified
-configuration is safe — only that an uncertified one has not shown it is.
+It is still a floor. A certified configuration is not thereby safe; an
+uncertified one has simply not shown it is. Seventeen findings above, seven fixed
+this run, and the two most valuable were found by attacking the fix for the
+previous one.
