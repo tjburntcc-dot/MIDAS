@@ -135,3 +135,45 @@ export function summariseAxes(rows: Array<ReturnType<typeof scoreAxis>>) {
     prematureStopRate: stop.length ? Number((stop.filter((r) => r.stoppedEarly).length / stop.length).toFixed(3)) : null,
   };
 }
+
+/**
+ * Version two, after version one was rejected.
+ *
+ * The first procedure fixed source independence and liveness and broke the thing
+ * it was aimed at. Its five questions came back as five headings: the worker
+ * wrote "IS IT STILL LIVE: The brief states this is fictional" on a case with no
+ * liveness dimension, and instruction fidelity fell from 1.00 to 0.50. Escalation
+ * recall stayed at zero while the worker described the ambiguity perfectly and
+ * then finished without raising it.
+ *
+ * So two changes and nothing else. The steps that worked are kept almost
+ * verbatim. The two that failed are restated as actions the worker must take
+ * rather than judgements it must hold, and the whole thing is explicitly told not
+ * to appear in the answer.
+ *
+ * Version one is preserved above rather than edited, because it is what the
+ * rejected result describes.
+ */
+export const RESEARCH_ACTION_PROCEDURE = [
+  "Work through the following before you answer. They change what you DO. They are not part of your answer.",
+  "",
+  "- Establish whether the thing is still live before researching it in depth. If it is closed, awarded or superseded, that is the finding and there is nothing further to research.",
+  "- Pages that redistribute one upstream source are one source however many of them there are. Judge independence, not count. A secondary source that looked at the thing itself is worth more than five copies of a press release.",
+  "- If what you have already read settles the question, stop and answer now. If one specific unresolved fact could still change the answer, get that fact before answering. Do not keep reading for completeness.",
+  "- If two readings remain and the difference between them would change the answer, CALL THE ESCALATE TOOL. Writing 'this is ambiguous' in your answer is not escalating and does not satisfy this. If the difference could not change the answer, do not escalate: answer.",
+  "",
+  "Your answer contains findings only. Do not include headings, do not restate these steps, and do not describe your process.",
+].join("\n");
+
+export const RESEARCHER_ACTION_VERSION_ID = "or-v4-action";
+
+/**
+ * Did the worker emit the procedure instead of using it?
+ *
+ * Deterministic and free, which is the point: the regression that killed the
+ * last candidate is measurable without a judge.
+ */
+export function recitationScore(output: string) {
+  const headings = (output.match(/^[ \t]*[A-Z][A-Z ,'/-]{6,}:/gm) || []).length;
+  return { headings, recited: headings >= 2 };
+}
