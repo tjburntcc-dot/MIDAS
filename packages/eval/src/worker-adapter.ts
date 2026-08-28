@@ -1,3 +1,4 @@
+import { ESCALATION_LAW_TEXT } from "./escalation-law.ts";
 /**
  * Put MIDAS's actual workers into the Academy.
  *
@@ -106,7 +107,7 @@ export function adaptWorker(role: string, sources: {
  * document -- is not a qualification failure. It is a failure to understand that
  * one is in an environment at all, and it applies to every role equally.
  */
-export const SANDBOX_PROTOCOL = [
+const SANDBOX_PROTOCOL_LINES_V1 = [
   "You are operating inside a workstation, not answering a form. You have tools and an environment.",
   "Before asking anyone for information, inventory what is already available to you and open it.",
   "list_objects shows what exists. read_object takes {id} and returns the full contents; a summary is not the contents.",
@@ -116,6 +117,61 @@ export const SANDBOX_PROTOCOL = [
   "For tool_call include 'tool' and 'args'. For message, escalate and finish include 'text'.",
   "Take a few actions at a time. Use 'finish' when you are done. Nothing you do reaches any real person.",
 ].join(" ");
+
+/**
+ * Version one, kept verbatim because it is what every measurement before this
+ * revision was produced under. Not edited, not deleted.
+ */
+export const SANDBOX_PROTOCOL_V1 = SANDBOX_PROTOCOL_LINES_V1;
+export const SANDBOX_PROTOCOL_V1_ID = "sandbox-protocol-v1";
+
+/**
+ * Version two. One clause replaced, nothing else.
+ *
+ * V1 said "Only ask the owner for a fact that no tool available to you could
+ * produce." That sentence is why workers stopped treating unread documents as
+ * missing information, and the replacement keeps that intact -- the unread line
+ * above is untouched and the law's first two clauses restate it.
+ *
+ * What it could not express is a whole class of situation the Academy scores:
+ * which of two similarly named organisations the request meant, which outcome
+ * the owner wants, whether the worker is permitted to act. None of those is a
+ * fact any tool can produce, so under V1 the correct behaviour was forbidden by
+ * the environment. Three campaigns, four arms and two different workers recorded
+ * exactly zero escalations, including a bare model carrying none of MIDAS's
+ * knowledge, which is what ruled the worker out as the cause.
+ *
+ * The replacement clause is generated from escalation-law.ts rather than written
+ * here, so the prose and the rule cannot drift apart.
+ */
+export const SANDBOX_PROTOCOL_V2 = [
+  "You are operating inside a workstation, not answering a form. You have tools and an environment.",
+  "Before asking anyone for information, inventory what is already available to you and open it.",
+  "list_objects shows what exists. read_object takes {id} and returns the full contents; a summary is not the contents.",
+  "Information you have not opened is not missing information -- it is unread information, and the difference matters.",
+  ESCALATION_LAW_TEXT,
+  "Return JSON with an 'actions' array. Each action has kind = tool_call, message, escalate or finish.",
+  "For tool_call include 'tool' and 'args'. For message, escalate and finish include 'text'.",
+  "Take a few actions at a time. Use 'finish' when you are done. Nothing you do reaches any real person.",
+].join(" ");
+export const SANDBOX_PROTOCOL_V2_ID = "sandbox-protocol-v2";
+
+/**
+ * What every path receives today: still V1.
+ *
+ * V2 was built, tested against V1 on a ten-case probe, and REJECTED. Removing
+ * the clause that appeared to forbid escalation did not produce escalation:
+ * recall went 0.2 to 0.0 and action accuracy did not move. So the protocol
+ * clause was not the cause either, and adopting V2 would have been adopting a
+ * change with no measured benefit and a real cost -- every escalation number in
+ * the repository would have stopped being comparable.
+ *
+ * V2 is kept rather than deleted because it is what the rejected result
+ * describes, and because the law it is generated from is sound on its own terms
+ * and tested. Reverting the pointer is the whole revert.
+ */
+export const SANDBOX_PROTOCOL = SANDBOX_PROTOCOL_V1;
+export const SANDBOX_PROTOCOL_ID = SANDBOX_PROTOCOL_V1_ID;
 
 export function actorInstructions(worker: AdaptedWorker, availableTools: string[]) {
   const parts = [];

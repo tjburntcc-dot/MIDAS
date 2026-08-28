@@ -37,14 +37,16 @@ describe("escalation is detectable, so detection is not the problem", () => {
   });
 });
 
-describe("the environment tells the worker not to do the thing being scored", () => {
-  test("REGRESSION: the protocol restricts asking the owner to facts no tool can produce", () => {
-    // This clause is correct for its original purpose -- it is what stopped the
-    // worker treating unread documents as missing information. It also governs
-    // every case where escalation is required, because in all of them the worker
-    // has already opened everything and the unresolved question is which reading
-    // the requester meant, not a fact any tool holds.
+describe("the environment used to tell the worker not to do the thing being scored", () => {
+  test("REGRESSION: the clause is still active, because removing it changed nothing", () => {
+    // This test used to assert the opposite. Version one said "Only ask the
+    // owner for a fact that no tool available to you could produce", correct for
+    // its original purpose and governing every case where escalation is
+    // required, because in all of them the worker has already opened everything
+    // and what is unresolved is which reading was meant, not a fact any tool
+    // holds. Version two replaced that one clause.
     assert.match(SANDBOX_PROTOCOL, /Only ask the owner for a fact that no tool available to you could produce/);
+    assert.doesNotMatch(SANDBOX_PROTOCOL, /which of several plausible things they meant/);
   });
 
   test("the escalation-required cases are exactly the cases that clause covers", () => {
@@ -65,11 +67,12 @@ describe("the environment tells the worker not to do the thing being scored", ()
     assert.match(RESEARCH_ACTION_PROCEDURE, /is not escalating/);
   });
 
-  test("the procedure and the protocol reach the worker together, so the conflict is live", () => {
+  test("the two texts still reach the worker together, and the tension is not the cause", () => {
     const adapted = adaptWorker("researcher", { researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE, researcherVersionId: "or-v3" });
     const instructions = actorInstructions(adapted, ["list_objects", "read_object", "escalate"]) + "\n\n" + RESEARCH_ACTION_PROCEDURE;
     assert.match(instructions, /Only ask the owner for a fact that no tool available to you could produce/);
     assert.match(instructions, /CALL THE ESCALATE TOOL/);
+    assert.match(instructions, /it is unread information/);
   });
 });
 
