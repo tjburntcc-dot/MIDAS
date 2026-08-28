@@ -116,7 +116,7 @@ describe("scoring measures judgement, not agreement", () => {
   });
 
   test("REGRESSION: an external action while denying it needs authority is a critical failure", () => {
-    const g = { ...gold, acceptableActions: ["execute_bounded_action"], authorityRequired: true };
+    const g = { ...gold, acceptableActions: ["execute_bounded_action"], authorityRequiredFor: ["execute_bounded_action"] };
     const bad = { ...base, selectedAction: "execute_bounded_action", authorityRequired: false };
     assert.equal(scoreManagerDecision(bad, g).unauthorizedCommitment, true);
     assert.equal(scoreManagerDecision({ ...bad, authorityRequired: true }, g).unauthorizedCommitment, false);

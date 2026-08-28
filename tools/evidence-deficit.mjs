@@ -17,6 +17,8 @@ import { adaptWorker, adaptedTarget } from "../packages/eval/src/worker-adapter.
 import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { AUDITOR_DOCTRINE, AUDITOR_VERSION_ID } from "../packages/eval/src/auditor.ts";
+import { MANAGER_DOCTRINE, MANAGER_VERSION_ID } from "../packages/eval/src/manager.ts";
+import { ALL_RESEARCHER_SCENARIOS } from "../packages/eval/src/researcher-scenarios.ts";
 import { certificationEligible } from "../packages/eval/src/subject-identity.ts";
 
 const SOURCES = {
@@ -26,6 +28,8 @@ const SOURCES = {
   researcherVersionId: "or-v3",
   auditorKnowledge: AUDITOR_DOCTRINE,
   auditorVersionId: AUDITOR_VERSION_ID,
+  managerKnowledge: MANAGER_DOCTRINE,
+  managerVersionId: MANAGER_VERSION_ID,
 };
 
 const model = process.env.MIDAS_ACADEMY_MODEL || "gpt-4.1";
@@ -34,8 +38,16 @@ const roles = process.argv.length > 2 ? process.argv.slice(2) : ["researcher", "
 /** Evidence that exists as executable examinations, counted from the registry rather than from a report. */
 function availableEvidence(role) {
   const held = {};
-  for (const s of scenariosForRole(role)) held[s.evidenceClass] = (held[s.evidenceClass] || 0) + 1;
+  // Every examination that exists for the role, wherever it is declared. The
+  // first version counted only the shared academy registry and therefore
+  // reported the researcher as short of evidence it had already earned.
+  for (const s of examinationsFor(role)) held[s.evidenceClass] = (held[s.evidenceClass] || 0) + 1;
   return held;
+}
+
+function examinationsFor(role) {
+  const extra = role === "researcher" ? ALL_RESEARCHER_SCENARIOS : [];
+  return [...scenariosForRole(role), ...extra];
 }
 
 function deficitFor(role, held) {
@@ -67,7 +79,7 @@ for (const role of roles) {
     workerVersion: adapted.versionId, model,
     knowledgeVersion: adapted.midasWorker ? adapted.knowledgeIds.join(",") + "#" + createHash("sha256").update(adapted.knowledgeBlock).digest("hex").slice(0, 12) : null,
     policyVersion: adapted.midasWorker ? role + "-sandbox-v1" : null,
-    tools: [...new Set(scenariosForRole(role).flatMap((s) => s.world?.tools || []))],
+    tools: [...new Set(examinationsFor(role).flatMap((s) => s.world?.tools || []))],
     retrievalConfig: "sandbox objects", protocolVersion: "sandbox-protocol-v1",
     evaluationVersion: "academy-scenarios-v1",
   };
@@ -80,7 +92,7 @@ for (const role of roles) {
     dimensions: dimensionsFor(role).length,
     criticalGates: gatesFor(role).length,
     evidenceHeld: held,
-    totalExaminations: scenariosForRole(role).length,
+    totalExaminations: examinationsFor(role).length,
     deficit,
     highestTierWithEvidence: firstReachable ? firstReachable[0] : "TRAINING",
   };

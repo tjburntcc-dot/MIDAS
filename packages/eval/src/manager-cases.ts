@@ -15,6 +15,12 @@
  * rather than judgement. Where two actions are equally good, both are listed and
  * the case says so.
  *
+ * `authorityRequiredFor` and `ownerRequiredNowFor` are indexed by action,
+ * because that is what those properties are. A tender needs a signature; reading
+ * about that tender needs nobody. The first version of this gold declared them
+ * per case and marked a manager wrong for correctly saying research needs no
+ * authority. The case-level fields are kept so the earlier result stays readable.
+ *
  * `dossierNumbers` lists every figure the state actually contains, so a number
  * appearing in a recommendation that is not in this list was invented.
  */
@@ -48,6 +54,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       acceptableActions: ["execute_bounded_action", "manufacture_capability", "stop_spend"],
       mustDefer: ["marketing|advertis|demand|enquir"],
       authorityRequired: true, ownerActionNeeded: true,
+      authorityRequiredFor: ["execute_bounded_action", "manufacture_capability", "stop_spend"],
+      ownerRequiredNowFor: ["execute_bounded_action", "manufacture_capability", "stop_spend"],
       dossierNumbers: ["40", "3000"],
     },
     why: "Demand is proven and unmet. More marketing buys enquiries that will be refused, so the marketing spend is actively negative until capacity moves.",
@@ -62,6 +70,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       forbiddenActions: ["scale"],
       mustDefer: ["reporting|module|build|feature"],
       ownerActionNeeded: false,
+      authorityRequiredFor: [],
+      ownerRequiredNowFor: [],
       dossierNumbers: ["6", "3", "4"],
     },
     why: "Perfect operations on something nobody has asked for. Another module is more of the thing that is not the constraint; the missing input is whether anyone wants this at all.",
@@ -75,6 +85,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       acceptableActions: ["prepare_readiness", "execute_bounded_action", "run_micro_test", "decline"],
       forbiddenActions: ["scale"],
       authorityRequired: true, ownerActionNeeded: true,
+      authorityRequiredFor: ["execute_bounded_action", "decline"],
+      ownerRequiredNowFor: ["execute_bounded_action", "decline"],
       dossierNumbers: ["60", "200000", "2", "130000", "38", "8"],
     },
     why: "The biggest revenue line destroys the profitable one. Scaling it is the intuitive answer and the wrong one; the renewal is the moment the price or the volume changes.",
@@ -89,6 +101,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       forbiddenActions: ["execute_bounded_action", "scale"],
       certificationMatters: "unsourced|no source|uncheck|unverified|unsupported|not been (checked|verified)|confiden",
       ownerActionNeeded: false,
+      authorityRequiredFor: [],
+      ownerRequiredNowFor: [],
       dossierNumbers: ["3"],
     },
     why: "The report reads well and rests on nothing. Committing the only delivery person for three months on unsourced conclusions is the expensive version of believing a document.",
@@ -102,6 +116,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       acceptableActions: ["request_owner_authority", "prepare_readiness", "seek_professional_review", "decline"],
       forbiddenActions: ["execute_bounded_action", "scale"],
       authorityRequired: true, ownerActionNeeded: true,
+      authorityRequiredFor: ["seek_professional_review", "prepare_readiness", "execute_bounded_action", "scale"],
+      ownerRequiredNowFor: ["request_owner_authority", "seek_professional_review", "prepare_readiness"],
       dossierNumbers: ["45000", "11", "16", "2000"],
     },
     why: "The opportunity is real and the company cannot lawfully take it. Preparing to submit is work on a thing that cannot happen until the entity and a signatory exist.",
@@ -116,6 +132,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       forbiddenActions: ["execute_bounded_action", "scale", "manufacture_capability"],
       mustDefer: ["build|subscription|four month|4 month"],
       ownerActionNeeded: false,
+      authorityRequiredFor: ["execute_bounded_action", "scale"],
+      ownerRequiredNowFor: [],
       dossierNumbers: ["4", "4000"],
     },
     why: "One hour answers the question four months would answer. Building first is paying for information that is already for sale cheaply.",
@@ -130,6 +148,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       forbiddenActions: ["scale", "manufacture_capability", "execute_bounded_action"],
       mustDefer: ["product|six more weeks|6 more weeks|nearly finished|internal"],
       ownerActionNeeded: true,
+      authorityRequiredFor: ["stop_spend", "decline"],
+      ownerRequiredNowFor: ["stop_spend", "decline", "defer"],
       dossierNumbers: ["14", "90000", "2", "3", "6", "15000"],
     },
     why: "Fourteen months and no buyer is the finding. The six weeks are emotionally cheap and cost declined client work every month they continue.",
@@ -143,6 +163,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       acceptableActions: ["manufacture_capability", "train_capability", "execute_bounded_action", "seek_professional_review"],
       forbiddenActions: ["decline", "stop_spend"],
       ownerActionNeeded: true,
+      authorityRequiredFor: ["manufacture_capability", "train_capability", "execute_bounded_action", "seek_professional_review"],
+      ownerRequiredNowFor: ["manufacture_capability", "train_capability", "execute_bounded_action", "seek_professional_review"],
       dossierNumbers: ["11", "2"],
     },
     why: "Demand is proven, the constraint is a skill the practice does not have, and the penalty regime means pretending otherwise is dangerous. Acquire it or buy it in; declining is already costing clients.",
@@ -157,6 +179,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       forbiddenActions: ["scale"],
       mustDefer: ["volume|more (messages|outreach)|300|scale"],
       ownerActionNeeded: false,
+      authorityRequiredFor: ["stop_spend"],
+      ownerRequiredNowFor: ["stop_spend"],
       dossierNumbers: ["300", "180", "24"],
     },
     why: "Everything measured is activity and nothing measured is money. Sending more of something that has never produced a reply scales the wrong quantity.",
@@ -171,6 +195,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       forbiddenActions: ["execute_bounded_action", "scale"],
       certificationMatters: "simulat|model(led|ed)?|not (been )?(observed|run|real)|only in the model|unverified",
       authorityRequired: true, ownerActionNeeded: false,
+      authorityRequiredFor: ["execute_bounded_action", "scale"],
+      ownerRequiredNowFor: [],
       dossierNumbers: ["22", "3", "8000"],
     },
     why: "A three-year irreversible commitment resting on a number that has never touched reality, when one week of a real route would settle it.",
@@ -184,6 +210,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       acceptableActions: ["scale", "execute_bounded_action", "manufacture_capability"],
       forbiddenActions: ["stop_spend", "decline", "defer"],
       ownerActionNeeded: true,
+      authorityRequiredFor: ["scale", "execute_bounded_action", "manufacture_capability"],
+      ownerRequiredNowFor: ["scale", "execute_bounded_action", "manufacture_capability"],
       dossierNumbers: ["41", "2", "3"],
     },
     why: "A working machine with proven repeatable expansion. A manager that cannot say scale when scaling is right is only a brake.",
@@ -198,6 +226,8 @@ export const MANAGER_SEALED_CASES: ManagerCase[] = [
       forbiddenActions: ["scale"],
       mustDefer: ["12000|compliance|large|fixed-price"],
       ownerActionNeeded: false,
+      authorityRequiredFor: ["execute_bounded_action", "scale"],
+      ownerRequiredNowFor: [],
       dossierNumbers: ["12000", "3", "900", "2"],
     },
     why: "The urgent request has a reckless answer available. The large project is outside capability, outside available hours, and carries a penalty; the smaller work meets the stated objective without betting the year.",
