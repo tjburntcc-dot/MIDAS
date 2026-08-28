@@ -26,7 +26,7 @@
  * tool-dependent evidence classes. The adapted worker is a different
  * certification target from the form-filling one, and it says so.
  *
- * Where no MIDAS worker exists for a role -- sales, auditor, manager, technical --
+ * Where no MIDAS worker exists for a role -- sales, manager, technical --
  * this reports that fact rather than quietly substituting a bare model and
  * letting the result read as a statement about MIDAS.
  */
@@ -60,6 +60,8 @@ export function adaptWorker(role: string, sources: {
   qualifierVersionId?: string;
   researcherKnowledge?: Array<{ id: string; text?: string; statement?: string }>;
   researcherVersionId?: string;
+  auditorKnowledge?: Array<{ id: string; text?: string; statement?: string }>;
+  auditorVersionId?: string;
 }): AdaptedWorker {
   if (role === "qualifier" && sources.qualifierKnowledge) {
     return {
@@ -73,6 +75,16 @@ export function adaptWorker(role: string, sources: {
       role, versionId: sources.researcherVersionId || null, midasWorker: true,
       knowledgeIds: sources.researcherKnowledge.map((k) => k.id),
       knowledgeBlock: block(sources.researcherKnowledge),
+    };
+  }
+  // Manufactured after three of five roles were found to have no worker at all.
+  // The auditor is first because every instrument defect of the last four
+  // missions was found by hand rather than by scoring.
+  if (role === "auditor" && sources.auditorKnowledge) {
+    return {
+      role, versionId: sources.auditorVersionId || null, midasWorker: true,
+      knowledgeIds: sources.auditorKnowledge.map((k) => k.id),
+      knowledgeBlock: block(sources.auditorKnowledge),
     };
   }
   return {
