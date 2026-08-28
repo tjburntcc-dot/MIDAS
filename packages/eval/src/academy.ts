@@ -52,6 +52,20 @@ export interface CertificationTarget {
   retrievalConfigId: string;
   /** The manager or workflow the worker runs inside, where that shapes behaviour. */
   workflowConfigId?: string;
+  /**
+   * The material execution environment: protocol, workstation contract, action
+   * schema. Optional, and deliberately so.
+   *
+   * A certification describes a worker acting in an environment, and the two
+   * were never separable. Until now the target recorded only the worker, so a
+   * change to the shared runtime moved no fingerprint and every certification
+   * carried across it silently. Adding this field as required would have changed
+   * every historical target id and rewritten what past results were about; left
+   * optional, an absent value serialises away and legacy ids stay exactly what
+   * they were. A target that declares an environment gets a different identity
+   * from one that does not, which is the whole point.
+   */
+  executionEnvironmentId?: string;
 }
 
 export function targetId(t: CertificationTarget) {
@@ -60,6 +74,9 @@ export function targetId(t: CertificationTarget) {
     knowledgeVersionId: t.knowledgeVersionId, tools: [...t.tools].sort(),
     policyVersionId: t.policyVersionId, retrievalConfigId: t.retrievalConfigId,
     workflowConfigId: t.workflowConfigId || null,
+    // Absent serialises away entirely, so a legacy target hashes exactly as it
+    // always did. Present, it changes the identity.
+    executionEnvironmentId: t.executionEnvironmentId,
   });
   return "CT-" + createHash("sha256").update(canonical).digest("hex").slice(0, 12);
 }

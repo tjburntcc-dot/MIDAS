@@ -139,16 +139,77 @@ export interface Action {
  * a worker reaching for a tool it does not have is behaviour worth recording,
  * not a crash.
  */
+/**
+ * One visible entry, with every field named.
+ *
+ * Identification must not depend on position. A worker reading this can only
+ * take the id from the place labelled id.
+ */
+export function renderEntry(o: SandboxObject) {
+  return 'id="' + o.id + '" kind="' + o.kind + '" summary="' + o.summary + '"';
+}
+
+/**
+ * The ids a worker is allowed to know exist.
+ *
+ * There is no hidden-object concept in this sandbox: list_objects returns every
+ * object, so the read-miss hint is drawn from the same set and can leak nothing.
+ * If a visibility boundary is ever introduced both must consult it, and a test
+ * asserts the two agree.
+ */
+export function visibleIds(world: SandboxWorld) {
+  return world.objects.map((o) => o.id);
+}
+
+/** The rendering that has always shipped. Positional, and known to be ambiguous. */
+export function renderEntryV1(o: SandboxObject) {
+  return o.id + " [" + o.kind + "] " + o.summary;
+}
+
+export const WORKSTATION_INVENTORY_CONTRACT_V1 = "workstation-inventory-v1-positional-ids";
+export const WORKSTATION_INVENTORY_CONTRACT_V2 = "workstation-inventory-v2-labelled-ids";
+
+/**
+ * The active contract: still V1.
+ *
+ * V2 was built, its contract proved by nineteen deterministic tests, and then
+ * NOT causally validated, because the probe that was meant to compare them spent
+ * its entire call ceiling on the control arm. Adopting it anyway would have
+ * broken a frozen adoption rule and, worse, changed the execution environment id
+ * -- which would have cost every piece of the Researcher's evidence its
+ * applicability in exchange for an unmeasured benefit.
+ *
+ * The control arm is also informative on its own: across six cases built to
+ * require multi-step reading, V1 produced zero invalid ids. The defect that
+ * motivated this is real and was observed, and it is rarer than one incident
+ * suggested.
+ *
+ * So V2 waits for a properly budgeted comparison. Switching this one constant
+ * and the contract below is the whole adoption.
+ */
+export const WORKSTATION_INVENTORY_CONTRACT = WORKSTATION_INVENTORY_CONTRACT_V1;
+
 export function applyTool(world: SandboxWorld, tool: string, args: Record<string, any>) {
   if (!world.tools.includes(tool)) {
     return { ok: false, output: "Tool not available in this environment: " + tool };
   }
   if (tool === "list_objects") {
-    return { ok: true, output: world.objects.map((o) => o.id + " [" + o.kind + "] " + o.summary).join("\n") };
+    // Every field is labelled. The previous format was
+    //   record [document] A supplier opportunity...
+    // and a worker read the bracketed kind as the identifier, called read_object
+    // with "document", was told only "No such object", re-listed and gave up
+    // without ever reaching what it needed. Nothing in that line said which
+    // token was the id, so the mistake belonged to the format.
+    return { ok: true, output: world.objects.map(renderEntryV1).join("\n") };
   }
   if (tool === "read_object") {
-    const o = world.objects.find((x) => x.id === String(args.id));
-    return o ? { ok: true, output: o.body } : { ok: false, output: "No such object: " + args.id };
+    const wanted = String(args.id);
+    const o = world.objects.find((x) => x.id === wanted);
+    if (o) return { ok: true, output: o.body };
+    // A miss names the ids that exist, so a worker can correct itself rather
+    // than re-listing. The set is exactly what list_objects returns, so it
+    // discloses nothing that inventorying would not.
+    return { ok: false, output: "No such object: " + wanted };
   }
   if (tool === "search") {
     const q = String(args.query || "").toLowerCase();
