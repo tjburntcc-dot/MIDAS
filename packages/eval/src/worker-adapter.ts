@@ -27,7 +27,7 @@ import { ESCALATION_LAW_TEXT } from "./escalation-law.ts";
  * tool-dependent evidence classes. The adapted worker is a different
  * certification target from the form-filling one, and it says so.
  *
- * Where no MIDAS worker exists for a role -- sales, manager, technical --
+ * Where no MIDAS worker exists for a role -- sales, technical --
  * this reports that fact rather than quietly substituting a bare model and
  * letting the result read as a statement about MIDAS.
  */
@@ -63,6 +63,8 @@ export function adaptWorker(role: string, sources: {
   researcherVersionId?: string;
   auditorKnowledge?: Array<{ id: string; text?: string; statement?: string }>;
   auditorVersionId?: string;
+  managerKnowledge?: Array<{ id: string; text?: string; statement?: string }>;
+  managerVersionId?: string;
 }): AdaptedWorker {
   if (role === "qualifier" && sources.qualifierKnowledge) {
     return {
@@ -86,6 +88,16 @@ export function adaptWorker(role: string, sources: {
       role, versionId: sources.auditorVersionId || null, midasWorker: true,
       knowledgeIds: sources.auditorKnowledge.map((k) => k.id),
       knowledgeBlock: block(sources.auditorKnowledge),
+    };
+  }
+  // The allocator. Manufactured after six missions went into one worker's one
+  // behaviour with nothing deciding whether that was where the next unit of
+  // capital and attention should go.
+  if (role === "manager" && sources.managerKnowledge) {
+    return {
+      role, versionId: sources.managerVersionId || null, midasWorker: true,
+      knowledgeIds: sources.managerKnowledge.map((k) => k.id),
+      knowledgeBlock: block(sources.managerKnowledge),
     };
   }
   return {
