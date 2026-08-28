@@ -109,3 +109,37 @@ an object in the workstation stating when the owner must be asked, and measure
 whether escalation appears on referent and intent cases as it did on the
 authority one. That is a handful of calls and it is a direct test of the one
 explanation still standing.
+
+## Update: the fifth hypothesis died too
+
+A powered confirmation ran this comparison again with ten required-escalation
+cases instead of three, so a single flip is worth 0.10 against a declared 0.30
+margin and cannot decide anything. Arm B was dropped -- three campaigns of no
+prompt effect no longer justify the spend -- and the rule was read from the
+probe's stored record rather than retyped, so both runs provably tested the same
+sentence (`87116211d6edae20`).
+
+| | required escalations | recall | unnecessary | correct action |
+|---|---|---|---|---|
+| A control | 0 of 10 | 0.00 | 0 of 3 | 0.231 |
+| C workspace | **1 of 10** | 0.10 | 0 of 3 | 0.308 |
+
+**RESULT_B, no effect.** The workspace representation is rejected. The earlier
+directional result was a false positive produced by an underpowered threshold --
+exactly the limitation recorded alongside it at the time.
+
+Five hypotheses are now dead: worker knowledge, prompt procedure, protocol
+clause, schema affordance, and requirement representation. Escalation happened
+once out of ten cases with the requirement sitting in the workstation, and the
+negative controls held in both arms, so nothing here is a precision tradeoff
+either -- the worker simply does not take this action.
+
+Across every campaign ever run, three escalations exist in total: one on an
+authority case before this line of work, one on a referent case in the probe, and
+one on an authority case here. That is too few and too scattered to support the
+"only when a document says so" reading offered after the probe, and that reading
+is withdrawn.
+
+The next layer is below instruction and below representation: the action-
+selection mechanism itself. No further spend is justified on prompt wording,
+prompt placement, protocol text, schema shape, or where a requirement is stored.
