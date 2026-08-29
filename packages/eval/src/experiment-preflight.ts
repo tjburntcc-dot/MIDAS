@@ -71,6 +71,21 @@ export interface ManifestBudget {
   perModelCeilings?: Record<string, number>;
   /** Reserve per arm so one cannot starve another. */
   perArmReserve?: Record<string, number>;
+  /**
+   * Per-case turn caps, where one number for the whole set would be a lie.
+   *
+   * A campaign whose cases differ in shape has cases that differ in cost. The
+   * Auditor desk is the first: a two-record packet is gathered in one call and
+   * concluded in the next, and a four-record packet was measured going back for
+   * a second read before finishing. Declaring the larger cap for every case
+   * inflates the worst case, and declaring the smaller one truncates the bigger
+   * cases -- which is how the previous campaign lost its tool-use gate.
+   *
+   * When present, the worst case is the sum of these rather than cases x cap,
+   * and maxTurnsPerCase must be the largest of them so no case is budgeted above
+   * the declared cap.
+   */
+  turnsByCase?: Record<string, number>;
 }
 
 export interface ManifestSubject {
@@ -312,7 +327,26 @@ export function preflight(m: ExperimentManifest): { ok: boolean; findings: Findi
     f.push(warn("turns_survive_one_wasted_call", "RUNTIME_TRUNCATION",
       "The budget is exactly the workflow length, so one wasted turn consumes the result.", "D-15"));
   }
-  const worst = b.cases * b.arms * b.maxTurnsPerCase * (b.repeats || 1) + (b.judgeCalls || 0);
+  let worst = b.cases * b.arms * b.maxTurnsPerCase * (b.repeats || 1) + (b.judgeCalls || 0);
+  if (b.turnsByCase) {
+    const entries = Object.entries(b.turnsByCase);
+    if (entries.length !== b.cases) {
+      f.push(fail("per_case_turns_cover_every_case", "BUDGET_PLANNING",
+        "turnsByCase names " + entries.length + " cases and the budget declares " + b.cases + ".", "D-16"));
+    }
+    const largest = entries.reduce((n, [, v]) => Math.max(n, v), 0);
+    if (largest > b.maxTurnsPerCase) {
+      f.push(fail("per_case_turns_within_cap", "BUDGET_PLANNING",
+        "A case is budgeted " + largest + " turns against a declared cap of " + b.maxTurnsPerCase + ".", "D-16"));
+    }
+    for (const [id, v] of entries) {
+      if (v < workflowTurns) {
+        f.push(fail("per_case_turns_fit_the_workflow", "RUNTIME_TRUNCATION",
+          id + " is budgeted " + v + " turns and the workflow needs " + workflowTurns + ".", "D-15"));
+      }
+    }
+    worst = entries.reduce((n, [, v]) => n + v, 0) * b.arms * (b.repeats || 1) + (b.judgeCalls || 0);
+  }
   if (worst > b.hardCeiling) {
     f.push(fail("budget_fits_the_ceiling", "BUDGET_PLANNING",
       "Worst case " + worst + " exceeds the declared ceiling of " + b.hardCeiling

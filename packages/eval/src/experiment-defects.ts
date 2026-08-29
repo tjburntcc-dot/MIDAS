@@ -230,6 +230,20 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     guard: "a refusal writes to its own path; the completed result is never the same file",
     guardReusable: true,
   },
+  {
+    id: "D-32", category: "BUDGET_PLANNING", where: "experiment-preflight.ts ManifestBudget",
+    what: "One maxTurnsPerCase cannot describe a set whose cases differ in shape. The Auditor desk set has twelve two-record packets and six four-record ones, and an instrument probe measured the large packets taking a turn longer. Declaring the larger cap for all eighteen inflates the worst case by a third; declaring the smaller one truncates the six that need it, which is exactly how the previous campaign lost its tool-use gate.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "budget.turnsByCase declares a cap per case, the worst case is their sum, and preflight checks every case is covered, within the declared cap, and at or above the derived workflow floor",
+    guardReusable: true,
+  },
+  {
+    id: "D-33", category: "BUDGET_PLANNING", where: "audit-desk campaign planning",
+    what: "The turn cost per case was about to be assumed from the previous interface rather than measured. A five-call probe on two throwaway cases showed the auditor does batch ids -- which the old interface could not tell us -- but does not gather exhaustively: on a four-record packet it batched two, went back for a third, and finished at the cap with one record unopened. Assuming three turns for every case would have truncated a third of the campaign.",
+    caughtBeforeSpend: true, changedTheDecision: true,
+    guard: "measure the instrument on throwaway cases before budgeting a campaign whose cost depends on an unobserved behaviour",
+    guardReusable: true,
+  },
 ];
 
 export function defectSummary() {

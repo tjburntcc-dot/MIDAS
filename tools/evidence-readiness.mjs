@@ -12,7 +12,8 @@
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { repoPath } from "@midas/db";
 import { adaptWorker, adaptedTarget, SANDBOX_TOOLING, NO_TOOLING } from "../packages/eval/src/worker-adapter.ts";
-import { SINGLE_SHOT_ENVIRONMENT, correctedNoToolTarget, readOnlyToolTarget, portabilityAudit } from "../packages/eval/src/auditor-target-truth.ts";
+import { SINGLE_SHOT_ENVIRONMENT, AUDIT_DESK_ENVIRONMENT } from "../packages/eval/src/auditor-target-truth.ts";
+import { AUDIT_DESK_TOOL_SET } from "../packages/eval/src/audit-desk.ts";
 import { targetId, TIER_EVIDENCE_REQUIREMENTS, TIER_SCORE_REQUIREMENTS, TIER_FLOOR_REQUIREMENTS } from "../packages/eval/src/academy.ts";
 import { scenariosForRole } from "../packages/eval/src/academy-scenarios.ts";
 import { ALL_RESEARCHER_SCENARIOS } from "../packages/eval/src/researcher-scenarios.ts";
@@ -72,20 +73,21 @@ const WORKERS = [
   },
   {
     role: "auditor",
-    // It has never used a tool. The target that certified it said "sandbox".
-    actual: NO_TOOLING, environment: SINGLE_SHOT_ENVIRONMENT,
+    // The desk is now the Auditor's configuration: one tool, one protocol,
+    // named before anything ran.
+    actual: { tools: AUDIT_DESK_TOOL_SET, policyVersionId: "auditor-doctrine-v1" }, environment: AUDIT_DESK_ENVIRONMENT,
     currentTier: "TRAINING",
     capabilityBlocker: {
       blocked: false,
-      detail: "On the frontier model it cleared fabrication, authority, contradiction, omission and provenance detection at 1.00 each. No capability gate is known to block SANDBOX_COMPETENT.",
+      detail: "No capability gate is known to block SANDBOX_COMPETENT. The one clean worker finding on the desk so far is a confounded miss on a half-delivered two-part task, from a campaign whose turn budget could not reach it.",
     },
     configurationStable: {
-      stable: false,
-      detail: "au-v1 is promoted, but the target it was certified against misdescribed it twice: it declared sandbox tools the candidate never had, and the workstation environment the candidate never entered. The corrected no-tool target is a new id and the read-only-tool target is a third. Which of the three the auditor is has not been settled.",
+      stable: true,
+      detail: "Settled. CT-677749cd2035 at EE-ab6da07f1924: au-v1, gpt-4.1, auditor-doctrine-v1, one tool, frozen before any case ran. The three earlier targets are recorded as what they were and none is live.",
     },
     examinationsTrustworthy: {
-      trustworthy: false,
-      detail: "The 12 fresh lock cases are sound and belong to the corrected no-tool target. The 8-case read-only set had two wrong reference answers, confirmed by blind independent adjudication and repaired after the run, and now exercises no underdetermined case at all. The 28-case development set still carries AS-05 and AS-27.",
+      trustworthy: true,
+      detail: "Eighteen fresh cases, every reference answer independently reviewed blind before execution and returned 18/18 REFERENCE_CORRECT. The earlier sets are retained as development evidence and none is reused.",
     },
   },
   {

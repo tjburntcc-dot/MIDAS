@@ -24,6 +24,7 @@ import { adaptWorker, adaptedTarget, NO_TOOLING } from "./worker-adapter.ts";
 import { executionEnvironmentId, evidencePortability, ACTION_SCHEMA_CONTRACT } from "./execution-environment.ts";
 import type { ExecutionEnvironment } from "./execution-environment.ts";
 import { AUDITOR_DOCTRINE, AUDITOR_VERSION_ID } from "./auditor.ts";
+import { AUDIT_DESK_PROTOCOL_ID, AUDIT_DESK_INVENTORY_CONTRACT, AUDIT_DESK_TOOL_SET } from "./audit-desk.ts";
 
 const SOURCES = { auditorKnowledge: AUDITOR_DOCTRINE, auditorVersionId: AUDITOR_VERSION_ID };
 const MODEL = "gpt-4.1";
@@ -157,4 +158,32 @@ export function forensicsFingerprint() {
     B: targetId(correctedNoToolTarget()),
     C: targetId(readOnlyToolTarget()),
   })).digest("hex").slice(0, 12);
+}
+
+/**
+ * The final Auditor environment.
+ *
+ * The read-only-v1 interface was a real environment and it is not being
+ * pretended away: it ran, it produced development evidence, and CT-6bfb7037bf36
+ * still names it. It is superseded because serial single-record reads were the
+ * wrong abstraction for the job, not because the run went badly.
+ *
+ * Changing the tool contract is a material environment change. It is made here,
+ * before any certification evidence exists for the desk, and frozen.
+ */
+export const AUDIT_DESK_ENVIRONMENT: ExecutionEnvironment = {
+  protocolVersion: AUDIT_DESK_PROTOCOL_ID,
+  inventoryContractVersion: AUDIT_DESK_INVENTORY_CONTRACT,
+  actionSchemaVersion: ACTION_SCHEMA_CONTRACT,
+};
+
+/** The target the certification campaign runs against. Frozen before execution. */
+export function finalAuditorTarget() {
+  return {
+    ...adaptedTarget(adaptWorker("auditor", SOURCES), MODEL, {
+      tools: AUDIT_DESK_TOOL_SET,
+      policyVersionId: "auditor-doctrine-v1",
+    }),
+    executionEnvironmentId: executionEnvironmentId(AUDIT_DESK_ENVIRONMENT),
+  } as CertificationTarget;
 }
