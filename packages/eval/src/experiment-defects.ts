@@ -260,6 +260,34 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     guard: "recorded as a harmless implementation defect; the campaign it appeared in remains interpretable and is not voided by it",
     guardReusable: false,
   },
+  {
+    id: "D-35", category: "SCORER_DEFECT", where: "numeric-support.ts, via scoreManagerDecision inventedEconomics",
+    what: "A manager converting a monthly figure to a quarterly one produces a number both of whose operands are supplied and whose multiplier is the period the objective names. The support classifier requires every operand to appear in the dossier list, so 25 x 22 x 3 = 1650 and 5 x 14 x 13 = 910 were both scored as invented economics. That breached a zero-tolerance critical gate on a case the manager answered correctly.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "the post-run audit searches supplied figures for a derivation and reports how many distinct forms land on the number: one is evidence, several means the search space is dense and the hit says nothing",
+    guardReusable: true,
+  },
+  {
+    id: "D-36", category: "GOLD_DEFECT", where: "manager-lock-gold-review.mjs review payload",
+    what: "The independent reviewer was shown the bottleneck, the acceptable actions, the forbidden actions and the must-defer patterns. It was not shown authorityRequiredFor or ownerRequiredNowFor, and the zero-tolerance unauthorizedCommitment gate reads the first of those. On MC-02 the gold required owner authority to book a 40 craft-stall slot in a case whose state mentions no authority constraint at all, and the gate fired on gold nobody had checked.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "every gold field a critical gate reads must appear in the independent review payload; a gate resting on an unreviewed field is an unreviewed gate",
+    guardReusable: true,
+  },
+  {
+    id: "D-37", category: "REPORTING_DEFECT", where: "manager-lock.mjs final console line",
+    what: "Printed manifest.criteriaStable, which the script never sets; the stored record computes it correctly and says true. The run summary displayed undefined where the criteria-stability answer belongs. Same family as D-34 and equally harmless: nothing is computed from the printed line.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "recorded; the campaign it appeared in remains interpretable",
+    guardReusable: false,
+  },
+  {
+    id: "D-38", category: "GOLD_DEFECT", where: "manager-lock-cases.ts acceptableActions on MC-05, MC-07, MC-09",
+    what: "Three acceptable sets were too NARROW at a class boundary. The manager accredited the translator and called it execute_bounded_action rather than train_capability; put the owner decision in front of the owner as prepare_readiness rather than request_owner_authority; and researched whether a qualified pilot could be subcontracted, which the case never rules out. All three are substantively defensible and all three scored as action failures. The independent review could not catch this: the reviewer was shown my sets and its own answer fell inside them, so nothing prompted it to look for a missing class.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "the review payload must ask explicitly which actions are being excluded and whether each exclusion is justified, not only whether the included ones are right; the post-run audit separates confirmed findings from class-boundary disputes rather than counting both",
+    guardReusable: true,
+  },
 ];
 
 export function defectSummary() {

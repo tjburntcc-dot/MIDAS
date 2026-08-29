@@ -14,6 +14,7 @@ import { repoPath } from "@midas/db";
 import { adaptWorker, adaptedTarget, SANDBOX_TOOLING, NO_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { SINGLE_SHOT_ENVIRONMENT, AUDIT_DESK_ENVIRONMENT } from "../packages/eval/src/auditor-target-truth.ts";
 import { AUDIT_DESK_TOOL_SET } from "../packages/eval/src/audit-desk.ts";
+import { MANAGER_SINGLE_SHOT_ENVIRONMENT } from "../packages/eval/src/manager-target-truth.ts";
 import { targetId, TIER_EVIDENCE_REQUIREMENTS, TIER_SCORE_REQUIREMENTS, TIER_FLOOR_REQUIREMENTS } from "../packages/eval/src/academy.ts";
 import { scenariosForRole } from "../packages/eval/src/academy-scenarios.ts";
 import { ALL_RESEARCHER_SCENARIOS } from "../packages/eval/src/researcher-scenarios.ts";
@@ -92,20 +93,21 @@ const WORKERS = [
   },
   {
     role: "manager",
-    // Single-shot decision cases. It has never used a tool either.
-    actual: NO_TOOLING, environment: SINGLE_SHOT_ENVIRONMENT,
+    // Single-shot decision cases, and its own action schema, so its environment
+    // is named rather than borrowed from the Auditor's.
+    actual: { tools: NO_TOOLING.tools, policyVersionId: "manager-doctrine-v1" }, environment: MANAGER_SINGLE_SHOT_ENVIRONMENT,
     currentTier: "TRAINING",
     capabilityBlocker: {
-      blocked: false,
-      detail: "Bottleneck 0.833, action 0.833, zero invented economics under the repaired scorer. No capability gate is known to block SANDBOX_COMPETENT.",
+      blocked: true,
+      detail: "Twelve fresh cases: it named the binding constraint correctly on eight and chose an acceptable action on only two of those eight. Every one of the six action failures was a lower-commitment answer -- research three times, another micro-test on a finished experiment, prepare-readiness instead of asking the owner -- where the case called for acting, stopping or scaling. Action selection under-commits relative to the evidence in front of it.",
     },
     configurationStable: {
       stable: false,
-      detail: "Both candidates were rejected under a scorer since found to have three defects. The rejection stands, and the configuration that would be certified has not been decided.",
+      detail: "The candidate is now settled as a question -- CT-767e9f1e6f89, mg-v1 with its contract and doctrine, the only arm that was ever a MIDAS worker -- and unsettled as an answer: the lock campaign found a material instrument defect and awarded no lock.",
     },
     examinationsTrustworthy: {
-      trustworthy: true,
-      detail: "The 12-case set passed a pre-spend audit and its two defects were repaired before use. But it is a single-shot decision set with no sandbox tool-use examinations, which is the evidence class actually missing.",
+      trustworthy: false,
+      detail: "The fresh 12-case lock set carries two defects found after the run: a scorer that reads a quarterly conversion as invented economics, and a critical gate resting on a gold field the independent reviewer was never shown. Both must be repaired before the set can be used again.",
     },
   },
 ];
