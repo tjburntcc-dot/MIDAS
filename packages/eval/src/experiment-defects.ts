@@ -288,6 +288,20 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     guard: "the review payload must ask explicitly which actions are being excluded and whether each exclusion is justified, not only whether the included ones are right; the post-run audit separates confirmed findings from class-boundary disputes rather than counting both",
     guardReusable: true,
   },
+  {
+    id: "D-39", category: "GOLD_DEFECT", where: "manager-fitness-cases.ts authorityByAction, nine of twelve cases",
+    what: "Owner-authority requirements were written into gold for nine cases whose situations state no authority constraint at all. The expectation was imported from the one case that does state one. A zero-tolerance gate reads that field, so it would have fired on cases where the case itself supports no such rule -- the same shape as D-36, on a larger scale.",
+    caughtBeforeSpend: true, changedTheDecision: true,
+    guard: "the review payload is generated from the gate dependency graph, so authorityByAction reached the reviewer automatically and was returned WRONG on all nine before any worker call; the corrections were adopted verbatim",
+    guardReusable: true,
+  },
+  {
+    id: "D-40", category: "GOLD_DEFECT", where: "manager-fitness-cases.ts supportedQuantities, eleven of twelve cases",
+    what: "Supplied figures were omitted from the declared quantities -- durations, counts, subtotals the situation states. A figure a worker derives from an omitted quantity has no dimensional path and is scored as invented economics, so an incomplete quantity list manufactures the exact false flag the numeric repair exists to remove.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "the field-level review asks whether supportedQuantities is TOO_NARROW, and the reviewer named the omissions case by case",
+    guardReusable: true,
+  },
 ];
 
 export function defectSummary() {
