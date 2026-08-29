@@ -101,8 +101,15 @@ export const PERIOD_FACTORS: Quantity[] = [
   { id: "weeksPerMonth", value: 4.345, dim: dim(["week"], ["month"]), label: "about 4.3 weeks in a month" },
 ];
 
-/** Words that mark a figure as deliberately approximate. */
-const HEDGE = /\b(about|approximately|around|roughly|circa|~|almost|nearly|近|order of)\b/i;
+/**
+ * Marks that a figure is deliberately approximate.
+ *
+ * Two alternations rather than one. A tilde is not a word character, so inside
+ * a \b group it could never match and "~2000/month" was read as an exact claim
+ * -- which is how a Manager that wrote its arithmetic out in full was scored as
+ * having invented the rounded figure it declared (D-43).
+ */
+const HEDGE = /(\b(about|approximately|around|roughly|circa|almost|nearly|order of)\b|~)/i;
 /** Words that project a figure past what the evidence reaches. */
 const PROJECTION = /\b(lifetime value|ltv|payback|roi|run.?rate|forecast|projected)\b/i;
 
@@ -196,12 +203,40 @@ function consider2(found: Derivation[], value: number, d: Dimension, how: string
   found.push({ how, value, dim: d, usedPeriodFactor: false, steps });
 }
 
+const PERIOD_WORDS = "quarter|month|week|year|day";
+/**
+ * A rate the text states in its own units: "260 hours a year", "23 jobs/month".
+ *
+ * Only a rate. A bare count keeps no dimension, because "1200 episodes in the
+ * catalogue" names no denominator and guessing one would invent the claim's
+ * meaning rather than read it. Without this, any claim in hours, jobs, units or
+ * headcount per period had no dimensional path at all and was reported
+ * unsupported however cleanly it derived (D-44).
+ */
+const STATED_RATE = new RegExp(
+  "(\\d[\\d,]*(?:\\.\\d+)?)\\s*([a-z]{3,20})\\s*(?:/|per\\s+|a\\s+|each\\s+)(" + PERIOD_WORDS + ")", "gi",
+);
+
+/** The rate the window states for this figure, or null. Matched on the figure itself. */
+function statedRateFor(claim: string, w: string) {
+  const n = Number(String(claim).replace(/[^\d.]/g, ""));
+  if (!isFinite(n)) return null;
+  for (const m of w.matchAll(STATED_RATE)) {
+    if (Math.abs(Number(m[1].replace(/,/g, "")) - n) < 1e-9) return dim([m[2].replace(/s$/, "")], [m[3]]);
+  }
+  return null;
+}
+
 /** What dimension does the text around a claim say the claim has? */
 export function claimDimension(claim: string, window: string) {
   const w = window.toLowerCase();
   if (/%|per cent|percent/i.test(claim)) return dim(["percent"]);
   const isMoney = /\$|\bcost|\bspend|\bprofit|\brevenue|\bmargin|\bwage|\bsaving|\bcontribution|\bvalue|\bprice|\bfee/i.test(claim + " " + w);
   const base = isMoney ? ["currency"] : [];
+  if (!base.length) {
+    const rate = statedRateFor(claim, w);
+    if (rate) return rate;
+  }
   if (!base.length) return null;
   if (/\ba? ?quarter|quarterly|\/quarter|per quarter/.test(w)) return dim(base, ["quarter"]);
   if (/\ba? ?month|monthly|\/month|per month|a month/.test(w)) return dim(base, ["month"]);

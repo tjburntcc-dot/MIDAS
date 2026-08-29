@@ -201,3 +201,51 @@ describe("the classifier does not reject everything", () => {
     for (const c of v) assert.equal(typeof c.derivationCount, "number");
   });
 });
+
+describe("the two recorded scorer defects, repaired", () => {
+  test("REGRESSION D-43: a tilde is a hedge, because it is not a word character", () => {
+    const v = classifyClaimsV2("25 declined bookings at 22 contribution is ~560/month.", SITTERS);
+    const c = v.find((x) => x.claim.includes("560"))!;
+    assert.equal(c.hedged, true, "the tilde was read as an exact claim again");
+    assert.equal(c.support, "supported_rounded", JSON.stringify(c));
+  });
+
+  test("REGRESSION D-43: the same figure written flatly is still not supported", () => {
+    const v = classifyClaimsV2("25 declined bookings at 22 contribution is 560/month.", SITTERS);
+    const c = v.find((x) => x.claim.includes("560"))!;
+    assert.equal(c.hedged, false);
+    assert.ok(c.support.startsWith("unsupported"), "an undeclared rounding passed as exact");
+  });
+
+  test("D-43: hedging still buys only a rounding band, not licence", () => {
+    const v = classifyClaimsV2("That is ~9000/month of contribution from the declined bookings.", SITTERS);
+    const c = v.find((x) => x.claim.includes("9000"))!;
+    assert.ok(c.support.startsWith("unsupported"), "a tilde licensed an arbitrary number");
+  });
+
+  test("REGRESSION D-44: a non-currency rate the text states has a dimension and derives", () => {
+    const v = classifyClaimsV2("That frees 260 hours a year of owner time.", SITTERS);
+    const c = v.find((x) => x.claim.includes("260"))!;
+    assert.equal(c.claimDim, "hour/year");
+    assert.equal(c.support, "supported_derivation", JSON.stringify(c));
+    assert.match(String(c.basis), /52 weeks in a year/);
+  });
+
+  test("D-44: the unit must be the one the text states, not any unit that fits", () => {
+    const v = classifyClaimsV2("That is 260 bookings a year from the same demand.", SITTERS);
+    const c = v.find((x) => x.claim.includes("260"))!;
+    assert.equal(c.claimDim, "booking/year");
+    assert.ok(c.support.startsWith("unsupported"), "an hours derivation was accepted for a bookings claim");
+  });
+
+  test("REGRESSION: a bare count still has no dimension guessed for it", () => {
+    assert.equal(claimDimension("1200", "1200 episodes in the catalogue"), null);
+    const v = classifyClaimsV2("There are 1200 episodes in the catalogue.", SITTERS);
+    assert.equal(v.find((x) => x.claim.includes("1200"))!.claimDim, null);
+  });
+
+  test("D-44: a rate elsewhere in the window does not attach to a different figure", () => {
+    const d = claimDimension("1200", "we decline 25 bookings a month and hold 1200 episodes");
+    assert.equal(d, null, "the dimension of one figure was borrowed by another");
+  });
+});

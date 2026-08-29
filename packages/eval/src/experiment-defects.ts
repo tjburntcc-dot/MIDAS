@@ -320,14 +320,14 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     id: "D-43", category: "SCORER_DEFECT", where: "numeric-support-v2.ts HEDGE pattern",
     what: "The hedge list is matched with word boundaries, and a tilde is not a word character, so \"~2000/month\" was never recognised as approximate. A Manager wrote its arithmetic out in full -- 23 orders x 87 gross profit per month (~2000/month) -- and the 2001 it computed was scored as invented economics against the 2000 it wrote.",
     caughtBeforeSpend: false, changedTheDecision: false,
-    guard: "recorded; the post-run audit re-derives every flagged figure and reports which the scorer could not reach, so the flag was classified as instrument rather than worker before any verdict rested on it",
+    guard: "REPAIRED before the first Company 0 Shadow. The hedge pattern now matches the tilde outside the word-boundary group, and numeric-support-v2.test.ts asserts both that a tilde hedges and that the same figure written flatly is still refused. Before the repair: the post-run audit re-derived every flagged figure and classified this one as instrument rather than worker, so no verdict rested on it.",
     guardReusable: true,
   },
   {
     id: "D-44", category: "SCORER_DEFECT", where: "numeric-support-v2.ts claimDimension",
     what: "A claim gets a dimension only when the context reads as money or a percentage, so a non-currency rate has no dimensional path at all. \"~260 hours per year\" is 5 free hours a week times 52 weeks and was scored unsupported because the classifier never tried hour/year. Any claim in hours, units, jobs or headcount per period has the same gap.",
     caughtBeforeSpend: false, changedTheDecision: false,
-    guard: "recorded; the audit tries non-currency dimensions explicitly when re-examining a flag, which is how this was found",
+    guard: "REPAIRED before the first Company 0 Shadow. claimDimension now reads a rate the text states in its own units -- 260 hours a year, 23 jobs per month -- matched on the figure itself, so a non-currency rate has a dimensional path. A bare count still gets no dimension guessed for it, which is the line the repair had to stay behind. Before the repair: the audit tried non-currency dimensions by hand when re-examining a flag, which is how this was found.",
     guardReusable: true,
   },
 ];
