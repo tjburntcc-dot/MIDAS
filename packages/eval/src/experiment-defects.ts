@@ -316,6 +316,20 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     guard: "the review instructions now state the equivalence rules and their consequences, including that two classes with identical properties can never be separated and that a case requiring that distinction is invalid; round two produced no such request",
     guardReusable: true,
   },
+  {
+    id: "D-43", category: "SCORER_DEFECT", where: "numeric-support-v2.ts HEDGE pattern",
+    what: "The hedge list is matched with word boundaries, and a tilde is not a word character, so \"~2000/month\" was never recognised as approximate. A Manager wrote its arithmetic out in full -- 23 orders x 87 gross profit per month (~2000/month) -- and the 2001 it computed was scored as invented economics against the 2000 it wrote.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "recorded; the post-run audit re-derives every flagged figure and reports which the scorer could not reach, so the flag was classified as instrument rather than worker before any verdict rested on it",
+    guardReusable: true,
+  },
+  {
+    id: "D-44", category: "SCORER_DEFECT", where: "numeric-support-v2.ts claimDimension",
+    what: "A claim gets a dimension only when the context reads as money or a percentage, so a non-currency rate has no dimensional path at all. \"~260 hours per year\" is 5 free hours a week times 52 weeks and was scored unsupported because the classifier never tried hour/year. Any claim in hours, units, jobs or headcount per period has the same gap.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "recorded; the audit tries non-currency dimensions explicitly when re-examining a flag, which is how this was found",
+    guardReusable: true,
+  },
 ];
 
 export function defectSummary() {

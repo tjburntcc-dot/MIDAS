@@ -112,15 +112,15 @@ const WORKERS = [
        * is the same shape as the H-4 leverage observation and is carried at the
        * same weight: a development concern, not evidence.
        */
-      detail: "Absolute fitness NOT ESTABLISHED. No clean capability blocker exists. Development concern, unchanged in weight since H-4: on three of twelve fresh cases it named the binding constraint and then chose research or another micro-test where the case called for acting or scaling. The campaign that measured this was voided by its own integrity audit.",
+      detail: "CLEAN CAPABILITY BLOCKER, established. On a clean campaign against fully confirmed gold it breached two zero-tolerance gates: it chose a declared wrong near-neighbour on two cases and used two figures the evidence does not support. Every action failure was the same shape -- a lower-commitment answer where the case called for acting: MF-01 ran a test with 29 of 36 bookings refused, MF-11 ran a test after fourteen profitable jobs, MF-07 researched an offer that needed the owner in ten days. Under-commitment is no longer a development concern; it reproduced cleanly.",
     },
     configurationStable: {
       stable: false,
-      detail: "The candidate is now settled as a question -- CT-767e9f1e6f89, mg-v1 with its contract and doctrine, the only arm that was ever a MIDAS worker -- and unsettled as an answer: the lock campaign found a material instrument defect and awarded no lock.",
+      detail: "Settled as a question and answered: CT-767e9f1e6f89 is the only MIDAS Manager that exists and it is not absolutely fit as configured. No lock. Repairing it is a worker change and would create a new configuration.",
     },
     examinationsTrustworthy: {
-      trustworthy: false,
-      detail: "The fresh 12-case lock set carries two defects found after the run: a scorer that reads a quarterly conversion as invented economics, and a critical gate resting on a gold field the independent reviewer was never shown. Both must be repaired before the set can be used again.",
+      trustworthy: true,
+      detail: "The 12-case fitness set is sound: 84/84 gated gold field verdicts confirmed by a blinded reviewer that was shown the scorer semantics, quantity completeness machine-enforced, structural audit clean. It is now spent as fitness evidence for this target.",
     },
   },
 ];
