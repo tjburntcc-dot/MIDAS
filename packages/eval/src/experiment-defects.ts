@@ -1,0 +1,210 @@
+/**
+ * Every experiment defect this repository has recorded, as data.
+ *
+ * These are not recollections. Each row names the mission, the commit record or
+ * document that reports it, and whether it was caught before or after money was
+ * spent. They are here so the preflight can be built from what actually went
+ * wrong rather than from what seems prudent, and so the claim "this is the
+ * dominant failure mode" can be checked rather than asserted.
+ *
+ * History is not rewritten. Where a defect changed a verdict, the verdict stands
+ * as recorded and the row says so.
+ */
+
+export const DEFECT_CATEGORIES = [
+  "ACTOR_IDENTITY",
+  "GOLD_DEFECT",
+  "CASE_DESIGN",
+  "SCORER_DEFECT",
+  "METRIC_NOT_EXERCISED",
+  "POLICY_CONFLICT",
+  "TOOL_AFFORDANCE",
+  "RUNTIME_TRUNCATION",
+  "BUDGET_PLANNING",
+  "STATISTICAL_RESOLUTION",
+  "INFORMATION_PARITY",
+  "SEALED_CONTAMINATION",
+  "CONFIGURATION_IDENTITY",
+  "POST_HOC_CRITERION_CHANGE",
+  "RAW_TRACE_INSUFFICIENCY",
+] as const;
+
+export interface ExperimentDefect {
+  id: string;
+  category: string;
+  where: string;
+  what: string;
+  caughtBeforeSpend: boolean;
+  changedTheDecision: boolean;
+  guard: string | null;
+  guardReusable: boolean;
+}
+
+export const RECORDED_DEFECTS: ExperimentDefect[] = [
+  {
+    id: "D-01", category: "ACTOR_IDENTITY", where: "academy certification, three sessions",
+    what: "Every certification examined a bare model given a generic professional instruction while reporting the result as a MIDAS worker. Four more paths were found doing the same thing in the following mission.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "subject-identity.ts classifyPath and its repository-wide test", guardReusable: true,
+  },
+  {
+    id: "D-02", category: "GOLD_DEFECT", where: "record-identity-cases.ts DEV-01",
+    what: "The reference answer claimed twelve opportunities on a record that states no total. The number was invented by the case author, and a worker returning null was more honest than the gold.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "a regression asserting no gold count exceeds what its record states", guardReusable: false,
+  },
+  {
+    id: "D-03", category: "POLICY_CONFLICT", where: "record-identity.ts routingFor",
+    what: "The routing rule required a numeric count above one to decompose, so a worker that honestly declined to invent a total was demoted for it. The rule was wrong on its own terms.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "a regression that an unknown count does not demote an aggregate", guardReusable: false,
+  },
+  {
+    id: "D-04", category: "CASE_DESIGN", where: "academy-scenarios.ts SC-SALES-04",
+    what: "A trap fired on the correct answer: booking included matched a pattern for not included.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "exam-audit.ts trap-fires-on-a-correct-answer check", guardReusable: true,
+  },
+  {
+    id: "D-05", category: "CASE_DESIGN", where: "researcher-scenarios.ts, eight of ten sealed exams",
+    what: "Every check was a text pattern, so a fluent answer was indistinguishable from work. Also a brief that leaked an expectation through the standard fictional disclaimer.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "exam-audit.ts no_observable_check and brief_leaks_answer", guardReusable: true,
+  },
+  {
+    id: "D-06", category: "SCORER_DEFECT", where: "team-run.ts handoff tracer",
+    what: "Any intermediate gap was treated as a loss, reporting 25 per cent fidelity on a chain that was fine.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "absence at the final stage is the loss; misreporting is its own breach", guardReusable: false,
+  },
+  {
+    id: "D-07", category: "STATISTICAL_RESOLUTION", where: "routing cycle qualify-recall gate",
+    what: "Four positive cases made the smallest possible regression 0.25, so the gate could not tell slightly more cautious from broken. The candidate was rejected on it.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "none at the time", guardReusable: false,
+  },
+  {
+    id: "D-08", category: "STATISTICAL_RESOLUTION", where: "requirement-channel probe",
+    what: "Three required-escalation cases against a 0.33 margin meant one flipped case satisfied the margin exactly. The directional result did not survive a powered rerun.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "a test asserting the margin cannot be met by one case", guardReusable: true,
+  },
+  {
+    id: "D-09", category: "GOLD_DEFECT", where: "auditor-cases.ts AS-05 and AS-27",
+    what: "A must-pass case contained a fabrication the author did not notice, and an underdetermined verdict was assigned where the correct answer was a failure. The auditor was right and was scored wrong.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "independent adjudication of reference answers", guardReusable: true,
+  },
+  {
+    id: "D-10", category: "SCORER_DEFECT", where: "manager.ts numeric support",
+    what: "Citing a supplied figure in digits, and adding two supplied figures, were both scored as fabrication. All four flags that failed three arms were scorer error and none was a fabricated fact.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "numeric-support.ts with five support classes and its adversarial tests", guardReusable: true,
+  },
+  {
+    id: "D-11", category: "SCORER_DEFECT", where: "manager-cases.ts authority and owner gold",
+    what: "Authority and owner involvement were declared per case when both are properties of the action chosen. A manager picking research was marked wrong for saying research needs no signature.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "action-indexed gold fields and a scorer that reads them", guardReusable: true,
+  },
+  {
+    id: "D-12", category: "SCORER_DEFECT", where: "manager.ts ownerActionRequired",
+    what: "A free string is scored as a categorical value, so a manager that describes the owner's optional part reads as demanding involvement. Still open.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "recorded as a tracked defect test", guardReusable: false,
+  },
+  {
+    id: "D-13", category: "TOOL_AFFORDANCE", where: "sandbox.ts list_objects",
+    what: "The inventory printed the kind unlabelled between the id and the summary. A worker read the kind as the identifier, was told only No such object, re-listed and gave up.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "a repaired format built and tested, deliberately not adopted without a measured comparison", guardReusable: true,
+  },
+  {
+    id: "D-14", category: "TOOL_AFFORDANCE", where: "company-state.ts list_state",
+    what: "An unsupported kind filter returned an empty string with no error. A reasonable opening guess cost a turn and taught nothing, and four of seven cases never reached a decision.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "an unknown filter now names the kinds present and how to recover", guardReusable: true,
+  },
+  {
+    id: "D-15", category: "RUNTIME_TRUNCATION", where: "state advantage arm C",
+    what: "Three turns was list, read and decide with no slack, so one wasted turn consumed the decision. The arm was structurally handicapped by the harness.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "a turn budget that must survive one wasted turn", guardReusable: true,
+  },
+  {
+    id: "D-16", category: "BUDGET_PLANNING", where: "workstation affordance probe",
+    what: "Six cases across two arms were planned as twelve calls. Multi-step reading costs two to three calls per case, so the control arm consumed the whole ceiling and the treatment never ran.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "call-budget.ts planCalls computed from turns, refusing to start", guardReusable: true,
+  },
+  {
+    id: "D-17", category: "BUDGET_PLANNING", where: "state advantage cycle",
+    what: "Without per-arm reserves a greedy arm can consume the whole ceiling before another arm runs, which is precisely how the workstation affordance comparison lost its treatment arm.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "per-arm reservations enforced at charge time", guardReusable: true,
+  },
+  {
+    id: "D-18", category: "POST_HOC_CRITERION_CHANGE", where: "state C confirmation smoke gate",
+    what: "The smoke gate required the worker to skip a distractor and failed a run in which the runtime plainly worked. The criterion was corrected after seeing the result and recorded as such.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "a test recording the change and why a smoke gate differs from a scored gate", guardReusable: true,
+  },
+  {
+    id: "D-19", category: "CONFIGURATION_IDENTITY", where: "academy.ts CertificationTarget",
+    what: "The target did not include the execution environment, so a protocol revision moved no fingerprint and every certification would have carried across a changed environment silently.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "an optional executionEnvironmentId that leaves historical ids byte-identical", guardReusable: true,
+  },
+  {
+    id: "D-20", category: "METRIC_NOT_EXERCISED", where: "auditor certification dimensions",
+    what: "Dimensions with no case exercising them had to be reported as null rather than as a flattering default, and nothing enforced that a gate could not be written against one.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "null dimensions are excluded from the weighted score", guardReusable: true,
+  },
+  {
+    id: "D-21", category: "RAW_TRACE_INSUFFICIENCY", where: "state advantage arm C",
+    what: "Four cases failed identically and the stored result did not contain the tool calls, so three model calls had to be spent rediscovering what happened.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "none at the time", guardReusable: false,
+  },
+  {
+    id: "D-22", category: "INFORMATION_PARITY", where: "state advantage cycle",
+    what: "Three renderings of one fact list could have diverged silently and made the experiment measure information rather than representation.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "parityAudit asserting every item reaches every arm and the listing leaks nothing", guardReusable: true,
+  },
+  {
+    id: "D-23", category: "SEALED_CONTAMINATION", where: "routing and identity sealed sets",
+    what: "A sealed set that had informed a diagnosis was no longer a clean holdout for the question that diagnosis raised.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "a test that a new sealed set reuses no record from a set that has already informed a diagnosis", guardReusable: true,
+  },
+  {
+    id: "D-24", category: "CASE_DESIGN", where: "manager-cases.ts",
+    what: "A dossier leaked an action class into its own text, and three objectives were too terse to say what was being optimised.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "a pre-spend suite audit over the case set", guardReusable: true,
+  },
+  {
+    id: "D-25", category: "GOLD_DEFECT", where: "state-advantage-cases.ts",
+    what: "A belief the outcome data contradicts was marked current rather than superseded, and a stale token also appeared in current state where it would have flagged correct work.",
+    caughtBeforeSpend: true, changedTheDecision: false,
+    guard: "gold audit asserting stale tokens appear only in superseded items", guardReusable: true,
+  },
+];
+
+export function defectSummary() {
+  const byCategory: Record<string, number> = {};
+  for (const d of RECORDED_DEFECTS) byCategory[d.category] = (byCategory[d.category] || 0) + 1;
+  const ranked = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+  return {
+    total: RECORDED_DEFECTS.length,
+    byCategory,
+    mostCommon: ranked.slice(0, 3).map(([k, v]) => k + " " + v),
+    caughtBeforeSpend: RECORDED_DEFECTS.filter((d) => d.caughtBeforeSpend).length,
+    caughtAfterSpend: RECORDED_DEFECTS.filter((d) => !d.caughtBeforeSpend).length,
+    changedTheDecision: RECORDED_DEFECTS.filter((d) => d.changedTheDecision).length,
+    reusableGuards: RECORDED_DEFECTS.filter((d) => d.guardReusable).length,
+    unguarded: RECORDED_DEFECTS.filter((d) => !d.guard).map((d) => d.id),
+  };
+}
