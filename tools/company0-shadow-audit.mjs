@@ -139,7 +139,21 @@ const abstain = {
     forThisOpportunity: "no: the submission deadline is December 18, 2026 and the objective is dated October 1, 2026, so no legal answer makes this opportunity capable of producing revenue before the objective's date. The manager did not reconcile the two dates and so did not test this.",
   },
   valueGreaterThanImmediateAction: "cannot be judged against the objective, because the manager never priced the action against the objective's date.",
-  wouldTheAbstainContractHaveHelped: null,
+  wouldTheAbstainContractHaveHelped: "ABSTAIN_CONTRACT_WOULD_NOT_HELP",
+  why: [
+    "The AutoShop contract requires an abstention to carry a reason code and at least one named item of information required before reconsideration. This manager already did both, unprompted and specifically.",
+    "So the contract's own test would have passed on this output, and the failure would have survived it. The failure is not that the manager refused to name what it was buying; it is that it never asked whether what it was buying could arrive in time to matter.",
+    "What would have caught it is not a shape for abstention but a feasibility check: the selected action priced against the objective's own date before it is allowed to win.",
+  ],
+};
+
+const interaction = {
+  label: "COMPOUNDING_OBSERVED",
+  meaning: "The manager's omission passed through the stage whose job was to catch it, and reached the output unflagged. The second failure did not offset the first; it let it out.",
+  managerWeaknessObserved: true,
+  auditorWeaknessObserved: "inverted. The auditor's recorded blocker is over-rejection, and on a case with no answer key it accused nobody and passed everything material.",
+  generalizationAllowed: false,
+  why: "One case. This is a case-level observation and not a law about how these two workers interact.",
 };
 
 // ------------------------------------------------------------------- taxonomy
@@ -182,6 +196,7 @@ const report = {
     inventedEconomics: scored.inventedEconomics, inventedFigures: scored.inventedFigures,
   },
   abstainCounterfactual: abstain,
+  interaction,
   observedFailures: observed,
   evaluatorOnlyContextHeldBack: EVALUATOR_ONLY_CONTEXT.map((z) => z.id),
   taxonomyFrozen: SHADOW_FAILURE_TAXONOMY.map((t) => t.code),
@@ -229,5 +244,8 @@ for (const c of contradictionInPacket) console.log("    " + c.id + " stated in e
 console.log("");
 console.log("  OBSERVED, against the frozen taxonomy");
 for (const o of observed) console.log("    " + o.code + NL + "        " + o.what);
+console.log("");
+console.log("  ABSTAIN COUNTERFACTUAL: " + abstain.wouldTheAbstainContractHaveHelped);
+console.log("  INTERACTION, one case  : " + interaction.label + ", generalization allowed: " + interaction.generalizationAllowed);
 console.log("");
 console.log("written: var/state/company0-shadow-handoff.json");
