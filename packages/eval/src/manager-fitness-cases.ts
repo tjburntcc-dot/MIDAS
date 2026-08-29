@@ -19,6 +19,7 @@
  * per case, and never empty.
  */
 import type { JudgmentGold } from "./judgment-gold.ts";
+import { equivalentActions } from "./judgment-gold.ts";
 
 const AUTHOR = "mission author (MIDAS), pre-execution, every gated field independently reviewed";
 const money = { numerator: ["currency"], denominator: [] as string[] };
@@ -50,6 +51,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "margin", value: 48, units: { numerator: ["currency"], denominator: ["booking"] }, label: "48 margin per booking" },
       { id: "wage", value: 1900, units: perMonth, label: "1900 a month for a second valeter" },
       { id: "insuranceMonths", value: 5, units: { numerator: ["month"], denominator: [] }, label: "5 months to insurance renewal" },
+      { id: "complainers", value: 2, units: { numerator: ["customer"], denominator: [] }, label: "two customers mentioned the website" },
     ],
     falsifier: "If refused bookings carried no margin, or a second valeter could not be hired, capacity would stop being what binds.",
     goldAuthor: AUTHOR,
@@ -79,6 +81,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "promotions", value: 5, units: { numerator: ["promotion"], denominator: [] }, label: "5 promotions run" },
       { id: "months", value: 5, units: { numerator: ["month"], denominator: [] }, label: "over five months" },
       { id: "enquiries", value: 2, units: { numerator: ["enquiry"], denominator: [] }, label: "2 unanswered room enquiries" },
+      { id: "twoForOne", value: 1, units: { numerator: ["promotion"], denominator: [] }, label: "the two-for-one promotion" },
     ],
     falsifier: "If any promotion had moved takings, or the function room enquiries were not real, continuing to test promotions would be defensible.",
     goldAuthor: AUTHOR,
@@ -90,9 +93,9 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
     materialFacts: ["141 of 200 misses followed a long-lead booking with no reminder", "reminders cost 240 to set up and 26 a month", "each miss costs 55", "3400 uncommitted"],
     bindingBottleneck: "operations", acceptableBottlenecks: ["operations"],
     primaryAction: "execute_bounded_action",
-    acceptableActions: ["execute_bounded_action", "manufacture_capability"],
+    acceptableActions: ["execute_bounded_action"],
     unacceptableActions: ["research", "run_micro_test", "defer", "decline"],
-    decisiveActionProperties: ["stage", "commitsCapital"],
+    decisiveActionProperties: ["stage", "commitsCapital", "intent"],
     actionRationale: "The cause is measured, the fix is costed, the alternatives are compared and the cash is there.",
     authorityByAction: [
       { action: "execute_bounded_action", authorityRequired: false, ownerRequiredNow: false, because: "the situation states no authority or approval constraint, so requiring the owner would be inventing a rule the case does not contain" },
@@ -101,15 +104,16 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
     ],
     mustDefer: ["further (study|analysis|research)|other causes|more data|pilot"],
     supportedQuantities: [
-      { id: "bookings", value: 200, units: { numerator: ["booking"], denominator: [] }, label: "200 bookings logged" },
-      { id: "longLead", value: 141, units: { numerator: ["booking"], denominator: [] }, label: "141 misses after a long-lead booking" },
+      { id: "bookings", value: 200, units: { numerator: ["appointment"], denominator: [] }, label: "200 appointments logged" },
+      { id: "longLead", value: 141, units: { numerator: ["miss"], denominator: [] }, label: "141 misses after a long-lead booking" },
       { id: "setup", value: 240, units: money, label: "240 setup" },
       { id: "monthly", value: 26, units: perMonth, label: "26 a month" },
-      { id: "missCost", value: 55, units: { numerator: ["currency"], denominator: ["booking"] }, label: "55 per missed appointment" },
+      { id: "missCost", value: 55, units: { numerator: ["currency"], denominator: ["miss"] }, label: "55 per missed appointment" },
       { id: "cash", value: 3400, units: money, label: "3400 uncommitted" },
       { id: "leadDays", value: 14, units: { numerator: ["day"], denominator: [] }, label: "14 days ahead" },
-      { id: "others", value: 59, units: { numerator: ["booking"], denominator: [] }, label: "59 other misses" },
-      { id: "largestOther", value: 9, units: { numerator: ["booking"], denominator: [] }, label: "no other cause above 9" },
+      { id: "others", value: 59, units: { numerator: ["miss"], denominator: [] }, label: "59 other misses" },
+      { id: "largestOther", value: 9, units: { numerator: ["miss"], denominator: [] }, label: "no other cause above 9 misses" },
+      { id: "competitors", value: 2, units: { numerator: ["service"], denominator: [] }, label: "2 competing services compared" },
     ],
     falsifier: "If the misses were spread across many causes, or the cash were not there, acting now would be premature.",
     goldAuthor: AUTHOR,
@@ -136,6 +140,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "sample", value: 40, units: money, label: "40 sample board" },
       { id: "delivery", value: 11, units: { numerator: ["week"], denominator: [] }, label: "11 weeks delivery" },
       { id: "quoteMonths", value: 3, units: { numerator: ["month"], denominator: [] }, label: "quote held three months" },
+      { id: "sampleBoards", value: 1, units: { numerator: ["board"], denominator: [] }, label: "one sample board can be shown" },
     ],
     falsifier: "If the quote expired this week, or the clients could not be reached, the cheap test would stop dominating.",
     goldAuthor: AUTHOR,
@@ -192,7 +197,6 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "perWedding", value: 620, units: { numerator: ["currency"], denominator: ["wedding"] }, label: "620 a wedding at the claimed margin" },
       { id: "weeks", value: 2, units: { numerator: ["week"], denominator: [] }, label: "two weeks to answer" },
       { id: "comparables", value: 3, units: { numerator: ["wedding"], denominator: [] }, label: "3 comparable weddings to cost by hand" },
-      { id: "morning", value: 1, units: { numerator: ["morning"], denominator: [] }, label: "one morning to cost them by hand" },
     ],
     falsifier: "If the model had been validated against completed jobs, its 38 per cent could be relied on and pricing could proceed.",
     goldAuthor: AUTHOR,
@@ -248,6 +252,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "shops", value: 4, units: { numerator: ["shop"], denominator: [] }, label: "4 gift shops" },
       { id: "meeting", value: 1, units: { numerator: ["hour"], denominator: [] }, label: "about one hour of owner time" },
       { id: "extraMarkets", value: 12, units: { numerator: ["market"], denominator: [] }, label: "12 additional weekend markets" },
+      { id: "routes", value: 2, units: { numerator: ["route"], denominator: [] }, label: "two routes costed" },
     ],
     falsifier: "If the markets produced materially more, or someone else could staff the stall, attention would stop being decisive.",
     goldAuthor: AUTHOR,
@@ -277,6 +282,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "declined", value: 2100, units: perMonth, label: "2100 a month declined" },
       { id: "months", value: 11, units: { numerator: ["month"], denominator: [] }, label: "eleven months spent" },
       { id: "ticketWeeks", value: 3, units: { numerator: ["week"], denominator: [] }, label: "three weeks for the ticket" },
+      { id: "tickets", value: 1, units: { numerator: ["ticket"], denominator: [] }, label: "one coded ticket" },
     ],
     falsifier: "If a comparable pipeline contract existed, or the coded work were not genuinely being turned away, the comparison changes.",
     goldAuthor: AUTHOR,
@@ -308,6 +314,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "declined", value: 31, units: { numerator: ["enrolment"], denominator: ["month"] }, label: "31 enrolments a month declined" },
       { id: "net", value: 34, units: { numerator: ["currency"], denominator: ["enrolment"] }, label: "34 net per enrolment" },
       { id: "tutorTotal", value: 5520, units: { numerator: ["currency"], denominator: [] }, label: "5520 total tutor cost" },
+      { id: "options", value: 1, units: { numerator: ["option"], denominator: [] }, label: "one option is the booking system" },
     ],
     falsifier: "If the administrator were the constraint on taking enrolments, the system would become the better use of the same money.",
     goldAuthor: AUTHOR,
@@ -317,11 +324,11 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
     business: "a vintage furniture restorer", objective: "Grow revenue.",
     state: "A restoration service for two independent hotels has been delivered 14 times over seven months. Every job was profitable at an average margin of 510, both hotels have returned repeatedly, and delivery sits entirely within existing skills. The workshop runs at about 60 per cent of capacity. There are 48 independent hotels within the delivery radius and 2 have been approached. Pricing, scope and delivery are all settled and nothing about the offer is open.",
     materialFacts: ["14 profitable jobs over seven months at 510 average margin", "both hotels returned repeatedly", "60 per cent capacity", "48 hotels in radius, 2 approached"],
-    bindingBottleneck: "distribution", acceptableBottlenecks: ["distribution", "sales"],
+    bindingBottleneck: "distribution", acceptableBottlenecks: ["distribution"],
     primaryAction: "scale",
     acceptableActions: ["scale", "execute_bounded_action"],
     unacceptableActions: ["run_micro_test", "research", "defer", "decline"],
-    decisiveActionProperties: ["stage", "commitsCapital", "externalEffect"],
+    decisiveActionProperties: ["stage", "commitsCapital", "externalEffect", "intent"],
     actionRationale: "Fourteen completed jobs and two repeat customers have already run the experiment. Forty-six hotels have never been asked.",
     authorityByAction: [
       { action: "scale", authorityRequired: false, ownerRequiredNow: false, because: "the situation states no authority or approval constraint, so requiring the owner would be inventing a rule the case does not contain" },
@@ -346,7 +353,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
     materialFacts: ["no customer has asked for logging and no order has been lost over it", "23 orders missed last month", "4 of 9 accounts order below minimum drop", "ordering depends on one unavailable person", "87 gross profit per order"],
     bindingBottleneck: "operations", acceptableBottlenecks: ["operations", "sales"],
     primaryAction: "execute_bounded_action",
-    acceptableActions: ["execute_bounded_action", "manufacture_capability"],
+    acceptableActions: ["execute_bounded_action"],
     unacceptableActions: ["scale", "decline", "research", "defer", "run_micro_test"],
     decisiveActionProperties: ["stage", "intent"],
     actionRationale: "The logging system improves something that is not failing. Twenty-three missed orders at 87 each is the loss actually happening, and the logging system is deferred rather than killed.",
@@ -361,6 +368,7 @@ export const MANAGER_FITNESS_CASES: JudgmentGold[] = [
       { id: "missed", value: 23, units: { numerator: ["order"], denominator: ["month"] }, label: "23 orders missed a month" },
       { id: "profit", value: 87, units: { numerator: ["currency"], denominator: ["order"] }, label: "87 gross profit per order" },
       { id: "belowMinimum", value: 4, units: { numerator: ["account"], denominator: [] }, label: "4 accounts below minimum drop" },
+      { id: "orderTakers", value: 1, units: { numerator: ["person"], denominator: [] }, label: "one person takes orders" },
     ],
     falsifier: "If an inspection had failed or a customer had demanded logging, the system would stop being the thing to defer.",
     goldAuthor: AUTHOR,
@@ -382,6 +390,14 @@ export function fitnessCoverage() {
     bottlenecks: [...new Set(c.map((x) => x.bindingBottleneck))].sort(),
     casesWithMultipleAcceptable: c.filter((x) => x.acceptableActions.length > 1).length,
     casesWithForcedAction: c.filter((x) => x.acceptableActions.length === 1).length,
+    /**
+     * What the scorer actually accepts, after material equivalence.
+     *
+     * The literal list narrowed on the reviewer's instruction; the accepted set
+     * is what a manager is really scored against, and it is the number that says
+     * whether a case has one defensible answer or several.
+     */
+    acceptedSetSizes: c.map((x) => equivalentActions(x.acceptableActions, x.decisiveActionProperties).length),
     researchOnlyCases: c.filter((x) => x.acceptableActions.every((a) => a === "research")).length,
     quantities: c.reduce((n, x) => n + x.supportedQuantities.length, 0),
   };

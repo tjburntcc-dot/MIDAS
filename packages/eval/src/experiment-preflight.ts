@@ -318,6 +318,14 @@ export function preflight(m: ExperimentManifest): { ok: boolean; findings: Findi
         "These gold fields can decide a gate and were never shown to the independent reviewer: " + gap.join(", ")
         + ". A gate resting on an unreviewed field is an unreviewed gate.", "D-36"));
     }
+    if (adj.semanticsShown !== true) {
+      f.push(fail("reviewer_saw_action_equivalence_semantics", "GOLD_DEFECT",
+        "The independent reviewer judged acceptable actions without being shown how equivalence is computed. Round one of the Manager review did exactly that, asked for a widening, and retracted it once told.", "D-42"));
+    }
+    if (adj.quantityCompletenessEnforcedBy === undefined) {
+      f.push(warn("quantity_completeness_is_machine_checked", "GOLD_DEFECT",
+        "The manifest does not say what enforces the completeness of the supplied quantities. A human-enumerated list does not converge.", "D-41"));
+    }
     if (Array.isArray(adj.unresolvedFieldVerdicts) && adj.unresolvedFieldVerdicts.length) {
       f.push(fail("gold_fields_all_confirmed", "GOLD_DEFECT",
         "The reviewer did not confirm: " + adj.unresolvedFieldVerdicts.map((u: any) => u.caseId + "." + u.field + "=" + u.verdict).join(", ")

@@ -20,6 +20,8 @@
  * both derived from the same object, so they cannot drift apart.
  */
 
+import { quantityCoverage, QUANTITY_EXTRACTION_VERSION } from "./quantity-extraction.ts";
+
 /**
  * What an action materially is, independent of what it is called.
  *
@@ -125,8 +127,23 @@ export interface JudgmentGold {
   mustDefer: string[];
   supportedQuantities: NumericExpectation[];
 
+  /**
+   * Numbers present in the text that are deliberately not evidence.
+   *
+   * Each needs a reason. The structural audit refuses any numeric token the gold
+   * has neither typed nor excluded, so this is the only way a number can be
+   * left out, and leaving one out is now a recorded decision rather than an
+   * oversight nobody can see.
+   */
+  excludedNumerals?: Array<{ value: number; reason: string }>;
+
   falsifier: string;
   goldAuthor: string;
+}
+
+/** Everything the worker reads. Extraction runs over exactly this. */
+export function workerVisibleText(gold: JudgmentGold) {
+  return [gold.objective, gold.state].join(" ");
 }
 
 /**
@@ -142,8 +159,19 @@ export interface JudgmentGate {
   critical: boolean;
   reportedOnly: boolean;
   goldDependencies: string[];
+  /** Set where a dependency's completeness is machine-checked rather than reviewed. */
+  completenessEnforcedBy?: string;
+  /** What the reviewer is actually being asked about this dependency. */
+  reviewQuestion?: string;
 }
 
+/**
+ * Completeness of supportedQuantities is no longer a reviewer judgement: the
+ * structural audit refuses a gold whose declared quantities do not cover every
+ * numeric token the worker can read. What remains reviewable is what each
+ * quantity MEANS -- its units -- which is interpretation, so the field stays a
+ * gated dependency and the question asked of the reviewer changes.
+ */
 export const JUDGMENT_GATES: JudgmentGate[] = [
   { gateId: "bottleneck", metricId: "bottleneckAccuracy", scorerId: "bottleneckCorrect", critical: false, reportedOnly: false,
     goldDependencies: ["acceptableBottlenecks"] },
@@ -158,7 +186,8 @@ export const JUDGMENT_GATES: JudgmentGate[] = [
   { gateId: "ownerAttention", metricId: "ownerAttentionJudgment", scorerId: "ownerInterruptionCorrect", critical: false, reportedOnly: false,
     goldDependencies: ["authorityByAction"] },
   { gateId: "economics", metricId: "inventedEconomicsCount", scorerId: "inventedEconomics", critical: true, reportedOnly: false,
-    goldDependencies: ["supportedQuantities"] },
+    goldDependencies: ["supportedQuantities"], completenessEnforcedBy: QUANTITY_EXTRACTION_VERSION,
+    reviewQuestion: "are the declared units right, not whether the list is complete" },
   { gateId: "deferKill", metricId: "deferKillAccuracy", scorerId: "deferredTheRightThing", critical: false, reportedOnly: false,
     goldDependencies: ["mustDefer"] },
   { gateId: "alternatives", metricId: "alternativeGeneration", scorerId: "generatedAlternatives", critical: false, reportedOnly: false,
@@ -197,6 +226,17 @@ export function criticalGoldFields(gates: JudgmentGate[] = JUDGMENT_GATES) {
  * removing a field from this function is caught by preflight rather than by
  * someone noticing.
  */
+export function reviewSemantics(gold: JudgmentGold) {
+  return {
+    actionProperties: ACTION_PROPERTIES,
+    actionSemantics: ACTION_SEMANTICS,
+    decisiveForThisCase: gold.decisiveActionProperties,
+    equivalenceRule: "Two action labels are the same present decision when they match on every property listed in decisiveForThisCase. Adding a property narrows the accepted set. Two classes with identical property values can never be separated; a case that requires that distinction is invalid.",
+    authorityRule: "Authority and owner involvement are indexed by the action chosen. A materially equivalent label inherits the expectation, so a synonym cannot escape the authority gate.",
+    numericRule: "Completeness of supportedQuantities is machine-enforced by " + QUANTITY_EXTRACTION_VERSION + ". You are asked only whether the declared units are right, never whether figures are missing.",
+  };
+}
+
 export function reviewPayloadFor(gold: JudgmentGold, gates: JudgmentGate[] = JUDGMENT_GATES) {
   const fields = gatedGoldFields(gates);
   const payload: Record<string, any> = {
@@ -210,7 +250,11 @@ export function reviewPayloadFor(gold: JudgmentGold, gates: JudgmentGate[] = JUD
   // The primary action is context for judging the set, not a gated field itself.
   payload.proposed.primaryAction = gold.primaryAction;
   payload.proposed.bindingBottleneck = gold.bindingBottleneck;
-  return { payload, fieldsShown: [...fields, "primaryAction", "bindingBottleneck"].sort() };
+  // D-42. The first review round judged acceptableActions without knowing how
+  // equivalence is computed, asked for a widening, and retracted it once told.
+  // The semantics now travel with the payload and cannot be omitted.
+  payload.semantics = reviewSemantics(gold);
+  return { payload, fieldsShown: [...fields, "primaryAction", "bindingBottleneck"].sort(), semanticsIncluded: true };
 }
 
 /**
@@ -255,6 +299,17 @@ export function auditGold(gold: JudgmentGold) {
   }
   for (const a of gold.authorityByAction) {
     if (!a.because || a.because.length < 15) problems.push("authority expectation for " + a.action + " has no stated reason");
+  }
+  const cov = quantityCoverage(workerVisibleText(gold),
+    gold.supportedQuantities.map((q) => ({ id: q.id, value: q.value })), gold.excludedNumerals || []);
+  for (const u of cov.uncovered) {
+    problems.push("a number the worker can read is neither typed nor excluded: " + u.value + " in \"" + u.trailing.slice(0, 30) + "\"");
+  }
+  for (const u of cov.unfounded) {
+    problems.push("declared quantity " + u.id + " = " + u.value + " appears nowhere in the text the worker sees");
+  }
+  for (const e of gold.excludedNumerals || []) {
+    if (!e.reason || e.reason.length < 10) problems.push("excluded numeral " + e.value + " has no stated reason");
   }
   if (!gold.supportedQuantities.length) problems.push("no supported quantities: every figure in the reasoning would be unsupported");
   if (!/^If /.test(gold.falsifier)) problems.push("falsifier is not stated as a condition");
