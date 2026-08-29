@@ -27,6 +27,15 @@ export const DEFECT_CATEGORIES = [
   "CONFIGURATION_IDENTITY",
   "POST_HOC_CRITERION_CHANGE",
   "RAW_TRACE_INSUFFICIENCY",
+  /**
+   * A defect in how a result is displayed, affecting nothing computed from it.
+   *
+   * Added deliberately rather than by stretching an existing label. The guard
+   * that forced this refused an undeclared category on the same day the Auditor
+   * answered a case with a defect class the taxonomy does not contain -- the
+   * same failure, one caught by a test and one scored as a miss.
+   */
+  "REPORTING_DEFECT",
 ] as const;
 
 export interface ExperimentDefect {
@@ -243,6 +252,13 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     caughtBeforeSpend: true, changedTheDecision: true,
     guard: "measure the instrument on throwaway cases before budgeting a campaign whose cost depends on an unobserved behaviour",
     guardReusable: true,
+  },
+  {
+    id: "D-34", category: "REPORTING_DEFECT", where: "audit-desk-decide.mjs and auditor-readonly-certification.mjs tier print",
+    what: "Both printed award.tier, and certify() returns awardedTier. The awarded tier displayed as undefined in two campaign reports. Nothing computed from it -- the evidence decision comes from the frozen gates, not from this line -- so no result was affected, but a reader would have seen a blank where the tier belongs.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "recorded as a harmless implementation defect; the campaign it appeared in remains interpretable and is not voided by it",
+    guardReusable: false,
   },
 ];
 
