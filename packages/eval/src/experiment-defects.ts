@@ -302,6 +302,20 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     guard: "the field-level review asks whether supportedQuantities is TOO_NARROW, and the reviewer named the omissions case by case",
     guardReusable: true,
   },
+  {
+    id: "D-41", category: "GOLD_DEFECT", where: "judgment-gold.ts supportedQuantities, as specified",
+    what: "The field asks for every figure the situation supplies, which has no fixed boundary, so an independent reviewer enumerates it differently every round. Across two rounds on five cases it named entirely different omissions the second time -- two customers mentioning a website, no client having been asked, the model never having been checked -- several of which are facts rather than quantities. A field whose completeness is a matter of enumeration judgement cannot reach CONFIRMED by iteration, and five of the ten verdicts that stayed open are this one field.",
+    caughtBeforeSpend: true, changedTheDecision: true,
+    guard: "recorded, not repaired: the field needs a bounded definition a machine can check, such as every numeral appearing in the situation text, so the structural gold audit can enforce completeness without spending a review call on it",
+    guardReusable: false,
+  },
+  {
+    id: "D-42", category: "GOLD_DEFECT", where: "manager-fitness gold review, round one",
+    what: "The first review was conducted without being told how action equivalence is computed, so it asked for distinctions the substrate cannot express and for widenings it later retracted. On MF-03 it asked for manufacture_capability to be added and then, once told that manufacture_capability and train_capability have identical material properties and can never be separated, said admitting it was too broad. The same reversal happened on MF-12, and on MF-11 it first said sales arguably fit and then that adding sales was too broad. Advice adopted verbatim from round one was advice the reviewer would not have given had it known the rules.",
+    caughtBeforeSpend: true, changedTheDecision: true,
+    guard: "the review instructions now state the equivalence rules and their consequences, including that two classes with identical properties can never be separated and that a case requiring that distinction is invalid; round two produced no such request",
+    guardReusable: true,
+  },
 ];
 
 export function defectSummary() {

@@ -20,7 +20,7 @@
  * So this builds the manifest and runs preflight, and preflight refuses it. No
  * worker call is made.
  */
-import { writeFileSync, readFileSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { repoPath } from "@midas/db";
 import { preflight, criteriaFingerprint } from "../packages/eval/src/experiment-preflight.ts";
@@ -33,7 +33,8 @@ import { targetId } from "../packages/eval/src/academy.ts";
 
 const model = "gpt-4.1";
 const target = managerCandidateTarget();
-const review = JSON.parse(readFileSync(repoPath("var", "state", "manager-fitness-gold-review.json"), "utf8"));
+const closed = repoPath("var", "state", "manager-fitness-gold-closed.json");
+const review = JSON.parse(readFileSync(existsSync(closed) ? closed : repoPath("var", "state", "manager-fitness-gold-review.json"), "utf8"));
 
 const caseFingerprint = createHash("sha256").update(JSON.stringify(MANAGER_FITNESS_CASES)).digest("hex").slice(0, 16);
 const priorFingerprints = [
@@ -112,10 +113,11 @@ writeFileSync(repoPath("var", "state", "manager-fitness-preflight.json"), JSON.s
   structuralGoldAudit: structural,
   fieldVerdicts: { total: review.fieldVerdicts.length, confirmed: review.fieldVerdicts.length - blockers.length, blockers },
   repairsApplied: [
-    "authorityByAction: the invented owner-authority requirements were removed from the eight cases whose situations state no authority constraint, adopting the reviewer's stated correction verbatim",
-    "supportedQuantities: every supplied figure the reviewer named as omitted was added with its units",
+    "round one: the invented owner-authority requirements were removed from the nine cases whose situations state no authority constraint",
+    "round one: the supplied figures the reviewer named as omitted were added with their units",
+    "round two: all forty-four outstanding fields were repaired from the reviewer's stated reasoning and re-adjudicated; thirty-four were confirmed",
   ],
-  repairsOutstanding: "acceptableActions, acceptableBottlenecks, decisiveActionProperties, unacceptableActions and mustDefer verdicts are design judgements the reviewer disputed. Adopting them would change what each case measures and would need re-review, and the mission's gold-review budget of three calls is spent.",
+  repairsOutstanding: "Ten field verdicts remain open after two review rounds and the review ceiling of two calls is spent, so they cannot be closed in this mission. Five are supportedQuantities, where the reviewer enumerated different omissions each round and included facts that are not quantities: that field has no bounded definition and does not converge by iteration. Three are action or bottleneck sets the reviewer widened in round one and narrowed in round two, once it was told that two action classes with identical material properties can never be separated. Two ask for decisive properties that would exclude a near neighbour the current property vocabulary cannot distinguish.",
   preflight: { ok: pre.ok, blocking: pre.blocking, findings: pre.findings },
   manifest,
   evidenceStatus: "No campaign was run. Certifies nothing, promotes nothing, locks nothing.",

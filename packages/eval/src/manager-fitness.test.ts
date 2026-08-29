@@ -23,6 +23,7 @@ const repoFile = (rel: string) => new URL("../../../" + rel, import.meta.url).pa
 const load = (f: string) => (existsSync(repoFile("var/state/" + f)) ? JSON.parse(readFileSync(repoFile("var/state/" + f), "utf8")) : null);
 const review = load("manager-fitness-gold-review.json");
 const pre = load("manager-fitness-preflight.json");
+const closed = load("manager-fitness-gold-closed.json");
 
 describe("the set is fresh and structurally sound", () => {
   test("twelve shapes, twelve trades, nothing reused", () => {
@@ -113,14 +114,34 @@ describe("the campaign did not run, and the record says why", () => {
       "a gated field was still unreviewed, which the generated payload was supposed to make impossible");
   });
 
-  test("the outstanding verdicts are the ones that need judgement, not the mechanical ones", { skip: !(pre && review) }, () => {
-    const blockers = freezeBlockers(review.fieldVerdicts);
-    const fields = new Set(blockers.map((b: any) => b.field));
-    // The two categories repaired verbatim should no longer dominate what blocks.
-    assert.ok(blockers.length > 0, "the set froze after all; update this test and the record");
-    assert.ok(fields.size >= 3);
-    assert.match(pre.repairsOutstanding, /would need re-review/);
-    assert.match(pre.repairsOutstanding, /budget of three calls is spent/);
+  test("the closing round answered every reopened field and confirmed most of them", { skip: !closed }, () => {
+    assert.equal(closed.calls, 2, "the review ceiling of two calls was exceeded");
+    assert.equal(closed.reopened.length, 44);
+    assert.equal(closed.freshVerdicts.length, 44, "a reopened field went unanswered");
+    assert.equal(closed.unanswered.length, 0);
+    assert.equal(closed.fieldVerdicts.filter((f: any) => f.verdict === "CONFIRMED").length, 74);
+  });
+
+  test("REGRESSION: no already-confirmed field was reopened", { skip: !(review && closed) }, () => {
+    const confirmedInRoundOne = new Set(review.fieldVerdicts
+      .filter((f: any) => f.verdict === "CONFIRMED").map((f: any) => f.caseId + "." + f.field));
+    for (const r of closed.reopened) {
+      assert.ok(!confirmedInRoundOne.has(r.caseId + "." + r.field), r.caseId + "." + r.field + " was re-adjudicated unnecessarily");
+    }
+  });
+
+  test("BLOCKING: ten verdicts remain open, and five of them are one non-convergent field", { skip: !closed }, () => {
+    assert.equal(closed.cleared, false);
+    assert.equal(closed.unresolvedFieldVerdicts.length, 10);
+    const byField: Record<string, number> = {};
+    for (const b of closed.unresolvedFieldVerdicts) byField[b.field] = (byField[b.field] || 0) + 1;
+    assert.equal(byField.supportedQuantities, 5,
+      "the non-convergent field is no longer dominating; update D-41 and this test");
+  });
+
+  test("the record says why they did not close", { skip: !pre }, () => {
+    assert.match(pre.repairsOutstanding, /does not converge by iteration/);
+    assert.match(pre.repairsOutstanding, /ceiling of two calls is spent/);
   });
 
   test("nothing was certified, locked or promoted", { skip: !pre }, () => {
