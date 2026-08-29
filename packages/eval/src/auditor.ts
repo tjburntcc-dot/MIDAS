@@ -145,11 +145,16 @@ export const AUDITOR_VERSION_ID = "au-v1";
  */
 export function scoreAudit(
   predicted: Partial<AuditReport>,
-  gold: { verdict: string; defectClass: string | null },
+  gold: { verdict: string; defectClass: string | null; alsoAcceptable?: string[] },
 ) {
   const verdict = String(predicted.verdict || "").toLowerCase().trim();
   const classes = (predicted.criticalDefects || []).map((d) => String(d.defectClass || "").toLowerCase().trim());
-  const named = gold.defectClass ? classes.includes(gold.defectClass) : false;
+  // Primary first, then anything else that characterises the same defect
+  // acceptably. Finding the defect and calling it something materially correct
+  // is a detection; only the characterisation is scored separately.
+  const acceptable = gold.defectClass ? [gold.defectClass, ...(gold.alsoAcceptable || [])] : [];
+  const named = acceptable.some((c) => classes.includes(c));
+  const namedPrimary = gold.defectClass ? classes.includes(gold.defectClass) : false;
   const mustPass = gold.verdict === "pass";
   const mustFail = gold.verdict === "fail";
   const ambiguous = gold.verdict === "insufficient_evidence";
@@ -161,6 +166,8 @@ export function scoreAudit(
     /** Caught it and said what it was. The only reading of "detected" worth having. */
     detected: mustFail ? verdict === "fail" && named : null,
     namedTheDefect: mustFail ? named : null,
+    /** Whether the primary class was chosen. Reported, never gated. */
+    namedPrimaryClass: mustFail ? namedPrimary : null,
     falseAcceptance: mustFail ? verdict === "pass" : null,
     falseRejection: mustPass ? verdict === "fail" : null,
     /** A critical finding invented against work that is correct. */
@@ -191,6 +198,7 @@ export function summariseAuditRun(rows: Array<ReturnType<typeof scoreAudit>>) {
     verdictAccuracy: Number((rows.filter((r) => r.verdictCorrect).length / (rows.length || 1)).toFixed(3)),
     criticalDetectionRecall: sub("mustFail", "detected"),
     defectNamingAccuracy: sub("mustFail", "namedTheDefect"),
+    primaryClassAccuracy: sub("mustFail", "namedPrimaryClass"),
     falseAcceptanceRate: sub("mustFail", "falseAcceptance"),
     falseRejectionRate: sub("mustPass", "falseRejection"),
     falseAccusationCount: rows.filter((r) => r.falseAccusation).length,

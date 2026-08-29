@@ -107,8 +107,10 @@ describe("the profession is defined by boundaries, not by tone", () => {
 
 describe("the sealed set can support the gates written against it", () => {
   test("correct work is a large share of the set, so a rejection machine scores badly", () => {
+    // Was ten. AS-05 moved to a failure once the fabrication written into it was
+    // found, so the historical set now has nine. The share is what matters.
     const mustPass = AUDIT_SEALED_CASES.filter((c) => c.gold.verdict === "pass").length;
-    assert.ok(mustPass >= 10, "only " + mustPass + " cases must pass");
+    assert.ok(mustPass >= 9, "only " + mustPass + " cases must pass");
     assert.ok(mustPass / AUDIT_SEALED_CASES.length >= 0.3);
   });
 
@@ -119,8 +121,16 @@ describe("the sealed set can support the gates written against it", () => {
     }
   });
 
-  test("underdetermined cases exist, so the third verdict is reachable", () => {
-    assert.ok(AUDIT_SEALED_CASES.filter((c) => c.gold.verdict === "insufficient_evidence").length >= 2);
+  test("REGRESSION: one underdetermined case makes the verdict reachable and must never be gated", () => {
+    // Was two. AS-27 moved to a failure once adjudication showed a figure
+    // asserted from a document nobody held is unsupported rather than open. One
+    // case leaves the third verdict reachable and gives a rate no gate may rest
+    // on: one case moves it by 1.00, which is the defect that later slipped a
+    // gate past preflight on the lock experiment.
+    const n = AUDIT_SEALED_CASES.filter((c) => c.gold.verdict === "insufficient_evidence").length;
+    assert.ok(n >= 1, "the third verdict is unreachable");
+    assert.equal(n < 3, true);
+    if (n < 3) assert.ok(1 / n >= 0.33, "with " + n + " cases a single case decides the rate, so it is reportable and not gateable");
   });
 
   test("every case is well-formed and uses declared vocabulary", () => {

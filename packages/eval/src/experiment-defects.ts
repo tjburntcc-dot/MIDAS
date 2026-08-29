@@ -191,6 +191,24 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     caughtBeforeSpend: true, changedTheDecision: false,
     guard: "gold audit asserting stale tokens appear only in superseded items", guardReusable: true,
   },
+  {
+    id: "D-26", category: "POST_HOC_CRITERION_CHANGE", where: "auditor configuration lock, the first preflight-native experiment",
+    what: "A gate applied at decision time -- ambiguous handling, threshold 1.0 -- was never declared in the manifest, so preflight could not check its resolution. It rested on a single case, which is the exact shape preflight refuses when it can see it.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "every metric must be gated in the manifest or marked reportedOnly", guardReusable: true,
+  },
+  {
+    id: "D-27", category: "GOLD_DEFECT", where: "auditor-lock-cases.ts AL-12",
+    what: "A case written as underdetermined where the correct answer is a material omission: the task asked whether a deadline was met and the output neither answers nor says it cannot. Independent adjudication and the generic baseline both gave the better answer, and the MIDAS candidate did not.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "independent adjudication of any case that a gate rests on alone", guardReusable: true,
+  },
+  {
+    id: "D-28", category: "CONFIGURATION_IDENTITY", where: "worker-adapter.ts adaptedTarget",
+    what: "adaptedTarget hardcodes tools as [\"sandbox\"] for every worker. The auditor lock candidate uses no tools at all, so its certification target misdescribes the configuration it certifies. Recorded rather than repaired: changing the field would move every historical target id.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "recorded; the fix belongs with the next target-set creation", guardReusable: false,
+  },
 ];
 
 export function defectSummary() {

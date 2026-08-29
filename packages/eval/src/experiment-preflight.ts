@@ -34,6 +34,15 @@ export interface ManifestArm {
 
 export interface ManifestMetric {
   id: string;
+  /**
+   * True when the metric is reported and never gated.
+   *
+   * Without this, a metric can be defined in the manifest, gated in the runner,
+   * and never seen by preflight -- which is exactly what happened on the first
+   * preflight-native experiment. Every metric must now be either gated in the
+   * manifest or declared reported-only, so an applied gate cannot hide.
+   */
+  reportedOnly?: boolean;
   /** Where the number comes from. A metric read from prose is not observable. */
   observableSource: string;
   /** Case ids that actually exercise it. A gate on an unexercised metric is theater. */
@@ -222,6 +231,15 @@ export function preflight(m: ExperimentManifest): { ok: boolean; findings: Findi
     if (!g.preregistered) {
       f.push(fail("gates_are_preregistered", "POST_HOC_CRITERION_CHANGE",
         "Gate on " + g.metricId + " is not marked preregistered.", "D-18"));
+    }
+  }
+
+  // D2. Every metric is either gated here or declared reported-only.
+  for (const metric of m.metrics) {
+    const gated = m.gates.some((g) => g.metricId === metric.id);
+    if (!gated && !metric.reportedOnly) {
+      f.push(fail("every_metric_is_gated_or_reported_only", "POST_HOC_CRITERION_CHANGE",
+        metric.id + " is defined but neither gated in the manifest nor marked reportedOnly. A gate applied outside the manifest is never checked for resolution.", "D-26"));
     }
   }
 
