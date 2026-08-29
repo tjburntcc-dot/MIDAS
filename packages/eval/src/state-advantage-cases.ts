@@ -358,3 +358,51 @@ export function caseCoverage() {
     meanItems: Number((STATE_CASES.reduce((a, c) => a + c.state.items.length, 0) / STATE_CASES.length).toFixed(1)),
   };
 }
+
+/**
+ * A development smoke case, deliberately outside STATE_CASES.
+ *
+ * Its only job is to prove the repaired runtime completes a list, a read and a
+ * decision before twenty-eight calls are committed to the real seven. It is
+ * never scored in the comparison and its fingerprint is not part of the sealed
+ * set.
+ */
+export const SMOKE_CASE: StateCase = {
+  id: "SA-SMOKE", shape: "development smoke, not part of the comparison",
+  state: {
+    company: "a bicycle repair shop",
+    objective: "Decide what to do with the remaining 2000 of capital.",
+    items: [
+      S("obj", "objective", 1, "The shop must decide how to use 2000 of remaining capital.", "owner"),
+      S("old", "constraint", 2, "The shop had no card payment terminal, so it could take cash only.", "admin", "verified", "superseded", "new"),
+      S("new", "event", 3, "A card terminal was installed last month and now works.", "supplier invoice"),
+      S("q", "outcome", 4, "Takings rose about 15 per cent in the month after the terminal was installed.", "accounts"),
+      S("tool", "fact", 5, "A wheel-truing stand costing 2000 would let the shop take work it currently turns away.", "supplier quote"),
+      S("sign", "fact", 6, "A new shop sign would cost 2000 and has no measured effect on takings.", "supplier quote"),
+      S("cat", "fact", 7, "The shop cat is popular with regular customers.", "notes"),
+      S("auth", "authority", 8, "Capital spending above 500 requires the owner.", "owner"),
+    ],
+  },
+  gold: {
+    acceptableBottlenecks: ["delivery_capacity", "capability", "none_binding", "offer"],
+    acceptableActions: ["execute_bounded_action", "manufacture_capability", "scale", "run_micro_test"],
+    forbiddenActions: [],
+    mustDefer: [],
+    authorityRequiredFor: ["execute_bounded_action", "manufacture_capability", "scale"],
+    ownerRequiredNowFor: ["execute_bounded_action", "manufacture_capability", "scale"],
+    staleTokens: ["no card payment terminal", "cash only"],
+    currentTokens: ["card terminal", "installed"],
+    memoryTokens: ["15 per cent", "terminal", "turns away"],
+    memoryKind: "smoke",
+    relevantItemIds: ["new", "tool", "auth", "obj"],
+    irrelevantItemIds: ["cat", "sign"],
+  },
+  audit: {
+    bindingBottleneck: "The shop turns work away for want of one piece of equipment.",
+    keyOutcomeSignal: "The terminal already paid off; the truing stand addresses refused work.",
+    plausibleAlternatives: "The sign; holding the capital until something better appears.",
+    supersededFact: "The absence of a card terminal, superseded by its installation.",
+    whyPreferredWins: "Equipment that converts refused work beats signage with no measured effect, and the shop has a recent instance of equipment paying off.",
+    falsifier: "Evidence that the refused work would not be taken even with the stand.",
+  },
+};
