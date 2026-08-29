@@ -12,5 +12,12 @@ APR-005/TPK-001; AutoShop; sealed; secrets; fake 24/7/revenue/deploy/IAM/Postgre
 node --import ./tools/register-ts.mjs apps/api/src/http-server.ts
 URL: http://127.0.0.1:3000/
 
+## Company 0 decision console
+http://127.0.0.1:3000/console
+Company 0 state, the real opportunity records, and one button that runs the actual
+Researcher -> Manager -> Auditor chain against a chosen opportunity. Nothing there sends,
+submits, applies for or pays for anything. Owner disposition and the eventual real outcome
+are recorded in var/state/company0-console-runs.json.
+
 ## First Cursor prompt
 Continue MIDAS from unpacked handoff. FILE_STORE only. Do not decide APR-005/TPK-001. Prefer zero live spend. Read QUICKSTART.md and product-app.html. Start API and verify overview/companies/work/deliverables/approvals/settings. Propose next 3 improvements.

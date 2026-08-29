@@ -38,6 +38,8 @@ import { decideTeachingApproval, teachingControlRoomSlice } from "../../../packa
 import { evaluateStageIGate } from "../../../packages/eval/src/stage-i-gate.ts";
 import { factoryAvailability, authorizeSpecialist } from "../../../packages/eval/src/employee-factory.ts";
 import { HANDOFF_FICTIONAL_PROSPECTS, HANDOFF_OWNER_PASTE, HANDOFF_SCOUT_QUESTION, handoffQualificationPolicy } from "../../../packages/eval/src/handoff-scenario.ts";
+import { companyView, listOpportunities, opportunityDetail, opportunityPacketFor, loadRuns, saveRun, getRun, runsFor, runSummary, resultView, setDisposition, recordOutcome, inputFingerprint, OWNER_DISPOSITIONS, OUTCOME_STATES, CONSOLE_VERSION } from "../../../packages/eval/src/company0-console.ts";
+import { runShadowChain, SHADOW_MODEL, SHADOW_STAGES } from "../../../packages/eval/src/company0-shadow-chain.ts";
 import { dispatchProductRequest, dispatchProductRequestAsync } from "../../../packages/eval/src/product-shell.ts";
 import { LIVE_SPECIALIST_CONTRACTS } from "../../../packages/eval/src/live-specialists.ts";
 import {
@@ -526,6 +528,121 @@ async function runVersion(db, version, trialIndex, maxCases, arm, caseId, suite)
   return out;
 }
 
+/**
+ * Console runs in flight.
+ *
+ * A run is persisted at every stage boundary, so the store is the truth and
+ * this map exists only so a poll during PREPARING has something to read. A
+ * crash loses the map and keeps every stage that had already completed.
+ */
+const activeConsoleRuns = new Map();
+
+/** Normalised worker detail: what each stage found, without the transcripts. */
+function consoleWorkerDetail(run) {
+  const r = (run.stages && run.stages.researcher) || {};
+  const m = (run.stages && run.stages.manager) || {};
+  const a = (run.stages && run.stages.auditor) || {};
+  const facts = (r.parsed && r.parsed.facts) || {};
+  return {
+    researcher: {
+      target: r.target ? r.target.shadow : null,
+      certificationNote: r.target ? r.target.truthful : null,
+      facts: Object.keys(facts).map((k) => ({
+        fact: k,
+        stated: facts[k].stated === true,
+        value: facts[k].stated === true ? facts[k].value : "NOT STATED IN THE SOURCE",
+        quote: facts[k].quote || null,
+      })),
+      scopeSummary: (r.parsed && r.parsed.scope_summary) || null,
+      notStated: (r.parsed && r.parsed.facts_not_stated) || [],
+      unresolved: (r.parsed && r.parsed.unresolved_questions) || [],
+      raw: r.modelResponse || null,
+    },
+    manager: {
+      target: m.target ? m.target.shadow : null,
+      decision: m.parsed || null,
+      raw: m.modelResponse || null,
+    },
+    auditor: {
+      target: a.target ? a.target.shadow : null,
+      verdict: a.report ? a.report.verdict : null,
+      defects: a.report ? a.report.criticalDefects || [] : [],
+      reasoning: a.report ? a.report.reasoning : null,
+      recordsOpened: a.opened || [],
+      turnsUsed: a.turnsUsed || null,
+      transcript: a.transcript || [],
+      raw: (a.trace || []).map((t) => t.modelResponse),
+    },
+  };
+}
+
+/**
+ * Start one Shadow chain for the owner.
+ *
+ * The same function the command line calls, on the same packets. The route
+ * returns as soon as the run exists so the screen can show real stage names
+ * while it works; it reports no percentage, because the chain has three stages
+ * of unknown length and a bar would be inventing one.
+ *
+ * Nothing here reaches outside. The chain has no tool but the audit desk's
+ * evidence reader, and the only network call is to the model provider.
+ */
+async function startConsoleShadow(opportunityId) {
+  const packet = opportunityPacketFor(opportunityId);
+  if (!packet) return { error: "no such opportunity: " + opportunityId };
+  // The product's own provider gateway, not a private check. If it will not
+  // verify, the run does not start and nothing is faked in its absence.
+  const gate = await ensureLiveProvider(createStoreSafe(), { reason: "first_task" });
+  if (gate.ok !== true) {
+    return { error: "No verified model provider (" + String(gate.status || "unavailable") + ")."
+      + (gate.error ? " " + String(gate.error) : "")
+      + " Connect one before running an analysis; nothing is faked in its absence." };
+  }
+  const runId = "RUN-" + randomUUID().slice(0, 8);
+  const run = {
+    runId, opportunityId, opportunityTitle: packet.title,
+    startedAt: new Date().toISOString(), finishedAt: null,
+    stage: "PREPARING", historical: false, error: null,
+    inputFingerprint: inputFingerprint(packet),
+    model: SHADOW_MODEL, calls: 0, tokens: { input: 0, output: 0 },
+    stages: {}, outboundActionsTaken: 0,
+    owner: { disposition: "NONE", note: null, at: null, externalActionAuthorised: false },
+    outcome: null,
+  };
+  activeConsoleRuns.set(runId, run);
+  saveRun(run);
+
+  const provider = new OpenAIResponsesProvider(undefined, SHADOW_MODEL);
+  void (async () => {
+    try {
+      const out = await runShadowChain({
+        opportunity: packet,
+        call: async ({ instructions, input, schemaName, schema }) =>
+          provider.complete({ instructions, input, outputSchema: { name: schemaName, strict: false, schema } }),
+        onStage: (stage) => { run.stage = stage; saveRun(run); },
+        onRaw: (name, record) => { run.stages[name] = record; saveRun(run); },
+      });
+      run.stages = out.stages;
+      run.targets = out.targets;
+      run.instructionHashes = out.instructionHashes;
+      run.calls = out.calls;
+      run.tokens = out.tokens;
+      run.inputs = out.inputs;
+      run.stage = "COMPLETE";
+      run.finishedAt = new Date().toISOString();
+      saveRun(run);
+    } catch (e) {
+      run.stage = "FAILED";
+      run.error = e instanceof Error ? e.message : String(e);
+      run.finishedAt = new Date().toISOString();
+      saveRun(run);
+    } finally {
+      activeConsoleRuns.delete(runId);
+    }
+  })();
+  return { runId, stage: run.stage, opportunityId, inputFingerprint: run.inputFingerprint };
+}
+
 async function handle(req, res) {
   if (!process.env.OPENAI_API_KEY) {
     const again = loadWorkspaceEnv();
@@ -559,6 +676,82 @@ async function handle(req, res) {
       send(res, 200, readFileSync(join(here, "product-app.css"), "utf8"), "text/css; charset=utf-8");
       return;
     }
+    // ---------------------------------------------------------------- console
+    // The Company 0 decision console. A control surface over the real Shadow
+    // chain: it starts the same runtime the command line starts, and displays
+    // nothing it did not get from a worker, a stored record, or arithmetic on
+    // two dates.
+    if (method === "GET" && (path === "/console" || path === "/company0")) {
+      send(res, 200, readFileSync(join(here, "company0-console.html"), "utf8"), "text/html; charset=utf-8");
+      return;
+    }
+    if (method === "GET" && path === "/console/api/company0") {
+      send(res, 200, Object.assign({ version: CONSOLE_VERSION }, companyView()));
+      return;
+    }
+    if (method === "GET" && path === "/console/api/opportunities") {
+      send(res, 200, { version: CONSOLE_VERSION, opportunities: listOpportunities() });
+      return;
+    }
+    if (method === "GET" && path.startsWith("/console/api/opportunities/")) {
+      const oid = decodeURIComponent(path.slice("/console/api/opportunities/".length));
+      const detail = opportunityDetail(oid);
+      if (!detail) { send(res, 404, { error: "no such opportunity: " + oid }); return; }
+      send(res, 200, detail);
+      return;
+    }
+    if (method === "GET" && path === "/console/api/runs") {
+      const oppId = url.searchParams.get("opportunityId");
+      const rows = oppId ? runsFor(oppId) : loadRuns();
+      send(res, 200, { runs: rows.map(runSummary) });
+      return;
+    }
+    if (method === "POST" && path === "/console/api/runs") {
+      const payload = await body(req);
+      const out = await startConsoleShadow(String(payload.opportunityId || ""));
+      send(res, out.error ? 400 : 202, out);
+      return;
+    }
+    if (method === "GET" && path.startsWith("/console/api/runs/")) {
+      const rid = decodeURIComponent(path.slice("/console/api/runs/".length));
+      const run = getRun(rid) || activeConsoleRuns.get(rid) || null;
+      if (!run) { send(res, 404, { error: "no such run: " + rid }); return; }
+      send(res, 200, {
+        run: runSummary(run),
+        stage: run.stage,
+        stages: SHADOW_STAGES,
+        error: run.error || null,
+        result: run.stage === "COMPLETE" ? resultView(run) : null,
+        workers: run.stage === "COMPLETE" ? consoleWorkerDetail(run) : null,
+        historical: Boolean(run.historical),
+        note: run.note || null,
+        analysis: run.analysis || null,
+      });
+      return;
+    }
+    if (method === "POST" && path.startsWith("/console/api/disposition/")) {
+      const rid = decodeURIComponent(path.slice("/console/api/disposition/".length));
+      const payload = await body(req);
+      try {
+        const run = setDisposition(rid, String(payload.disposition || ""), payload.note);
+        send(res, 200, { run: runSummary(run), allowed: OWNER_DISPOSITIONS, externalActionAuthorised: false });
+      } catch (e) { send(res, 400, { error: e instanceof Error ? e.message : String(e), allowed: OWNER_DISPOSITIONS }); }
+      return;
+    }
+    if (method === "POST" && path.startsWith("/console/api/outcome/")) {
+      const rid = decodeURIComponent(path.slice("/console/api/outcome/".length));
+      const payload = await body(req);
+      try {
+        const run = recordOutcome(rid, {
+          state: String(payload.state || ""),
+          verifiedRevenueUsd: payload.verifiedRevenueUsd,
+          observed: payload.observed, notes: payload.notes,
+        });
+        send(res, 200, { run: runSummary(run), allowed: OUTCOME_STATES });
+      } catch (e) { send(res, 400, { error: e instanceof Error ? e.message : String(e), allowed: OUTCOME_STATES }); }
+      return;
+    }
+
     if (method === "GET" && (path === "/diagnostics" || path === "/control-room")) {
       send(res, 200, readFileSync(HTML, "utf8"), "text/html; charset=utf-8");
       return;

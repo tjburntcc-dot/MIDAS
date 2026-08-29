@@ -353,18 +353,46 @@ export function companyPacketText() {
   ].join(NL);
 }
 
-export function opportunityPacketText() {
+/** Anything the chain can be pointed at: the frozen case, or a live work item. */
+export interface OpportunityPacket {
+  workItemId: string;
+  title: string;
+  buyer: string;
+  channel: string;
+  sourceUrl: string;
+  sourceKind: string;
+  livenessCheck: string;
+  evidence: EvidenceItem[];
+}
+
+/**
+ * One renderer for every opportunity the chain can be run on.
+ *
+ * The frozen Houston ISD case goes through it unchanged, byte for byte, which
+ * is asserted rather than assumed: the historical run must stay comparable with
+ * anything the console produces later.
+ */
+export function opportunityPacketTextFor(o: OpportunityPacket) {
   return [
-    "OPPORTUNITY " + OPPORTUNITY.workItemId + ": " + OPPORTUNITY.title,
-    "Buyer: " + OPPORTUNITY.buyer,
-    "Channel: " + OPPORTUNITY.channel,
-    "Source: " + OPPORTUNITY.sourceKind,
-    "Source URL: " + OPPORTUNITY.sourceUrl,
-    "Liveness: " + OPPORTUNITY.livenessCheck,
+    "OPPORTUNITY " + o.workItemId + ": " + o.title,
+    "Buyer: " + o.buyer,
+    "Channel: " + o.channel,
+    "Source: " + o.sourceKind,
+    "Source URL: " + o.sourceUrl,
+    "Liveness: " + o.livenessCheck,
     "",
     "EVIDENCE HELD. Nothing beyond this has been retrieved.",
-    ...OPPORTUNITY_EVIDENCE.map((e) => "  [" + e.id + "] (" + e.source + ", captured " + e.capturedAt + ") " + e.text),
+    ...o.evidence.map((e) => "  [" + e.id + "] (" + e.source + ", captured " + e.capturedAt + ") " + e.text),
   ].join(NL);
+}
+
+/** The frozen case as a packet. */
+export function houstonPacket(): OpportunityPacket {
+  return { ...OPPORTUNITY, evidence: OPPORTUNITY_EVIDENCE };
+}
+
+export function opportunityPacketText() {
+  return opportunityPacketTextFor(houstonPacket());
 }
 
 /** The text the Researcher reads. Its job is to report what this states, and what it does not. */
