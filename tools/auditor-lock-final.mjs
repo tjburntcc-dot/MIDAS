@@ -16,7 +16,7 @@ import {
   AUDITOR_DOCTRINE, AUDITOR_VERSION_ID, AUDITOR_CONTRACT_BRIEF, AUDITOR_NON_RESPONSIBILITIES,
   DEFECT_CLASSES, AUDIT_VERDICTS, scoreAudit, summariseAuditRun,
 } from "../packages/eval/src/auditor.ts";
-import { adaptWorker, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, adaptedTarget, NO_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { certify, targetId, dimensionsFor, TIER_EVIDENCE_REQUIREMENTS } from "../packages/eval/src/academy.ts";
 import { executionEnvironmentId } from "../packages/eval/src/execution-environment.ts";
 import { costFor, loadPrices } from "../packages/eval/src/model-cost.ts";
@@ -28,7 +28,7 @@ const provider = new OpenAIResponsesProvider(undefined, model);
 
 const adapted = adaptWorker("auditor", { auditorKnowledge: AUDITOR_DOCTRINE, auditorVersionId: AUDITOR_VERSION_ID });
 const envId = executionEnvironmentId();
-const target = { ...adaptedTarget(adapted, model), executionEnvironmentId: envId };
+const target = { ...adaptedTarget(adapted, model, NO_TOOLING), executionEnvironmentId: envId };
 
 const lock = JSON.parse(readFileSync(repoPath("var", "state", "auditor-lock.json"), "utf8"));
 const byId = new Map(AUDITOR_LOCK_CASES.map((c) => [c.id, c]));

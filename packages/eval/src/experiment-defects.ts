@@ -209,6 +209,27 @@ export const RECORDED_DEFECTS: ExperimentDefect[] = [
     caughtBeforeSpend: false, changedTheDecision: false,
     guard: "recorded; the fix belongs with the next target-set creation", guardReusable: false,
   },
+  {
+    id: "D-29", category: "GOLD_DEFECT", where: "auditor-tool-cases.ts AT-05 and AT-08",
+    what: "Both underdetermined cases asked whether the SUBJECT MATTER could be settled from the records and scored the auditor against that. The audit question is whether THE OUTPUT is sound, and an output that converts silence into a stated absence, or confirms a match against an unreadable record, is defective either way. The auditor answered correctly on both and was scored as missing both. Independent frontier adjudication, blind to my gold and to the auditor answer, returned fail on both at high confidence.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "the case-set audit now asserts what insufficient_evidence means: it is correct only when the auditor cannot tell whether the OUTPUT is sound, never merely when the subject matter is unsettled",
+    guardReusable: true,
+  },
+  {
+    id: "D-30", category: "RUNTIME_TRUNCATION", where: "auditor-readonly-certification.mjs manifest.runtime",
+    what: "Preflight raised turns_survive_one_wasted_call as an advisory. I silenced it by relabelling workflowShape from three steps to two rather than raising the turn budget. The worker then returned one tool call per turn, so turn one listed, turn two read a single record, and turn three was the forced finish. Cases needing two records opened were unreachable, and the decisiveReadRate gate that failed is confounded as a result.",
+    caughtBeforeSpend: false, changedTheDecision: true,
+    guard: "the turn floor is now derived from runtime.expectedTools plus one, so a self-declared workflow shape cannot lower it",
+    guardReusable: true,
+  },
+  {
+    id: "D-31", category: "RAW_TRACE_INSUFFICIENCY", where: "auditor-readonly-certification.mjs result writer",
+    what: "The preflight-refused path wrote its refusal to the same file as a completed run. After the run finished, a later --dry with a raised turn budget was refused and overwrote the result, destroying every row and every raw trace the run had captured. The traces existed because preflight had refused to run without them, and were then lost to a dry run.",
+    caughtBeforeSpend: false, changedTheDecision: false,
+    guard: "a refusal writes to its own path; the completed result is never the same file",
+    guardReusable: true,
+  },
 ];
 
 export function defectSummary() {

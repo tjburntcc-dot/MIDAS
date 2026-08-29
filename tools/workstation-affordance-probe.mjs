@@ -18,7 +18,7 @@ import { writeFileSync, readdirSync, readFileSync, existsSync } from "node:fs";
 import { repoPath } from "@midas/db";
 import { loadWorkspaceEnv, OpenAIResponsesProvider } from "@midas/model";
 import { runScenario, applyTool, renderEntry, visibleIds, WORKSTATION_INVENTORY_CONTRACT } from "../packages/eval/src/sandbox.ts";
-import { adaptWorker, actorInstructions, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, actorInstructions, adaptedTarget, SANDBOX_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { executionEnvironmentId, currentExecutionEnvironment, LEGACY_ENVIRONMENT, evidencePortability } from "../packages/eval/src/execution-environment.ts";
 import { targetId } from "../packages/eval/src/academy.ts";
@@ -254,7 +254,7 @@ for (const f of readdirSync(repoPath("var", "state"))) {
   campaigns.push({ file: f, exposed: !/pre-opened|already opened/.test(raw) });
 }
 
-const legacyTarget = adaptedTarget(adapted, model);
+const legacyTarget = adaptedTarget(adapted, model, SANDBOX_TOOLING);
 const newTarget = { ...legacyTarget, executionEnvironmentId: executionEnvironmentId() };
 
 console.log("PHASE 0 -- impact");

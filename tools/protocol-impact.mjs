@@ -8,7 +8,7 @@
  */
 import { readFileSync, readdirSync, existsSync, writeFileSync } from "node:fs";
 import { repoPath } from "@midas/db";
-import { SANDBOX_PROTOCOL_V1, SANDBOX_PROTOCOL_V2, SANDBOX_PROTOCOL_V1_ID, SANDBOX_PROTOCOL_V2_ID, adaptWorker, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { SANDBOX_PROTOCOL_V1, SANDBOX_PROTOCOL_V2, SANDBOX_PROTOCOL_V1_ID, SANDBOX_PROTOCOL_V2_ID, adaptWorker, adaptedTarget, SANDBOX_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { targetId, recertificationScope } from "../packages/eval/src/academy.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
@@ -57,7 +57,7 @@ console.log("ROLE TARGETS");
 const roleRows = [];
 for (const role of ["researcher", "qualifier", "auditor", "sales", "manager", "technical"]) {
   const a = adaptWorker(role, SOURCES);
-  const t = adaptedTarget(a, "gpt-4.1");
+  const t = adaptedTarget(a, "gpt-4.1", SANDBOX_TOOLING);
   roleRows.push({ role, midasWorker: a.midasWorker, versionId: a.versionId, targetId: targetId(t) });
   console.log("   " + role.padEnd(12) + (a.midasWorker ? "MIDAS " + a.versionId : "no worker").padEnd(16) + targetId(t));
 }
@@ -70,7 +70,7 @@ for (const role of ["researcher", "qualifier", "auditor", "sales", "manager", "t
  * id is unchanged by this revision, and every certification would carry across a
  * change to the environment the worker acts in without any fingerprint moving.
  */
-const before = adaptedTarget(adaptWorker("researcher", SOURCES), "gpt-4.1");
+const before = adaptedTarget(adaptWorker("researcher", SOURCES), "gpt-4.1", SANDBOX_TOOLING);
 const after = { ...before };
 const scope = recertificationScope(before, after);
 console.log("");

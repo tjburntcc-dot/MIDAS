@@ -27,7 +27,7 @@ import { RESEARCH_JUDGMENT_PROCEDURE, RESEARCHER_JUDGMENT_VERSION_ID, scoreAxis,
 import { auditSuite } from "../packages/eval/src/exam-audit.ts";
 import { judgeRun } from "../packages/eval/src/judge.ts";
 import { certify, targetId, dimensionsFor, TIER_SCORE_REQUIREMENTS, TIER_FLOOR_REQUIREMENTS } from "../packages/eval/src/academy.ts";
-import { adaptWorker, actorInstructions, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, actorInstructions, adaptedTarget, SANDBOX_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { meetsMargin } from "../packages/eval/src/qualification-procedure.ts";
 import { certificationEligible, subjectLabel } from "../packages/eval/src/subject-identity.ts";
@@ -196,7 +196,7 @@ function summarise(per) {
   for (const s of per) for (const r of s.runs) for (const g of r.trapsSprung) breachCounts[g] = (breachCounts[g] || 0) + 1;
   const breaches = Object.entries(breachCounts).map(([gateId, count]) => ({ gateId, count }));
   const axes = summariseAxes(per.flatMap((s) => s.runs.map((r) => r.axis)));
-  const cert = certify({ target: adaptedTarget(adapted, baseModel), dimensions, evidence, breaches, scoringMode: "pattern_and_judge" });
+  const cert = certify({ target: adaptedTarget(adapted, baseModel, SANDBOX_TOOLING), dimensions, evidence, breaches, scoringMode: "pattern_and_judge" });
   return { dimensions, evidence, breaches, axes, cert, dimById: Object.fromEntries(dimensions.map((d) => [d.id, d.score])) };
 }
 
@@ -299,7 +299,7 @@ if (promote) {
   console.log(finalPromote ? "PROMOTE (correctness and stability)" : "REJECT at stability: " + checks.filter((c) => !c.pass).map((c) => c.id).join(", "));
 }
 
-const promotedTarget = { ...adaptedTarget(adapted, baseModel), policyVersionId: RESEARCHER_JUDGMENT_VERSION_ID };
+const promotedTarget = { ...adaptedTarget(adapted, baseModel, SANDBOX_TOOLING), policyVersionId: RESEARCHER_JUDGMENT_VERSION_ID };
 const fingerprint = createHash("sha256")
   .update([adapted.versionId, baseModel, adapted.knowledgeIds.join("+"), RESEARCHER_JUDGMENT_VERSION_ID, RESEARCH_JUDGMENT_PROCEDURE].join("|"))
   .digest("hex").slice(0, 16);
@@ -316,7 +316,7 @@ writeFileSync(repoPath("var", "state", "research-judgment-cycle.json"), JSON.str
   sealedHash, examAudit: suite.ruling, criteria: CRITERIA, subject,
   candidateDeclaredBeforeRunning: "B_candidate",
   procedure: RESEARCH_JUDGMENT_PROCEDURE,
-  controlTargetId: targetId(adaptedTarget(adapted, baseModel)),
+  controlTargetId: targetId(adaptedTarget(adapted, baseModel, SANDBOX_TOOLING)),
   candidateTargetId: targetId(promotedTarget), candidateFingerprint: fingerprint,
   arms: {
     A_control: { label: A.label, overall: A.cert.overall, worstCase: A.cert.robustness.worstCase, tier: A.cert.awardedTier, dimensions: A.dimensions, axes: A.axes, breaches: A.breaches, per: A.per.map((p) => ({ scenarioId: p.scenarioId, axis: p.axis, mean: p.mean })) },

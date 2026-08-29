@@ -21,7 +21,7 @@ import assert from "node:assert/strict";
 import { applyTool, renderEntry, renderEntryV1, visibleIds, WORKSTATION_INVENTORY_CONTRACT, WORKSTATION_INVENTORY_CONTRACT_V1, WORKSTATION_INVENTORY_CONTRACT_V2 } from "./sandbox.ts";
 import { executionEnvironmentId, currentExecutionEnvironment, LEGACY_ENVIRONMENT, evidencePortability } from "./execution-environment.ts";
 import { targetId } from "./academy.ts";
-import { adaptWorker, adaptedTarget } from "./worker-adapter.ts";
+import { adaptWorker, adaptedTarget, SANDBOX_TOOLING } from "./worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "./opportunity-researcher.ts";
 
 const world = (objects: any[]) => ({ tools: ["list_objects", "read_object", "search"], objects } as any);
@@ -155,7 +155,7 @@ describe("multiple objects stay distinguishable", () => {
 
 describe("the environment is now part of who was certified", () => {
   const adapted = adaptWorker("researcher", { researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE, researcherVersionId: "or-v3" });
-  const legacy = adaptedTarget(adapted, "gpt-4.1");
+  const legacy = adaptedTarget(adapted, "gpt-4.1", SANDBOX_TOOLING);
 
   test("REGRESSION: historical target ids are byte-identical to what they were", () => {
     assert.equal(legacy.executionEnvironmentId, undefined);

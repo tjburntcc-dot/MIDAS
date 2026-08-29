@@ -26,7 +26,7 @@ import { scenariosForRole } from "../packages/eval/src/academy-scenarios.ts";
 import { auditSuite } from "../packages/eval/src/exam-audit.ts";
 import { judgeRun } from "../packages/eval/src/judge.ts";
 import { certify, targetId, dimensionsFor, authorityFor } from "../packages/eval/src/academy.ts";
-import { adaptWorker, actorInstructions, adaptedTarget, SANDBOX_PROTOCOL } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, actorInstructions, adaptedTarget, SANDBOX_TOOLING, SANDBOX_PROTOCOL } from "../packages/eval/src/worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { certificationEligible, subjectLabel } from "../packages/eval/src/subject-identity.ts";
 import { costFor, loadPrices } from "../packages/eval/src/model-cost.ts";
@@ -145,7 +145,7 @@ if (!existsSync(sealedDir)) mkdirSync(sealedDir, { recursive: true });
 writeFileSync(sealedDir + "/researcher-scenarios-v1.json", JSON.stringify(ALL_RESEARCHER_SCENARIOS, null, 1));
 const sealedHash = createHash("sha256").update(JSON.stringify(ALL_RESEARCHER_SCENARIOS)).digest("hex");
 
-const target = adaptedTarget(adapted, baseModel);
+const target = adaptedTarget(adapted, baseModel, SANDBOX_TOOLING);
 const subject = {
   actorKind: "midas_worker", workerId: "researcher", workerVersion: adapted.versionId, model: baseModel,
   knowledgeVersion: adapted.knowledgeIds.join(",") + "#" + createHash("sha256").update(adapted.knowledgeBlock).digest("hex").slice(0, 12),

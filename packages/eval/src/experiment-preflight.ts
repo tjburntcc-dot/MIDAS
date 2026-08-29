@@ -265,12 +265,48 @@ export function preflight(m: ExperimentManifest): { ok: boolean; findings: Findi
     }
   }
 
+  /**
+   * F2. Who wrote the reference answers, and did anyone else check them.
+   *
+   * GOLD_DEFECT is now the most common recorded category, and two of them
+   * changed a verdict. Preflight cannot tell whether a reference answer is
+   * right -- that is a judgement, not a property of the manifest -- but it can
+   * refuse to let the question go unasked. An author who has to write down that
+   * nobody else looked at the gold usually goes and gets someone to look.
+   */
+  if (m.cases.kind === "sealed") {
+    const g = (m.cases as any).goldAdjudication;
+    if (!g || typeof g.author !== "string") {
+      f.push(warn("gold_provenance_declared", "GOLD_DEFECT",
+        "A sealed set is being used as evidence and the manifest does not say who wrote its reference answers.", "D-29"));
+    } else if (!g.independentlyAdjudicated) {
+      f.push(warn("gold_independently_adjudicated", "GOLD_DEFECT",
+        "The reference answers were written by " + g.author + " and nobody independent has checked them. Two of the recorded gold defects changed a verdict, and both were found only after the run was paid for.", "D-29"));
+    }
+  }
+
   // G. Turn budget, computed from turns and not from cases
   const b = m.budget;
-  const workflowTurns = Math.max(1, m.runtime.workflowShape.length);
+  /**
+   * The required turns are derived, not accepted.
+   *
+   * workflowShape is written by the author, and on AUDITOR-READONLY-1 the author
+   * was me: the advisory below fired on a three-step shape, and I stopped it by
+   * relabelling the shape as two steps rather than raising the budget. The run
+   * then spent one turn listing, one turn on a single read, and reached the
+   * forced-finish turn without opening what the case needed. The check was
+   * satisfied and the concern was not.
+   *
+   * So the floor is now the larger of the declared shape and what the declared
+   * tools imply: every tool the runtime expects, plus one turn to conclude. A
+   * relabel cannot lower it, because it is computed from the environment.
+   */
+  const impliedTurns = (m.runtime.expectedTools || []).length ? (m.runtime.expectedTools || []).length + 1 : 1;
+  const workflowTurns = Math.max(1, m.runtime.workflowShape.length, impliedTurns);
   if (b.maxTurnsPerCase < workflowTurns) {
     f.push(fail("turns_fit_the_workflow", "RUNTIME_TRUNCATION",
-      "The workflow is " + m.runtime.workflowShape.join(" then ") + " which needs " + workflowTurns
+      "The workflow is " + m.runtime.workflowShape.join(" then ") + " and the tools are "
+      + ((m.runtime.expectedTools || []).join(", ") || "none") + ", which together need " + workflowTurns
       + " turns, and the budget allows " + b.maxTurnsPerCase + ".", "D-15"));
   } else if (b.maxTurnsPerCase === workflowTurns && workflowTurns > 1) {
     f.push(warn("turns_survive_one_wasted_call", "RUNTIME_TRUNCATION",

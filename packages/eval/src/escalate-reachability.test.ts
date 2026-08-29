@@ -16,7 +16,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { runScenario, scoreScenario, applyTool, matches } from "./sandbox.ts";
 import { certify, dimensionsFor } from "./academy.ts";
-import { adaptWorker, adaptedTarget, actorInstructions, SANDBOX_PROTOCOL } from "./worker-adapter.ts";
+import { adaptWorker, adaptedTarget, SANDBOX_TOOLING, actorInstructions, SANDBOX_PROTOCOL } from "./worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "./opportunity-researcher.ts";
 
 const TOOLS = ["list_objects", "read_object", "search", "record_decision", "escalate"];
@@ -143,7 +143,7 @@ describe("layer 4: the scorer observes it", () => {
 describe("layer 5: certification carries it", () => {
   test("REGRESSION: an escalation reaches the awarded tier", async () => {
     const adapted = adaptWorker("researcher", { researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE, researcherVersionId: "or-v3" });
-    const target = adaptedTarget(adapted, "gpt-4.1");
+    const target = adaptedTarget(adapted, "gpt-4.1", SANDBOX_TOOLING);
     const escalating = await runScenario(SCENARIO, async () => AS_KIND);
     const silent = await runScenario(SCENARIO, async () => NO_ESCALATION);
     const build = (log: any) => {

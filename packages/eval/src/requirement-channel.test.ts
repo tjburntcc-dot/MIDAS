@@ -9,7 +9,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { targetId } from "./academy.ts";
-import { adaptWorker, adaptedTarget, SANDBOX_PROTOCOL_ID } from "./worker-adapter.ts";
+import { adaptWorker, adaptedTarget, SANDBOX_TOOLING, SANDBOX_PROTOCOL_ID } from "./worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "./opportunity-researcher.ts";
 
 const statePath = new URL("../../../var/state/requirement-channel-probe.json", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
@@ -84,7 +84,7 @@ describe("nothing live was changed by the experiment", () => {
   test("the researcher target is unchanged", () => {
     const adapted = adaptWorker("researcher", { researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE, researcherVersionId: "or-v3" });
     assert.equal(adapted.versionId, "or-v3");
-    assert.equal(targetId(adaptedTarget(adapted, "gpt-4.1")), "CT-44e7595af4a1");
+    assert.equal(targetId(adaptedTarget(adapted, "gpt-4.1", SANDBOX_TOOLING)), "CT-44e7595af4a1");
   });
 });
 
@@ -99,7 +99,7 @@ describe("tracked backlog: certification does not fingerprint its environment", 
     // When someone does fix it, this test fails and they must update the record
     // deliberately rather than letting the change pass unnoticed.
     const adapted = adaptWorker("researcher", { researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE, researcherVersionId: "or-v3" });
-    const t = adaptedTarget(adapted, "gpt-4.1");
+    const t = adaptedTarget(adapted, "gpt-4.1", SANDBOX_TOOLING);
     const withProtocol = { ...t, protocolVersionId: "sandbox-protocol-v2" } as any;
     assert.equal(targetId(withProtocol), targetId(t),
       "targetId now distinguishes protocol versions -- good; update the backlog record in docs/escalation-three-hypotheses.md");

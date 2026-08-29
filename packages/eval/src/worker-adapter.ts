@@ -204,14 +204,44 @@ export function actorInstructions(worker: AdaptedWorker, availableTools: string[
  * from the form-filling one the foundry certified. Two targets, two hashes, no
  * confusion about which evidence describes which.
  */
-export function adaptedTarget(worker: AdaptedWorker, baseModel: string) {
+export interface ActualConfiguration {
+  /** The tools the worker genuinely had. Required: it cannot be guessed. */
+  tools: string[];
+  policyVersionId?: string;
+  retrievalConfigId?: string;
+  workflowConfigId?: string;
+}
+
+/**
+ * The certification target for an adapted worker.
+ *
+ * `tools` used to be hardcoded to ["sandbox"] for every worker. For the
+ * researcher that was true. For the auditor it was not: its lock experiment ran
+ * single-shot with no tools at all, and the target it was certified against
+ * therefore described a configuration that never executed. A certification
+ * whose target misdescribes its subject is not a certification of anything.
+ *
+ * So the caller must now state what the worker actually had. Passing the real
+ * tool list reproduces every historical id that was truthful; only the ones that
+ * were wrong change, which is the point.
+ */
+export function adaptedTarget(worker: AdaptedWorker, baseModel: string, actual: ActualConfiguration) {
+  if (!actual || !Array.isArray(actual.tools)) {
+    throw new Error("adaptedTarget requires the tools the worker actually had; a target that guesses them can misdescribe its subject");
+  }
   return {
     role: worker.role,
     workerVersionId: worker.versionId || "no-midas-worker",
     baseModel,
     knowledgeVersionId: worker.knowledgeIds.length ? worker.knowledgeIds.join("+") : "none",
-    tools: ["sandbox"],
-    policyVersionId: worker.midasWorker ? "foundry-promoted" : "none",
-    retrievalConfigId: "none",
+    tools: [...actual.tools],
+    policyVersionId: actual.policyVersionId ?? (worker.midasWorker ? "foundry-promoted" : "none"),
+    retrievalConfigId: actual.retrievalConfigId ?? "none",
+    ...(actual.workflowConfigId ? { workflowConfigId: actual.workflowConfigId } : {}),
   };
 }
+
+/** What the sandbox-examined workers actually had. Reproduces their historical ids. */
+export const SANDBOX_TOOLING: ActualConfiguration = { tools: ["sandbox"] };
+/** A worker given a dossier and asked for one answer. */
+export const NO_TOOLING: ActualConfiguration = { tools: [] };

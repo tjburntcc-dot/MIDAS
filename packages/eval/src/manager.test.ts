@@ -12,7 +12,7 @@
  */
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { adaptWorker, adaptedTarget } from "./worker-adapter.ts";
+import { adaptWorker, adaptedTarget, NO_TOOLING, SANDBOX_TOOLING } from "./worker-adapter.ts";
 import { targetId } from "./academy.ts";
 import {
   MANAGER_DOCTRINE, MANAGER_VERSION_ID, MANAGER_CONTRACT_BRIEF, ACTION_CLASSES, BOTTLENECKS,
@@ -54,9 +54,9 @@ describe("the manager resolves on the live path", () => {
   });
 
   test("the manager has its own certification identity", () => {
-    const t = adaptedTarget(adaptWorker("manager", SOURCES), "gpt-4.1");
+    const t = adaptedTarget(adaptWorker("manager", SOURCES), "gpt-4.1", NO_TOOLING);
     assert.equal(t.workerVersionId, "mg-v1");
-    assert.notEqual(targetId(t), targetId(adaptedTarget(adaptWorker("researcher", SOURCES), "gpt-4.1")));
+    assert.notEqual(targetId(t), targetId(adaptedTarget(adaptWorker("researcher", SOURCES), "gpt-4.1", SANDBOX_TOOLING)));
   });
 });
 

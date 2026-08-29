@@ -26,7 +26,7 @@ import {
   AUDITOR_DOCTRINE, AUDITOR_VERSION_ID, AUDITOR_CONTRACT_BRIEF, AUDITOR_NON_RESPONSIBILITIES,
   DEFECT_CLASSES, AUDIT_VERDICTS, scoreAudit, summariseAuditRun,
 } from "../packages/eval/src/auditor.ts";
-import { adaptWorker, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, adaptedTarget, NO_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { targetId, gatesFor, TIER_EVIDENCE_REQUIREMENTS, TIER_SCORE_REQUIREMENTS } from "../packages/eval/src/academy.ts";
 import { executionEnvironmentId, currentExecutionEnvironment } from "../packages/eval/src/execution-environment.ts";
 import { costFor, loadPrices } from "../packages/eval/src/model-cost.ts";
@@ -43,7 +43,7 @@ if (!adapted.midasWorker) { console.error("The auditor did not resolve on the li
 
 const knowledgeHash = createHash("sha256").update(adapted.knowledgeBlock).digest("hex").slice(0, 16);
 const envId = executionEnvironmentId();
-const target = { ...adaptedTarget(adapted, model), executionEnvironmentId: envId };
+const target = { ...adaptedTarget(adapted, model, NO_TOOLING), executionEnvironmentId: envId };
 const fingerprint = createHash("sha256").update(JSON.stringify(AUDITOR_LOCK_CASES)).digest("hex").slice(0, 16);
 const historicalFingerprint = createHash("sha256").update(JSON.stringify(AUDIT_SEALED_CASES)).digest("hex").slice(0, 16);
 

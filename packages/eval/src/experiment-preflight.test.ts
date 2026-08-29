@@ -253,6 +253,9 @@ describe("the inventory this was built from", () => {
       "TOOL_AFFORDANCE", "RUNTIME_TRUNCATION", "BUDGET_PLANNING", "INFORMATION_PARITY",
       "METRIC_NOT_EXERCISED", "SEALED_CONTAMINATION", "CONFIGURATION_IDENTITY",
       "POST_HOC_CRITERION_CHANGE", "RAW_TRACE_INSUFFICIENCY",
+      // gold_provenance_declared / gold_independently_adjudicated, added after
+      // two reference answers cost a verdict on AUDITOR-READONLY-1.
+      "GOLD_DEFECT",
     ]);
     const uncovered = costly.filter((c) => !covered.has(c));
     assert.deepEqual(uncovered, [], "these cost a verdict and have no preflight check: " + uncovered.join(", "));

@@ -29,7 +29,7 @@ import {
   ACTION_CLASSES, BOTTLENECKS, scoreManagerDecision, summariseManagerRun,
 } from "../packages/eval/src/manager.ts";
 import { MANAGER_SEALED_CASES, caseCoverage } from "../packages/eval/src/manager-cases.ts";
-import { adaptWorker, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, adaptedTarget, NO_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { targetId, certify, dimensionsFor } from "../packages/eval/src/academy.ts";
 import { executionEnvironmentId } from "../packages/eval/src/execution-environment.ts";
 import { planCalls, budgetGuard } from "../packages/eval/src/call-budget.ts";
@@ -202,7 +202,7 @@ async function decide(armKey, c) {
 
 console.log("");
 console.log("subject:", subjectLabel(subjectFor("C_doctrine")), "| eligible:", certificationEligible(subjectFor("C_doctrine")).eligible);
-console.log("target:", targetId({ ...adaptedTarget(adapted, baseModel), executionEnvironmentId: executionEnvironmentId() }));
+console.log("target:", targetId({ ...adaptedTarget(adapted, baseModel, NO_TOOLING), executionEnvironmentId: executionEnvironmentId() }));
 console.log("sealed:", sealedHash.slice(0, 16), "|", JSON.stringify(caseCoverage()).slice(0, 160));
 console.log("candidates declared before running: B_contract and C_doctrine, each with its own gate");
 console.log("");

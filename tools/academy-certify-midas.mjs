@@ -19,7 +19,7 @@ import { ALL_SCENARIOS, scenariosForRole } from "../packages/eval/src/academy-sc
 import { auditSuite } from "../packages/eval/src/exam-audit.ts";
 import { judgeRun } from "../packages/eval/src/judge.ts";
 import { certify, authorityProfile, tierRank, targetId } from "../packages/eval/src/academy.ts";
-import { adaptWorker, actorInstructions, adaptedTarget, SANDBOX_PROTOCOL } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, actorInstructions, adaptedTarget, SANDBOX_TOOLING, SANDBOX_PROTOCOL } from "../packages/eval/src/worker-adapter.ts";
 import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { estimateUsd } from "../packages/eval/src/spend.ts";
@@ -166,7 +166,7 @@ for (const role of ROLES) {
     const results = rows.map((r) => r[armName].scored);
     const agg = aggregateRuns(results);
     const target = armName === "midas"
-      ? adaptedTarget(adapted, baseModel)
+      ? adaptedTarget(adapted, baseModel, SANDBOX_TOOLING)
       : { role, workerVersionId: "no-midas-worker", baseModel, knowledgeVersionId: "none", tools: ["sandbox"], policyVersionId: "none", retrievalConfigId: "none" };
     const cert = certify({
       target, dimensions: agg.dimensions, evidence: agg.evidence, breaches: agg.breaches,

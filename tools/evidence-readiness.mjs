@@ -11,11 +11,12 @@
  */
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { repoPath } from "@midas/db";
-import { adaptWorker, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, adaptedTarget, SANDBOX_TOOLING, NO_TOOLING } from "../packages/eval/src/worker-adapter.ts";
+import { SINGLE_SHOT_ENVIRONMENT, correctedNoToolTarget, readOnlyToolTarget, portabilityAudit } from "../packages/eval/src/auditor-target-truth.ts";
 import { targetId, TIER_EVIDENCE_REQUIREMENTS, TIER_SCORE_REQUIREMENTS, TIER_FLOOR_REQUIREMENTS } from "../packages/eval/src/academy.ts";
 import { scenariosForRole } from "../packages/eval/src/academy-scenarios.ts";
 import { ALL_RESEARCHER_SCENARIOS } from "../packages/eval/src/researcher-scenarios.ts";
-import { executionEnvironmentId } from "../packages/eval/src/execution-environment.ts";
+import { executionEnvironmentId, currentExecutionEnvironment } from "../packages/eval/src/execution-environment.ts";
 import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { AUDITOR_DOCTRINE, AUDITOR_VERSION_ID } from "../packages/eval/src/auditor.ts";
@@ -45,6 +46,8 @@ const examinationsFor = (role) => [...scenariosForRole(role), ...(role === "rese
 const WORKERS = [
   {
     role: "researcher",
+    /** What it actually had. Not a default: adaptedTarget no longer supplies one. */
+    actual: SANDBOX_TOOLING, environment: currentExecutionEnvironment(),
     currentTier: "SANDBOX_COMPETENT",
     capabilityBlocker: {
       blocked: true,
@@ -55,6 +58,7 @@ const WORKERS = [
   },
   {
     role: "qualifier",
+    actual: SANDBOX_TOOLING, environment: currentExecutionEnvironment(),
     currentTier: "TRAINING",
     capabilityBlocker: {
       blocked: true,
@@ -68,6 +72,8 @@ const WORKERS = [
   },
   {
     role: "auditor",
+    // It has never used a tool. The target that certified it said "sandbox".
+    actual: NO_TOOLING, environment: SINGLE_SHOT_ENVIRONMENT,
     currentTier: "TRAINING",
     capabilityBlocker: {
       blocked: false,
@@ -75,15 +81,17 @@ const WORKERS = [
     },
     configurationStable: {
       stable: false,
-      detail: "Both declared candidates were rejected, so no configuration is promoted. The doctrine arm won on detection and lost on ambiguity; which configuration is the auditor has not been settled.",
+      detail: "au-v1 is promoted, but the target it was certified against misdescribed it twice: it declared sandbox tools the candidate never had, and the workstation environment the candidate never entered. The corrected no-tool target is a new id and the read-only-tool target is a third. Which of the three the auditor is has not been settled.",
     },
     examinationsTrustworthy: {
       trustworthy: false,
-      detail: "The 28-case sealed set carries two known gold defects, AS-05 and AS-27, recorded and deliberately not repaired so the original result stayed readable. Certification evidence from a set with known defects would not be trustworthy.",
+      detail: "The 12 fresh lock cases are sound and belong to the corrected no-tool target. The 8-case read-only set had two wrong reference answers, confirmed by blind independent adjudication and repaired after the run, and now exercises no underdetermined case at all. The 28-case development set still carries AS-05 and AS-27.",
     },
   },
   {
     role: "manager",
+    // Single-shot decision cases. It has never used a tool either.
+    actual: NO_TOOLING, environment: SINGLE_SHOT_ENVIRONMENT,
     currentTier: "TRAINING",
     capabilityBlocker: {
       blocked: false,
@@ -105,7 +113,7 @@ console.log("EVIDENCE READINESS (zero model calls)");
 console.log("");
 for (const w of WORKERS) {
   const adapted = adaptWorker(w.role, SOURCES);
-  const target = adaptedTarget(adapted, "gpt-4.1");
+  const target = { ...adaptedTarget(adapted, "gpt-4.1", w.actual), executionEnvironmentId: executionEnvironmentId(w.environment) };
   const held = {};
   for (const s of examinationsFor(w.role)) held[s.evidenceClass] = (held[s.evidenceClass] || 0) + 1;
   const need = TIER_EVIDENCE_REQUIREMENTS.SANDBOX_COMPETENT

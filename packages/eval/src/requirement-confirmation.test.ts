@@ -12,7 +12,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
-import { adaptWorker, adaptedTarget, SANDBOX_PROTOCOL_ID } from "./worker-adapter.ts";
+import { adaptWorker, adaptedTarget, SANDBOX_TOOLING, SANDBOX_PROTOCOL_ID } from "./worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "./opportunity-researcher.ts";
 import { targetId } from "./academy.ts";
 
@@ -71,6 +71,6 @@ describe("nothing live changed", () => {
     assert.equal(SANDBOX_PROTOCOL_ID, "sandbox-protocol-v1");
     const a = adaptWorker("researcher", { researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE, researcherVersionId: "or-v3" });
     assert.equal(a.versionId, "or-v3");
-    assert.equal(targetId(adaptedTarget(a, "gpt-4.1")), "CT-44e7595af4a1");
+    assert.equal(targetId(adaptedTarget(a, "gpt-4.1", SANDBOX_TOOLING)), "CT-44e7595af4a1");
   });
 });

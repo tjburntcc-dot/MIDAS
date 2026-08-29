@@ -13,7 +13,7 @@ import { createHash } from "node:crypto";
 import { repoPath } from "@midas/db";
 import { ALL_SCENARIOS, scenariosForRole } from "../packages/eval/src/academy-scenarios.ts";
 import { TIERS, TIER_EVIDENCE_REQUIREMENTS, dimensionsFor, gatesFor, tierRank, targetId } from "../packages/eval/src/academy.ts";
-import { adaptWorker, adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptWorker, adaptedTarget, SANDBOX_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { HEMMER_POLICY_KNOWLEDGE, HEMMER_EXPIRY_KNOWLEDGE, QUALIFIER_V2_ID } from "../packages/eval/src/qualifier-foundry.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { AUDITOR_DOCTRINE, AUDITOR_VERSION_ID } from "../packages/eval/src/auditor.ts";
@@ -71,7 +71,7 @@ for (const role of roles) {
   const held = availableEvidence(role);
   const deficit = deficitFor(role, held);
   const firstReachable = Object.entries(deficit).find(([, missing]) => missing.length === 0);
-  const target = adapted.midasWorker ? adaptedTarget(adapted, model) : null;
+  const target = adapted.midasWorker ? adaptedTarget(adapted, model, SANDBOX_TOOLING) : null;
 
   const subject = {
     actorKind: adapted.midasWorker ? "midas_worker" : "generic_baseline",

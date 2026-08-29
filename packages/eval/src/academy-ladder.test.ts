@@ -17,7 +17,7 @@ import {
   certify, targetId, TIERS, TIER_EVIDENCE_REQUIREMENTS, tierRank,
   dimensionsFor, gatesFor, UNJUDGED_TIER_CEILING,
 } from "./academy.ts";
-import { adaptWorker, adaptedTarget } from "./worker-adapter.ts";
+import { adaptWorker, adaptedTarget, SANDBOX_TOOLING } from "./worker-adapter.ts";
 import { RESEARCHER_METHOD_KNOWLEDGE } from "./opportunity-researcher.ts";
 import { ALL_RESEARCHER_SCENARIOS, RESEARCHER_SANDBOX_SCENARIOS, RESEARCHER_SEALED_SCENARIOS, postureBalance } from "./researcher-scenarios.ts";
 import { scenariosForRole } from "./academy-scenarios.ts";
@@ -25,7 +25,7 @@ import { auditSuite } from "./exam-audit.ts";
 import { needsJudgementFor } from "./sandbox.ts";
 
 const adapted = adaptWorker("researcher", { researcherKnowledge: RESEARCHER_METHOD_KNOWLEDGE, researcherVersionId: "or-v3" });
-const target = adaptedTarget(adapted, "gpt-4.1");
+const target = adaptedTarget(adapted, "gpt-4.1", SANDBOX_TOOLING);
 
 const strongDimensions = () => dimensionsFor("researcher").map((d) => ({ id: d.id, score: 95, cases: 6 }));
 const fullEvidence = () => [
@@ -147,7 +147,7 @@ describe("certification binds a subject, not a job title", () => {
   test("a role with no MIDAS worker cannot silently become one", () => {
     const none = adaptWorker("researcher", {});
     assert.equal(none.midasWorker, false);
-    assert.equal(adaptedTarget(none, "gpt-4.1").workerVersionId, "no-midas-worker");
+    assert.equal(adaptedTarget(none, "gpt-4.1", SANDBOX_TOOLING).workerVersionId, "no-midas-worker");
   });
 });
 

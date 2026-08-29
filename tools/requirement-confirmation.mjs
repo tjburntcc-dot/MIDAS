@@ -26,7 +26,7 @@ import { adaptWorker, actorInstructions, SANDBOX_PROTOCOL_ID } from "../packages
 import { RESEARCHER_METHOD_KNOWLEDGE } from "../packages/eval/src/opportunity-researcher.ts";
 import { CONFIRMATION_CASES, caseBalance } from "../packages/eval/src/requirement-confirmation-cases.ts";
 import { targetId } from "../packages/eval/src/academy.ts";
-import { adaptedTarget } from "../packages/eval/src/worker-adapter.ts";
+import { adaptedTarget, SANDBOX_TOOLING } from "../packages/eval/src/worker-adapter.ts";
 import { costFor, loadPrices } from "../packages/eval/src/model-cost.ts";
 
 loadWorkspaceEnv("ws-hemmer");
@@ -104,7 +104,7 @@ const add = (id, pass, detail) => checks.push({ id, pass, detail });
 const pa = CONFIRMATION_CASES.map((c) => buildPrompt("A_control", c));
 const pc = CONFIRMATION_CASES.map((c) => buildPrompt("C_workspace", c));
 
-add("real_researcher_actor", adapted.midasWorker && adapted.versionId === "or-v3", "adaptWorker -> or-v3, target " + targetId(adaptedTarget(adapted, model)));
+add("real_researcher_actor", adapted.midasWorker && adapted.versionId === "or-v3", "adaptWorker -> or-v3, target " + targetId(adaptedTarget(adapted, model, SANDBOX_TOOLING)));
 add("rule_hash_matches_frozen_value", true, RULE_HASH.slice(0, 16) + " read from the prior experiment, not retyped");
 add("identical_instructions_across_arms", pa.every((p, i) => p.instructions === pc[i].instructions), "the instruction channel is byte-identical in both arms");
 add("identical_tools", true, TOOLS.join(", "));
