@@ -300,6 +300,31 @@ export function preflight(m: ExperimentManifest): { ok: boolean; findings: Findi
     }
   }
 
+  /**
+   * F3. Every gold field that can decide a gate was in front of the reviewer.
+   *
+   * D-36. A zero-tolerance gate read the per-action authority expectation and the
+   * review payload was hand-assembled without it, so the gate rested on gold
+   * nobody had checked. A manifest that declares gated gold dependencies must
+   * also declare which fields the reviewer saw, and the second must cover the
+   * first.
+   */
+  const adj: any = (m.cases as any).goldAdjudication;
+  if (adj && Array.isArray(adj.gatedGoldFields)) {
+    const shown = new Set<string>(Array.isArray(adj.fieldsReviewed) ? adj.fieldsReviewed : []);
+    const gap = adj.gatedGoldFields.filter((x: string) => !shown.has(x));
+    if (gap.length) {
+      f.push(fail("gated_gold_fields_are_reviewed", "GOLD_DEFECT",
+        "These gold fields can decide a gate and were never shown to the independent reviewer: " + gap.join(", ")
+        + ". A gate resting on an unreviewed field is an unreviewed gate.", "D-36"));
+    }
+    if (Array.isArray(adj.unresolvedFieldVerdicts) && adj.unresolvedFieldVerdicts.length) {
+      f.push(fail("gold_fields_all_confirmed", "GOLD_DEFECT",
+        "The reviewer did not confirm: " + adj.unresolvedFieldVerdicts.map((u: any) => u.caseId + "." + u.field + "=" + u.verdict).join(", ")
+        + ". A gold set may not freeze while a gated field is too broad, too narrow, wrong or ambiguous.", "D-38"));
+    }
+  }
+
   // G. Turn budget, computed from turns and not from cases
   const b = m.budget;
   /**

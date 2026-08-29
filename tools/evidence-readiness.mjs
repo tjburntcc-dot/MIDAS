@@ -99,7 +99,20 @@ const WORKERS = [
     currentTier: "TRAINING",
     capabilityBlocker: {
       blocked: true,
-      detail: "Twelve fresh cases: it named the binding constraint correctly on eight and chose an acceptable action on only two of those eight. Every one of the six action failures was a lower-commitment answer -- research three times, another micro-test on a finished experiment, prepare-readiness instead of asking the owner -- where the case called for acting, stopping or scaling. Action selection under-commits relative to the evidence in front of it.",
+      /**
+       * ABSOLUTE FITNESS: NOT_ESTABLISHED.
+       * CLEAN CAPABILITY BLOCKER: none.
+       * DEVELOPMENT CONCERN: diminishing returns / under-commitment.
+       *
+       * The campaign that produced the numbers was voided by its own post-run
+       * audit, so nothing from it is a certified blocker. Re-scored under the
+       * repaired substrate, action correctness moves 0.50 to 0.75 and one of the
+       * two invented-economics flags disappears. What survives is three cases
+       * where it named the constraint and chose a lower-commitment answer, which
+       * is the same shape as the H-4 leverage observation and is carried at the
+       * same weight: a development concern, not evidence.
+       */
+      detail: "Absolute fitness NOT ESTABLISHED. No clean capability blocker exists. Development concern, unchanged in weight since H-4: on three of twelve fresh cases it named the binding constraint and then chose research or another micro-test where the case called for acting or scaling. The campaign that measured this was voided by its own integrity audit.",
     },
     configurationStable: {
       stable: false,
