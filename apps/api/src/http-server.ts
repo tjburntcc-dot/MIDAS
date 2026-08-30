@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { existsSync, readFileSync, writeFileSync, chmodSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { KIND, createStore, ensureAtlasV0, freezeAtlasV1, ensureAtlasV2, ensureAtlasV3, ensureAtlasV4, ensureAtlasV5, ensureAtlasV6, ensureAtlasV7, ensureAtlasV8, ensureAtlasV9, ensureAtlasV10, ATLAS_V0_ID, ATLAS_V1_ID, ATLAS_V2_ID, ATLAS_V3_ID, ATLAS_V4_ID, ATLAS_V5_ID, ATLAS_V6_ID, ATLAS_V7_ID, ATLAS_V8_ID, ATLAS_V9_ID, ATLAS_V10_ID } from "@midas/db";
 import { studioOverview, addOwnerAuthoredRule, addPastedText, addUrlSource, reviewKnowledgeItem, inspectKnowledge, trainAtlas, STUDIO_CAPABILITY } from "../../../packages/eval/src/knowledge-studio.ts";
 import { createWorkspace, inspectWorkspace, setupWorkspace, runWorkbench, ownerDashboard, listWorkspaces, seedRidgelineDemo, seedIsolationWorkspaces, WORKBENCH_BANNER } from "../../../packages/eval/src/workspace.ts";
@@ -38,7 +38,7 @@ import { decideTeachingApproval, teachingControlRoomSlice } from "../../../packa
 import { evaluateStageIGate } from "../../../packages/eval/src/stage-i-gate.ts";
 import { factoryAvailability, authorizeSpecialist } from "../../../packages/eval/src/employee-factory.ts";
 import { HANDOFF_FICTIONAL_PROSPECTS, HANDOFF_OWNER_PASTE, HANDOFF_SCOUT_QUESTION, handoffQualificationPolicy } from "../../../packages/eval/src/handoff-scenario.ts";
-import { companyView, listOpportunities, opportunityDetail, opportunityPacketFor, loadRuns, saveRun, getRun, runsFor, runSummary, resultView, setDisposition, recordOutcome, inputFingerprint, OWNER_DISPOSITIONS, OUTCOME_STATES, CONSOLE_VERSION } from "../../../packages/eval/src/company0-console.ts";
+import { companyView, listOpportunities, opportunityDetail, opportunityPacketFor, attentionList, loadRuns, saveRun, getRun, runsFor, runSummary, resultView, setDisposition, recordOutcome, inputFingerprint, OWNER_DISPOSITIONS, OUTCOME_STATES, CONSOLE_VERSION } from "../../../packages/eval/src/company0-console.ts";
 import { runShadowChain, SHADOW_MODEL, SHADOW_STAGES } from "../../../packages/eval/src/company0-shadow-chain.ts";
 import { dispatchProductRequest, dispatchProductRequestAsync } from "../../../packages/eval/src/product-shell.ts";
 import { LIVE_SPECIALIST_CONTRACTS } from "../../../packages/eval/src/live-specialists.ts";
@@ -297,16 +297,21 @@ function redactSecrets(value, seen) {
   return out;
 }
 
-function send(res, status, body, type = "application/json; charset=utf-8") {
+function send(res, status, body, type = "application/json; charset=utf-8", extra = {}) {
   const data = typeof body === "string" ? body : JSON.stringify(redactSecrets(body, new WeakSet()));
   res.writeHead(status, {
     "content-type": type,
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET,POST,OPTIONS",
     "access-control-allow-headers": "content-type",
+    ...extra,
   });
   res.end(data);
 }
+
+/* The console's own assets are read from disk on every request and must not be
+   cached: a stale stylesheet looks exactly like a layout bug. */
+const NO_STORE = { "cache-control": "no-store" };
 
 async function body(req) {
   const chunks = [];
@@ -682,7 +687,24 @@ async function handle(req, res) {
     // nothing it did not get from a worker, a stored record, or arithmetic on
     // two dates.
     if (method === "GET" && (path === "/console" || path === "/company0")) {
-      send(res, 200, readFileSync(join(here, "company0-console.html"), "utf8"), "text/html; charset=utf-8");
+      // Asset stamps from the file contents. Without them a browser happily
+      // serves last week's stylesheet against this week's markup, and the
+      // result looks exactly like a layout bug in the current code.
+      const css = readFileSync(join(here, "company0-console.css"), "utf8");
+      const app = readFileSync(join(here, "console-app.js"), "utf8");
+      const stamp = createHash("sha256").update(css + app).digest("hex").slice(0, 8);
+      const page = readFileSync(join(here, "company0-console.html"), "utf8")
+        .replace('href="/console.css"', 'href="/console.css?v=' + stamp + '"')
+        .replace('src="/console-app.js"', 'src="/console-app.js?v=' + stamp + '"');
+      send(res, 200, page, "text/html; charset=utf-8", NO_STORE);
+      return;
+    }
+    if (method === "GET" && path === "/console.css") {
+      send(res, 200, readFileSync(join(here, "company0-console.css"), "utf8"), "text/css; charset=utf-8", NO_STORE);
+      return;
+    }
+    if (method === "GET" && path === "/console-app.js") {
+      send(res, 200, readFileSync(join(here, "console-app.js"), "utf8"), "application/javascript; charset=utf-8", NO_STORE);
       return;
     }
     if (method === "GET" && path === "/console/api/company0") {
@@ -690,7 +712,7 @@ async function handle(req, res) {
       return;
     }
     if (method === "GET" && path === "/console/api/opportunities") {
-      send(res, 200, { version: CONSOLE_VERSION, opportunities: listOpportunities() });
+      send(res, 200, { version: CONSOLE_VERSION, opportunities: listOpportunities(), attention: attentionList() });
       return;
     }
     if (method === "GET" && path.startsWith("/console/api/opportunities/")) {

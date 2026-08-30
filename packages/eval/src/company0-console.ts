@@ -35,35 +35,35 @@ export const OBJECTIVE_DATE = "2026-10-01";
  */
 export function companyView() {
   const byId = (id: string) => COMPANY0_CLAIMS.find((c) => c.id === id);
-  const row = (label: string, id: string) => {
+  const row = (label: string, id: string, short?: string) => {
     const c = byId(id);
     return c
-      ? { label, value: c.statement, knownAs: c.claimClass, source: c.source, note: c.note || null, claimId: c.id }
-      : { label, value: "UNKNOWN", knownAs: "unknown", source: "not recorded", note: null, claimId: null };
+      ? { label, short: short || null, value: c.statement, knownAs: c.claimClass, source: c.source, note: c.note || null, claimId: c.id }
+      : { label, short: null, value: "UNKNOWN", knownAs: "unknown", source: "not recorded", note: null, claimId: null };
   };
   return {
     objective: COMPANY0_OBJECTIVE,
     objectiveDate: OBJECTIVE_DATE,
     asOf: SHADOW_TODAY,
     rows: [
-      row("Capital at risk", "C0-02"),
-      row("Owner time", "C0-03"),
-      row("Customers", "C0-04"),
-      row("Verified revenue", "C0-05"),
-      row("Offer", "C0-06"),
-      row("Niche", "C0-07"),
-      row("Outreach so far", "C0-08"),
-      row("Payment readiness", "C0-09"),
-      row("Legal entity", "C0-10"),
-      row("Authorised signer", "C0-16"),
-      row("Capability", "C0-11"),
-      row("Delivery record", "C0-20"),
-      row("Distribution", "C0-12"),
-      row("Logistics", "C0-13"),
-      row("Authority", "C0-14"),
-      row("Adult involvement", "C0-15"),
-      row("Open channel", "C0-17"),
-      row("Closed channels", "C0-18"),
+      row("Verified revenue", "C0-05", "$0"),
+      row("Customers", "C0-04", "0"),
+      row("Capital at risk", "C0-02", "~$500"),
+      row("Owner time", "C0-03", "4-5h / ~10h"),
+      row("Offer", "C0-06", "None validated"),
+      row("Niche", "C0-07", "None fixed"),
+      row("Payment readiness", "C0-09", "Stripe reported working"),
+      row("Legal entity", "C0-10", "UNKNOWN"),
+      row("Authorised signer", "C0-16", "None asked"),
+      row("Capability", "C0-11", "AI build yes, delivery unproven"),
+      row("Delivery record", "C0-20", "No delivered project"),
+      row("Distribution", "C0-12", "Cold sales limited"),
+      row("Logistics", "C0-13", "Digital only"),
+      row("Authority", "C0-14", "Owner approval required"),
+      row("Adult involvement", "C0-15", "UNKNOWN"),
+      row("Open channel", "C0-17", "freelancer.com (16+)"),
+      row("Closed channels", "C0-18", "Upwork, Fiverr (18+)"),
+      row("Outreach so far", "C0-08", "Small sample, no replies"),
     ],
     unknowns: COMPANY0_UNKNOWNS,
     unknownCount: COMPANY0_CLAIMS.filter((c) => c.claimClass === "unknown").length + COMPANY0_UNKNOWNS.length,
@@ -197,10 +197,16 @@ export function opportunityPacketFor(id: string): OpportunityPacket | null {
   if (!item) return null;
   const src = item.source || {};
   const ver = item.sourceVerification || {};
+  // The source note is a buyer name on most records and a provenance sentence
+  // on two of them. A sentence is not a buyer, and putting one in the buyer
+  // field would state something about the buyer that nobody established.
+  const note = String(src.note || "").trim();
+  const buyer = note && !/\.$/.test(note) ? note : "UNKNOWN";
   return {
     workItemId: item.id,
     title: String(item.title || "untitled"),
-    buyer: String(src.note || "UNKNOWN"),
+    buyer,
+    sourceNote: note || null,
     channel: String(item.type || "commercial_opportunity"),
     sourceUrl: String(src.url || "UNKNOWN"),
     sourceKind: String(src.kind || "unknown") + ". The buyer's own posting has not necessarily been retrieved.",
@@ -221,6 +227,8 @@ export function listOpportunities() {
     const fit = objectiveFit(packet.evidence);
     const q = (item.outputs && (item.outputs.requalify || item.outputs.qualifying)) || null;
     const blockers = q ? [...(q.disqualifiers || []), ...(q.missing_information || [])] : [];
+    const prior = runsFor(item.id);
+    const last = prior[0] || null;
     return {
       id: item.id,
       title: packet.title,
@@ -236,7 +244,17 @@ export function listOpportunities() {
       statedBudget: statedBudget(packet.evidence).statedAs,
       majorBlocker: blockers.length ? blockers.join(", ") : "UNKNOWN",
       blockerSource: q ? "recorded by the qualifier on " + String(item.updatedAt || "").slice(0, 10) : "no qualification recorded",
-      runs: runsFor(item.id).length,
+      runs: prior.length,
+      lastDecision: last
+        ? {
+          runId: last.runId, at: last.startedAt,
+          action: last.stage === "COMPLETE" ? resultView(last).recommendedAction : null,
+          audit: last.stage === "COMPLETE" ? resultView(last).audit.verdict : null,
+          stage: last.stage,
+          ownerDisposition: (last.owner && last.owner.disposition) || "NONE",
+          outcome: (last.outcome && last.outcome.state) || null,
+        }
+        : null,
     };
   });
   // Anything with a closing date first, soonest first; unknown dates last.
@@ -245,6 +263,27 @@ export function listOpportunities() {
     const bd = b.submission.date || "9999";
     return ad < bd ? -1 : ad > bd ? 1 : a.id < b.id ? -1 : 1;
   });
+}
+
+/**
+ * What is worth the owner's attention right now.
+ *
+ * Not a ranking and not a score. Two facts, both checkable: the submission
+ * window is still open on or before the objective's date, and MIDAS has not
+ * looked at it yet. Anything that fails either test is simply not in the list,
+ * and the reason it is in the list is printed next to it.
+ */
+export function attentionList() {
+  return listOpportunities()
+    .filter((o) => o.objectiveFit === "SUBMISSION_OPEN_BEFORE_OBJECTIVE_DATE")
+    .map((o) => ({
+      id: o.id, title: o.title, buyer: o.buyer, closes: o.submission.date,
+      analysed: o.runs > 0,
+      lastDecision: o.lastDecision,
+      why: o.runs > 0
+        ? "Open before the objective date. MIDAS has already decided on it."
+        : "Open before the objective date, and MIDAS has not looked at it yet.",
+    }));
 }
 
 export function opportunityDetail(id: string) {
@@ -433,6 +472,7 @@ export function runSummary(run: any) {
   return {
     runId: run.runId,
     opportunityId: run.opportunityId,
+    opportunityTitle: run.opportunityTitle || null,
     startedAt: run.startedAt,
     finishedAt: run.finishedAt || null,
     stage: run.stage,

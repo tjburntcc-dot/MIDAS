@@ -18,7 +18,7 @@ import { readFileSync, existsSync } from "node:fs";
 
 import {
   companyView, listOpportunities, opportunityDetail, opportunityPacketFor,
-  submissionDate, objectiveFit, statedBudget, resultView, runSummary, loadRuns, runsFor,
+  submissionDate, objectiveFit, statedBudget, resultView, runSummary, loadRuns, runsFor, attentionList,
   OWNER_DISPOSITIONS, OUTCOME_STATES, FORBIDDEN_CONSOLE_FIELDS, OBJECTIVE_DATE, CONSOLE_VERSION,
 } from "./company0-console.ts";
 import { runShadowChain, SHADOW_STAGES, shadowTargets, shadowInstructions } from "./company0-shadow-chain.ts";
@@ -31,6 +31,12 @@ const runs = loadRuns();
 const historical = runs.find((r) => r.runId === "RUN-C0-SHADOW-01") || null;
 const consoleHtml = existsSync(repoFile("apps/api/src/company0-console.html"))
   ? readFileSync(repoFile("apps/api/src/company0-console.html"), "utf8") : null;
+const consoleApp = existsSync(repoFile("apps/api/src/console-app.js"))
+  ? readFileSync(repoFile("apps/api/src/console-app.js"), "utf8") : null;
+const consoleCss = existsSync(repoFile("apps/api/src/company0-console.css"))
+  ? readFileSync(repoFile("apps/api/src/company0-console.css"), "utf8") : null;
+const villageCss = existsSync(repoFile("apps/api/src/village.css"))
+  ? readFileSync(repoFile("apps/api/src/village.css"), "utf8") : null;
 const serverSrc = existsSync(repoFile("apps/api/src/http-server.ts"))
   ? readFileSync(repoFile("apps/api/src/http-server.ts"), "utf8") : null;
 
@@ -181,12 +187,12 @@ describe("the console runs the real chain, not a copy of it", () => {
 
   test("REGRESSION: stage names are stages, and none of them is a percentage", () => {
     assert.deepEqual([...SHADOW_STAGES], ["PREPARING", "RESEARCHING", "DECIDING", "AUDITING", "COMPLETE", "FAILED"]);
-    assert.ok(consoleHtml, "the console page is missing");
-    const html = String(consoleHtml);
-    assert.ok(!/<progress/i.test(html), "a progress element appeared");
-    assert.ok(!/\d+\s*%\s*(complete|done)/i.test(html), "a completion percentage appeared");
-    assert.ok(!/\*\s*100\s*\)/.test(html), "something computed a percentage");
-    assert.match(html, /No progress percentage is shown/,
+    assert.ok(consoleApp, "the console app is missing");
+    const app = String(consoleApp);
+    assert.ok(!/<progress/i.test(app), "a progress element appeared");
+    assert.ok(!/\d+\s*%\s*(complete|done)/i.test(app), "a completion percentage appeared");
+    assert.ok(!/\*\s*100\s*\)/.test(app), "something computed a percentage");
+    assert.match(app, /No progress percentage is shown/,
       "the console stopped saying why it shows no progress bar");
   });
 
@@ -231,9 +237,11 @@ describe("the result is arranged for a decision, not for a dashboard", () => {
     assert.equal(objected.finalStatus, "NOT_CLEARED");
     assert.equal(objected.audit.objected, true);
     assert.equal(objected.audit.defects.length, 1);
-    assert.ok(consoleHtml!.includes("MANAGER RECOMMENDED") || consoleHtml!.includes("The manager recommended"),
+    assert.match(String(consoleApp), /Manager recommends/,
       "the disagreement view does not show what the manager recommended");
-    assert.ok(consoleHtml!.includes("NOT CLEARED") || consoleHtml!.includes("NOT_CLEARED"));
+    assert.match(String(consoleApp), /Not cleared/);
+    assert.match(String(consoleApp), /An objection does not delete it/,
+      "the disagreement view stopped saying the recommendation survives an objection");
   });
 
   test("REGRESSION: an undetermined audit is shown as unresolved, not as a pass", () => {
@@ -321,6 +329,111 @@ describe("outcomes are durable and history is history", () => {
     }
     for (let i = 1; i < h.length; i++) {
       assert.ok(String(h[i - 1].startedAt) >= String(h[i].startedAt), "history is not in order");
+    }
+  });
+});
+
+describe("the shell is MIDAS, not a page of its own invention", () => {
+  test("the console renders on the product design system rather than a private one", () => {
+    assert.ok(consoleHtml && villageCss && consoleCss, "a stylesheet is missing");
+    assert.match(String(consoleHtml), /href="\/village\.css"/, "the console stopped using the MIDAS design system");
+    assert.match(String(consoleHtml), /href="\/console\.css"/);
+    // The page is a shell. If markup starts accumulating here, the two files
+    // have started to diverge from the rest of the product again.
+    assert.ok(String(consoleHtml).length < 1200, "the console page is growing its own markup");
+    assert.match(String(consoleHtml), /class="shell"/);
+    assert.match(String(consoleHtml), /class="side"/);
+    assert.match(String(consoleHtml), /class="topbar"/);
+  });
+
+  test("REGRESSION: the console defines no colour, font or radius of its own", () => {
+    const css = String(consoleCss);
+    // Every colour must come from a token in village.css. A raw hex here is a
+    // second palette, which is how the last version drifted into olive serif.
+    const rootBlock = /:root\s*\{/.test(css);
+    assert.equal(rootBlock, false, "the console redefined the design tokens");
+    assert.ok(!/font-family:\s*(Georgia|serif|"Iowan)/i.test(css), "a serif body face came back");
+    for (const token of ["--line", "--dim", "--gold", "--mono", "--radius"]) {
+      assert.ok(css.includes("var(" + token + ")"), "the console stopped using " + token);
+    }
+  });
+
+  test("the historical design system it reuses is the one that was already there", () => {
+    const v = String(villageCss);
+    assert.match(v, /--bg:#05080f/, "the MIDAS palette moved");
+    assert.match(v, /--sans:Inter/);
+    assert.match(v, /\.shell\{display:grid;grid-template-columns:250px 1fr/);
+  });
+
+  test("REGRESSION: nothing on the primary surface is a score, a rank or a percentage", () => {
+    const app = String(consoleApp);
+    for (const bad of ["roi", "readinessScore", "fitScore", "healthScore", "winProbability", "confidenceScore"]) {
+      assert.ok(!app.includes(bad), "the console started rendering " + bad);
+    }
+    assert.ok(!/toFixed\(\d\)\s*\+\s*"%"/.test(app), "a percentage was formatted for display");
+  });
+
+  test("the provenance vocabulary survived the redesign", () => {
+    const app = String(consoleApp);
+    for (const k of ["midas_verified_primary_source", "owner_reported", "midas_reported_unverified", "unknown"]) {
+      assert.ok(app.includes(k), "provenance class " + k + " is no longer rendered");
+    }
+    assert.match(app, /const NA = .*UNKNOWN/, "UNKNOWN stopped being a rendered value");
+  });
+
+  test("technical identity is present but behind an expander", () => {
+    const app = String(consoleApp);
+    const adv = app.slice(app.indexOf("function advancedPanel"));
+    for (const field of ["inputFingerprint", "runId"]) {
+      assert.ok(adv.includes(field), field + " left the advanced panel");
+      const primary = app.slice(0, app.indexOf("function advancedPanel"));
+      assert.ok(!primary.includes("Fingerprint"), "a fingerprint reached the primary surface");
+    }
+    assert.match(adv, /details class="adv"/, "advanced details stopped being collapsible");
+  });
+
+  test("closed opportunities do not dominate the working list", () => {
+    const app = String(consoleApp);
+    assert.match(app, /let OPP_FILTER = "open"/, "the list stopped defaulting to what is still open");
+    for (const k of ["open", "later", "undated", "closed", "all"]) {
+      assert.ok(app.includes('"' + k + '"'), "the " + k + " group disappeared from the filter");
+    }
+  });
+
+  test("a sentence is not a buyer", () => {
+    // Two legacy records carry a provenance sentence where a buyer name goes.
+    const legacy = opportunityPacketFor("WI-2ff56ff6")!;
+    assert.equal(legacy.buyer, "UNKNOWN");
+    assert.match(String(legacy.sourceNote), /Preserved from the recommendation-mode/);
+    const real = opportunityPacketFor("WI-9d7f9d70")!;
+    assert.match(real.buyer, /Houston Independent School District/);
+  });
+
+  test("what needs looking at is two facts, not a ranking", () => {
+    const list = attentionList();
+    for (const a of list) {
+      assert.ok(a.closes, a.id + " is in the attention list with no closing date");
+      assert.match(a.why, /Open before the objective date/);
+      assert.ok(!("score" in a) && !("rank" in a), "the attention list acquired a score");
+    }
+    const ids = listOpportunities().filter((o) => o.objectiveFit === "SUBMISSION_OPEN_BEFORE_OBJECTIVE_DATE").map((o) => o.id);
+    assert.deepEqual(list.map((a) => a.id).sort(), ids.sort());
+  });
+
+  test("REGRESSION: the page stamps its own assets", () => {
+    // A browser will happily serve last week's stylesheet against this week's
+    // markup, and the result is indistinguishable from a layout bug in the
+    // current code. Cost an hour once; now it is asserted.
+    const src = String(serverSrc);
+    assert.match(src, /href="\/console\.css\?v=/, "the stylesheet is served unstamped");
+    assert.match(src, /src="\/console-app\.js\?v=/, "the app script is served unstamped");
+    assert.match(src, /cache-control": "no-store/, "the console page may be cached");
+  });
+
+  test("every run carries the title of what it decided on", () => {
+    for (const r of runs) {
+      const sum = runSummary(r);
+      assert.ok("opportunityTitle" in sum, r.runId + " cannot say what it was about");
     }
   });
 });

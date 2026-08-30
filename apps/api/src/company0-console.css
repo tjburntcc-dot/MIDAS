@@ -1,0 +1,136 @@
+/* ============================================================
+   Company 0 decision console.
+   Everything structural comes from village.css — the MIDAS design
+   system. This file adds only what the console needs and the
+   portfolio screens never did: a dense opportunity table, the
+   decision hero, the execution rail, and the audit disagreement
+   block. No new colours, no new type scale, no new radii.
+   ============================================================ */
+
+/* ---------------- dense table ---------------- */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.6px}
+.tbl thead th{
+  position:sticky;top:0;z-index:2;text-align:left;white-space:nowrap;
+  padding:9px 12px;background:rgba(9,15,27,.96);border-bottom:1px solid var(--line-2);
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:500;
+}
+.tbl td{padding:11px 12px;border-bottom:1px solid rgba(27,43,71,.55);vertical-align:middle;color:var(--text-2)}
+.tbl tbody tr{transition:.13s;cursor:pointer}
+.tbl tbody tr:hover td{background:rgba(22,36,62,.55)}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl .t-name{display:block;color:var(--text);font-weight:590;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl .t-sub{display:block;margin-top:3px;font-size:11.2px;color:var(--dim);max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbl .t-num{font-family:var(--mono);font-size:11.5px;color:var(--text-2);white-space:nowrap}
+.tbl .t-dim{color:var(--dim)}
+.tbl .t-right{text-align:right}
+.tbl-wrap{overflow-x:auto}
+.tbl .t-clip{max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The opportunity list has to stay readable at 1440 with every row shown, so the
+   two columns that can grow without limit are the two that get capped. */
+/* Fixed layout, because auto layout lets a long title push the last column off
+   the edge and the last column is the one carrying the decision. */
+.tbl-opps{table-layout:fixed}
+.tbl-opps th:nth-child(1),.tbl-opps td:nth-child(1){width:33%}
+.tbl-opps th:nth-child(2),.tbl-opps td:nth-child(2){width:11%}
+.tbl-opps th:nth-child(3),.tbl-opps td:nth-child(3){width:9%}
+.tbl-opps th:nth-child(4),.tbl-opps td:nth-child(4){width:17%}
+.tbl-opps th:nth-child(5),.tbl-opps td:nth-child(5){width:11%}
+.tbl-opps th:nth-child(6),.tbl-opps td:nth-child(6){width:19%}
+.tbl-opps .t-name,.tbl-opps .t-sub{max-width:none}
+.tbl-opps td:nth-child(2),.tbl-opps td:nth-child(3),.tbl-opps td:nth-child(5),.tbl-opps td:nth-child(6){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbl-opps .t-clip{max-width:none}
+.tbl-empty td{padding:26px 12px;text-align:center;color:var(--dim);cursor:default}
+.tbl-empty:hover td{background:none}
+
+/* ---------------- truth semantics ---------------- */
+.na{color:var(--gold);font-family:var(--mono);font-size:10.5px;letter-spacing:.11em}
+.prov{
+  display:inline-block;margin-left:7px;padding:1px 6px;border-radius:999px;vertical-align:1px;
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+  border:1px solid var(--line);color:var(--dim);white-space:nowrap;
+}
+.prov.v{border-color:rgba(61,219,163,.4);color:#8ee9c6}
+.prov.o{border-color:rgba(90,169,248,.3);color:#9db8dc}
+.prov.u{border-color:rgba(244,201,93,.42);color:#f4d391}
+.prov.x{border-color:rgba(120,135,165,.4);color:#94a7c7}
+
+/* ---------------- decision hero ---------------- */
+.hero{
+  border-radius:var(--radius);border:1px solid rgba(244,201,93,.34);
+  background:radial-gradient(120% 140% at 0% 0%,rgba(88,68,26,.5),transparent 62%),linear-gradient(180deg,rgba(24,32,50,.96),rgba(12,19,33,.96));
+  padding:22px 24px;display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;
+}
+.hero .hero-main{flex:1;min-width:min(420px,100%)}
+.hero .kicker{color:#c8a75c}
+.hero h2{margin:9px 0 0;font-size:27px;font-weight:660;letter-spacing:-.02em;color:#f9e9c6;line-height:1.18}
+.hero .hero-why{margin:12px 0 0;font-size:13.2px;line-height:1.62;color:var(--text-2);max-width:74ch}
+.hero .hero-side{display:flex;flex-direction:column;gap:9px;min-width:190px}
+
+/* ---------------- audit verdict ---------------- */
+.verdict{border-radius:var(--radius);border:1px solid var(--line);padding:15px 18px;background:rgba(11,19,34,.7)}
+.verdict .vhd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.verdict h4{margin:0;font-size:13.5px;font-weight:640}
+.verdict p{margin:9px 0 0;font-size:12.6px;line-height:1.62;color:var(--muted);max-width:82ch}
+.verdict.pass{border-color:rgba(61,219,163,.36);background:linear-gradient(180deg,rgba(13,34,29,.7),rgba(10,18,28,.7))}
+.verdict.pass h4{color:#8ee9c6}
+.verdict.fail{border-color:rgba(244,114,114,.5);background:linear-gradient(180deg,rgba(44,18,18,.75),rgba(22,12,14,.8))}
+.verdict.fail h4{color:#f6a5a5}
+.verdict.undet{border-color:rgba(244,201,93,.42);background:linear-gradient(180deg,rgba(44,36,15,.6),rgba(20,17,10,.75))}
+.verdict.undet h4{color:#f4d391}
+.disagree{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px}
+.disagree .dcol{padding:13px 15px;border-radius:12px;border:1px solid var(--line);background:rgba(8,14,26,.6)}
+.disagree .dcol .kicker{display:block;margin-bottom:7px}
+.disagree .dcol b{font-size:14px;font-weight:640}
+.disagree .dcol ul{margin:8px 0 0;padding-left:17px;font-size:12.4px;color:var(--muted);line-height:1.6}
+
+/* ---------------- execution rail ---------------- */
+.rail{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:2px 0 0}
+.rail .st{
+  display:flex;align-items:center;gap:8px;padding:8px 15px;border:1px solid var(--line);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
+  background:rgba(9,15,27,.6);margin-right:-1px;
+}
+.rail .st:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.rail .st:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-right:0}
+.rail .st i{width:6px;height:6px;border-radius:50%;background:currentColor;display:block;flex:none}
+.rail .st.done{color:#8ee9c6;border-color:rgba(61,219,163,.32)}
+.rail .st.on{color:#0a1018;background:linear-gradient(180deg,#5fd7ea,#3fb6cc);border-color:#5fd7ea;font-weight:700}
+.rail .st.on i{background:#0a1018;box-shadow:0 0 0 3px rgba(10,16,24,.25);animation:pulse 1.15s ease-in-out infinite}
+.rail .st.failed{color:#0a1018;background:var(--danger);border-color:var(--danger);font-weight:700}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ---------------- fact rows ---------------- */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 26px}
+.fact{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid rgba(27,43,71,.55);font-size:12.7px;align-items:baseline}
+.fact > span{color:var(--dim);white-space:nowrap;font-size:12.2px}
+.fact > b{font-weight:590;text-align:right;color:var(--text-2);min-width:0}
+.bullets{margin:0;padding-left:17px;font-size:12.6px;line-height:1.68;color:var(--text-2)}
+.bullets li{margin:5px 0}
+.bullets.dim{color:var(--muted)}
+.bullets.warn{color:#f0d5a0}
+
+/* ---------------- evidence and detail ---------------- */
+.quote{font-size:11.8px;color:var(--dim);line-height:1.6;border-left:2px solid var(--line-2);padding-left:11px;margin:7px 0 0}
+details.adv{border:1px solid var(--line);border-radius:12px;background:rgba(9,15,27,.55);padding:0;margin:0}
+details.adv > summary{
+  list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:9px;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+}
+details.adv > summary::-webkit-details-marker{display:none}
+details.adv > summary:hover{color:var(--text-2)}
+details.adv > summary::before{content:"+";font-size:13px;line-height:1;color:var(--line-3)}
+details.adv[open] > summary::before{content:"\2212"}
+details.adv > .adv-b{padding:2px 16px 16px;display:flex;flex-direction:column;gap:14px}
+details.adv[open]{border-color:var(--line-2)}
+pre.raw{
+  margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:10.5px;line-height:1.6;
+  color:var(--dim);background:rgba(5,9,17,.85);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:320px;overflow:auto;
+}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 11px;flex-wrap:wrap}
+.sec-h h3{margin:0;font-size:14.5px;font-weight:645}
+.sec-h .kicker{color:var(--faint)}
+
+@media (max-width:1180px){
+  .facts{grid-template-columns:1fr}
+  .hero h2{font-size:23px}
+}
