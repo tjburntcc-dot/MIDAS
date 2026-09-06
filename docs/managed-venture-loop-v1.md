@@ -31,6 +31,9 @@ Every record carries a workspace, company, and venture scope; a schema version;
 actor/version information where work is performed; parent/evidence linkage;
 authority; uncertainty; and unknown-or-estimated cost. The record stream is
 append-only. A retry with the same deterministic identity is idempotent.
+Each managed `WorkOrder` also projects into the existing `work_items.json`
+queue, retaining MIDAS's established general/economic action representation
+while the managed record supplies venture-specific lineage and reviews.
 
 ## Selection and safety
 

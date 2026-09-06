@@ -9,6 +9,8 @@
  */
 import { createHash } from "node:crypto";
 import { recordUsage } from "./spend-ledger.ts";
+import { newWorkItem, putWorkItem } from "./work-item.ts";
+import { assertActorAllowed, rejectMasonClaim } from "./approval-actors.ts";
 import { FRONTIER_BASIC_PROMPT, frontierStrongPrompt } from "./frontier-arena.ts";
 import { MANAGER_VERSION_ID } from "./manager.ts";
 import { OPPORTUNITY_RESEARCHER_SPEC, RESEARCHER_ROLE_ID } from "./opportunity-researcher.ts";
@@ -158,9 +160,18 @@ export function createWorkOrder(store: any, input: { scope: Scope; teamPlanId: s
   const plan = scoped(store, input.scope, "team_plan").find((r) => r.id === input.teamPlanId); if (!plan) throw new Error("team plan missing or outside scope"); const workEvidence = evidenceById(store, input.scope, input.evidenceRefs); if (workEvidence.some((e) => e.status === "stale")) throw new Error("stale evidence cannot support a new WorkOrder");
   const assignment = plan.assignments.find((a: any) => input.capability === plan.requirements.find((r: any) => r.id === a.requirementId)?.capability); if (!assignment) throw new Error("no qualified assignment for requested capability");
   const key = hash({ scope: input.scope, teamPlanId: input.teamPlanId, title: input.title, capability: input.capability }); const duplicate = scoped(store, input.scope, "work_order").find((r) => r.idempotencyKey === key && !["rejected"].includes(r.state)); if (duplicate) return duplicate;
+  // Retain the existing economically relevant action queue as the canonical
+  // queue projection. The managed record adds venture lineage and immutable
+  // review history; it does not replace the general WorkItem nervous system.
+  const workItem = {
+    ...newWorkItem({ workspaceId: input.scope.workspaceId, type: "research", title: input.title, objective: plan.objectiveId, evidence: input.evidenceRefs, priority: input.priority,
+      economics: { expectedValueUsd: input.expectedValueUsd ?? null, expectedCostUsd: input.expectedCostUsd ?? null }, id: "WI-" + key.slice(0, 16) }),
+    companyId: input.scope.companyId, ventureId: input.scope.ventureId, managedVentureIdempotencyKey: key,
+  };
+  putWorkItem(store, workItem);
   const rec = { ...base("work_order", input.scope, input.actor || "venture_manager", input), teamPlanId: input.teamPlanId, title: input.title, capability: input.capability, priority: input.priority,
     expectedValueUsd: input.expectedValueUsd ?? null, expectedCostUsd: input.expectedCostUsd ?? null, assignedRoleId: assignment.roleId, assignedVersion: assignment.version,
-    state: "proposed", idempotencyKey: key, successCondition: input.successCondition, failureCondition: input.failureCondition, validationWorker: "venture_manager" };
+    state: "proposed", idempotencyKey: key, workItemId: workItem.id, successCondition: input.successCondition, failureCondition: input.failureCondition, validationWorker: "venture_manager" };
   return append(store, rec);
 }
 
@@ -222,6 +233,8 @@ export function consolidateManagementRecommendation(store: any, input: { scope: 
 
 export function recordOwnerDecision(store: any, input: { scope: Scope; recommendationId: string; decision: "approve_record_only" | "reject" | "request_revision"; ownerId: string; authorityGranted: string; actor?: string }) {
   if (!text(input.ownerId) || input.ownerId === "system") throw new Error("only an owner-like actor may decide consequential action");
+  rejectMasonClaim(input.ownerId, "demo_operator");
+  assertActorAllowed(input.ownerId, "approve managed-venture record-only action");
   const recommendation = scoped(store, input.scope, "manager_recommendation").find((r) => r.id === input.recommendationId); if (!recommendation) throw new Error("recommendation missing or outside scope");
   const rec = { ...base("owner_decision", input.scope, input.actor || input.ownerId, input), recommendationId: input.recommendationId, decision: input.decision, ownerId: input.ownerId, authorityGranted: input.authorityGranted, executionMode: "record_only_shadow", externalActionPerformed: false };
   return append(store, rec);
