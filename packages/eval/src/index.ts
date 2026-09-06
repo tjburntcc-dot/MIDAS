@@ -143,3 +143,30 @@ export {
   buildSourceProviderRegistry,
   REVENUE_FOUNDRY_HONESTY,
 } from "./revenue-foundry.ts";
+
+export {
+  MANAGED_VENTURE_SCHEMA_VERSION,
+  createVenture,
+  recordEvidence,
+  validateBusinessObjective,
+  submitBusinessObjective,
+  deriveCapabilityRequirements,
+  defaultWorkers,
+  qualifyOpportunityAdversary,
+  assembleTeamPlan,
+  createWorkOrder,
+  transitionWorkOrder,
+  validateAbstention,
+  preWorkReview,
+  executeShadowWork,
+  postWorkReview,
+  consolidateManagementRecommendation,
+  recordOwnerDecision,
+  recordShadowExecution,
+  recordOutcomeObservation,
+  createLearningSignal,
+  ventureMeasurements,
+  reviewVenture,
+  runManagedVentureShadow,
+} from "./managed-venture.ts";
+export type { Scope, VersionRef, EvidenceRef, Cost, VentureRecord, CapabilityRequirement, WorkerCandidate } from "./managed-venture.ts";

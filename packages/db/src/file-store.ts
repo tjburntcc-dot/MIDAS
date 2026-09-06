@@ -76,6 +76,10 @@ export interface Store {
   listCurriculumSnapshots(): CurriculumSnapshot[];
   getCurriculumSnapshot(id: string): CurriculumSnapshot | undefined;
   putCurriculumSnapshot(snapshot: CurriculumSnapshot): CurriculumSnapshot;
+  /** Append-only event records for the managed venture operating loop. */
+  listManagedVentureRecords(): any[];
+  getManagedVentureRecord(id: string): any | undefined;
+  putManagedVentureRecord(record: any): any;
 }
 
 export interface FileStoreMeta {
@@ -767,6 +771,15 @@ export class FileStore {
     atomicWrite(this.path(name), next);
     return record;
   }
+
+  /**
+   * Managed-venture state is event sourced.  Transitions append immutable
+   * records instead of overwriting a prior decision, so evidence and authority
+   * history remain auditable on the same atomic JSON persistence substrate.
+   */
+  listManagedVentureRecords() { return this._listJson("managed_venture_records.json"); }
+  getManagedVentureRecord(id) { return this.listManagedVentureRecords().find((r) => r.id === id); }
+  putManagedVentureRecord(record) { return this._putJsonById("managed_venture_records.json", record, true); }
 
   listFindingDispositions() { return this._listJson("finding_dispositions.json"); }
   getFindingDisposition(id) { return this.listFindingDispositions().find((r) => r.id === id); }
