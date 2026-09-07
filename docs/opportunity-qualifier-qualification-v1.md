@@ -14,6 +14,7 @@ Run these commands from the repository root. They make no network call and do no
 node --import ./tools/register-ts.mjs ./tools/opportunity-qualification-campaign.mjs freeze
 node --import ./tools/register-ts.mjs ./tools/opportunity-qualification-campaign.mjs export
 node --import ./tools/register-ts.mjs ./tools/opportunity-qualification-campaign.mjs validate <packet.json> <response.json>
+node --import ./tools/register-ts.mjs ./tools/opportunity-qualification-campaign.mjs import <packet.json> <response.json>
 node --import ./tools/register-ts.mjs ./tools/opportunity-qualification-campaign.mjs score <response.json>
 ```
 
@@ -21,4 +22,4 @@ The first two commands create ignored local artifacts under `var/state/sealed/` 
 
 For each contestant, open a clean session with no access to MIDAS, the campaign state, any evaluator material, or the other contestant. Paste the packet's `clean_session_prompt` and evidence. Return only the response JSON—no prose and no changed case IDs. Record actual model/version, timestamps, latency, tokens, actual sourced cost or `null`, pricing source or `null`, and human correction minutes. Recommended frontier contestant: GPT-6 Astra, only if the clean session verifies access; otherwise record the actually used strongest practical model without relabeling it.
 
-Validate and score the returned response before any qualitative evaluation. Then independently blind the two response sets for human/evaluator scoring. Submit repeated, evaluator-backed run projections to `recordQualificationEvidence`; it preserves `FRONTIER_SELECTED`, `NO_MATERIAL_DIFFERENCE`, `INSUFFICIENT_EVIDENCE`, and `CAMPAIGN_INVALID` rather than forcing a specialist win. The managed-venture loop blocks high-consequence qualifier work until completed real campaign evidence exists. Fixture demonstrations retain their explicit synthetic status.
+Validate and import the returned response before any qualitative evaluation. Import records an immutable packet/result fingerprint and rejects a duplicate import. Then score deterministically and independently blind the two response sets for human/evaluator scoring. Submit repeated, evaluator-backed run projections to `recordQualificationEvidence`; it preserves `FRONTIER_SELECTED`, `NO_MATERIAL_DIFFERENCE`, `INSUFFICIENT_EVIDENCE`, and `CAMPAIGN_INVALID` rather than forcing a specialist win. The managed-venture loop blocks high-consequence qualifier work until completed real campaign evidence exists. Fixture demonstrations retain their explicit synthetic status.

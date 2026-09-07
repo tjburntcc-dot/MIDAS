@@ -9,6 +9,7 @@ import {
 const root = process.cwd();
 const state = resolve(root, "var/state/sealed/opportunity-qualifier-qualification-v1.json");
 const packetDir = resolve(root, "var/artifacts/opportunity-qualifier-qualification-v1");
+const importsPath = resolve(root, "var/state/opportunity-qualifier-qualification-v1-imports.json");
 const read = (path) => JSON.parse(readFileSync(resolve(root, path), "utf8"));
 const write = (path, value) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, JSON.stringify(value, null, 2) + "\n"); };
 const identity = (arm) => arm === "specialist"
@@ -35,6 +36,15 @@ function exportPackets() {
 function validate(packetPath, responsePath) {
   const packet = read(packetPath), response = read(responsePath); const result = validateImport(packet, response, packet.packet_fingerprint); console.log(JSON.stringify(result, null, 2)); if (!result.ok) process.exitCode = 2;
 }
+function importResponse(packetPath, responsePath) {
+  const packet = read(packetPath), response = read(responsePath);
+  const imported = existsSync(importsPath) ? read(importsPath) : [];
+  const result = validateImport(packet, response, packet.packet_fingerprint, imported.map((r) => r.result_fingerprint));
+  if (!result.ok) { console.log(JSON.stringify(result, null, 2)); process.exitCode = 2; return; }
+  const record = { id: `OQ-IMPORT-${result.result_fingerprint.slice(0, 16)}`, imported_at: new Date().toISOString(), campaign_id: packet.campaign_id, campaign_version: packet.campaign_version, arm: packet.arm, packet_fingerprint: packet.packet_fingerprint, response_path: resolve(root, responsePath), ...result };
+  write(importsPath, imported.concat([record]));
+  console.log(JSON.stringify({ imported: record, imports_path: importsPath }, null, 2));
+}
 function score(responsePath) {
   if (!existsSync(state)) throw new Error("frozen campaign missing; run freeze first"); const campaign = read(state), response = read(responsePath); const result = deterministicChecks(campaign.sealed_cases_with_private_gold, response); console.log(JSON.stringify({ campaign_fingerprint: campaign.campaign_fingerprint, deterministic: result, advisory_only: "Judgment dimensions still require blinded independent evaluation; no certification or selection is emitted." }, null, 2)); if (!result.passed) process.exitCode = 2;
 }
@@ -43,5 +53,6 @@ const [command, ...args] = process.argv.slice(2);
 if (command === "freeze") freeze();
 else if (command === "export") exportPackets();
 else if (command === "validate" && args.length === 2) validate(args[0], args[1]);
+else if (command === "import" && args.length === 2) importResponse(args[0], args[1]);
 else if (command === "score" && args.length === 1) score(args[0]);
-else throw new Error("usage: freeze | export | validate <packet.json> <response.json> | score <response.json>");
+else throw new Error("usage: freeze | export | validate <packet.json> <response.json> | import <packet.json> <response.json> | score <response.json>");
