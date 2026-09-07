@@ -1,0 +1,16 @@
+import { describe, test } from "node:test";
+import assert from "node:assert/strict";
+import { preregisterCampaign, syntheticCampaignFixtures, buildContestantPacket, validateImport, deterministicChecks, selectCampaignWinner } from "./opportunity-qualification-campaign.ts";
+
+const fixtures = syntheticCampaignFixtures();
+const identity = { model: "unexecuted", prompt: "frozen", knowledge: "v1", tools: "none", policy: "record-only" };
+const spec = preregisterCampaign({ ...fixtures, specialist_identity: identity, frontier_identity: identity, playbook: { version: "v1" } });
+const packet = buildContestantPacket(spec, "specialist", fixtures.sealed, "Frozen specialist prompt.", identity);
+const response = { responses: packet.cases.map((c: any) => ({ case_id: c.case_id, disposition: c.family.includes("pursue") || c.family.includes("strategic") ? "pursue" : c.family.includes("cheap") ? "validate" : c.family.includes("revise") || c.family.includes("new_evidence") ? "revise" : c.family.includes("defer") || c.family.includes("stale") || c.family.includes("abstention") ? "hold_insufficient_evidence" : "reject", decision_rationale: "Synthetic test response.", evidence_ids: [c.evidence[0].id], unknowns: [], cheap_decisive_validation: null, authority_requirements: [], economic_assessment: { revenue_usd: null, contribution_margin_pct: null, owner_minutes: null, assumptions: [] }, run_metadata: { model: "fixture-only", model_version: null, started_at: "2026-09-06T00:00:00.000Z", completed_at: "2026-09-06T00:00:01.000Z", latency_ms: 1, input_tokens: null, output_tokens: null, actual_cost_usd: null, pricing_source: null, human_correction_minutes: 0 } })) };
+
+describe("sealed opportunity qualification campaign", () => {
+  test("preregisters 12 development and a 28-family sealed set before responses", () => { assert.equal(spec.development_case_count, 12); assert.equal(spec.sealed_case_count, 28); assert.equal(spec.case_families.length, 28); assert.equal(Object.values(spec.artifact_fingerprints).every(Boolean), true); });
+  test("blind contestant packets exclude gold and reject altered or duplicate imports", () => { assert.equal(JSON.stringify(packet).includes("acceptable_dispositions"), false); const ok = validateImport(packet, response, packet.packet_fingerprint); assert.equal(ok.ok, true); assert.equal(validateImport(packet, response, packet.packet_fingerprint, [ok.result_fingerprint!]).ok, false); });
+  test("deterministic checks and selection never promote absent real runs", () => { assert.equal(deterministicChecks(fixtures.sealed, response).passed, true); assert.equal(selectCampaignWinner({ spec, evaluator_reliable: true }).selection, "INSUFFICIENT_EVIDENCE"); });
+  test("critical failures cannot be averaged into a winner", () => { const bad = [{ quality: 99, critical_failures: ["fabricated_evidence"], complete_provenance: true }, { quality: 99, critical_failures: [], complete_provenance: true }]; const frontier = [{ quality: 70, critical_failures: [], complete_provenance: true }, { quality: 70, critical_failures: [], complete_provenance: true }]; assert.equal(selectCampaignWinner({ spec, specialist: bad, frontier, evaluator_reliable: true }).selection, "FRONTIER_SELECTED"); });
+});
