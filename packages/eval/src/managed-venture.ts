@@ -16,6 +16,7 @@ import { MANAGER_VERSION_ID } from "./manager.ts";
 import { OPPORTUNITY_RESEARCHER_SPEC, RESEARCHER_ROLE_ID } from "./opportunity-researcher.ts";
 import { OPPORTUNITY_QUALIFIER_SPEC, QUALIFIER_ROLE_ID } from "./opportunity-qualifier.ts";
 import { recordIntent, newShadowSession } from "./shadow.ts";
+import { fingerprint, selectCampaignWinner, type CampaignSpec } from "./opportunity-qualification-campaign.ts";
 
 export const MANAGED_VENTURE_SCHEMA_VERSION = "managed-venture-v1";
 export const MANAGED_VENTURE_RECORD_FILE = "managed_venture_records.json";
@@ -120,7 +121,7 @@ export function defaultWorkers(): WorkerCandidate[] {
   ];
 }
 
-/** Records the foundry lineage and an honest economic selection result. */
+/** Legacy synthetic fixture helper.  It is not genuine campaign evidence. */
 export function qualifyOpportunityAdversary(store: any, input: { scope: Scope; candidate: WorkerCandidate; frontier: WorkerCandidate; sealedCases: number; candidateQuality: number; frontierQuality: number; candidateCriticalFailures: number; frontierCriticalFailures: number; actor?: string }) {
   if (input.candidate.roleId === input.frontier.roleId) throw new Error("specialist and frontier baseline must be distinct contestants");
   if (input.candidate.certifiedBy === input.candidate.roleId) throw new Error("a worker cannot certify itself");
@@ -129,17 +130,51 @@ export function qualifyOpportunityAdversary(store: any, input: { scope: Scope; c
     pipeline: ["role_definition", "frozen_baseline", "competency_model", "training_candidate", "sealed_evaluation", "regression_analysis", "candidate_version", "certification_decision"],
     contestants: { specialized: input.candidate.version, frontier: input.frontier.version, informationParity: true, toolsParity: true, frontierMasterPrompt: frontierStrongPrompt("Same policy and record supplied to the specialist.") },
     results: { sealedCases: input.sealedCases, candidateQuality: input.candidateQuality, frontierQuality: input.frontierQuality, candidateCriticalFailures: input.candidateCriticalFailures, frontierCriticalFailures: input.frontierCriticalFailures },
-    selectedWorker: selected, verdict: selected.frontier ? "frontier_selected_no_demonstrated_specialist_advantage" : "specialist_selected_after_sealed_advantage", automaticPromotion: false };
+    selectedWorker: selected, verdict: selected.frontier ? "frontier_selected_no_demonstrated_specialist_advantage" : "specialist_selected_after_sealed_advantage", automaticPromotion: false,
+    evidenceStatus: "synthetic_fixture_not_campaign_evidence", productionEligible: false };
   return append(store, rec);
 }
 
+export interface QualificationEvidenceInput {
+  scope: Scope; campaign: CampaignSpec; campaignFingerprint: string; candidate: WorkerCandidate; frontier: WorkerCandidate;
+  candidateFingerprint: string; frontierFingerprint: string; specialistRuns?: any[]; frontierRuns?: any[];
+  evaluatorReliable: boolean; contaminated?: boolean; actor?: string;
+}
+
+/**
+ * The evidence-bearing worker-selection interface. It accepts no hand-entered
+ * score: only a frozen campaign plus repeated imported run projections may
+ * produce a selection, and no result auto-promotes a worker.
+ */
+export function recordQualificationEvidence(store: any, input: QualificationEvidenceInput) {
+  if (input.candidate.roleId === input.frontier.roleId) throw new Error("specialist and frontier baseline must be distinct contestants");
+  if (input.candidate.certifiedBy === input.candidate.roleId) throw new Error("a worker cannot certify itself");
+  if (input.campaign.campaign_id !== "MIDAS-FOUNDRY-004") throw new Error("unrecognized qualification campaign");
+  if (fingerprint(input.campaign) !== input.campaignFingerprint) throw new Error("campaign fingerprint mismatch");
+  if (input.campaign.artifact_fingerprints.specialist !== input.candidateFingerprint) throw new Error("candidate fingerprint is incompatible with campaign");
+  if (input.campaign.artifact_fingerprints.frontier !== input.frontierFingerprint) throw new Error("frontier fingerprint is incompatible with campaign");
+  const selection = selectCampaignWinner({ spec: input.campaign, specialist: input.specialistRuns, frontier: input.frontierRuns, evaluator_reliable: input.evaluatorReliable, contaminated: input.contaminated });
+  const selectedWorker = selection.selection === "SPECIALIST_SELECTED" ? input.candidate : selection.selection === "FRONTIER_SELECTED" ? input.frontier : null;
+  const rec = { ...base("qualification_evidence", input.scope, input.actor || "independent_evaluator", input),
+    campaignId: input.campaign.campaign_id, campaignVersion: input.campaign.version, campaignFingerprint: input.campaignFingerprint,
+    candidateFingerprint: input.candidateFingerprint, frontierFingerprint: input.frontierFingerprint,
+    candidateVersion: input.candidate.version, frontierVersion: input.frontier.version,
+    selection: selection.selection, selectionReason: selection.reason, selectedWorker,
+    specialistRuns: input.specialistRuns || [], frontierRuns: input.frontierRuns || [], evaluatorReliable: input.evaluatorReliable,
+    contaminated: Boolean(input.contaminated), evidenceStatus: selection.selection === "CAMPAIGN_INVALID" ? "invalid" : selection.selection === "INSUFFICIENT_EVIDENCE" ? "incomplete" : "completed_real_campaign",
+    productionEligible: Boolean(selectedWorker) && selection.selection !== "CAMPAIGN_INVALID", automaticPromotion: false };
+  return append(store, rec);
+}
+
+function latestQualificationEvidence(store: any, scope: Scope) { return scoped(store, scope, "qualification_evidence").at(-1); }
+
 export function assembleTeamPlan(store: any, input: { scope: Scope; objectiveId: string; requirements: CapabilityRequirement[]; workers?: WorkerCandidate[]; requestedRoleIds?: string[]; actor?: string }) {
   const objective = scoped(store, input.scope, "business_objective").find((r) => r.id === input.objectiveId); if (!objective) throw new Error("objective is missing or outside scope");
-  const workers = input.workers || defaultWorkers(); const qualification = scoped(store, input.scope, "worker_qualification").at(-1);
+  const workers = input.workers || defaultWorkers(); const qualification = latestQualificationEvidence(store, input.scope) || scoped(store, input.scope, "worker_qualification").at(-1);
   const assignments: any[] = [];
   for (const requirement of input.requirements) {
     let eligible = workers.filter((w) => w.capability === requirement.capability && w.certified);
-    if (requirement.capability === "opportunity_adversarial_qualification" && qualification) eligible = eligible.filter((w) => w.roleId === qualification.selectedWorker.roleId);
+    if (requirement.capability === "opportunity_adversarial_qualification" && qualification && qualification.selectedWorker) eligible = eligible.filter((w) => w.roleId === qualification.selectedWorker.roleId);
     if (!eligible.length) throw new Error("required capability is unavailable or uncertified: " + requirement.capability);
     const chosen = eligible.sort((a, b) => Number(a.marginalCostUsd ?? Infinity) - Number(b.marginalCostUsd ?? Infinity))[0];
     if (chosen.roleId === "venture_manager" && chosen.certifiedBy === "venture_manager") throw new Error("Venture Manager may not certify its own managerial performance");
@@ -158,6 +193,10 @@ export function assembleTeamPlan(store: any, input: { scope: Scope; objectiveId:
 export function createWorkOrder(store: any, input: { scope: Scope; teamPlanId: string; title: string; capability: string; priority: number; expectedValueUsd?: number | null; expectedCostUsd?: number | null; authorityRequested: string; successCondition: string; failureCondition: string; evidenceRefs: string[]; actor?: string }) {
   if (!text(input.successCondition) || !text(input.failureCondition)) throw new Error("WorkOrder requires explicit success and failure conditions");
   const plan = scoped(store, input.scope, "team_plan").find((r) => r.id === input.teamPlanId); if (!plan) throw new Error("team plan missing or outside scope"); const workEvidence = evidenceById(store, input.scope, input.evidenceRefs); if (workEvidence.some((e) => e.status === "stale")) throw new Error("stale evidence cannot support a new WorkOrder");
+  if (input.capability === "opportunity_adversarial_qualification" && input.authorityRequested !== "internal_read_only") {
+    const qualification = latestQualificationEvidence(store, input.scope);
+    if (!qualification || !qualification.productionEligible || qualification.evidenceStatus !== "completed_real_campaign") throw new Error("uncertified or incomplete qualification evidence blocks high-consequence opportunity work");
+  }
   const assignment = plan.assignments.find((a: any) => input.capability === plan.requirements.find((r: any) => r.id === a.requirementId)?.capability); if (!assignment) throw new Error("no qualified assignment for requested capability");
   const key = hash({ scope: input.scope, teamPlanId: input.teamPlanId, title: input.title, capability: input.capability }); const duplicate = scoped(store, input.scope, "work_order").find((r) => r.idempotencyKey === key && !["rejected"].includes(r.state)); if (duplicate) return duplicate;
   // Retain the existing economically relevant action queue as the canonical

@@ -10,8 +10,9 @@ import {
   createWorkOrder, preWorkReview, transitionWorkOrder, executeShadowWork, postWorkReview,
   consolidateManagementRecommendation, recordOwnerDecision, recordShadowExecution,
   recordOutcomeObservation, createLearningSignal, reviewVenture, validateAbstention,
-  runManagedVentureShadow,
+  runManagedVentureShadow, recordQualificationEvidence,
 } from "./managed-venture.ts";
+import { fingerprint, preregisterCampaign, syntheticCampaignFixtures } from "./opportunity-qualification-campaign.ts";
 
 function fresh() {
   const store = new FileStore(mkdtempSync(join(tmpdir(), "midas-venture-")));
@@ -66,6 +67,18 @@ describe("managed venture contracts and team controls", () => {
     assert.throws(() => qualifyOpportunityAdversary(f.store, { scope: f.scope, candidate, frontier: f.workers[2], sealedCases: 4, candidateQuality: 99, frontierQuality: 1, candidateCriticalFailures: 0, frontierCriticalFailures: 0 }), /cannot certify itself/);
     const q = qualifyOpportunityAdversary(f.store, { scope: f.scope, candidate: f.workers[1], frontier: f.workers[2], sealedCases: 4, candidateQuality: 99, frontierQuality: 1, candidateCriticalFailures: 1, frontierCriticalFailures: 0 });
     assert.equal(q.selectedWorker.frontier, true);
+  });
+
+  test("real campaign evidence is fingerprint-bound and required for high-consequence qualifier work", () => {
+    const f = fresh(); const fixtures = syntheticCampaignFixtures(); const specialistIdentity = { id: "candidate-frozen" }, frontierIdentity = { id: "frontier-frozen" };
+    const campaign = preregisterCampaign({ ...fixtures, specialist_identity: specialistIdentity, frontier_identity: frontierIdentity, playbook: { v: 1 } });
+    const runs = [{ quality: 80, critical_failures: [], complete_provenance: true, actual_cost_usd: 1, latency_ms: 10, human_correction_minutes: 0 }, { quality: 79, critical_failures: [], complete_provenance: true, actual_cost_usd: 1, latency_ms: 10, human_correction_minutes: 0 }];
+    assert.throws(() => recordQualificationEvidence(f.store, { scope: f.scope, campaign, campaignFingerprint: "wrong", candidate: f.workers[1], frontier: f.workers[2], candidateFingerprint: campaign.artifact_fingerprints.specialist, frontierFingerprint: campaign.artifact_fingerprints.frontier, specialistRuns: runs, frontierRuns: runs, evaluatorReliable: true }), /fingerprint mismatch/);
+    const evidence = recordQualificationEvidence(f.store, { scope: f.scope, campaign, campaignFingerprint: fingerprint(campaign), candidate: f.workers[1], frontier: f.workers[2], candidateFingerprint: campaign.artifact_fingerprints.specialist, frontierFingerprint: campaign.artifact_fingerprints.frontier, specialistRuns: [{ ...runs[0], critical_failures: ["fabricated_evidence"] }, runs[1]], frontierRuns: runs, evaluatorReliable: true });
+    assert.equal(evidence.selection, "FRONTIER_SELECTED"); assert.equal(evidence.productionEligible, true); assert.equal(evidence.automaticPromotion, false);
+    const plan = assembleTeamPlan(f.store, { scope: f.scope, objectiveId: f.objective.id, requirements: deriveCapabilityRequirements(f.objective), workers: f.workers });
+    const high = createWorkOrder(f.store, { scope: f.scope, teamPlanId: plan.id, title: "Qualified internal analysis", capability: "opportunity_adversarial_qualification", priority: 1, authorityRequested: "internal_analysis", successCondition: "Record only", failureCondition: "Return", evidenceRefs: [f.fact.id] });
+    assert.equal(high.capability, "opportunity_adversarial_qualification");
   });
 });
 

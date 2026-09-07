@@ -153,6 +153,7 @@ export {
   deriveCapabilityRequirements,
   defaultWorkers,
   qualifyOpportunityAdversary,
+  recordQualificationEvidence,
   assembleTeamPlan,
   createWorkOrder,
   transitionWorkOrder,
@@ -170,3 +171,6 @@ export {
   runManagedVentureShadow,
 } from "./managed-venture.ts";
 export type { Scope, VersionRef, EvidenceRef, Cost, VentureRecord, CapabilityRequirement, WorkerCandidate } from "./managed-venture.ts";
+
+export { OQ_CAMPAIGN_ID, OQ_CAMPAIGN_VERSION, OQ_SELECTIONS, OQ_DISPOSITIONS, QUALIFIER_RESPONSE_SCHEMA, fingerprint, preregisterCampaign, projectCase, assertNoGoldLeak, buildContestantPacket, validateResponse, validateImport, deterministicChecks, selectCampaignWinner, syntheticCampaignFixtures } from "./opportunity-qualification-campaign.ts";
+export type { OpportunityCase, CampaignSpec } from "./opportunity-qualification-campaign.ts";
