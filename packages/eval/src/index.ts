@@ -174,3 +174,5 @@ export type { Scope, VersionRef, EvidenceRef, Cost, VentureRecord, CapabilityReq
 
 export { OQ_CAMPAIGN_ID, OQ_CAMPAIGN_VERSION, OQ_SELECTIONS, OQ_DISPOSITIONS, QUALIFIER_RESPONSE_SCHEMA, fingerprint, preregisterCampaign, projectCase, assertNoGoldLeak, buildContestantPacket, validateResponse, validateImport, deterministicChecks, selectCampaignWinner, syntheticCampaignFixtures } from "./opportunity-qualification-campaign.ts";
 export type { OpportunityCase, CampaignSpec } from "./opportunity-qualification-campaign.ts";
+export { OQ_TELEMETRY_V2_VERSION, MEASUREMENT_STATUSES, TELEMETRY_METRICS, unknownInteractiveMeasurement, unknownInteractiveTelemetry, validateTelemetryMeasurement, validateRunTelemetry, projectRunTelemetryOntoResponses, validateV2Artifact, substantiveResponses, substantiveFingerprint, migrateV1ResponseToV2, OQ_V2_SELECTIONS, selectCampaignWinnerV2 } from "./opportunity-qualification-telemetry-v2.ts";
+export type { MeasurementStatus, MeasurementProvenance, TelemetryMeasurement, RunTelemetry, TelemetryMetric, ModelIdentityV2, OqV2Selection } from "./opportunity-qualification-telemetry-v2.ts";
