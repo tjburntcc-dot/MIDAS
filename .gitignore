@@ -12,6 +12,11 @@
 # Move this between machines with the state export archive, never through git.
 var/
 
+# ── sealed independent-evaluator material: local-only ───────────────────────
+# Blind packets, their identity map, manifests, and recovery copies are campaign
+# evidence.  They must never enter Git or a review diff.
+var/artifacts/opportunity-qualifier-evaluator-v2/
+
 # ── local UI backups and archives ────────────────────────────────────────────
 .midas-ui-backups/
 *.zip
