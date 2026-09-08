@@ -68,6 +68,10 @@ describe("successor evaluator protocol v2.1", () => {
     const input: any = campaignRows("AMBIGUITY", 0); setScore(input, 0, "disposition_quality", 28, 0); setScore(input, 0, "buyer_access", 6, 0);
     const result = planSecondaryReview(input); assert.equal(result.status, "SECONDARY_REVIEW_AUTHORIZED"); assert.equal(result.secondary_reviews.length, 1); assert.match(result.secondary_reviews[0].exact_deterministic_reason, /COMPETENCE/);
   });
+  test("a decision-sensitive boundary excludes an unrelated uncertain response with a proof", () => {
+    const input: any = campaignRows("AMBIGUITY", 0); setScore(input, 0, "disposition_quality", 28, 0); setScore(input, 0, "buyer_access", 6, 0); const unrelated = input.validated_primary_scorecards[2].responses[0]; unrelated.review_signals = ["AMBIGUITY"]; unrelated.uncertainty = "LIMITED"; unrelated.review_signal_dimension_ids = ["hidden_labor"];
+    const result = planSecondaryReview(input); assert.equal(result.secondary_reviews.length, 1); assert.equal(result.excluded_proofs.length, 1); assert.equal(result.excluded_proofs[0].opaque_contestant_id, input.opaque_structure[2].opaque_contestant_id);
+  });
   test("bounded synthetic uncertainty crossing run stability creates a targeted review", () => {
     const input: any = campaignRows("AMBIGUITY", 0); setScore(input, 0, "disposition_quality", 28, 0); setScore(input, 0, "buyer_access", 6, 0); setScore(input, 1, "disposition_quality", 21, 0); setScore(input, 1, "buyer_access", 1, 1);
     const result = planSecondaryReview(input); assert.equal(result.status, "SECONDARY_REVIEW_AUTHORIZED"); assert.match(result.secondary_reviews[0].exact_deterministic_reason, /STABILITY/);
