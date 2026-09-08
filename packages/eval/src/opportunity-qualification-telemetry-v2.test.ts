@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { preregisterCampaign, syntheticCampaignFixtures } from "./opportunity-qualification-campaign.ts";
 import { migrateV1ResponseToV2, selectCampaignWinnerV2, unknownInteractiveMeasurement, unknownInteractiveTelemetry, validateTelemetryMeasurement, validateV2Artifact } from "./opportunity-qualification-telemetry-v2.ts";
 
@@ -68,10 +69,10 @@ describe("v2 versioned unknown telemetry contract", () => {
 });
 
 describe("deterministic four-artifact migration", () => {
-  const root = process.cwd();
+  const root = resolve(fileURLToPath(new URL("../../../", import.meta.url)));
   const v1 = resolve(root, "var/artifacts/opportunity-qualifier-qualification-v1");
   const sources = [
-    ["specialist", "specialist-sealed-response-run-1.raw\\.json", "specialist-sealed-packet.json", "specialist-run-1", "GPT-5.6 Terra High"],
+    ["specialist", "specialist-sealed-response-run-1.json", "specialist-sealed-packet.json", "specialist-run-1", "GPT-5.6 Terra High"],
     ["specialist", "specialist-sealed-response-run-2.raw\\.json", "specialist-sealed-packet.json", "specialist-run-2", "GPT-5.6 Terra High"],
     ["frontier", "frontier-sealed-response-run-1.raw.json", "frontier-sealed-packet.json", "frontier-run-1", "GPT-6 Astra Medium"],
     ["frontier", "frontier-sealed-response-run-2.raw.json", "frontier-sealed-packet.json", "frontier-run-2", "GPT-6 Astra Medium"],
