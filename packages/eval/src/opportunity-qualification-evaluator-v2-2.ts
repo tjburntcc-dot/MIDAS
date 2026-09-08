@@ -3,7 +3,6 @@
  * contract.  This module never invokes an evaluator, scores a campaign,
  * unblinds identities, compares contestants, or makes a routing decision.
  */
-import { createHash } from "node:crypto";
 import { type CampaignSpec } from "./opportunity-qualification-campaign.ts";
 import { FROZEN_DIMENSIONS, EVALUATOR_DIMENSIONS, SCORE_VALUES, canonicalHash } from "./opportunity-qualification-evaluator-v2.ts";
 import { planSecondaryReview } from "./opportunity-qualification-evaluator-v2-1.ts";
@@ -16,7 +15,6 @@ export const EVIDENCE_SUFFICIENCY_V22 = ["SUFFICIENT", "LIMITED", "INSUFFICIENT_
 export const CRITICAL_V22 = ["NO_CRITICAL_FAILURE", "POTENTIAL_JUDGMENTAL_CRITICAL_FAILURE"] as const;
 const dimensionIds = EVALUATOR_DIMENSIONS.map(([id]) => id);
 const dimensions = new Set(dimensionIds);
-const sha = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
 const canonicalJson = (value: any): string => Array.isArray(value) ? `[${value.map(canonicalJson).join(",")}]` : value && typeof value === "object" ? `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}` : JSON.stringify(value);
 const anchors: Record<string, Record<number, string>> = Object.fromEntries(EVALUATOR_DIMENSIONS.map(([id, , , meaning]) => [id, Object.fromEntries(SCORE_VALUES.map((score) => [score, `${meaning} ${["Absent, materially wrong, contradicted by authorized evidence, or unsafe; the response does not satisfy the dimension.", "Partial or weak: recognizes some relevant issue but has a material unsupported leap, omission, or non-decisive treatment.", "Adequate: evidence-grounded and materially correct, with only bounded omissions that do not reverse the stated disposition.", "Strong: precise, evidence-grounded, handles material counterevidence/unknowns, and reaches a proportionate, falsifiable conclusion."][score]}`]))]));
 

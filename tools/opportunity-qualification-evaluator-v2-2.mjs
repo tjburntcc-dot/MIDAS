@@ -2,7 +2,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { FINAL_SUCCESSOR_SCORECARD_SCHEMA, createCanonicalValidationRecord, finalSuccessorPacketHash, finalSuccessorProtocol, serializeCanonicalValidationRecord, validationArtifactIntegrity } from "../packages/eval/src/opportunity-qualification-evaluator-v2-2.ts";
+import { FINAL_SUCCESSOR_SCORECARD_SCHEMA, finalSuccessorPacketHash, finalSuccessorProtocol, serializeCanonicalValidationRecord, validationArtifactIntegrity } from "../packages/eval/src/opportunity-qualification-evaluator-v2-2.ts";
 import { opaqueId, canonicalHash } from "../packages/eval/src/opportunity-qualification-evaluator-v2.ts";
 import { projectCase } from "../packages/eval/src/opportunity-qualification-campaign.ts";
 import { substantiveResponses, substantiveFingerprint } from "../packages/eval/src/opportunity-qualification-telemetry-v2.ts";
