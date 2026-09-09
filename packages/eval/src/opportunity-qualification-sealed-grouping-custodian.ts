@@ -16,6 +16,8 @@ export type PrivilegedGroupingInput = {
   evidence_raw_sha256: string;
   gate_finding_set_sha256: string;
   sealed_source_hashes: string[];
+  frozen_runs_per_arm: number;
+  frozen_cases_per_run: number;
   implementation_version: string;
   implementation_hash: string;
 };
@@ -32,7 +34,7 @@ const unique = (items: unknown[]) => new Set(items).size === items.length;
  */
 export function deriveOpaqueGroupingFromSealedAuthority(input: PrivilegedGroupingInput): OpaqueGroupingArtifact {
   if (!fields(input?.sealed_map, ["sealed", "protocol_hash", "mappings"]) || input.sealed_map.sealed !== true || input.sealed_map.protocol_hash !== input.protocol_010_hash || !Array.isArray(input.sealed_map.mappings) || input.sealed_map.mappings.length !== 4) fail();
-  if (![input.protocol_010_hash, input.packet_manifest_hash, input.evidence_fingerprint, input.evidence_raw_sha256, input.gate_finding_set_sha256, input.implementation_hash].every(hash) || !Array.isArray(input.sealed_source_hashes) || !input.sealed_source_hashes.length || !input.sealed_source_hashes.every(hash) || !unique(input.sealed_source_hashes)) fail();
+  if (![input.protocol_010_hash, input.packet_manifest_hash, input.evidence_fingerprint, input.evidence_raw_sha256, input.gate_finding_set_sha256, input.implementation_hash].every(hash) || !Array.isArray(input.sealed_source_hashes) || !input.sealed_source_hashes.length || !input.sealed_source_hashes.every(hash) || !unique(input.sealed_source_hashes) || input.frozen_runs_per_arm !== 2 || input.frozen_cases_per_run !== 28) fail();
   if (!Array.isArray(input.sources) || input.sources.length !== 4 || !Array.isArray(input.source_packets) || input.source_packets.length !== 2 || !Array.isArray(input.expected_primary_pairs) || input.expected_primary_pairs.length !== 112 || !unique(input.expected_primary_pairs)) fail();
   const packets = new Map<string, PrivilegedPacket>();
   for (const packet of input.source_packets) { if (!fields(packet, ["arm", "packet_fingerprint"]) || !packet.arm || !hash(packet.packet_fingerprint) || packets.has(packet.packet_fingerprint)) fail(); packets.set(packet.packet_fingerprint, packet); }

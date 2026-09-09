@@ -17,7 +17,7 @@ function fixture() {
     sources: ids.map((_, index) => ({ source_substantive_hash: sourceHashes[index], arm: arms[index], source_packet_fingerprint: packetHashes[index < 2 ? 0 : 1], case_ids: cases.slice() })),
     source_packets: [{ arm: "synthetic-arm-a", packet_fingerprint: packetHashes[0] }, { arm: "synthetic-arm-b", packet_fingerprint: packetHashes[1] }],
     expected_primary_pairs: ids.flatMap((id) => cases.map((case_id) => `${id}|${case_id}`)),
-    protocol_010_hash: hash("0"), packet_manifest_hash: hash("1"), evidence_fingerprint: hash("2"), evidence_raw_sha256: hash("3"), gate_finding_set_sha256: hash("4"), sealed_source_hashes: [hash("5"), hash("6")], implementation_version: "synthetic-v1", implementation_hash: hash("7")
+    protocol_010_hash: hash("0"), packet_manifest_hash: hash("1"), evidence_fingerprint: hash("2"), evidence_raw_sha256: hash("3"), gate_finding_set_sha256: hash("4"), sealed_source_hashes: [hash("5"), hash("6")], frozen_runs_per_arm: 2, frozen_cases_per_run: 28, implementation_version: "synthetic-v1", implementation_hash: hash("7")
   };
 }
 
@@ -48,6 +48,8 @@ describe("sealed opaque grouping authority", () => {
     assert.equal(safelyRunSealedCustodian(() => deriveOpaqueGroupingFromSealedAuthority(conflict)).ok, false);
     const missing = fixture(); missing.expected_primary_pairs.pop();
     assert.equal(safelyRunSealedCustodian(() => deriveOpaqueGroupingFromSealedAuthority(missing)).ok, false);
+    const wrongFrozenPolicy = fixture(); wrongFrozenPolicy.frozen_runs_per_arm = 1;
+    assert.equal(safelyRunSealedCustodian(() => deriveOpaqueGroupingFromSealedAuthority(wrongFrozenPolicy)).ok, false);
   });
 
   test("strictly rejects unknown, identity-bearing, score, rationale, signal, telemetry, ranking, and winner fields", () => {

@@ -3,7 +3,7 @@
  * It never reads a Protocol-010 scorecard and emits aggregate status only.
  */
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { canonicalHash } from "../packages/eval/src/opportunity-qualification-evaluator-v2.ts";
@@ -56,9 +56,9 @@ const sensitiveStrings = ({ sealedMap, sourceRuns, sourcePackets, state }) => {
 };
 const writeAtomic = (path, bytes) => {
   mkdirSync(resolve(path, ".."), { recursive: true });
-  if (existsSync(path)) { if (!readFileSync(path).equals(bytes)) throw new Error("output collision"); return; }
+  if (existsSync(path) && readFileSync(path).equals(bytes)) return;
   const temporary = `${path}.${process.pid}.tmp`;
-  try { writeFileSync(temporary, bytes, { flag: "wx" }); renameSync(temporary, path); } finally { /* a failed temporary artifact is identity-free and ignored */ }
+  try { writeFileSync(temporary, bytes, { flag: "wx" }); renameSync(temporary, path); } finally { if (existsSync(temporary)) unlinkSync(temporary); }
 };
 
 function frozenInputs() {
@@ -71,6 +71,7 @@ function frozenInputs() {
   const sourceRuns = sourceRunFiles.map((name) => parse(resolve(sourceDir, name)));
   const sourcePackets = sourcePacketFiles.map((name) => parse(resolve(packetDir, name)));
   const primaryPackets = manifest.packets.map((packet) => parse(resolve(dir, packet.file)));
+  if (!state.spec || state.spec.stability?.minimum_runs_per_arm !== 2 || state.spec.sealed_case_count !== 28) throw new Error("frozen campaign policy mismatch");
   if (manifest.protocol_hash !== expected.protocolHash || manifest.manifest_hash !== expected.packetManifestHash || canonicalHash(Object.fromEntries(Object.entries(manifest).filter(([key]) => key !== "manifest_hash"))) !== manifest.manifest_hash) throw new Error("public manifest mismatch");
   if (evidence.protocol_id !== expected.protocolId || evidence.protocol_hash !== expected.protocolHash || evidence.canonical_validation_fingerprint !== expected.evidenceFingerprint || shaFile(evidencePath) !== expected.evidenceRawHash || evidence.expected_response_count !== 112 || evidence.unique_opaque_contestant_case_pair_count !== 112 || evidence.required_dimension_judgment_count !== 1008) throw new Error("primary evidence mismatch");
   if (gates.protocol_id !== expected.protocolId || gates.protocol_hash !== expected.protocolHash || gates.input_response_count !== 112 || gates.opaque_run_count !== 4 || gates.critical_finding_count !== 0 || gates.gate_findings_set_sha256 !== expected.gateHash) throw new Error("gate mismatch");
@@ -97,6 +98,8 @@ function derive() {
     evidence_raw_sha256: expected.evidenceRawHash,
     gate_finding_set_sha256: expected.gateHash,
     sealed_source_hashes: inputs.sealedSourceHashes,
+    frozen_runs_per_arm: inputs.state.spec.stability.minimum_runs_per_arm,
+    frozen_cases_per_run: inputs.state.spec.sealed_case_count,
     implementation_version: implementationVersion,
     implementation_hash: inputs.implementationHash
   });
@@ -107,7 +110,7 @@ function derive() {
   const leaks = sensitiveStrings(inputs).filter((value) => bytes.includes(Buffer.from(value, "utf8")));
   if (leaks.length) throw new Error("output leakage detected");
   const again = deriveOpaqueGroupingFromSealedAuthority({
-    sealed_map: inputs.sealedMap, sources: inputs.sourceRuns.map((source) => ({ source_substantive_hash: substantiveFingerprint(source), arm: source.arm, source_packet_fingerprint: source.source_packet_fingerprint, case_ids: source.responses.map((response) => response.case_id) })), source_packets: inputs.sourcePackets.map((packet) => ({ arm: packet.arm, packet_fingerprint: packet.packet_fingerprint })), expected_primary_pairs: inputs.expectedPairs, protocol_010_hash: expected.protocolHash, packet_manifest_hash: expected.packetManifestHash, evidence_fingerprint: expected.evidenceFingerprint, evidence_raw_sha256: expected.evidenceRawHash, gate_finding_set_sha256: expected.gateHash, sealed_source_hashes: inputs.sealedSourceHashes, implementation_version: implementationVersion, implementation_hash: inputs.implementationHash
+    sealed_map: inputs.sealedMap, sources: inputs.sourceRuns.map((source) => ({ source_substantive_hash: substantiveFingerprint(source), arm: source.arm, source_packet_fingerprint: source.source_packet_fingerprint, case_ids: source.responses.map((response) => response.case_id) })), source_packets: inputs.sourcePackets.map((packet) => ({ arm: packet.arm, packet_fingerprint: packet.packet_fingerprint })), expected_primary_pairs: inputs.expectedPairs, protocol_010_hash: expected.protocolHash, packet_manifest_hash: expected.packetManifestHash, evidence_fingerprint: expected.evidenceFingerprint, evidence_raw_sha256: expected.evidenceRawHash, gate_finding_set_sha256: expected.gateHash, sealed_source_hashes: inputs.sealedSourceHashes, frozen_runs_per_arm: inputs.state.spec.stability.minimum_runs_per_arm, frozen_cases_per_run: inputs.state.spec.sealed_case_count, implementation_version: implementationVersion, implementation_hash: inputs.implementationHash
   });
   if (!Buffer.from(canonical(again), "utf8").equals(bytes)) throw new Error("nondeterministic derivation");
   const report = { artifact_type: "oq-opaque-grouping-authority-validation", artifact_sha256: sha(bytes), canonical_artifact_fingerprint: artifact.canonical_artifact_fingerprint, protocol_hash_matches: true, input_hash_matches: true, authority_sources_agree: true, primary_scorecards_read: false, contestant_count: 4, group_count: 2, contestants_per_group: 2, cases_per_contestant: 28, unique_memberships: 112, membership_equality_passed: true, output_strict_validation_passed: true, leakage_scan_passed: true, deterministic_regeneration_passed: true };
