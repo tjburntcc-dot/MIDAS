@@ -6,21 +6,18 @@ import { RunController } from '../src/runtime.ts';
 import { createSupportEnvironment } from '../src/lab/support.ts';
 import { createFixtureModel } from '../src/lab/model-fixture.ts';
 import { FixtureHttpPort, FixtureService } from '../src/lab/fixture-service.ts';
-
 function args() {
-  const value: Record<string, string> = {};
-  for (let index = 2; index < process.argv.length; index += 2) value[process.argv[index].replace(/^--/, '')] = process.argv[index + 1];
-  return value;
+    const value: Record<string, string> = {};
+    for (let index = 2; index < process.argv.length; index += 2)
+        value[process.argv[index].replace(/^--/, '')] = process.argv[index + 1];
+    return value;
 }
-
 function mark(name: string, value: unknown) {
-  process.stdout.write(JSON.stringify({ marker: name, value }) + '\n');
+    process.stdout.write(JSON.stringify({ marker: name, value }) + '\n');
 }
-
 function hold() {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10_000);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10000);
 }
-
 const input = args();
 const root = input.root;
 const runId = input.run;
@@ -37,17 +34,20 @@ const actions = input['service-url']
     : (localService = new FixtureService(join(root, 'service.sqlite')));
 const block = input.block;
 try {
-  const result = await runtime.advance(worker, run.scope, environment, model, actions, {
-    checkpoint: input.checkpoint,
-    afterDispatchIntent: block === 'after-dispatch-intent' ? () => { mark('after-dispatch-intent', { runId }); hold(); } : undefined,
-    afterEffect: block === 'after-effect' ? () => { mark('after-effect', { runId }); hold(); } : undefined,
-  });
-  mark(block ?? 'result', { phase: result.phase, runId });
-  if (block === 'checkpoint-decide' || block === 'waiting-approval') hold();
-} catch (error) {
-  mark('error', { code: (error as any).code ?? 'ERROR', runId });
-  process.exitCode = 1;
-} finally {
-  localService?.close();
-  store.close();
+    const result = await runtime.advance(worker, run.scope, environment, model, actions, {
+        checkpoint: input.checkpoint,
+        afterDispatchIntent: block === 'after-dispatch-intent' ? () => { mark('after-dispatch-intent', { runId }); hold(); } : undefined,
+        afterEffect: block === 'after-effect' ? () => { mark('after-effect', { runId }); hold(); } : undefined,
+    });
+    mark(block ?? 'result', { phase: result.phase, runId });
+    if (block === 'checkpoint-decide' || block === 'waiting-approval')
+        hold();
+}
+catch (error) {
+    mark('error', { code: (error as any).code ?? 'ERROR', runId });
+    process.exitCode = 1;
+}
+finally {
+    localService?.close();
+    store.close();
 }
