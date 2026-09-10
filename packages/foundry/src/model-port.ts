@@ -1,9 +1,11 @@
-import { canonical, hash, identifier, modelResult, money, requireThat, safeInteger, scope } from './contracts.ts';
+import { canonical, hash, identifier, modelResult, money, requireThat, safeInteger, scope, FoundryError, rawHash } from './contracts.ts';
 import type { Cost, ModelPort, ModelRequest, ModelResult, Money } from './contracts.ts';
 /** An admission/billing port belongs to trusted application code, never model text.
  * reserve must atomically claim the scoped request and reject duplicate pending
  * calls; uncertain retains the reservation until billing reconciliation. */
 export interface ModelBudgetPort {
+    prepare?(request: ModelRequest, amount: Money, requestHash: string, requestBytes: string): Promise<void>;
+    observed?(request: ModelRequest, observation: Record<string, unknown>): Promise<void>;
     reserve(request: ModelRequest, amount: Money, requestHash: string): Promise<void>;
     settle(request: ModelRequest, actual: Cost, providerRequestId: string | null): Promise<void>;
     uncertain(request: ModelRequest, reason: string): Promise<void>;
@@ -11,6 +13,9 @@ export interface ModelBudgetPort {
 export type ResponsesRoute = {
     authorizationId: string;
     model: string;
+    projectId?: string;
+    reasoningEffort?: "low" | "medium" | "high";
+    serviceTier?: "default";
     maxOutputTokens: number;
     deadlineMs: number;
     inputTokenCeiling: number;
@@ -32,7 +37,7 @@ export function responsesModelPort(options: {
     budget: ModelBudgetPort;
     schemaForTask: (task: string) => any;
     validateOutput: (task: string, output: any) => void;
-    countInputTokens: (body: any) => number;
+    countInputTokens: (body: any) => number | Promise<number>;
     transport?: typeof fetch;
 }): ModelPort {
     const { apiKey, budget, schemaForTask, validateOutput } = options;
@@ -69,21 +74,21 @@ export function responsesModelPort(options: {
             // ceiling must be established by F2's provider-compatible token counter.
             // Administrative scope/request IDs bind local accounting only;
             // they must not leak scenario labels into the worker prompt.
-            const body = { model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
-            const inputTokens = options.countInputTokens(body);
-            safeInteger(inputTokens);
-            requireThat(inputTokens <= route.inputTokenCeiling, 'MODEL_INPUT_EXCEEDS_ADMISSION');
-            const credential = apiKey();
-            requireThat(typeof credential === 'string' && credential.length > 0, 'MODEL_ACCESS_REQUIRED');
-            await budget.reserve(request, maximum, hash({ authorizationId: route.authorizationId, body }));
-            const started = Date.now();
-            let usageRecorded = false;
+            const body = { ...(route.reasoningEffort ? {reasoning:{effort:route.reasoningEffort}} : {}), ...(route.serviceTier ? {service_tier:route.serviceTier} : {}), model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
+            const bytes=canonical(body), digest=rawHash(bytes);
+            const started=Date.now();let admitted=false,usageRecorded=false;
             try {
-                const response = await transport('https://api.openai.com/v1/responses', { method: 'POST', headers: { authorization: 'Bearer ' + credential, 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(route.deadlineMs) });
+                if(budget.prepare){await budget.prepare(request,maximum,digest,bytes);admitted=true;}
+                const inputTokens=await options.countInputTokens(structuredClone(body));
+                safeInteger(inputTokens);requireThat(inputTokens<=route.inputTokenCeiling,'MODEL_INPUT_EXCEEDS_ADMISSION');
+                const credential=apiKey();requireThat(typeof credential==='string' && credential.length>0,'MODEL_ACCESS_REQUIRED');
+                await budget.reserve(request,maximum,digest);admitted=true;
+                const response=await transport('https://api.openai.com/v1/responses',{method:'POST',headers:{authorization:'Bearer '+credential,'content-type':'application/json',...(route.projectId?{'OpenAI-Project':route.projectId}:{})},body:bytes,signal:AbortSignal.timeout(route.deadlineMs)});
                 requireThat(response.ok, 'MODEL_HTTP_ERROR');
                 const raw = await response.json() as any;
                 const requestId = typeof raw.id === 'string' ? raw.id : null;
                 const usage = raw.usage;
+                await budget.observed?.(request,{providerRequestId:requestId,model:typeof raw.model==='string'?raw.model:null,status:typeof raw.status==='string'?raw.status:null,inputTokens:Number.isSafeInteger(usage?.input_tokens)?usage.input_tokens:null,outputTokens:Number.isSafeInteger(usage?.output_tokens)?usage.output_tokens:null,cachedInputTokens:Number.isSafeInteger(usage?.input_tokens_details?.cached_tokens)?usage.input_tokens_details.cached_tokens:null,latencyMs:Date.now()-started});
                 requireThat(raw.model === route.model, 'RETURNED_MODEL_MISMATCH');
                 requireThat(usage && Number.isSafeInteger(usage.input_tokens) && Number.isSafeInteger(usage.output_tokens), 'MODEL_USAGE_MISSING');
                 safeInteger(usage.input_tokens);
@@ -95,6 +100,7 @@ export function responsesModelPort(options: {
                 await budget.settle(request, actual, requestId);
                 usageRecorded = true;
                 requireThat(raw.status === 'completed', 'MODEL_RESPONSE_INCOMPLETE');
+                requireThat(!(raw.output ?? []).some((item:any)=>(item.content ?? []).some((part:any)=>part.type==='refusal')),'MODEL_REFUSED');
                 const text = (raw.output ?? []).flatMap((item: any) => item.content ?? []).filter((item: any) => item.type === 'output_text').map((item: any) => item.text).join('');
                 requireThat(text.length > 0, 'MODEL_OUTPUT_MISSING');
                 const output = JSON.parse(text);
@@ -102,9 +108,9 @@ export function responsesModelPort(options: {
                 return modelResult({ output, usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost: actual }, route: { provider: 'openai-responses', model: raw.model, kind: 'live' }, metadata: { providerRequestId: requestId, cachedInputTokens: Number.isSafeInteger(usage.input_tokens_details?.cached_tokens) ? usage.input_tokens_details.cached_tokens : null, latencyMs: Date.now() - started } });
             }
             catch (error) {
-                if (!usageRecorded)
+                if (admitted && !usageRecorded)
                     await budget.uncertain(request, (error as any).code ?? 'MODEL_RESULT_UNCERTAIN');
-                throw new Error('Model attempt has no accepted output; consult the scoped usage ledger. No automatic retry or fixture fallback.');
+                throw new FoundryError((error as any).code ?? 'MODEL_RESULT_UNCERTAIN','Model attempt has no accepted output ('+((error as any).code ?? 'MODEL_RESULT_UNCERTAIN')+'). No automatic retry or fixture fallback.');
             }
         },
     };

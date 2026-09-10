@@ -389,7 +389,7 @@ function validArtifact(artifact: unknown): artifact is SupportArtifact {
         && value.answers.every((answer) => Boolean(answer) && typeof answer === "object" && hasOnlyKeys(answer, ["topic", "text"]) && typeof answer.topic === "string" && answer.topic.length > 0 && typeof answer.text === "string" && answer.text.length > 0);
 }
 function validOperatorOutput(output: unknown): output is OperatorOutput {
-    return Boolean(output) && typeof output === "object" && hasOnlyKeys(output, ["kind", "artifact"]) && (output as OperatorOutput).kind === "support_artifact" && validArtifact((output as OperatorOutput).artifact);
+    return output !== null && typeof output === "object" && hasOnlyKeys(output, ["kind", "artifact"]) && (output as OperatorOutput).kind === "support_artifact" && validArtifact((output as OperatorOutput).artifact);
 }
 function validExperiment(value: unknown): value is ExperimentSpec {
     if (!value || typeof value !== "object" || !hasOnlyKeys(value, ["hypothesis", "competingExplanation", "population", "allocation", "baseline", "endpoint", "exclusions", "exposureCap", "branches"]))
