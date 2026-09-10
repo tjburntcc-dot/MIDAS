@@ -13,8 +13,8 @@ import type { Case } from './task.ts';
 export function openExperiment(root: string, allowExpired = false) { const a = authorization(root, allowExpired), store = new StateStore(join(root, 'experiment.sqlite')); return { ...a, store, ledger: new ModelLedger(store, a.spec.scope, a.authorizationHash, a.spec.limits) }; }
 export function roleArtifact(root: string, condition: 'baseline' | 'challenger', model: string): Role {
     const value = readJSON(join(root, condition + '.json'));
-    requireThat(typeof value.procedure === 'string' && value.procedure.trim().length > 0, 'PROCEDURE_REQUIRED');
-    return { id: 'operator', version: value.version, procedure: value.procedure, competencies: ['billing-status-support'], tools: [], predecessor: condition === 'challenger' ? 'baseline-v1' : null, model, qualification: 'fixture_only' };
+    requireThat(typeof value.version==='string'&&value.version.length>0&&value.taskContractHash===taskContractHash&&typeof value.procedure === 'string' && value.procedure.trim().length > 0, 'PROCEDURE_REQUIRED');
+    return { id: 'operator', version: value.version, procedure: value.procedure, competencies: ['billing-status-support'], tools: [], predecessor: condition === 'challenger' ? value.predecessorVersion : null, model, qualification: 'fixture_only' };
 }
 export function requestFor(scope: any, role: Role, c: Case, repeat: number, stage: Stage): ModelRequest {
     return { scope, requestId: 'A-' + hash({ scope, role: hash(role), caseId: c.id, input: hash(c.input), repeat, stage }).slice(0, 40), role, task: 'operate', context: { case: c.input }, limits: { maxCost: { minorUnits: 13, currency: 'USD' }, maxAttempts: 1, maxHumanMinutes: 10 }, tools: [] };
@@ -103,7 +103,7 @@ export function candidate(root: string, procedureFile: string, failureIds: strin
         }
         const baseline = readJSON(join(root, 'baseline.json')), procedure = readFileSync(procedureFile, 'utf8').trim();
         requireThat(procedure && procedure !== baseline.procedure, 'PROCEDURE_CHANGE_REQUIRED');
-        const result = { version: 'challenger-v1', procedure, taskContractHash, baselineHash: hash(baseline), failureIds, rationale, source: 'observed-development-failures', createdAt: new Date().toISOString() };
+        const result = { version: 'challenger-v1', predecessorVersion:baseline.version, procedure, taskContractHash, baselineHash: hash(baseline), failureIds, rationale, source: 'observed-development-failures', createdAt: new Date().toISOString() };
         writeJSON(join(root, 'challenger.json'), result, true);
         return { candidateHash: hash(result), failureIds };
     }

@@ -67,7 +67,7 @@ export function analyze(rows: ScoredAttempt[], spec: AnalysisSpec) {
     const clusterSuccess = mean(clusterRows.map(r => Number(r.fullyAccepted))), n = clusters.length, z = 1.959963984540054;
     const wilson = (clusterSuccess + z * z / (2 * n) - z * Math.sqrt(clusterSuccess * (1 - clusterSuccess) / n + z * z / (4 * n * n))) / (1 + z * z / n);
     const qualityLower = Math.min(quantile(quality, .025), wilson);
-    const measured = challenger.costPerAcceptedMinor !== null && challenger.p95LatencyMs !== null && challenger.meanCorrectionSeconds !== null && baseline.meanCorrectionSeconds !== null;
+    const measured = baseline.costMinor!==null&&baseline.p95LatencyMs!==null&&challenger.costPerAcceptedMinor !== null && challenger.p95LatencyMs !== null && challenger.meanCorrectionSeconds !== null && baseline.meanCorrectionSeconds !== null;
     const resources = measured && challenger.costPerAcceptedMinor! <= spec.maxCostPerAcceptedMinor && challenger.p95LatencyMs! <= spec.maxP95LatencyMs && challenger.meanCorrectionSeconds! <= spec.maxMeanCorrectionSeconds && challenger.meanCorrectionSeconds! <= baseline.meanCorrectionSeconds!;
     const pass = measured && delta >= spec.practicalGain && interval[0] > 0 && challenger.acceptance >= spec.minimumQuality && qualityLower >= spec.minimumQualityLowerBound && challenger.critical === 0 && criticalUpper <= spec.maxCriticalUpperBound && resources;
     const hardFailure = challenger.critical > 0 || challenger.acceptance < spec.minimumQuality || (measured && !resources);
