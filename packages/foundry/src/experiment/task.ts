@@ -26,7 +26,7 @@ export type Case = {
     id: string;
     family: string;
     cluster: string;
-    split: 'development' | 'validation';
+    split: 'development' | 'validation' | 'protected';
     rights: 'purpose-built-synthetic';
     input: TaskInput;
     checks: {
