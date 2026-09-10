@@ -36,7 +36,8 @@ describe("support laboratory adapter", () => {
     const action = environment.actionFor(artifact.output);
     assert.equal(action.toolId, "lab.publish");
     assert.equal(action.estimatedCost.minorUnits, 25);
-    assert.equal(action.payload.simulatedLedger.collections.minorUnits, 0);
+    assert.equal(action.payload.simulatedLedger.collections.minorUnits, 1000);
+    assert.equal(action.payload.simulatedLedger.recognizedRevenue.minorUnits, 0);
     assert.equal(action.payload.simulatedLedger.obligations.minorUnits, 1000);
     const observedLedger = { ...action.payload.simulatedLedger, bookings: { minorUnits: 1000, currency: "USD" }, collections: { minorUnits: 1000, currency: "USD" }, recognizedRevenue: { minorUnits: 1000, currency: "USD" }, refunds: { minorUnits: 100, currency: "USD" }, obligations: { minorUnits: 0, currency: "USD" }, modeledCustomerSavings: { minorUnits: 180, currency: "USD" } };
     const verification = environment.verify({ artifact: artifact.output.artifact, receipt: { toolId: "lab.publish", status: "confirmed" }, observation: { status: "confirmed", artifact: artifact.output.artifact, ledger: observedLedger, deliveryObserved: true }, snapshot, evidence: [evidence, policyEvidence] });

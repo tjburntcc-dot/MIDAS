@@ -243,12 +243,12 @@ function baseSnapshot(world: SupportWorld, activePolicyVersion: string): Support
 function fixtureLedger(delivered: boolean): SimulatedLedger {
   return {
     simulated: true,
-    bookings: money(delivered ? 1000 : 0),
-    collections: money(delivered ? 1000 : 0),
+    bookings: money(1000),
+    collections: money(1000),
     recognizedRevenue: money(delivered ? 1000 : 0),
-    refunds: money(delivered ? 100 : 0),
+    refunds: money(100),
     obligations: money(delivered ? 0 : 1000),
-    modeledCustomerSavings: money(delivered ? 180 : 0),
+    modeledCustomerSavings: money(180),
     note: "All entries are simulated. Modeled customer savings are not MIDAS collections or revenue.",
   };
 }
