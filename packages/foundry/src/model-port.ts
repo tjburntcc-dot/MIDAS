@@ -1,0 +1,109 @@
+import { canonical, hash, identifier, modelResult, money, requireThat, safeInteger, scope } from './contracts.ts';
+import type { Cost, ModelPort, ModelRequest, ModelResult, Money } from './contracts.ts';
+/** An admission/billing port belongs to trusted application code, never model text.
+ * reserve must atomically claim the scoped request and reject duplicate pending
+ * calls; uncertain retains the reservation until billing reconciliation. */
+export interface ModelBudgetPort {
+    reserve(request: ModelRequest, amount: Money, requestHash: string): Promise<void>;
+    settle(request: ModelRequest, actual: Cost, providerRequestId: string | null): Promise<void>;
+    uncertain(request: ModelRequest, reason: string): Promise<void>;
+}
+export type ResponsesRoute = {
+    authorizationId: string;
+    model: string;
+    maxOutputTokens: number;
+    deadlineMs: number;
+    inputTokenCeiling: number;
+    maxCallCost: Money;
+    pricing: {
+        inputMinorPerMillion: number;
+        outputMinorPerMillion: number;
+        source: string;
+        effectiveAt: string;
+    };
+};
+/** Supported OpenAI Responses transport. Not enabled by the laboratory CLI.
+ * Tests inject an in-memory transport: no provider calls were made for Mission 027.
+ * Unlike the older repository adapter this transports output and time limits.
+ * Abort means response uncertainty, not proof the provider stopped billing. */
+export function responsesModelPort(options: {
+    route: ResponsesRoute;
+    apiKey: () => string;
+    budget: ModelBudgetPort;
+    schemaForTask: (task: string) => any;
+    validateOutput: (task: string, output: any) => void;
+    countInputTokens: (body: any) => number;
+    transport?: typeof fetch;
+}): ModelPort {
+    const { apiKey, budget, schemaForTask, validateOutput } = options;
+    const route = structuredClone(options.route);
+    const transport = options.transport ?? fetch;
+    identifier(route.authorizationId);
+    identifier(route.model);
+    money(route.maxCallCost);
+    for (const amount of [route.maxOutputTokens, route.deadlineMs, route.inputTokenCeiling])
+        safeInteger(amount, 1);
+    for (const amount of [route.pricing.inputMinorPerMillion, route.pricing.outputMinorPerMillion])
+        safeInteger(amount);
+    requireThat(route.pricing.source.length > 0 && Number.isFinite(Date.parse(route.pricing.effectiveAt)), 'PRICE_PROVENANCE_REQUIRED');
+    function price(input: number, output: number): Money {
+        safeInteger(input);
+        safeInteger(output);
+        const numerator = BigInt(input) * BigInt(route.pricing.inputMinorPerMillion) + BigInt(output) * BigInt(route.pricing.outputMinorPerMillion);
+        const minorUnits = Number((numerator + 999999n) / 1000000n);
+        safeInteger(minorUnits);
+        return { minorUnits, currency: route.maxCallCost.currency };
+    }
+    return {
+        kind: 'live',
+        async run(request: ModelRequest): Promise<ModelResult> {
+            scope(request.scope);
+            identifier(request.requestId);
+            money(request.limits.maxCost);
+            requireThat(request.role.model === route.model, 'PINNED_MODEL_MISMATCH');
+            const maximum = price(route.inputTokenCeiling, route.maxOutputTokens);
+            requireThat(request.limits.maxCost.currency === maximum.currency && maximum.minorUnits <= request.limits.maxCost.minorUnits && maximum.minorUnits <= route.maxCallCost.minorUnits, 'MODEL_BUDGET_EXCEEDED');
+            const schema = schemaForTask(request.task);
+            requireThat(schema?.type === 'object' && schema.additionalProperties === false, 'STRICT_OUTPUT_SCHEMA_REQUIRED');
+            // Freeze input/config outside generated text. The admitted input-token
+            // ceiling must be established by F2's provider-compatible token counter.
+            const body = { model: route.model, input: canonical({ scope: request.scope, task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
+            const inputTokens = options.countInputTokens(body);
+            safeInteger(inputTokens);
+            requireThat(inputTokens <= route.inputTokenCeiling, 'MODEL_INPUT_EXCEEDS_ADMISSION');
+            const credential = apiKey();
+            requireThat(typeof credential === 'string' && credential.length > 0, 'MODEL_ACCESS_REQUIRED');
+            await budget.reserve(request, maximum, hash({ authorizationId: route.authorizationId, body }));
+            const started = Date.now();
+            let usageRecorded = false;
+            try {
+                const response = await transport('https://api.openai.com/v1/responses', { method: 'POST', headers: { authorization: 'Bearer ' + credential, 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(route.deadlineMs) });
+                requireThat(response.ok, 'MODEL_HTTP_ERROR');
+                const raw = await response.json() as any;
+                const requestId = typeof raw.id === 'string' ? raw.id : null;
+                const usage = raw.usage;
+                requireThat(raw.model === route.model, 'RETURNED_MODEL_MISMATCH');
+                requireThat(usage && Number.isSafeInteger(usage.input_tokens) && Number.isSafeInteger(usage.output_tokens), 'MODEL_USAGE_MISSING');
+                safeInteger(usage.input_tokens);
+                safeInteger(usage.output_tokens);
+                requireThat(usage.input_tokens <= route.inputTokenCeiling && usage.output_tokens <= route.maxOutputTokens, 'MODEL_USAGE_EXCEEDS_ADMISSION');
+                const estimated = price(usage.input_tokens, usage.output_tokens);
+                requireThat(estimated.minorUnits <= maximum.minorUnits, 'MODEL_COST_EXCEEDS_ADMISSION');
+                const actual: Cost = { status: 'provisional', money: estimated, basis: 'token-based estimate; ' + route.pricing.source + ' effective ' + route.pricing.effectiveAt + '; reconcile invoice and cached-token discounts' };
+                await budget.settle(request, actual, requestId);
+                usageRecorded = true;
+                requireThat(raw.status === 'completed', 'MODEL_RESPONSE_INCOMPLETE');
+                const text = (raw.output ?? []).flatMap((item: any) => item.content ?? []).filter((item: any) => item.type === 'output_text').map((item: any) => item.text).join('');
+                requireThat(text.length > 0, 'MODEL_OUTPUT_MISSING');
+                const output = JSON.parse(text);
+                validateOutput(request.task, output);
+                return modelResult({ output, usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost: actual }, route: { provider: 'openai-responses', model: raw.model, kind: 'live' }, metadata: { providerRequestId: requestId, cachedInputTokens: Number.isSafeInteger(usage.input_tokens_details?.cached_tokens) ? usage.input_tokens_details.cached_tokens : null, latencyMs: Date.now() - started } });
+            }
+            catch (error) {
+                if (!usageRecorded)
+                    await budget.uncertain(request, (error as any).code ?? 'MODEL_RESULT_UNCERTAIN');
+                throw new Error('Model attempt has no accepted output; consult the scoped usage ledger. No automatic retry or fixture fallback.');
+            }
+        },
+    };
+}
