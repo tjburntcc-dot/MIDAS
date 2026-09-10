@@ -1,0 +1,228 @@
+{
+  "mission": "MIDAS-FOUNDRY-LOOP-V0-027",
+  "schemaVersion": "1",
+  "fixtureOnly": true,
+  "startedAt": "2026-09-10T20:09:08.435Z",
+  "finishedAt": "2026-09-10T20:09:14.422Z",
+  "elapsedWallMilliseconds": 5987,
+  "root": "var/foundry-completion-027",
+  "runs": {
+    "viable": {
+      "runId": "LAB-001",
+      "phase": "completed",
+      "chosenOption": "limited-playbook",
+      "operatorVersion": "1",
+      "operationalResult": "pass",
+      "actionCost": {
+        "basis": "simulated fixture delivery charge",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 25
+        },
+        "status": "known"
+      },
+      "modelCalls": 4,
+      "simulatedReviewMinutes": 2,
+      "path": "var/foundry-completion-027/reports/lab-a/support-a/LAB-001/report.json",
+      "manifest": {
+        "schemaVersion": "1",
+        "scope": {
+          "tenantId": "lab-a",
+          "businessId": "support-a",
+          "dataPolicyVersion": "lab-policy-v1",
+          "mode": "fixture",
+          "runId": "LAB-001"
+        },
+        "rawSha256": "b201d1c470ea765570a79e8236a8de05b37d8e02267dbc34aaaa02d8eac5de80",
+        "normalizedSha256": "153923ad2e7f23288bf4caede7a3aa57be0a51b7c362d7567d31af12b04ccafb",
+        "normalization": "explicit semantic projection v1 excludes timestamps/run IDs/external IDs and their derived hashes",
+        "fixtureOnly": true
+      }
+    },
+    "rejected": {
+      "runId": "LAB-002",
+      "phase": "rejected",
+      "chosenOption": "no-action",
+      "operatorVersion": "1",
+      "operationalResult": "pass",
+      "actionCost": {
+        "status": "known",
+        "money": {
+          "minorUnits": 0,
+          "currency": "USD"
+        },
+        "basis": "no fixture delivery"
+      },
+      "modelCalls": 2,
+      "simulatedReviewMinutes": 0,
+      "path": "var/foundry-completion-027/reports/lab-a/support-a/LAB-002/report.json",
+      "manifest": {
+        "schemaVersion": "1",
+        "scope": {
+          "tenantId": "lab-a",
+          "businessId": "support-a",
+          "dataPolicyVersion": "lab-policy-v1",
+          "mode": "fixture",
+          "runId": "LAB-002"
+        },
+        "rawSha256": "a044b1fae1c4424f2d428e6e46ba9b86b5aa32d87a01bac4fdbdb280c5c4cb83",
+        "normalizedSha256": "fb3aa708862a7192713fda56dea8540be95fc339895aa36ae1737a0e717a0b40",
+        "normalization": "explicit semantic projection v1 excludes timestamps/run IDs/external IDs and their derived hashes",
+        "fixtureOnly": true
+      }
+    },
+    "uncertain": {
+      "runId": "LAB-003",
+      "phase": "completed",
+      "chosenOption": "limited-playbook",
+      "operatorVersion": "1",
+      "operationalResult": "pass",
+      "actionCost": {
+        "basis": "simulated fixture delivery charge",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 25
+        },
+        "status": "known"
+      },
+      "modelCalls": 4,
+      "simulatedReviewMinutes": 2,
+      "path": "var/foundry-completion-027/reports/lab-a/support-a/LAB-003/report.json",
+      "manifest": {
+        "schemaVersion": "1",
+        "scope": {
+          "tenantId": "lab-a",
+          "businessId": "support-a",
+          "dataPolicyVersion": "lab-policy-v1",
+          "mode": "fixture",
+          "runId": "LAB-003"
+        },
+        "rawSha256": "d19f790a20c8eb0def622d19cfa5f1fee4bc34117600261d05899bf476c78ac4",
+        "normalizedSha256": "01b4a515ff732068a7fea5e3d84562c1215eebb1f024fa45ed3a128e34db9223",
+        "normalization": "explicit semantic projection v1 excludes timestamps/run IDs/external IDs and their derived hashes",
+        "fixtureOnly": true
+      }
+    },
+    "promoted": {
+      "runId": "LAB-004",
+      "phase": "completed",
+      "chosenOption": "limited-playbook",
+      "operatorVersion": "1",
+      "operationalResult": "pass",
+      "actionCost": {
+        "basis": "simulated fixture delivery charge",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 25
+        },
+        "status": "known"
+      },
+      "modelCalls": 4,
+      "simulatedReviewMinutes": 2,
+      "path": "var/foundry-completion-027/reports/lab-a/support-a/LAB-004/report.json",
+      "manifest": {
+        "schemaVersion": "1",
+        "scope": {
+          "tenantId": "lab-a",
+          "businessId": "support-a",
+          "dataPolicyVersion": "lab-policy-v1",
+          "mode": "fixture",
+          "runId": "LAB-004"
+        },
+        "rawSha256": "5a52e33a4214ecba1ecd414328a15eb9b151c44474027fc401258f824c96b3cf",
+        "normalizedSha256": "0e4149491dcf5eed5b52aa5d8186634d3ccbc70e2e13c6c97355b0e4a55a6af6",
+        "normalization": "explicit semantic projection v1 excludes timestamps/run IDs/external IDs and their derived hashes",
+        "fixtureOnly": true
+      }
+    },
+    "pinned": {
+      "runId": "LAB-005",
+      "phase": "completed",
+      "chosenOption": "limited-playbook",
+      "operatorVersion": "2",
+      "operationalResult": "pass",
+      "actionCost": {
+        "basis": "simulated fixture delivery charge",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 25
+        },
+        "status": "known"
+      },
+      "modelCalls": 4,
+      "simulatedReviewMinutes": 2,
+      "path": "var/foundry-completion-027/reports/lab-a/support-a/LAB-005/report.json",
+      "manifest": {
+        "schemaVersion": "1",
+        "scope": {
+          "tenantId": "lab-a",
+          "businessId": "support-a",
+          "dataPolicyVersion": "lab-policy-v1",
+          "mode": "fixture",
+          "runId": "LAB-005"
+        },
+        "rawSha256": "b9f9c2345db2b15a47e79212c403364d86b7b4d9e00a3a504bc4a3989d97ea84",
+        "normalizedSha256": "07466f7290330ddc46fbc87a23b683bba09de5b3ea53bb0f828240ba4e35259d",
+        "normalization": "explicit semantic projection v1 excludes timestamps/run IDs/external IDs and their derived hashes",
+        "fixtureOnly": true
+      }
+    },
+    "afterRollback": {
+      "runId": "LAB-006",
+      "phase": "completed",
+      "chosenOption": "limited-playbook",
+      "operatorVersion": "1",
+      "operationalResult": "pass",
+      "actionCost": {
+        "basis": "simulated fixture delivery charge",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 25
+        },
+        "status": "known"
+      },
+      "modelCalls": 4,
+      "simulatedReviewMinutes": 2,
+      "path": "var/foundry-completion-027/reports/lab-a/support-a/LAB-006/report.json",
+      "manifest": {
+        "schemaVersion": "1",
+        "scope": {
+          "tenantId": "lab-a",
+          "businessId": "support-a",
+          "dataPolicyVersion": "lab-policy-v1",
+          "mode": "fixture",
+          "runId": "LAB-006"
+        },
+        "rawSha256": "7b9f917a1085f2228444269d69f1e7e0bcb7025509255ca94892e933750b52ab",
+        "normalizedSha256": "153923ad2e7f23288bf4caede7a3aa57be0a51b7c362d7567d31af12b04ccafb",
+        "normalization": "explicit semantic projection v1 excludes timestamps/run IDs/external IDs and their derived hashes",
+        "fixtureOnly": true
+      }
+    }
+  },
+  "learning": {
+    "inconclusive": "inconclusive",
+    "rejected": "rejected",
+    "promoted": "promoted",
+    "promotedVersion": "2",
+    "rollback": "rolled_back",
+    "restoredVersion": "1",
+    "inFlightVersionPreserved": "2"
+  },
+  "aggregate": {
+    "currency": "USD",
+    "simulatedCapMinor": 500,
+    "simulatedSettledMinor": 125,
+    "reservedMinor": 0,
+    "actualRuntimeProviderSpendMinor": 0,
+    "simulatedReviewMinutes": 10,
+    "measuredHumanCost": null,
+    "measuredEngineeringHours": null,
+    "measuredDevelopmentModelCost": null
+  },
+  "evidenceLimits": [
+    "Fixture mechanics only; no measured role improvement or commercial value.",
+    "Report hashes identify bytes at export; later report commands can update exports as scoped events grow.",
+    "Demo elapsed wall time is not engineering effort or human review time."
+  ]
+}

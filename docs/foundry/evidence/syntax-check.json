@@ -1,0 +1,8 @@
+{
+  "typescript": "6.0.3",
+  "files": 20,
+  "syntaxDiagnostics": 0,
+  "semanticTypecheck": false,
+  "node": "v24.19.0",
+  "checkedAt": "2026-09-10T20:10:15.024Z"
+}

@@ -1,0 +1,83 @@
+{
+  "checkedAt": "2026-09-10T20:10:57.660Z",
+  "canonicalBase": "8d2c6b3db3fe5d1c63493e2774844eda0af013af",
+  "canonicalHead": "8d2c6b3db3fe5d1c63493e2774844eda0af013af",
+  "canonicalBranch": "feature/opportunity-qualification-sealed-grouping-authority-v1",
+  "origin": "https://github.com/tjburntcc-dot/MIDAS.git",
+  "canonicalClean": true,
+  "preservedArtifactCount": 57,
+  "committedRangeFileCount": 31,
+  "preservedUnionCount": 88,
+  "missing": 0,
+  "mismatch": 0,
+  "groupingCompanions": [
+    {
+      "path": "var/artifacts/opportunity-qualifier-evaluator-v2-2/protocol-010-opaque-grouping-authority-v1.json",
+      "expectedSha256": "6fced7d4e29064c61cb94f899eb4fe6039af50cc1f605af7c598113baa0f9515",
+      "actualSha256": "6fced7d4e29064c61cb94f899eb4fe6039af50cc1f605af7c598113baa0f9515",
+      "match": true
+    },
+    {
+      "path": "var/artifacts/opportunity-qualifier-evaluator-v2-2/protocol-010-opaque-grouping-authority-v1.validation.json",
+      "expectedSha256": "0ac252d90a8bbb1075d652fc4faa9bf5c292e1fd1e8e217898488dedfdc009b9",
+      "actualSha256": "0ac252d90a8bbb1075d652fc4faa9bf5c292e1fd1e8e217898488dedfdc009b9",
+      "match": true
+    },
+    {
+      "path": "var/recovery/opportunity-qualifier-opaque-grouping-authority-v1/protocol-010-opaque-grouping-authority-v1.json",
+      "expectedSha256": "6fced7d4e29064c61cb94f899eb4fe6039af50cc1f605af7c598113baa0f9515",
+      "actualSha256": "6fced7d4e29064c61cb94f899eb4fe6039af50cc1f605af7c598113baa0f9515",
+      "match": true
+    },
+    {
+      "path": "var/recovery/opportunity-qualifier-opaque-grouping-authority-v1/protocol-010-opaque-grouping-authority-v1.validation.json",
+      "expectedSha256": "0ac252d90a8bbb1075d652fc4faa9bf5c292e1fd1e8e217898488dedfdc009b9",
+      "actualSha256": "0ac252d90a8bbb1075d652fc4faa9bf5c292e1fd1e8e217898488dedfdc009b9",
+      "match": true
+    }
+  ],
+  "foundryBranch": "codex/foundry-loop-v0-027",
+  "foundryFiles": [
+    "docs/foundry/COMPLETION-027.md",
+    "docs/foundry/F2-HANDOFF.md",
+    "docs/foundry/INVENTORY-RUNTIME.md",
+    "docs/foundry/evidence/acceptance-summary.json",
+    "docs/foundry/evidence/adjacent-tests.txt",
+    "docs/foundry/evidence/baseline-isolation.txt",
+    "docs/foundry/evidence/campaign-preservation.json",
+    "docs/foundry/evidence/changed-files.txt",
+    "docs/foundry/evidence/foundry-tests.txt",
+    "docs/foundry/evidence/syntax-check.json",
+    "packages/foundry/README.md",
+    "packages/foundry/package.json",
+    "packages/foundry/src/authority.ts",
+    "packages/foundry/src/cli.ts",
+    "packages/foundry/src/context.ts",
+    "packages/foundry/src/contracts.ts",
+    "packages/foundry/src/lab/fixture-service.ts",
+    "packages/foundry/src/lab/model-fixture.ts",
+    "packages/foundry/src/lab/support.test.ts",
+    "packages/foundry/src/lab/support.ts",
+    "packages/foundry/src/learning.ts",
+    "packages/foundry/src/model-port.ts",
+    "packages/foundry/src/reporting.ts",
+    "packages/foundry/src/runtime.ts",
+    "packages/foundry/src/state.ts",
+    "packages/foundry/test/authority.test.ts",
+    "packages/foundry/test/episode.test.ts",
+    "packages/foundry/test/helpers.ts",
+    "packages/foundry/test/learning.test.ts",
+    "packages/foundry/test/model-port.test.ts",
+    "packages/foundry/test/process-worker.ts",
+    "packages/foundry/test/process.test.ts",
+    "packages/foundry/tools/acceptance-demo.mjs"
+  ],
+  "onlyNewFoundryAndDocumentationPaths": true,
+  "campaignPayloadsParsed": false,
+  "campaignExecution": false,
+  "missingFindingArtifact": {
+    "status": "known missing; recovery unchanged; not a Foundry dependency",
+    "expectedSha256": "352f9426058c3dc85a6ebe26ed4fa6e51b759e4732d6c329adaed16ad324bca0"
+  },
+  "sourceArchitectureSha256": "b445289ff9113be8f9621341179468629ba59298049035750107126b35a01b21"
+}

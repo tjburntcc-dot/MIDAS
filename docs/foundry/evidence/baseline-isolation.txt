@@ -1,0 +1,36 @@
+▶ structural workspace isolation
+  ✔ queries throw without workspaceId (5.0131ms)
+  ✔ Cedar Path cannot retrieve RidgeLine policies or notes; RidgeLine cannot retrieve Cedar Path notes (64.7118ms)
+  ✔ packets, opportunities, spend, and artifacts cannot cross companies (48.8298ms)
+  ✔ no cross-cite: Cedar retrieval ids cannot include RidgeLine knowledge (35.149ms)
+  ✔ existing-business workspace stays isolated from new-business workspace (44.3624ms)
+  ✖ historical LSE-001-004 contamination stays identifiable and is not rewritten (1.1852ms)
+✖ structural workspace isolation (200.5436ms)
+ℹ tests 6
+ℹ suites 1
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1165.564
+
+✖ failing tests:
+
+test at packages\eval\src\isolation-structural.test.ts:236:3
+✖ historical LSE-001-004 contamination stays identifiable and is not rewritten (1.1852ms)
+  AssertionError [ERR_ASSERTION]: expected historical LSE records in live FILE_STORE
+      at TestContext.<anonymous> (file:///C:/Users/14844/Downloads/MIDAS/var/foundry-baseline-027/packages/eval/src/isolation-structural.test.ts:240:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

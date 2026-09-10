@@ -1,0 +1,42 @@
+▶ structural workspace isolation
+  ✔ queries throw without workspaceId (4.9587ms)
+  ✔ Cedar Path cannot retrieve RidgeLine policies or notes; RidgeLine cannot retrieve Cedar Path notes (58.6762ms)
+  ✔ packets, opportunities, spend, and artifacts cannot cross companies (44.3699ms)
+  ✔ no cross-cite: Cedar retrieval ids cannot include RidgeLine knowledge (39.9527ms)
+  ✔ existing-business workspace stays isolated from new-business workspace (57.5427ms)
+✔ structural workspace isolation (206.8319ms)
+▶ sealed opaque grouping authority
+  ✔ derives exactly four contestants, two anonymous groups, and 112 locked memberships (13.5144ms)
+  ✔ is deterministic under input and member reordering and ignores changed sealed identity labels (3.076ms)
+  ✔ changes the fingerprint when authoritative membership changes and fails closed on conflicts or missing membership (2.4068ms)
+  ✔ strictly rejects unknown, identity-bearing, score, rationale, signal, telemetry, ranking, and winner fields (4.4029ms)
+  ✔ contains no sealed labels and never releases them through a sanitized error (1.1318ms)
+  ✔ public planner adapter rejects the sealed schema and preserves only validated opaque structure (1.5215ms)
+  ✔ a synthetic planner accepts the public opaque structure without sealed-map access (4.3592ms)
+✔ sealed opaque grouping authority (32.0515ms)
+▶ Mission 016 governed planner synthetic end-to-end path
+  ✔ validated evidence produces a canonical governed plan and exact minimal packet (85.4254ms)
+  ✔ governed decisions remain semantically equal to the approved planner (36.2053ms)
+  ✔ reordering independent batches deterministically replays identical bytes (51.2007ms)
+  ✔ a no-material-review result cannot manufacture a packet (51.0986ms)
+✔ Mission 016 governed planner synthetic end-to-end path (225.3963ms)
+▶ Mission 016 adversarial governance
+  ✔ malformed byte inputs fail closed without leaking exception text (1.1869ms)
+  ✔ a coherent self-computed fixture cannot nominate itself as official Protocol-010 evidence (36.7927ms)
+  ✔ rejects policy substitution even when the caller recomputes the protocol hash (16.7564ms)
+  ✔ rejects a missing gate-finding preimage instead of treating it as no conflicts (22.1814ms)
+  ✔ rejects grouping unknown fields and synthetic sealed-identity canaries (20.4091ms)
+  ✔ rejects raw-byte, membership, scorecard, and canonical-plan tampering (34.6893ms)
+  ✔ strict builder rejects missing source coverage and altered dimensions (51.7058ms)
+  ✔ canonical replay payloads contain no operational execution timestamp (33.683ms)
+✔ Mission 016 adversarial governance (218.4422ms)
+✔ FileStore restart keeps Atlas, v0, run, and 8 case results (138.6422ms)
+✔ restart keeps sources, knowledge, v0, v1, both runs, and decision (369.9314ms)
+ℹ tests 26
+ℹ suites 4
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1217.6575
