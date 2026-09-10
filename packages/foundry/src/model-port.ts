@@ -67,7 +67,9 @@ export function responsesModelPort(options: {
             requireThat(schema?.type === 'object' && schema.additionalProperties === false, 'STRICT_OUTPUT_SCHEMA_REQUIRED');
             // Freeze input/config outside generated text. The admitted input-token
             // ceiling must be established by F2's provider-compatible token counter.
-            const body = { model: route.model, input: canonical({ scope: request.scope, task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
+            // Administrative scope/request IDs bind local accounting only;
+            // they must not leak scenario labels into the worker prompt.
+            const body = { model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
             const inputTokens = options.countInputTokens(body);
             safeInteger(inputTokens);
             requireThat(inputTokens <= route.inputTokenCeiling, 'MODEL_INPUT_EXCEEDS_ADMISSION');
