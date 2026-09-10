@@ -1,0 +1,55 @@
+{
+  "kind": "model-experiment-authorization",
+  "approved": false,
+  "approvalReference": "Pending explicit approval in this Mission 028 chat",
+  "approvedBy": "Current Mission 028 user (pending explicit approval)",
+  "projectId": null,
+  "credentialMethod": "explicit API key file read only after verified authorization; no environment fallback",
+  "credentialFile": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-028\\var\\foundry-smoke-028\\auth\\provider\\openai.key",
+  "protectedCredentialFile": null,
+  "permittedData": "Only authorized input facts of open synthetic cases D-001 and D-002, baseline instructions and output schema; no labels, customer data, tools or real business actions.",
+  "specHash": "d92680daec781f314a3ad6858f05922a0455759364d3261ef43abe81df5a80e8",
+  "limits": {
+    "totalMinor": 100,
+    "stages": {
+      "smoke": {
+        "minor": 100,
+        "attempts": 2
+      },
+      "development": {
+        "minor": 0,
+        "attempts": 0
+      },
+      "validation": {
+        "minor": 0,
+        "attempts": 0
+      },
+      "evaluation": {
+        "minor": 0,
+        "attempts": 0
+      }
+    }
+  },
+  "route": {
+    "authorizationId": "foundry-028",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "serviceTier": "default",
+    "maxOutputTokens": 4096,
+    "deadlineMs": 60000,
+    "inputTokenCeiling": 8192,
+    "maxCallCost": {
+      "minorUnits": 13,
+      "currency": "USD"
+    },
+    "pricing": {
+      "inputMinorPerMillion": 500,
+      "outputMinorPerMillion": 2000,
+      "source": "https://developers.openai.com/api/docs/pricing ; conservative cache-write input ceiling $5/M; standard Sol $4/M input and $20/M output",
+      "effectiveAt": "2026-09-10T00:00:00Z"
+    }
+  },
+  "expiresAt": "2026-09-11T22:00:00Z",
+  "pricingVerifiedAt": "2026-09-10",
+  "allowProtected": false
+}
