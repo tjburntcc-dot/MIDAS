@@ -113,6 +113,8 @@ export function releaseAggregate(root: string, boundaryEnvelope: any, keyPath: s
         requireThat(frozen.specHash === hash(x.spec), 'FREEZE_MISMATCH');
         const rows = x.ledger.rows().filter(r => r.stage === 'evaluation');
         const scored: ScoredAttempt[] = rows.map(r => { const review = x.store.get('experiment-review', x.ledger.key(r.id)); requireThat(review && r.finishedAt, 'FINAL_REVIEW_INCOMPLETE'); return { id: r.id, caseId: r.metadata.caseId, cluster: r.metadata.cluster, family: r.metadata.family, repeat: r.metadata.repeat, condition: r.metadata.condition, accepted: !r.errorCode && review.accepted, critical: review.critical, costMinor: r.invoice?.minorUnits ?? null, latencyMs: r.observation?.latencyMs ?? null, correctionSeconds: review.correctionSeconds, failed: !!r.errorCode }; });
+        const observationPath=join(root,'frozen-observations.json');
+        if(existsSync(observationPath))requireThat(hash(readJSON(observationPath))===hash(scored),'OBSERVATIONS_ALREADY_FROZEN');else writeJSON(observationPath,scored,true);
         const contaminated = x.store.get('experiment-contamination', 'final');
         const result = contaminated ? { decision: 'invalidated', reason: 'Contamination recorded; no replacement or tuning allowed.' } : analyze(scored, x.spec.analysis);
         const payload = { kind: 'protected-aggregate', freezeHash: hash(frozen), observationHash: hash(scored), result, custodian: x.spec.custodian, finalAttemptCount: rows.length, attemptAccounting:{failed:rows.filter(r=>r.errorCode).length, critical:scored.filter(r=>r.critical).length, reviewed:scored.length, measuredCorrectionSeconds:scored.reduce((n,r)=>n+(r.correctionSeconds??0),0), errorCodes:rows.reduce((counts,r)=>{if(r.errorCode)counts[r.errorCode]=(counts[r.errorCode]??0)+1;return counts;},{} as Record<string,number>)}, providerExposure: x.ledger.totals('evaluation'), releasedAt: new Date().toISOString(), claimB: false };
@@ -124,4 +126,18 @@ export function releaseAggregate(root: string, boundaryEnvelope: any, keyPath: s
     finally {
         x.store.close();
     }
+}
+
+/** Reanalyze private frozen observations without inference or item-level disclosure. */
+export function replayAggregate(root:string,boundaryEnvelope:any){
+ const x=openExperiment(root,true);
+ try{
+  const b=assertBoundary(x.spec,boundaryEnvelope);inside(b.privateRoot,root);
+  const aggregate=verified(readJSON(join(root,'aggregate.json')),x.spec.custodianPublicKey);
+  const frozen=readJSON(join(root,'freeze.json')),rows=readJSON(join(root,'frozen-observations.json'));
+  requireThat(aggregate.freezeHash===hash(frozen)&&frozen.specHash===hash(x.spec)&&aggregate.observationHash===hash(rows),'FROZEN_OBSERVATIONS_MISMATCH');
+  const result=aggregate.result.decision==='invalidated'?aggregate.result:analyze(rows,frozen.spec.analysis);
+  requireThat(hash(result)===hash(aggregate.result),'ANALYSIS_REPLAY_MISMATCH');
+  return {reproduced:true,observationHash:hash(rows),result};
+ }finally{x.store.close();}
 }

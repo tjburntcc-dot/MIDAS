@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { prepare, approve, readJSON, writeJSON, signed, keypair } from './config.ts';
 import { runDevelopment, reviewPacket, recordReview, candidate, freeze, report, openExperiment } from './workflow.ts';
 import { rehearse } from './rehearsal.ts';
-import { createManifest, evaluateNext, releaseAggregate } from './custodian.ts';
+import { createManifest, evaluateNext, releaseAggregate, replayAggregate } from './custodian.ts';
 import { requireThat, object } from '../contracts.ts';
 export async function main(argv = process.argv.slice(2)) {
     const command = argv[0] ?? 'help', args: Record<string, string> = {};
@@ -16,7 +16,7 @@ export async function main(argv = process.argv.slice(2)) {
     const root = resolve(args.root ?? 'var/foundry-experiment-028');
     let result: any;
     if (command === 'help')
-        return { commands: 'prepare | rehearse | keygen | sign | sign-invoice | authorize | smoke | develop | validate | review-pack | review | candidate | freeze | custodian-manifest | evaluate | aggregate | reconcile | interrupt | contaminate | report', live: 'explicit signed numerical authorization required; no automatic retry/fallback' };
+        return { commands: 'prepare | rehearse | keygen | sign | sign-invoice | authorize | smoke | develop | validate | review-pack | review | candidate | freeze | custodian-manifest | evaluate | aggregate | replay-analysis | reconcile | interrupt | contaminate | report', live: 'explicit signed numerical authorization required; no automatic retry/fallback' };
     if (command === 'prepare')
         result = prepare(root);
     else if (command === 'rehearse')
@@ -50,6 +50,7 @@ export async function main(argv = process.argv.slice(2)) {
         result = createManifest(root, readJSON(args.boundary), args.cases, args.key);
     else if (command === 'evaluate')
         result = await evaluateNext(root, readJSON(args.boundary), args.cases, readJSON(args.release));
+    else if(command==='replay-analysis')result=replayAggregate(root,readJSON(args.boundary));
     else if (command === 'aggregate')
         result = releaseAggregate(root, readJSON(args.boundary), args.key);
     else if (['reconcile', 'interrupt', 'contaminate'].includes(command)) {

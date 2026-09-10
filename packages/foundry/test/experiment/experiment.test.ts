@@ -186,3 +186,13 @@ test('mocked development, signed human-review mechanics, procedure-only challeng
     assert.equal(frozen.analysisVersion, 'paired-cluster-v1');
     assert.equal(frozen.baseline.procedure, baseline.procedure);assert.equal(frozen.challenger.predecessorVersion,'baseline-v2');
 });
+
+test('protected aggregate and analysis replay refuse the development host before reading final observations',async()=>{
+ const root=approved(),keys=keypair(),spec=readJSON(join(root,'spec.json'));
+ spec.custodian='OFFLINE TEST';spec.custodianPublicKey=keys.publicKey;writeJSON(join(root,'spec.json'),spec);
+ const b=signed({kind:'custodian-boundary',custodian:spec.custodian,developerHost:hostname(),host:hostname(),account:'test',noDeveloperAccess:true,auditor:'test',auditedAt:new Date().toISOString()},keys.privateKey);
+ const {releaseAggregate,replayAggregate}=await import('../../src/experiment/custodian.ts');
+ assert.throws(()=>releaseAggregate(root,b,'absent.key'),/SEPARATE_CUSTODIAN_HOST_REQUIRED/);
+ assert.throws(()=>replayAggregate(root,b),/SEPARATE_CUSTODIAN_HOST_REQUIRED/);
+ const rows=observations();assert.deepEqual(analyze(rows,analysisSpec),analyze(JSON.parse(JSON.stringify(rows)),analysisSpec));
+});
