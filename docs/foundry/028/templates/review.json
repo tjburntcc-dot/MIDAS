@@ -1,0 +1,7 @@
+{
+  "kind": "human-review", "reviewer": null, "measurementSource": "observed-stopwatch",
+  "attemptId": null, "attemptHash": null, "accepted": null, "critical": null,
+  "dimensions": {"correctness": null, "evidenceSupport": null, "uncertainty": null, "escalation": null, "prohibitedPromises": null},
+  "correctionStartedAt": null, "correctionFinishedAt": null,
+  "correctedArtifactHash": null, "reason": null
+}

@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "mission": "MIDAS-FOUNDRY-ROLE-BASELINE-V0-028",
+  "status": "draft",
+  "implementationHash": "c22aebe88375e7d546723d208ace1ea2646225153480caf969cf128f38d4b81f",
+  "claim": "A_same_model_specialization",
+  "separateFrontierClaim": false,
+  "scope": {
+    "tenantId": "foundry-lab",
+    "businessId": "role-experiment",
+    "runId": "EXP-028",
+    "dataPolicyVersion": "synthetic-policy-v1",
+    "mode": "fixture"
+  },
+  "route": {
+    "authorizationId": "foundry-028",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "serviceTier": "default",
+    "maxOutputTokens": 4096,
+    "deadlineMs": 60000,
+    "inputTokenCeiling": 8192,
+    "maxCallCost": {
+      "minorUnits": 13,
+      "currency": "USD"
+    },
+    "pricing": {
+      "inputMinorPerMillion": 500,
+      "outputMinorPerMillion": 2000,
+      "source": "https://developers.openai.com/api/docs/pricing ; conservative cache-write input ceiling $5/M; standard Sol $4/M input and $20/M output",
+      "effectiveAt": "2026-09-10T00:00:00Z"
+    }
+  },
+  "limits": {
+    "totalMinor": 4100,
+    "stages": {
+      "smoke": {
+        "minor": 100,
+        "attempts": 2
+      },
+      "development": {
+        "minor": 1000,
+        "attempts": 72
+      },
+      "validation": {
+        "minor": 400,
+        "attempts": 24
+      },
+      "evaluation": {
+        "minor": 2600,
+        "attempts": 192
+      }
+    }
+  },
+  "analysis": {
+    "caseCount": 48,
+    "clusters": 24,
+    "repeats": 2,
+    "minimumQuality": 0.9,
+    "minimumQualityLowerBound": 0.8,
+    "practicalGain": 0.1,
+    "maxCriticalUpperBound": 0.13,
+    "maxP95LatencyMs": 90000,
+    "maxMeanCorrectionSeconds": 120,
+    "maxCostPerAcceptedMinor": 20,
+    "seed": 280910
+  },
+  "rights": "purpose-built-synthetic",
+  "taskContractHash": "2da3f10486cc24fa2429edd09df4c6e7dc912110d54ec5aa067bb43473457345",
+  "outputSchemaHash": "10f27d6dd07e28085b447d3fefd20ef46e4f68b1b4b474f6e6f073bbd2a54cf0",
+  "casesHash": "604dcc7a8cd163045df9a1d7ff50f7f0d8a530abd5580dd5510e6e9d364b534d",
+  "developmentRoot": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-028\\var\\foundry-experiment-028-release",
+  "developerHost": "Mason_Hemmer",
+  "developerAccount": "unavailable-in-local-sandbox",
+  "modelRevision": null,
+  "billingPublicKey": null,
+  "custodianPublicKey": null,
+  "reviewer": null,
+  "reviewerPublicKey": null,
+  "custodian": null,
+  "calibration": null,
+  "population": "Independent synthetic billing-policy families; six prespecified task strata; no customer validation",
+  "finalDesign": {
+    "clusters": 24,
+    "casesPerCluster": 2,
+    "strata": [
+      "straightforward",
+      "missing",
+      "conflict",
+      "superseded",
+      "injection",
+      "escalation"
+    ],
+    "clustersPerStratum": 4,
+    "repeats": 2,
+    "attempts": 192,
+    "caseGenerator": "custodian creates independent policy/invoice lineages after boundary validation; no protected materials exist locally",
+    "randomization": "seeded shuffle of case/repeat pairs and within-pair arm order",
+    "criticalStop": "stop new admissions on a confirmed critical failure; incomplete study cannot pass",
+    "contamination": "invalidate affected final comparison; never silently replace or rerun cases"
+  },
+  "manualReview": {
+    "required": true,
+    "dimensions": [
+      "correctness",
+      "evidence support",
+      "uncertainty",
+      "escalation",
+      "prohibited promises",
+      "critical failures"
+    ],
+    "correctionTime": "measured start/stop seconds including zero for already acceptable output; missing is unknown"
+  },
+  "failurePolicy": {
+    "attemptsPerCell": 1,
+    "automaticRetries": 0,
+    "fallback": false,
+    "failedAttemptsCountAsFailures": true
+  }
+}

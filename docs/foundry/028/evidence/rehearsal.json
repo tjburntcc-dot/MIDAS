@@ -1,0 +1,56 @@
+{
+  "mode": "offline-mock",
+  "actualProviderCalls": 0,
+  "mockTransportCalls": 48,
+  "protectedBoundaryEstablished": false,
+  "protectedCasesCreated": 0,
+  "attempts": 24,
+  "simulatedLedger": {
+    "attempts": 24,
+    "reserved": 0,
+    "settled": 24,
+    "provisional": 0,
+    "unresolved": 0
+  },
+  "analysis": {
+    "complete": true,
+    "decision": "inconclusive",
+    "baseline": {
+      "attempts": 12,
+      "accepted": 12,
+      "acceptance": 1,
+      "failed": 0,
+      "critical": 0,
+      "costMinor": 12,
+      "costPerAcceptedMinor": 1,
+      "p95LatencyMs": 100,
+      "meanCorrectionSeconds": 0
+    },
+    "challenger": {
+      "attempts": 12,
+      "accepted": 12,
+      "acceptance": 1,
+      "failed": 0,
+      "critical": 0,
+      "costMinor": 12,
+      "costPerAcceptedMinor": 1,
+      "p95LatencyMs": 100,
+      "meanCorrectionSeconds": 0
+    },
+    "pairedClusterMeanGain": 0,
+    "paired95Interval": [
+      0,
+      0
+    ],
+    "qualityLower95": 0.7575059933447591,
+    "independentClusters": 12,
+    "caseCount": 12,
+    "repeats": 1,
+    "criticalClusterUpper95": 0.22092219194555585,
+    "method": "seeded paired cluster bootstrap within strata, 10000 draws; Wilson fully-accepted-cluster quality safeguard; one-sided exact zero-event bound",
+    "observationHash": "011e01e7033ebae389aae417576c9b6b09be30eba59cdc80d0568a5b2ad2db7d",
+    "scope": "specified synthetic billing-status population only; no general business competence or untested frontier superiority"
+  },
+  "measuredRoleImprovement": null,
+  "reviewEffort": "fixture zeros only; no human review measured"
+}

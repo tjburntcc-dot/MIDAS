@@ -1,0 +1,55 @@
+{
+  "kind": "model-experiment-authorization",
+  "approved": false,
+  "approvalReference": null,
+  "approvedBy": null,
+  "projectId": null,
+  "credentialMethod": "explicit API key file read only after verified authorization; no environment fallback",
+  "credentialFile": null,
+  "protectedCredentialFile": null,
+  "permittedData": "purpose-built synthetic development and validation cases only; protected scope requires frozen manifests and separate custodian execution",
+  "specHash": "cbecb98fb28c72f45123672f8a9d0736bca3351c4ed2eb57343d8e9998a2c932",
+  "limits": {
+    "totalMinor": 4100,
+    "stages": {
+      "smoke": {
+        "minor": 100,
+        "attempts": 2
+      },
+      "development": {
+        "minor": 1000,
+        "attempts": 72
+      },
+      "validation": {
+        "minor": 400,
+        "attempts": 24
+      },
+      "evaluation": {
+        "minor": 2600,
+        "attempts": 192
+      }
+    }
+  },
+  "route": {
+    "authorizationId": "foundry-028",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "serviceTier": "default",
+    "maxOutputTokens": 4096,
+    "deadlineMs": 60000,
+    "inputTokenCeiling": 8192,
+    "maxCallCost": {
+      "minorUnits": 13,
+      "currency": "USD"
+    },
+    "pricing": {
+      "inputMinorPerMillion": 500,
+      "outputMinorPerMillion": 2000,
+      "source": "https://developers.openai.com/api/docs/pricing ; conservative cache-write input ceiling $5/M; standard Sol $4/M input and $20/M output",
+      "effectiveAt": "2026-09-10T00:00:00Z"
+    }
+  },
+  "expiresAt": null,
+  "pricingVerifiedAt": "2026-09-10",
+  "allowProtected": false
+}

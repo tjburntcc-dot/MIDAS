@@ -1,0 +1,6 @@
+{
+  "kind": "closed_attempt_invoice", "projectId": null, "authorizationHash": null,
+  "scope": null, "attemptId": null, "requestHash": null, "providerRequestId": null,
+  "actual": {"minorUnits": null, "currency": "USD"}, "evidenceSha256": null,
+  "issuer": null, "closedAt": null
+}

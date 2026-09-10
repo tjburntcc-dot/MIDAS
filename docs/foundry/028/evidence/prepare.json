@@ -1,0 +1,10 @@
+{
+  "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-028\\var\\foundry-experiment-028-release",
+  "specHash": "0333368c186e4b5b752525b7a70cb8041727a1ece8cc690e8131137276055eeb",
+  "developmentCases": 12,
+  "validationCases": 6,
+  "protectedCasesCreated": 0,
+  "authorization": "not approved",
+  "maxPerCallMinor": 13,
+  "worstCaseAllCallsMinor": 3770
+}

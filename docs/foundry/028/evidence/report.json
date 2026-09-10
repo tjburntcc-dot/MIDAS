@@ -1,0 +1,9 @@
+{
+  "gate": 1,
+  "status": "offline preparation; actual-model authorization absent",
+  "actualModelAttempts": 0,
+  "actualProviderSpendMinor": 0,
+  "remainingProviderExposureMinor": 0,
+  "measuredImprovement": null,
+  "protectedCasesCreated": 0
+}

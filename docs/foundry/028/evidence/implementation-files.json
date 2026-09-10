@@ -1,0 +1,17 @@
+[
+  "packages/foundry/package.json",
+  "packages/foundry/src/experiment/analysis.ts",
+  "packages/foundry/src/experiment/cli.ts",
+  "packages/foundry/src/experiment/config.ts",
+  "packages/foundry/src/experiment/custodian.ts",
+  "packages/foundry/src/experiment/ledger.ts",
+  "packages/foundry/src/experiment/provider.ts",
+  "packages/foundry/src/experiment/rehearsal.ts",
+  "packages/foundry/src/experiment/task.ts",
+  "packages/foundry/src/experiment/workflow.ts",
+  "packages/foundry/src/lab/support.ts",
+  "packages/foundry/src/model-port.ts",
+  "packages/foundry/test/experiment/experiment.test.ts",
+  "packages/foundry/test/experiment/process-helper.ts",
+  "packages/foundry/tools/typecheck-experiment.mjs"
+]
