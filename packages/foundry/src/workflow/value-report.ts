@@ -25,7 +25,7 @@ const renderArtifact = (label: string, value: any) => !value ? `<section><h4>${e
  */
 export function valueReport(root: string) {
     const config: any = configFor(root);
-    requireThat(config.version === valueVersion || config.version === 'workflow-029-recovery-r1', 'VALUE_PROFILE_REQUIRED');
+    requireThat(config.version === valueVersion || ['workflow-029-recovery-r1','workflow-029-w006-v1'].includes(config.version), 'VALUE_PROFILE_REQUIRED');
     const base: any = report(root);
     const cases: any[] = read(root, 'episodes.json');
     const approvalEvents = new Map<string, any[]>();

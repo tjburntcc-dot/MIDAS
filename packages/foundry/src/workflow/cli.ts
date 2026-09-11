@@ -18,6 +18,7 @@ async function main() {
         result = prepare(root, (v.mode ?? 'mock') as any);
     else if (command === 'prepare-value')
         result = prepare(root, (v.mode ?? 'mock') as any, 'value');
+    else if (command === 'prepare-w006') { requireThat(v.parent, 'PARENT_ROOT_REQUIRED'); result = prepare(root, (v.mode ?? 'mock') as any, 'w006', v.parent); }
     else if (command === 'prepare-recovery') { requireThat(v.parent, 'PARENT_ROOT_REQUIRED'); result = prepare(root, (v.mode ?? 'mock') as any, 'recovery', v.parent); }
     else if (command === 'preflight') {
         const c = configFor(root);

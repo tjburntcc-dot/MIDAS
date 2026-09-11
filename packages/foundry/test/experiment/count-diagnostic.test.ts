@@ -13,7 +13,9 @@ function setup(){
  const store=new StateStore(join(old,'experiment.sqlite'));
  try{for(const id of ['D-001','D-002']){const bytes=canonical({model:'gpt-5.6-sol',input:'SYNTHETIC_INPUT_PRIVATE_TO_ATTEMPT',instructions:'instructions',reasoning:{effort:'medium'},text:{format:{type:'json_schema'}},max_output_tokens:4096,service_tier:'default',store:false});store.transaction(()=>store.put('model-attempt',id,{metadata:{caseId:id},stage:'smoke',inferenceDispatchIntent:false,errorCode:'TOKEN_COUNT_HTTP_ERROR',requestBytes:bytes,requestHash:rawHash(bytes),reservation:13,invoice:null},null));}}
  finally{store.close();}
- const request=prepareDiagnostic(root,old);return {root,old,keys,request};
+ const request=prepareDiagnostic(root,old);
+ // This is a fresh MOCK grant; keep the historical production expiry unchanged.
+ request.expiresAt=new Date(Date.now()+3600000).toISOString();writeJSON(join(root,'authorization.request.json'),request);return {root,old,keys,request};
 }
 function approve(t:any){const a={...t.request,approved:true,approvedBy:'MOCK TEST ONLY',approvalReference:'offline test'};writeJSON(join(t.root,'authorization.json'),signed(a,t.keys.privateKey));}
 test('count-only diagnostic refuses without its own new signed authorization',async()=>{const t=setup();let calls=0;await assert.rejects(runDiagnostic(t.root,async()=>{calls++;throw Error('forbidden');}));assert.equal(calls,0);});
