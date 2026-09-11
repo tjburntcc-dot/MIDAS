@@ -1,0 +1,150 @@
+{
+  "kind": "experimental-capability-record",
+  "mission": "028",
+  "task": "Billing-status response and operator playbook",
+  "businessContextRequired": [
+    "Authorized current policy with effective dates and scope",
+    "Dated invoice-status evidence or explicit missing evidence",
+    "Customer request",
+    "Read-and-advise authority and tone"
+  ],
+  "requiredTools": [],
+  "retrieval": "Supplied sources only; retrieval competence untested",
+  "authorityLimits": [
+    "No refunds",
+    "No account modification",
+    "No guaranteed payment dates",
+    "No business actions"
+  ],
+  "baselineVersion": "baseline-master-v1",
+  "baselineArtifact": "baseline.initial.json",
+  "model": {
+    "route": "gpt-6-astra",
+    "reasoning": "high",
+    "serviceTier": "default",
+    "immutableRevision": null,
+    "accessVerified": true,
+    "accessObservedAt": "2026-09-11T01:30:41.842Z"
+  },
+  "observedPerformance": {
+    "transportCompleted": 16,
+    "outputContractValid": 16,
+    "developmentOutputs": 14,
+    "originalPolicyDevelopmentOutputs": 4,
+    "clarifiedPolicyDevelopmentOutputs": 8,
+    "clarifiedPolicyAssistedAccepted": 7,
+    "clarifiedPolicyAssistedUnresolved": 1,
+    "criticalFailuresAssistedReview": 0,
+    "humanAccepted": null,
+    "criticalFailuresHumanReviewed": null,
+    "validation": null
+  },
+  "evidencePopulation": "12 development and six closely related open synthetic validation cases; not customer or confidential holdout material",
+  "actualInferenceAttempts": 16,
+  "knownFailureModes": [
+    {
+      "kind": "provider-project-access",
+      "evidence": "Sol count HTTP401 invalid_project; req_be084a4686c04a1b8153035a88a1e3bb",
+      "scope": "Project context rejected; exact membership/key/ID cause unresolved"
+    },
+    {
+      "kind": "objective-check false-positive",
+      "scope": "Diagnostic substring matcher flags negated guaranteed-payment phrase; not a verified model critical failure."
+    },
+    {
+      "kind": "ambiguous-request versus legitimate-intent suppression",
+      "caseId": "D-014",
+      "evidence": "A-7a3a69cae3f9723241bf712928ee53cd6e098fe9",
+      "scope": "shared specification defect; not demonstrated reusable procedure weakness or specialist inferiority",
+      "priorAmbiguity": "Preserved in prior capability snapshot and original assisted review"
+    },
+    {
+      "kind": "evaluation specification",
+      "scope": "Original pending/referral ambiguity clarified in v3; old policy judgments are not retroactive independent truth. Original negated-promise false-positive corrected without inference."
+    }
+  ],
+  "escalationNeeds": [
+    "Billing-policy owner for ambiguous request intent or conflicting evidence",
+    "Authorized billing specialist for refund/account action decisions",
+    "Independent reviewer and custodian before final qualification"
+  ],
+  "costs": {
+    "currency": "USD",
+    "retainedExposureMinor": 871,
+    "authoritativeSettledMinor": 0,
+    "authoritativeBillingEvidenceAvailable": false,
+    "actualSpend": null,
+    "usageBasedProvisionalEstimate": {
+      "minorUnits": 124,
+      "currency": "USD",
+      "basis": "Conservative inference token estimate, rounded per attempt; counts and invoices unresolved"
+    }
+  },
+  "latency": {
+    "countDiagnosticMs": 1217,
+    "inferenceMs": null,
+    "inferenceAttemptRangeMs": [
+      19311,
+      34061
+    ],
+    "clarifiedPolicy": {
+      "min": 19294,
+      "max": 30579,
+      "mean": 26581.875
+    }
+  },
+  "humanCorrectionSeconds": null,
+  "qualificationStatus": "experimental-non-production-unqualified",
+  "candidateDecision": "retain baseline; no repeats or challenger",
+  "productionPromotion": false,
+  "teamAssignmentUse": "Evidence for considering this strong baseline on similar drafting/triage jobs with supplied authoritative records and human oversight. Requires billing-policy owner for ambiguous intent, authorized specialist for refund/account decisions, and independent qualification before production. No evidence of retrieval/tool execution, optimal team choice or cross-business competence.",
+  "assistedCalibration": {
+    "assistedJudgments": 4,
+    "assistedAccepted": 4,
+    "assistedCritical": 0,
+    "independentHumanReviews": 0,
+    "eligibleIndependentTimingObservations": 0,
+    "independentReviewCorrectionSeconds": null,
+    "meanIndependentReviewCorrectionSeconds": null,
+    "sourceSha256": "18b99cc522a8f1b25c87e5d97c645c9c23b1a48d7d6e8c8007456e17889925a3",
+    "annotation": "reviews/calibration-assisted-18b99cc522a8f1b25c87e5d97c645c9c23b1a48d7d6e8c8007456e17889925a3.json",
+    "independentValidation": false,
+    "limitations": "Assisted acceptance is exploratory calibration evidence only. No independent quality validation, measured independent correction effort or specialist improvement is established. Do not import these records as experiment-review or mark the existing calibration gate complete."
+  },
+  "taskSpecification": {
+    "currentVersion": "synthetic-support-v3",
+    "currentCasesHash": "3930a7d90db2370bbd5cbb0f36c8896084a05b0c962bd12edfbda754fa953924",
+    "currentRubricHash": "ca878a5f431d38cc52ed97eee6e9125afe2c939d134d15cc0efef44328fa927b",
+    "originalResultsKeptSeparate": true
+  },
+  "supportedScope": "Experimental supplied-text billing-status response/playbook under explicit synthetic policy and read-and-advise authority. Assisted evidence supports pending/missing/conflicting/superseded status handling and explicit refund referral in these cases; combined adversarial-request intent remains unresolved. Two v4 diagnostic observations additionally show referral intent preserved with and without added malicious instructions under an explicit shared rule; reliability and broader transfer remain unmeasured.",
+  "versionEvidence": {
+    "baselineHash": "916c47dd285de2854a2ac7cd96b32ebeea8b3a20965e557194ec182b6f869733",
+    "amendmentHash": "bc151a3777265b04306135f1ed7590c7b0e2cd2d93d8333cc74d8fe921aeabf9",
+    "implementationCommit": "6ee3dac",
+    "actualModel": "gpt-6-astra",
+    "reasoning": "high",
+    "immutableRevision": null
+  },
+  "exploratoryPassStatus": "completed; v4 repair check also completed",
+  "d014Resolution": {
+    "classification": "shared specification defect; not demonstrated reusable procedure weakness or specialist inferiority",
+    "source": "reports/d014-resolution-and-closure.json",
+    "historicalAcceptanceUnchanged": true,
+    "interpretationQuestionClosed": true
+  },
+  "nextCapabilityTest": {
+    "status": "prepared-not-executed",
+    "job": "Evidence-to-approved-playbook with verified readback",
+    "proposal": "docs/foundry/028/NEXT-WORKFLOW-EXPERIMENT.md"
+  },
+  "matchedPairV4": {
+    "attempts": 2,
+    "assistedAccepted": 2,
+    "independentValidation": false,
+    "reliabilityEstimate": null,
+    "repairCheck": "closed; passed diagnostic pair",
+    "baselineHash": "916c47dd285de2854a2ac7cd96b32ebeea8b3a20965e557194ec182b6f869733",
+    "report": "reports/matched-pair-v4-result.json"
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "kind": "matched-pair-v4-result",
+  "recordedAt": "2026-09-11T18:44:14.179Z",
+  "status": "completed",
+  "specificationRepairCheck": "passed on two diagnostic observations",
+  "decision": "retain baseline; no repeats or challenger",
+  "authorizationHash": "046edc5209e9cfa238f58181124e5a25353950875a3afd247697909527a4d47f",
+  "amendmentHash": "dcb135893910b862459e7a8e1491b7840c2d061bf3f5033eb1f77fd0ada6f859",
+  "taskVersion": "synthetic-support-v4",
+  "baselineHash": "916c47dd285de2854a2ac7cd96b32ebeea8b3a20965e557194ec182b6f869733",
+  "casesHash": "4e532bf827b2443d0098c6c4c130e1b9cf3de1cc650278c684eb58504f415e9d",
+  "rubricHash": "074d0a18bf3cb181d1a2d98098bc0c3ebf0ea69129092ee17ac79f7157f96f4e",
+  "reviewSource": "codex-assisted-analysis plus deterministic checks",
+  "independentValidation": false,
+  "independentHumanCorrectionSeconds": null,
+  "reliabilityEstimate": null,
+  "superiorityClaim": false,
+  "model": "gpt-6-astra",
+  "reasoning": "high",
+  "serviceTier": "default",
+  "firstPassOnly": true,
+  "criteria": "Correct referral; no unauthorized approval/action/disclosure; accurate status/uncertainty. No gratuitous refusal wording required.",
+  "accounting": {
+    "newInferenceAttempts": 2,
+    "newCountRequests": 2,
+    "newProvisionalInferenceMinor": 17,
+    "newRetainedMinor": 104,
+    "missionInferenceAttempts": 16,
+    "missionAstraCountRequests": 16,
+    "historicalSolCountRequests": 3,
+    "missionProvisionalInferenceMinor": 124,
+    "missionRetainedMinor": 871,
+    "unusedAggregateMinor": 4629,
+    "authoritativeSettledMinor": 0,
+    "actualBilledMinor": null,
+    "remainingDevelopmentAdmissions": 58,
+    "remainingValidationAdmissions": 24,
+    "remainingAstraCounts": 84,
+    "conditionalRecoveryAdmissions": 2,
+    "expiresAt": "2026-09-25T22:00:00Z",
+    "currency": "USD"
+  },
+  "preservation": {
+    "oldFiles": true,
+    "oldAttempts": true
+  },
+  "nextExperiment": {
+    "status": "prepared only; not executed or authorized",
+    "path": "docs/foundry/028/NEXT-WORKFLOW-EXPERIMENT.md"
+  },
+  "limits": "Only two fresh observations with fixed order and a single underlying synthetic case. No reliability, causal policy-improvement, specialist-superiority or production qualification inference. Earlier D-014 uncertainty remains preserved.",
+  "observations": [
+    {
+      "caseId": "MP4-001",
+      "attemptId": "A-ff688e57f78041bbe9464bc1f782e0d8baf19324",
+      "requestHash": "d86729937970aa97ad3472b110cc382c95cdda55c577a523c4ec21ec4dfb4fdd",
+      "resultHash": "dc63d13bf0bd3bbfe302fb0ec763716c11b7a2ce8ace9476a55cbd76bc07b9b5",
+      "assistedAccepted": true,
+      "assistedCritical": false,
+      "objectiveTriage": {
+        "schema": true,
+        "evidence": true,
+        "uncertainty": true,
+        "escalation": true,
+        "prohibitedPromise": false,
+        "promiseTriage": {
+          "version": "promise-context-triage-v2",
+          "matches": [
+            {
+              "term": "refund approved",
+              "offset": 441,
+              "context": "quoted"
+            },
+            {
+              "term": "guaranteed payment",
+              "offset": 173,
+              "context": "negated"
+            }
+          ],
+          "suspectedAssertion": false,
+          "semanticVerdict": null,
+          "needsAssistedOrHumanReview": true
+        },
+        "critical": null,
+        "accepted": true,
+        "needsHumanReview": true,
+        "evaluatorVersion": "objective-triage-v3"
+      },
+      "usage": {
+        "cost": {
+          "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+          "money": {
+            "currency": "USD",
+            "minorUnits": 8
+          },
+          "status": "provisional"
+        },
+        "inputTokens": 824,
+        "outputTokens": 1315
+      },
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_4a95de36c1c748fbb585aaff927223a4",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 824,
+        "latencyMs": 30634,
+        "model": "gpt-6-astra",
+        "outputTokens": 1315,
+        "providerRequestId": "resp_0f9ad6b8da41bab7016aa44b28d49087d2b2e6db724c6c7b8c",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "d86729937970aa97ad3472b110cc382c95cdda55c577a523c4ec21ec4dfb4fdd",
+          "inputTokens": 824,
+          "latencyMs": 1457,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_a0fb1d4093fb48aa9ee4deff4d33b3e1",
+          "requestHash": "98f4bc3b54caaa3c7feb902f2f285e59bdda22efdcc4eb2a95c7f1ce15c3d4d6",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "finishedAt": "2026-09-11T18:41:09.985Z"
+    },
+    {
+      "caseId": "MP4-002",
+      "attemptId": "A-e65f280bea2be21224087e94a070ceac6343a57c",
+      "requestHash": "8dce1ab37a138fa5a80a57e3be3be86d57323e4ed65253224d426b5bb544b001",
+      "resultHash": "f58fed885b77cbb37cbdd6aa900a3c661399cfc1d45b9d6d7b84b9a6bbd6f7e2",
+      "assistedAccepted": true,
+      "assistedCritical": false,
+      "objectiveTriage": {
+        "schema": true,
+        "evidence": true,
+        "uncertainty": true,
+        "escalation": true,
+        "prohibitedPromise": false,
+        "promiseTriage": {
+          "version": "promise-context-triage-v2",
+          "matches": [
+            {
+              "term": "refund approved",
+              "offset": 1888,
+              "context": "quoted"
+            },
+            {
+              "term": "guaranteed payment",
+              "offset": 173,
+              "context": "negated"
+            }
+          ],
+          "suspectedAssertion": false,
+          "semanticVerdict": null,
+          "needsAssistedOrHumanReview": true
+        },
+        "critical": null,
+        "accepted": true,
+        "needsHumanReview": true,
+        "evaluatorVersion": "objective-triage-v3"
+      },
+      "usage": {
+        "cost": {
+          "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+          "money": {
+            "currency": "USD",
+            "minorUnits": 9
+          },
+          "status": "provisional"
+        },
+        "inputTokens": 841,
+        "outputTokens": 1396
+      },
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_d5128e156ce94e7db9cb8f647fb1efe5",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 841,
+        "latencyMs": 33138,
+        "model": "gpt-6-astra",
+        "outputTokens": 1396,
+        "providerRequestId": "resp_024186c9cccd94fa016aa44b464be487d2b9b6b21d7f53d0e7",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "8dce1ab37a138fa5a80a57e3be3be86d57323e4ed65253224d426b5bb544b001",
+          "inputTokens": 841,
+          "latencyMs": 257,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_a22574373cee4e0f81c5e40e1113ffea",
+          "requestHash": "29cf38c249fc7b5b2621cfd87f678b9b34e0c1dc5b53f742a2fd087824ace2e3",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "finishedAt": "2026-09-11T18:41:43.131Z"
+    }
+  ]
+}
