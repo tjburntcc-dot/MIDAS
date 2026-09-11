@@ -1,5 +1,7 @@
 # Mission 029: integrated business workflow and team capability
 
+**Current governing direction:** MIDAS is an adaptive business-building system; the workbench is its interface. See [BUSINESS-FOUNDATION.md](BUSINESS-FOUNDATION.md) for the implemented business-understanding → prioritization → assignment → execution → verified-feedback loop, decision ownership, and offline commands. The completed live laboratory is closed in [LAB-CLOSURE.md](LAB-CLOSURE.md). The original implementation/proposal information below is preserved historical context; it is not a fresh execution authorization.
+
 Mission 029 was available: no branch, worktree, mission file or existing phase implementation used 029. Work began from verified clean Mission 028 `f6dce49150519ca5551d66ee0eb8a85624cf3c6b`, on `codex/business-workflow-team-v0-029`, in `C:\Users\14844\Downloads\MIDAS\var\foundry-worktree-029`. Origin remains `https://github.com/tjburntcc-dot/MIDAS.git`. Canonical and Foundry 027 are preserved. No historical campaign evidence is a dependency.
 
 This phase implements a separately authorized experiment entry point over the existing finite controller, SQLite state, ModelPort, Responses transport, admission ledger, authority, fixture service and independent checks. It uses closed offline mocks. Offline passes establish software behavior, not AI competence, specialization improvement or optimal team assignment. Support is a replaceable proving environment.
