@@ -1,0 +1,267 @@
+{
+  "version": "midas-operating-packet-v2",
+  "title": "MIDAS operating packet: connected owner journey and remaining evidence gaps",
+  "authorship": "Development-assistant synthesis of repository implementation and preserved observations; not an independent founder, customer, financial or expert assessment.",
+  "objective": "Understand a connected business with explicit uncertainty, prioritize its valuable constraints, assemble the smallest supported team, improve workers through fair evidence, execute within authority and revise understanding from verified outcomes.",
+  "scope": "MIDAS is an adaptive business-building system. Support and supplier invoices are bounded acceptance environments, not the product ontology or selected market.",
+  "baselineCommit": "9de39a57807929f49d768f011e8853493065d073",
+  "statusNote": "Connected offline workbench implemented and browser-exercised. Historical observations are unchanged. New fixtures establish mechanics only; no new provider execution.",
+  "sources": [
+    {
+      "id": "foundation-source",
+      "path": "packages/foundry/src/business/core.ts",
+      "kind": "implementation",
+      "supports": "Versioned partial business understanding, deterministic assessment, assignment, feedback and improvement preparation"
+    },
+    {
+      "id": "foundation-receipt",
+      "path": "var/business-foundation-029-v1/completion-receipt.json",
+      "kind": "archived verification",
+      "supports": "Accepted foundation identity, 63 passing relevant tests, strict typecheck and zero provider activity"
+    },
+    {
+      "id": "workflow-design",
+      "path": "docs/foundry/029/DESIGN.md",
+      "kind": "implementation specification",
+      "supports": "Four-stage workflow, authority and stage context boundaries"
+    },
+    {
+      "id": "offline-workflow",
+      "path": "docs/foundry/029/evidence/demo-summary.json",
+      "kind": "mock observation",
+      "supports": "Both configurations across six synthetic episodes; mechanics only"
+    },
+    {
+      "id": "live-closure",
+      "path": "docs/foundry/029/LAB-CLOSURE.md",
+      "kind": "actual live observation summary",
+      "supports": "Two completed related single-agent workflows, preserved failed admission, accounting and limitations"
+    },
+    {
+      "id": "live-w006",
+      "path": "var/workflow-029-w006-v1/completion-observation.json",
+      "kind": "actual live observation",
+      "supports": "Injected draft correction, exact approval, authenticated one-effect readback and deterministic recovery"
+    },
+    {
+      "id": "assignment-proposal",
+      "path": "docs/foundry/029/NEXT-PHASE-BUSINESS-ASSIGNMENT.md",
+      "kind": "historical preparation",
+      "supports": "Materially richer supplier-invoice assignment and necessary missing competencies"
+    },
+    {
+      "id": "reconciliation",
+      "path": "docs/foundry/029/WORKBENCH-RECONCILIATION.md",
+      "kind": "development-assistant audit",
+      "supports": "Complete/partial/absent deliverables at accepted foundation; continuation acceptance"
+    },
+    {
+      "id": "workbench-completion",
+      "path": "docs/foundry/029/WORKBENCH-COMPLETION.md",
+      "kind": "implementation and verification",
+      "supports": "Interactive owner journey, evidence ModelPort, invoice correction and executed offline comparison"
+    }
+  ],
+  "implementedCapabilities": [
+    {
+      "name": "Persistent partial business understanding",
+      "provenance": "offline implementation and tests",
+      "evidence": [
+        "foundation-source",
+        "foundation-receipt"
+      ],
+      "limit": "ModelPort proposals are supported offline with source validation and owner adoption; actual model extraction accuracy remains unmeasured."
+    },
+    {
+      "name": "Rule-based prioritization and smallest feasible supplied worker set",
+      "provenance": "offline implementation and tests",
+      "evidence": [
+        "foundation-source"
+      ],
+      "limit": "Ranks supplied comparable estimates; no optimal team or causal diagnosis claim. Titles confer no qualification."
+    },
+    {
+      "name": "Evidence, decision, review, approval, fixture delivery and verification",
+      "provenance": "offline mechanics plus narrow actual model observations",
+      "evidence": [
+        "workflow-design",
+        "offline-workflow",
+        "live-closure"
+      ],
+      "limit": "Two related synthetic support live outcomes, no live team comparison or generalization."
+    },
+    {
+      "name": "Verified feedback and versioned controlled improvement preparation",
+      "provenance": "offline implementation and tests",
+      "evidence": [
+        "foundation-source",
+        "foundation-receipt"
+      ],
+      "limit": "Operational delivery does not measure economic benefit; no worker is promoted from fixtures."
+    },
+    {
+      "name": "Interactive evidence-to-outcome owner journey and supplier-invoice adapter",
+      "provenance": "Offline ModelPort fixtures, persisted state, exact approval and browser verification",
+      "evidence": [
+        "workbench-completion"
+      ],
+      "limit": "Edited evidence is analyzable but cannot execute silently against an unchanged assignment corpus. No new live compatibility claim."
+    }
+  ],
+  "liveObservations": [
+    {
+      "id": "W-001-single-r1",
+      "result": "Completed ordinary synthetic support workflow: four live admissions, exact human fixture approval, one effect, authenticated readback.",
+      "provenance": "Actual model output with deterministic checks and AI-assisted artifact review",
+      "evidence": [
+        "live-closure"
+      ],
+      "provisionalInferenceCostMinorUSD": 56,
+      "independentHumanCorrectionSeconds": null
+    },
+    {
+      "id": "W-006-single-v1",
+      "result": "Completed related workflow: model corrected disclosed inherited unsupported approval/guarantee; runtime reconciled deliberately lost response; one effect.",
+      "provenance": "Actual model output; correction assessment assisted; recovery deterministic",
+      "evidence": [
+        "live-closure",
+        "live-w006"
+      ],
+      "provisionalInferenceCostMinorUSD": 61,
+      "independentHumanCorrectionSeconds": null
+    },
+    {
+      "id": "original-W-001",
+      "result": "Original failed admission retained after shared timestamp-contract defect. It remains consumed and is not erased by recovery.",
+      "provenance": "Preserved failed observation",
+      "evidence": [
+        "live-closure"
+      ],
+      "provisionalInferenceCostMinorUSD": 11,
+      "independentHumanCorrectionSeconds": null
+    }
+  ],
+  "unsupportedClaims": [
+    "Complete business understanding or established highest-value causal bottleneck",
+    "Optimal learned team assembly or a demonstrated need for a second role",
+    "Specialist superiority to an excellent frontier baseline",
+    "Independent human semantic validation or measured labor savings",
+    "Customer validation, actual business revenue, autonomous financial operation or production qualification",
+    "Authoritatively settled provider cost, zero billing exposure, or immutable identity of a provider alias",
+    "Protected holdout evidence or reliable cross-business performance"
+  ],
+  "bottlenecks": [
+    {
+      "rank": 1,
+      "id": "evidence-to-decision",
+      "kind": "product bottleneck hypothesis",
+      "statement": "The business-loop value is constrained when business interpretations and candidate actions must be authored before the system can plan.",
+      "evidence": [
+        "foundation-source",
+        "reconciliation"
+      ],
+      "uncertainty": "No customer research or quantified business impact establishes the priority; this is an engineering dependency judgment.",
+      "work": "Connect permitted evidence to bounded, sourced ModelPort proposals for claims, conflicts, unknowns, requests, hypotheses and competencies; owner adopts a revision.",
+      "acceptance": "Altered source facts change proposed understanding; invalid references/rights and unsupported estimates fail deterministic checks; proposals never silently become facts.",
+      "dependency": "Strict proposal contracts and stage-specific admission.",
+      "currentStatus": "Local implementation complete; live model utility and owner usefulness remain unmeasured"
+    },
+    {
+      "rank": 2,
+      "id": "owner-journey-and-transfer",
+      "kind": "product bottleneck hypothesis",
+      "statement": "Static reports and a single support adapter do not establish a usable owner journey or reusable business execution boundary.",
+      "evidence": [
+        "reconciliation",
+        "assignment-proposal"
+      ],
+      "uncertainty": "Local browser acceptance establishes usability mechanics, not founder adoption or commercial value.",
+      "work": "Connect an interactive persisted owner journey and supplier-invoice packet adapter beside support; allow review to change the authoritative recommendation and all dependent artifacts.",
+      "acceptance": "A browser executes both assignments through exact approval and verified feedback; a corrected register changes totals/memo/hash and invalidates stale approval; unsupported states are readable.",
+      "dependency": "Preserve exact approval, accounting and source scope rather than create a parallel UI state machine.",
+      "currentStatus": "Local implementation complete; live model utility and owner usefulness remain unmeasured"
+    },
+    {
+      "rank": 3,
+      "id": "competence-and-outcome-evidence",
+      "kind": "product bottleneck hypothesis",
+      "statement": "Existing evidence cannot establish when a specialist/team earns added cost or whether delivered work changes business outcomes.",
+      "evidence": [
+        "live-closure",
+        "foundation-source"
+      ],
+      "uncertainty": "Two related synthetic single-agent observations do not estimate reliability; semantic quality, causal outcomes and human effort remain missing.",
+      "work": "Expose competency evidence and uncertainty, connect observed failures to versioned procedure-only comparison mechanics, and prepare a value-gated live diagnostic of the richer connected path.",
+      "acceptance": "Mock comparisons demonstrate the mechanics only; strongest baseline preserved; future live calls are admitted only for a named unresolved decision under a separate grant.",
+      "dependency": "Finished common task/policy contracts, scoped review and billing evidence; protected evaluation remains separately gated.",
+      "currentStatus": "Offline comparison mechanics complete; competence and economic evidence still missing"
+    }
+  ],
+  "rankedImplementationWork": [
+    {
+      "rank": 1,
+      "action": "Finish evidence proposal contracts and owner acceptance into persistent business revisions",
+      "bottleneck": "evidence-to-decision",
+      "status": "completed offline; see workbench-completion"
+    },
+    {
+      "rank": 2,
+      "action": "Finish browser journey and invoice decision correction with independent packet checks",
+      "bottleneck": "owner-journey-and-transfer",
+      "status": "completed offline; see workbench-completion"
+    },
+    {
+      "rank": 3,
+      "action": "Exercise failure-to-comparison linkage offline and freeze one consolidated live diagnostic proposal",
+      "bottleneck": "competence-and-outcome-evidence",
+      "status": "completed offline; see workbench-completion"
+    }
+  ],
+  "accounting": {
+    "scope": "Historical Mission 029 only; not a live provider balance",
+    "currency": "USD",
+    "inferenceAdmissions": 9,
+    "countRequests": 9,
+    "provisionalInferenceMinor": 128,
+    "retainedInferenceMinor": 468,
+    "unpricedCountBufferMinor": 504,
+    "totalHeldMinor": 972,
+    "uncommittedHistoricalAllowanceMinor": 2028,
+    "authoritativeBilledMinor": null,
+    "newExecutionAuthorized": false,
+    "note": "Provisional estimates are contained within reservations, not added again. No transfer from Mission 028 or historical unused allowance. Offline telemetry is not real spend."
+  },
+  "nextOwnerDecision": {
+    "action": "Inspect the completed connected owner journey and invoice recommendation packet, then approve or decline one separately versioned, value-gated live diagnostic grant.",
+    "purpose": "Determine whether the new evidence-to-understanding and richer task contracts work with actual model outputs before buying comparison data.",
+    "notRequiredNow": "No reauthorization for already-authorized local engineering; no automatic reopening of the closed laboratory.",
+    "humanDependencies": [
+      "Exact fixture-action approval for each prospective effect",
+      "Only material semantic judgments, with assistance and missing timing recorded",
+      "Authoritative billing evidence before definitive cost qualification",
+      "Real custody and immutable revision evidence before protected evaluation"
+    ]
+  },
+  "decisionBranches": [
+    {
+      "result": "Single workflow sufficient",
+      "decision": "Retain the simpler configuration and preserve unused calls."
+    },
+    {
+      "result": "Substantive team benefit",
+      "decision": "Name the observed mechanism and confirm it on fresh matched tasks before adoption."
+    },
+    {
+      "result": "Team regression",
+      "decision": "Diagnose coordination or context loss before adding roles."
+    },
+    {
+      "result": "Shared failure",
+      "decision": "Repair the common task, evidence or contract prerequisite before specializing; preserve earlier observations."
+    },
+    {
+      "result": "Inconclusive",
+      "decision": "Identify the missing source, review, measurement or billing evidence and the smallest useful test; do not spend on an administrative evidence gap."
+    }
+  ]
+}

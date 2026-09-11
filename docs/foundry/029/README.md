@@ -63,3 +63,7 @@ node packages/foundry/tools/typecheck-workflow.mjs C:/Users/14844/AppData/Local/
 ```
 
 The strict semantic check uses existing TypeScript 6.0.3 and existing Node declarations with `skipLibCheck`; it is scoped to Foundry, not a whole-repository claim. No campaign/evaluator execution, sealed inspection, production action, model call or token-count request is part of these commands.
+
+## Interactive integrated workbench
+
+See [WORKBENCH-COMPLETION.md](WORKBENCH-COMPLETION.md) for the runnable owner journey, assignment reuse and verification. The [pre-extension reconciliation](WORKBENCH-RECONCILIATION.md) preserves the original gaps. [WORKBENCH-LIVE-PROPOSAL.md](WORKBENCH-LIVE-PROPOSAL.md) is unsigned preparation only.
