@@ -53,7 +53,8 @@ export async function runWorkflow(root: string, runId: string, options: RunOptio
             requireThat(existsSync(join(root, 'continuation.json')) && read(root, 'continuation.json').configHash === hash(c), 'DIAGNOSTIC_REVIEW_REQUIRED');
         const extension: any = { id: hash({ version: c.version, mode: c.mode, configuration: item.configuration, implementation: c.implementationHash, roles: rolesFor(item.configuration) }), maxModelCost: route.maxCallCost, skipLearning: true, reviewTerminalDecision: true, roles: () => rolesFor(item.configuration), validate: validateWorkflowOutput,
             context: ({ run, task, observed }: any) => {
-                const base: any = { snapshot: run.snapshot, evidence: run.evidence, contextVersion: 'workflow-context-v1', toolVersion: 'fixture-tools-v1' };
+                const base: any = { snapshot: run.snapshot, evidence: run.evidence, contextVersion: 'workflow-context-v2', toolVersion: 'fixture-tools-v1' };
+                base.evidenceDeadline = new Date(Date.parse(run.createdAt) + 86400000).toISOString();
                 if (task !== 'investigate')
                     base.question = run.question;
                 if (['operate', 'verify'].includes(task)) {
@@ -96,6 +97,7 @@ export async function runWorkflow(root: string, runId: string, options: RunOptio
                 const port = responsesModelPort({ route: { ...route, projectId: project }, apiKey: credential, budget, schemaForTask, validateOutput: validateWorkflowOutput, transport, countInputTokens: async (body, r) => countTokens(body, project, credential(), async (event) => { await budget.observed?.(r!, { tokenCount: event }); }, transport) });
                 try {
                     const result = await port.run(admitted);
+                    if (original.task === 'investigate') requireThat((result.output as any).deadline === (original.context as any).evidenceDeadline, 'WORKFLOW_DEADLINE_MISMATCH');
                     if (c.mode === 'mock')
                         result.route = { ...result.route, kind: 'fixture', provider: 'offline-responses-mock' };
                     ledger.finish(admitted.requestId, result, null);
