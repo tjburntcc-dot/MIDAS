@@ -11,13 +11,14 @@ import { authorize, configFor, write, read, accountScope, checkGrant, valueVersi
 import { ModelLedger } from '../experiment/ledger.ts';
 import { hash, requireThat } from '../contracts.ts';
 async function main() {
-    const { positionals, values: v } = parseArgs({ allowPositionals: true, options: { root: { type: 'string' }, run: { type: 'string' }, mode: { type: 'string' }, file: { type: 'string' }, fault: { type: 'string' }, crash: { type: 'string' }, checkpoint: { type: 'string' } } });
+    const { positionals, values: v } = parseArgs({ allowPositionals: true, options: { root: { type: 'string' }, parent: { type: 'string' }, run: { type: 'string' }, mode: { type: 'string' }, file: { type: 'string' }, fault: { type: 'string' }, crash: { type: 'string' }, checkpoint: { type: 'string' } } });
     const command = positionals[0], root = resolve(v.root ?? 'var/workflow-029');
     let result: any;
     if (command === 'prepare')
         result = prepare(root, (v.mode ?? 'mock') as any);
     else if (command === 'prepare-value')
         result = prepare(root, (v.mode ?? 'mock') as any, 'value');
+    else if (command === 'prepare-recovery') { requireThat(v.parent, 'PARENT_ROOT_REQUIRED'); result = prepare(root, (v.mode ?? 'mock') as any, 'recovery', v.parent); }
     else if (command === 'preflight') {
         const c = configFor(root);
         result = { ready: true, mode: c.mode, implementationHash: c.implementationHash, casesHash: c.casesHash, providerCalls: 0, callMap: ['investigate evidence', 'decide and draft', 'review and revise', 'inspect readback'], humanDependencies: ['exact publication approval (asynchronous in value-v2)', 'independent semantic review/timing needed only for claims requiring them; not fabricated or promised'], liveAuthorized: existsSync(join(root, 'authorization.json')) };
@@ -123,7 +124,7 @@ async function main() {
         result = { continuationRecorded: true };
     }
     else
-        throw Error('Commands: prepare, prepare-value, select-value, value-report, approval-view, preflight, run, approve, resume, status, demo, report, review, authorize, continue');
+        throw Error('Commands: prepare, prepare-value, prepare-recovery, select-value, value-report, approval-view, preflight, run, approve, resume, status, demo, report, review, authorize, continue');
     console.log(JSON.stringify(result, null, 2));
 }
 main().catch(e => { console.error(JSON.stringify({ error: e.code ?? 'WORKFLOW_ERROR', message: e.message })); process.exitCode = 1; });

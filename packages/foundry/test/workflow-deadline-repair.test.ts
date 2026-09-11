@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { schemaForTask, validateWorkflowOutput, environmentFor } from '../src/workflow/task.ts';
+import { schemaForTask, validateWorkflowOutput, environmentFor, TASK_VERSION } from '../src/workflow/task.ts';
 import { prepare, runWorkflow, open, workflowScope } from '../src/workflow/runner.ts';
 import { scopeKey } from '../src/contracts.ts';
 
@@ -37,8 +37,8 @@ test('future request supplies a stable task deadline and MOCK copying reaches ac
         const run = store.get('run', scopeKey(workflowScope('W-001-single')));
         const rows = store.db.prepare("SELECT body FROM entities WHERE kind='model-attempt'").all().map(x => JSON.parse(String(x.body)));
         const attempt = rows.find(a => a.metadata.modelTask === 'investigate');
-        assert.equal(attempt.request.context.contextVersion, 'workflow-context-v2');
-        assert.equal(attempt.request.context.snapshot.taskBrief.version, 'synthetic-workflow-v2');
+        assert.equal(attempt.request.context.contextVersion, 'workflow-context-v3');
+        assert.equal(attempt.request.context.snapshot.taskBrief.version, TASK_VERSION);
         assert.equal(attempt.request.context.evidenceDeadline, new Date(Date.parse(run.createdAt) + 86400000).toISOString());
         assert.equal(attempt.result.output.deadline, attempt.request.context.evidenceDeadline);
         assert.match(attempt.request.context.snapshot.taskBrief.investigationDeadlineRule, /UTC RFC3339/);

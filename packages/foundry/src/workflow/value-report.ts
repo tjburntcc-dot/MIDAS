@@ -24,7 +24,8 @@ const renderArtifact = (label: string, value: any) => !value ? `<section><h4>${e
  * team-performance evaluator.
  */
 export function valueReport(root: string) {
-    requireThat(configFor(root).version === valueVersion, 'VALUE_PROFILE_REQUIRED');
+    const config: any = configFor(root);
+    requireThat(config.version === valueVersion || config.version === 'workflow-029-recovery-r1', 'VALUE_PROFILE_REQUIRED');
     const base: any = report(root);
     const cases: any[] = read(root, 'episodes.json');
     const approvalEvents = new Map<string, any[]>();
@@ -63,7 +64,7 @@ export function valueReport(root: string) {
         const initialDraft = artifact(initialDecision);
         const finalArtifact = artifact(operated) ?? observation.artifact ?? null;
         const approvals = approvalEvents.get(observation.runId) ?? [];
-        const usage = attempts.map(a => ({ id: a.id ?? null, latencyMs: a.observation?.latencyMs ?? null, inputTokens: a.observation?.inputTokens ?? null, outputTokens: a.observation?.outputTokens ?? null, reservationMinor: a.reservation ?? 0, provisionalMinor: a.cost?.status === 'provisional' ? a.cost.money?.minorUnits ?? null : null, billedMinor: a.invoice?.minorUnits ?? null }));
+        const usage = attempts.map(a => ({ id: a.id ?? null, latencyMs: a.observation?.latencyMs ?? null, inputTokens: a.observation?.inputTokens ?? null, outputTokens: a.observation?.outputTokens ?? null, reservationMinor: a.reservation ?? 0, provisionalMinor: a.cost?.status === 'provisional' ? a.cost.money?.minorUnits ?? null : null, billedMinor: a.invoice?.minorUnits ?? null, responseObservation: a.observation ?? null, responseOutput: a.result?.output ?? null }));
         return {
             runId: observation.runId,
             episode: observation.episode,
@@ -82,15 +83,17 @@ export function valueReport(root: string) {
     const executed = workflows.filter((x: any) => x.execution.state !== 'unexecuted/deferred');
     const deferred = workflows.filter((x: any) => x.execution.state === 'unexecuted/deferred');
     const completedMechanicalSingles = executed.filter((x: any) => x.configuration === 'single' && x.execution.deterministicAccepted);
+    const blocked = executed.some((x: any) => x.execution.state === 'blocked');
+    const waiting = executed.some((x: any) => x.execution.state === 'waiting');
     const result = {
-        version: 'workflow-029-value-v2',
+        version: base.version,
         basedOn: { workflowReportVersion: base.version, configHash: base.configHash, mode: base.accounting.mode, provenance: base.provenance },
         recordedAt: new Date().toISOString(),
         scope: 'Executed observations only; no semantic-quality, qualification, or team-superiority conclusion.',
         schedule: { executed: executed.map((x: any) => x.runId), deferred: deferred.map((x: any) => x.runId), deferredInterpretation: 'Unexecuted/deferred is not a failure.' },
-        recommendation: { decision: completedMechanicalSingles.length ? 'retain_single_provisionally' : 'run_single_smoke_before_comparison', qualification: 'Mechanical execution evidence only; semantic quality is unknown.', rationale: 'Team arms remain deferred for insufficient treatment: shared context, tools, review procedure, and a cosmetic procedure suffix do not justify paid team work. No team-superiority inference is available.' },
+        recommendation: { decision: blocked ? 'resolve_recorded_block_before_any_further_run' : waiting ? 'waiting_for_exact_approval_or_readback' : completedMechanicalSingles.length ? 'retain_single_provisionally' : 'run_single_smoke_before_comparison', qualification: 'Mechanical execution evidence only; semantic quality is unknown.', rationale: 'Team arms remain deferred for insufficient treatment: shared context, tools, review procedure, and a cosmetic procedure suffix do not justify paid team work. No team-superiority inference is available.' },
         workflows,
-        accounting: { ...base.accounting, admittedAttempts: base.allAttempts.length, remainingAdmissions: 48 - base.allAttempts.length, retainedTotalMinor: base.accounting.reservedMinor + base.accounting.supportingCountBufferMinor, remainingExposureMinor: 3000 - base.accounting.reservedMinor - base.accounting.supportingCountBufferMinor - base.accounting.authoritativeSettledMinor, pendingAttemptIds: base.allAttempts.filter((a: any) => !a.finishedAt).map((a: any) => a.id), countsAreDispatchIntents: true, reservationIsSpending: false }
+        accounting: { ...base.accounting, admittedAttempts: base.allAttempts.length, pendingAttemptIds: base.allAttempts.filter((a: any) => !a.finishedAt).map((a: any) => a.id), countsAreDispatchIntents: true, reservationIsSpending: false }
     };
     write(root, 'reports/value-report.json', result);
     const cards = workflows.map((x: any) => `<article><h2>${escape(x.runId)} <small>${escape(x.execution.state)}</small></h2><p>${escape(x.execution.actualOrMock ?? x.execution.reason)}</p><h3>Artifact gallery</h3>${renderArtifact('Original inherited draft', x.gallery.inheritedDraft)}${renderArtifact('Call 2 initial draft', x.gallery.call2InitialDraft)}${renderArtifact('Call 3 final artifact', x.gallery.call3FinalArtifact)}<p>Factual comparison: initial hash ${escape(x.gallery.artifactFacts.beforeHash)}, final hash ${escape(x.gallery.artifactFacts.afterHash)}, normalized artifact equality: ${escape(x.gallery.artifactFacts.normalizedArtifactEqual)}.</p><details><summary>Reported review and technical evidence</summary><pre>${escape(pretty({ modelReportedReview: x.gallery.reviewReportedByModel, evidenceAndDecision: x.evidenceAndDecision, receiptAndReadback: x.gallery.receiptAndReadback, approval: x.approvalProvenance, attempts: x.attempts, accounting: x.accounting, legacyTriage: x.legacyTriage }))}</pre></details><p>${escape(x.limitations.join(' '))}</p></article>`).join('');

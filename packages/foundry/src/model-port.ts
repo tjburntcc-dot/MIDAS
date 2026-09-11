@@ -28,6 +28,10 @@ export type ResponsesRoute = {
         effectiveAt: string;
     };
 };
+/** Same exact provider body for offline contract inspection and actual admission. Contains no credentials. */
+export function buildResponsesBody(route: ResponsesRoute, request: ModelRequest, schema: any) {
+    return { ...(route.reasoningEffort ? {reasoning:{effort:route.reasoningEffort}} : {}), ...(route.serviceTier ? {service_tier:route.serviceTier} : {}), model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
+}
 /** Supported OpenAI Responses transport. Not enabled by the laboratory CLI.
  * Tests inject an in-memory transport: no provider calls were made for Mission 027.
  * Unlike the older repository adapter this transports output and time limits.
@@ -75,7 +79,7 @@ export function responsesModelPort(options: {
             // ceiling must be established by F2's provider-compatible token counter.
             // Administrative scope/request IDs bind local accounting only;
             // they must not leak scenario labels into the worker prompt.
-            const body = { ...(route.reasoningEffort ? {reasoning:{effort:route.reasoningEffort}} : {}), ...(route.serviceTier ? {service_tier:route.serviceTier} : {}), model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
+            const body = buildResponsesBody(route, request, schema);
             const bytes=canonical(body), digest=rawHash(bytes);
             const started=Date.now();let admitted=false,usageRecorded=false;
             try {
