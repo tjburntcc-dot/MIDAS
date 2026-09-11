@@ -11,6 +11,24 @@ import { providerPort } from './provider.ts';
 import { objectiveChecks, taskContractHash, validateOutput } from './task.ts';
 import type { Case } from './task.ts';
 export function openExperiment(root: string, allowExpired = false) { const a = authorization(root, allowExpired), store = new StateStore(join(root, 'experiment.sqlite')); return { ...a, store, ledger: new ModelLedger(store, a.spec.scope, a.authorizationHash, a.spec.limits) }; }
+export function exploratoryReviewFor(x:ReturnType<typeof openExperiment>,row:any){
+    if(!x.exploratory)return x.store.get('experiment-review',x.ledger.key(row.id));
+    const r=x.store.get('exploratory-assisted-review',x.ledger.key(row.id));
+    return r&&r.attemptHash===hash(row.result)&&r.amendmentHash===x.exploratory.amendmentHash&&row.metadata.taskSpecificationHash===x.exploratory.casesHash?r:null;
+}
+export function recordExploratoryReview(root:string,r:any){
+    const x=openExperiment(root,true);try{
+        requireThat(x.exploratory&&r.kind==='exploratory-assisted-review'&&r.source==='codex-assisted-analysis'&&r.independentValidation===false&&r.correctionSeconds===null,'ASSISTED_REVIEW_SCOPE');
+        const row=x.ledger.get(r.attemptId);
+        requireThat(row?.finishedAt&&['development','validation'].includes(row.stage)&&r.attemptHash===hash(row.result)&&r.amendmentHash===x.exploratory.amendmentHash&&row.metadata.taskSpecificationHash===x.exploratory.casesHash,'REVIEW_ATTEMPT_MISMATCH');
+        requireThat([true,false,null].includes(r.accepted)&&[true,false,null].includes(r.critical)&&[true,false,null].includes(r.unnecessaryEscalation)&&r.reason?.length>20&&r.evidence?.length>0,'REVIEW_INCOMPLETE');
+        for(const dim of ['correctness','evidenceSupport','uncertainty','escalation','prohibitedPromises'])requireThat([true,false,null].includes(r.dimensions?.[dim]),'REVIEW_DIMENSION_REQUIRED');
+        requireThat(r.accepted!==true||(!row.errorCode&&r.critical===false&&Object.values(r.dimensions).every(v=>v===true)),'INCONSISTENT_ACCEPTANCE');
+        if(r.accepted===true)validateOutput(row.result.output);
+        const key=x.ledger.key(row.id);x.store.transaction(()=>{const old=x.store.get('exploratory-assisted-review',key);if(old)requireThat(old.hash===hash(r),'REVIEW_IMMUTABLE');else x.store.put('exploratory-assisted-review',key,{...r,hash:hash(r)},null);});
+        return {recorded:row.id,independentValidation:false,correctionSeconds:null};
+    }finally{x.store.close();}
+}
 export function roleArtifact(root: string, condition: 'baseline' | 'challenger', model: string): Role {
     const value = readJSON(join(root, condition + '.json'));
     requireThat(typeof value.version==='string'&&value.version.length>0&&value.taskContractHash===taskContractHash&&typeof value.procedure === 'string' && value.procedure.trim().length > 0, 'PROCEDURE_REQUIRED');
@@ -99,8 +117,8 @@ export function candidate(root: string, procedureFile: string, failureIds: strin
         requireThat(!existsSync(join(root, 'freeze.json')) && !existsSync(join(root, 'challenger.json')), 'CANDIDATE_ALREADY_FIXED');
         requireThat(failureIds.length > 0 && rationale.length > 20, 'OBSERVED_FAILURE_REQUIRED');
         for (const id of failureIds) {
-            const row = x.ledger.get(id), review = x.store.get('experiment-review', x.ledger.key(id));
-            requireThat(row?.metadata.source === 'actual-model' && row.stage === 'development' && row.metadata.condition === 'baseline' && row.metadata.roleHash === hash(roleArtifact(root, 'baseline', x.spec.route.model)) && review && !review.accepted, 'OBSERVED_BASELINE_FAILURE_REQUIRED');
+            const row = x.ledger.get(id), review = row&&exploratoryReviewFor(x,row);
+            requireThat(row?.metadata.source === 'actual-model' && row.stage === 'development' && row.metadata.condition === 'baseline' && row.metadata.roleHash === hash(roleArtifact(root, 'baseline', x.spec.route.model)) && review?.accepted===false, 'OBSERVED_BASELINE_FAILURE_REQUIRED');
         }
         const baseline = readJSON(join(root, 'baseline.json')), procedure = readFileSync(procedureFile, 'utf8').trim();
         requireThat(procedure && procedure !== baseline.procedure, 'PROCEDURE_CHANGE_REQUIRED');

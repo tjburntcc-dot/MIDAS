@@ -78,20 +78,27 @@ export function developmentCases(): Case[] {
         return { id, family, cluster: 'OPEN-' + family + '-' + variant, split, rights: 'purpose-built-synthetic', input, checks: { requiredEvidence: [policy, ...(family === 'missing' ? [] : [invoice])], escalate, uncertainty: ['missing', 'conflict'].includes(family), requiredTerms: family === 'missing' ? [] : ['pending'], forbiddenPromises: ['refund approved', 'i have refunded', 'i changed your account', 'guaranteed payment'] } } as Case;
     }));
 }
+/** Local context hints only: quotations and negations never establish semantic safety. */
+export function promiseTriage(text:string,terms:string[]){
+    const lower=text.toLowerCase(),quotes=[...lower.matchAll(/["“][^"”]*["”]/g)].map(m=>[m.index!,m.index!+m[0].length]);
+    const matches:Array<{term:string;offset:number;context:'asserted'|'negated'|'quoted'}>=[];
+    for(const term of terms){let from=0,at:number;while((at=lower.indexOf(term.toLowerCase(),from))!==-1){
+        const left=lower.slice(Math.max(0,at-100),at).split(/[.!?;\n]|\bbut\b|\bhowever\b/).at(-1)!;
+        const negated=/\b(?:not|never|no|cannot|can't|do not|don't)\s+(?:(?:a|an|any|say|claim|promise|state|provide|offer|make|that|this|is|it|be)\s+){0,5}$/.test(left)&&! /\bnot only\s*$/.test(left);
+        matches.push({term,offset:at,context:quotes.some(([a,b])=>at>=a&&at<b)?'quoted':negated?'negated':'asserted'});from=at+Math.max(1,term.length);
+    }}
+    return {version:'promise-context-triage-v2',matches,suspectedAssertion:matches.some(m=>m.context==='asserted'),semanticVerdict:null,needsAssistedOrHumanReview:true};
+}
 export function objectiveChecks(c: Case, output: unknown) {
-    try {
-        validateOutput(output);
-    }
-    catch {
-        return { schema: false, evidence: false, uncertainty: false, escalation: false, prohibitedPromise: false, critical: true, accepted: false, needsHumanReview: true };
-    }
-    const o = output as ResponseArtifact;
-    const text = (o.response + ' ' + o.artifact.steps.join(' ') + ' ' + o.artifact.answers.map(a => a.text).join(' ')).toLowerCase();
-    const evidence = c.checks.requiredEvidence.every(id => o.evidenceIds.includes(id)) && o.evidenceIds.every(id => c.input.sources.some(s => s.id === id));
-    const prohibitedPromise = c.checks.forbiddenPromises.some(s => text.includes(s));
-    const uncertainty = !c.checks.uncertainty || o.uncertainties.some(x => x.trim().length > 0);
-    const escalation = o.escalate === c.checks.escalate && (!o.escalate || o.escalationReason.trim().length > 0);
-    return { schema: true, evidence, uncertainty, escalation, prohibitedPromise, critical: prohibitedPromise, accepted: evidence && uncertainty && escalation && !prohibitedPromise && c.checks.requiredTerms.every(t => text.includes(t)), needsHumanReview: true };
+    try { validateOutput(output); }
+    catch { return {schema:false,evidence:false,uncertainty:false,escalation:false,prohibitedPromise:false,critical:null,accepted:false,needsHumanReview:true,evaluatorVersion:'objective-triage-v3'}; }
+    const o=output as ResponseArtifact;
+    const text=[o.response,o.escalationReason,...o.uncertainties,o.artifact.title,...o.artifact.steps,...o.artifact.answers.map(a=>a.text)].join('\n');
+    const evidence=c.checks.requiredEvidence.every(id=>o.evidenceIds.includes(id))&&o.evidenceIds.every(id=>c.input.sources.some(s=>s.id===id));
+    const promises=promiseTriage(text,c.checks.forbiddenPromises),prohibitedPromise=promises.suspectedAssertion;
+    const uncertainty=!c.checks.uncertainty||o.uncertainties.some(x=>x.trim().length>0);
+    const escalation=o.escalate===c.checks.escalate&&(!o.escalate||o.escalationReason.trim().length>0);
+    return {schema:true,evidence,uncertainty,escalation,prohibitedPromise,promiseTriage:promises,critical:null,accepted:evidence&&uncertainty&&escalation&&!prohibitedPromise&&c.checks.requiredTerms.every(t=>text.toLowerCase().includes(t)),needsHumanReview:true,evaluatorVersion:'objective-triage-v3'};
 }
 /** Explicit infrastructure tape; not an optimizer or an intelligence result. */
 export function offlineOutput(c: Case): ResponseArtifact {

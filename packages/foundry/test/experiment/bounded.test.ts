@@ -5,11 +5,12 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {StateStore} from '../../src/state.ts';
 import {canonical,rawHash,hash} from '../../src/contracts.ts';
-import {keypair,signed,writeJSON,readJSON,executionHash,installImplementationRelease,implementationHash} from '../../src/experiment/config.ts';
+import {keypair,signed,writeJSON,readJSON,executionHash,installImplementationRelease,implementationHash,installExploratoryAmendment} from '../../src/experiment/config.ts';
 import {developmentCases,offlineOutput} from '../../src/experiment/task.ts';
 import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport,recordAccessResolution} from '../../src/experiment/bounded.ts';
+import {prepareSyntheticV3} from '../../tools/prepare-synthetic-v3.mjs';
 import {ModelLedger} from '../../src/experiment/ledger.ts';
-import {openExperiment,requestFor,roleArtifact,runDevelopment} from '../../src/experiment/workflow.ts';
+import {openExperiment,requestFor,roleArtifact,runDevelopment,recordExploratoryReview,freeze} from '../../src/experiment/workflow.ts';
 function setup(){
  const base=mkdtempSync(join(tmpdir(),'bounded028-')),old=join(base,'old'),root=join(base,'bounded'),pending=join(base,'pending');mkdirSync(join(old,'auth'),{recursive:true});mkdirSync(pending);const keys=keypair();writeFileSync(join(old,'auth/owner.pub'),keys.publicKey);writeFileSync(join(old,'mock.key'),'SECRET_MOCK_ONLY');
  writeJSON(join(old,'authorization.json'),signed({approved:true,route:{model:'gpt-5.6-sol'},projectId:'proj_test',credentialFile:join(old,'mock.key')},keys.privateKey));
@@ -53,4 +54,24 @@ test('implementation release cannot alter grant and cannot be installed over an 
  assert.throws(()=>installImplementationRelease(t.root,signed({...release,authorizationHash:hash('other')},t.keys.privateKey)),/IMPLEMENTATION_CHANGED/);
  const x=openExperiment(t.root),c=readJSON(join(t.root,'cases.json'))[0],r=requestFor(x.spec.scope,roleArtifact(t.root,'baseline','gpt-6-astra'),c,0,'smoke',52),bytes='mock';try{await x.ledger.port('smoke',{caseId:c.id}).prepare!(r,{minorUnits:52,currency:'USD'},rawHash(bytes),bytes);assert.throws(()=>installImplementationRelease(t.root,signed(release,t.keys.privateKey)),/IN_FLIGHT_IMPLEMENTATION_PINNED/);x.ledger.finish(r.requestId,null,'MOCK_FAILED');}finally{x.store.close();}
  const before=readFileSync(join(t.root,'authorization.json'));installImplementationRelease(t.root,signed(release,t.keys.privateKey));assert.deepEqual(readFileSync(join(t.root,'authorization.json')),before);assert.equal(boundedReport(t.root).exposure.totalExposureMinor,78);
+});
+
+test('signed exploratory amendment changes task/review gate without resetting allowance or satisfying protected review',async()=>{
+ const t=setup(),m=mock(t.root);await boundedDiagnostic(t.root,m.transport);await boundedBatch(t.root,plan('original-smoke'),m.transport);
+ const initial=[{caseId:'D-001',repeat:0,condition:'baseline'},{caseId:'D-004',repeat:0,condition:'baseline'},{caseId:'D-007',repeat:0,condition:'baseline'},{caseId:'D-013',repeat:0,condition:'baseline'}];
+ await boundedBatch(t.root,plan('original-four','development',initial),m.transport);
+ const next=plan('future-case','development',[{caseId:'D-010',repeat:0,condition:'baseline'}]);await assert.rejects(boundedBatch(t.root,next,m.transport),/FOUNDER_CALIBRATION_REQUIRED/);
+ const grantBytes=readFileSync(join(t.root,'authorization.json')),caseBytes=readFileSync(join(t.root,'cases.json')),before=boundedReport(t.root).exposure;
+ writeJSON(join(t.root,'reports/assisted-calibration-status.json'),{kind:'test-only-assisted-calibration',independentValidation:false});prepareSyntheticV3(t.root);
+ const a=readJSON(join(t.root,'exploratory-amendment.request.json'));
+ assert.throws(()=>installExploratoryAmendment(t.root,signed({...a,authorizationHash:'wrong'},t.keys.privateKey)),/MISMATCH/);
+ assert.throws(()=>installExploratoryAmendment(t.root,signed({...a,independentValidation:true},t.keys.privateKey)),/REVIEW_SCOPE/);
+ assert.throws(()=>installExploratoryAmendment(t.root,signed({...a,expiresAt:'2099-01-01'},t.keys.privateKey)),/AUTHORITY/);
+ installExploratoryAmendment(t.root,signed(a,t.keys.privateKey));assert.deepEqual(boundedReport(t.root).exposure,before);assert.deepEqual(readFileSync(join(t.root,'authorization.json')),grantBytes);assert.deepEqual(readFileSync(join(t.root,'cases.json')),caseBytes);
+ const transport:any=async(url:string,init:any)=>{const b=JSON.parse(init.body);assert.match(b.input,/Active synthetic policy v3/);assert.ok(!b.input.includes('checks'));assert.ok(!b.input.includes('ai-assisted'));if(url.endsWith('input_tokens'))return new Response(JSON.stringify({object:'response.input_tokens',input_tokens:700}));const c=readJSON(join(t.root,'cases.synthetic-v3.json')).find((c:any)=>canonical({task:'operate',context:{case:c.input},tools:[]})===b.input);return new Response(JSON.stringify({model:b.model,id:'resp_mock',status:'completed',service_tier:'default',usage:{input_tokens:700,output_tokens:100},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(offlineOutput(c))}]}]}));};
+ const result=await boundedBatch(t.root,next,transport);assert.equal(result.attempts.length,1);assert.equal(result.remaining.totalExposureMinor,before.totalExposureMinor+52);assert.equal(result.attempts[0].metadata.taskVersion,'synthetic-support-v3');
+ const x=openExperiment(t.root,true);let row:any;try{row=x.ledger.get(result.attempts[0].id);assert.equal(x.store.get('founder-calibration','open'),null);}finally{x.store.close();}
+ const review={kind:'exploratory-assisted-review',source:'codex-assisted-analysis',independentValidation:false,correctionSeconds:null,attemptId:row.id,attemptHash:hash(row.result),amendmentHash:hash(a),accepted:true,critical:false,unnecessaryEscalation:false,reason:'Synthetic test review only; no real human measurements.',evidence:['test fixture'],dimensions:{correctness:true,evidenceSupport:true,uncertainty:true,escalation:true,prohibitedPromises:true}};
+ assert.throws(()=>recordExploratoryReview(t.root,{...review,correctionSeconds:1}),/SCOPE/);recordExploratoryReview(t.root,review);const report=boundedReport(t.root);assert.equal(report.humanReviewCount,0);assert.equal(report.assistedReviewCount,1);assert.throws(()=>freeze(t.root,{}),/CUSTODIAN_REVIEWER_REQUIRED/);
+ const changed=readJSON(join(t.root,'cases.synthetic-v3.json'));changed[0].input.brief='changed';writeJSON(join(t.root,'cases.synthetic-v3.json'),changed);assert.throws(()=>boundedReport(t.root),/ARTIFACT_CHANGED/);
 });

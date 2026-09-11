@@ -4,7 +4,7 @@ import {hostname} from 'node:os';
 import {DatabaseSync} from 'node:sqlite';
 import {canonical,hash,rawHash,requireThat} from '../contracts.ts';
 import {prepare,readJSON,writeJSON,verified,executionHash,implementationHash} from './config.ts';
-import {openExperiment,requestFor,roleArtifact} from './workflow.ts';
+import {openExperiment,requestFor,roleArtifact,exploratoryReviewFor} from './workflow.ts';
 import {providerPort} from './provider.ts';
 import {countTokens,countPayload} from './token-count.ts';
 import {objectiveChecks} from './task.ts';
@@ -92,13 +92,13 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
         requireThat(['smoke','development','validation'].includes(plan.stage)&&plan.cells.length>0&&plan.cells.length<=4,'BOUNDED_BATCH_SIZE');
         const diagnostic=x.ledger.get('SOL-COUNT-ONE');
         requireThat(diagnostic&&(diagnostic.result?.counted||x.store.get('project-access-resolution','one')?.diagnosticHash===hash(publicAttempt(diagnostic))),'COUNT_DIAGNOSTIC_NOT_SUCCESSFUL');
-        const cases:Case[]=readJSON(join(root,'cases.json'));requireThat(hash(cases)===x.spec.casesHash,'CASE_MANIFEST_CHANGED');
+        const cases:Case[]=x.exploratory?.cases??readJSON(join(root,'cases.json'));requireThat(hash(cases)===(x.exploratory?.casesHash??x.spec.casesHash),'CASE_MANIFEST_CHANGED');
         requireThat(!existsSync(join(root,'freeze.json')),'EXPERIMENT_FROZEN');
         if(plan.stage!=='smoke')requireThat(['D-001','D-002'].every(id=>x.ledger.rows().some(r=>r.stage==='smoke'&&r.metadata.caseId===id&&r.result&&!r.errorCode)),'SUCCESSFUL_SMOKE_REQUIRED');
         if(plan.stage==='development'){
             requireThat(!existsSync(join(root,'exploratory-lock.json')),'EXPLORATORY_COMPARISON_LOCKED');
             const n=x.ledger.totals('development').attempts;
-            if(n+plan.cells.length>4)requireThat(x.store.get('founder-calibration','open')?.complete,'FOUNDER_CALIBRATION_REQUIRED');
+            if(n+plan.cells.length>4)requireThat(x.exploratory?.reviewMode==='ai-assisted-exploratory'||x.store.get('founder-calibration','open')?.complete,'FOUNDER_CALIBRATION_REQUIRED');
         }
         if(plan.stage==='validation')checkLock(root,x);
         const batchKey=x.ledger.key('batch-'+plan.id),previous=x.store.get('experiment-batch',batchKey);
@@ -126,7 +126,7 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
             }
             const failed=rows.filter(r=>r.stage!=='diagnostic'&&r.errorCode);
             requireThat(failed.every(r=>rows.some(s=>s.metadata.recoveryOf===r.id&&!s.errorCode&&s.finishedAt)||cell.recoveryOf===r.id),'TRANSPORT_FAILURE_REQUIRES_RESOLUTION');
-            const metadata={condition:cell.condition,caseId:c.id,caseHash:hash(c),inputHash:hash(c.input),family:c.family,cluster:c.cluster,repeat:cell.repeat,roleHash:hash(role),source:'actual-model',businessExecution:'none',batchId:plan.id,implementationHash:implementationHash(),...(cell.recoveryOf?{recoveryOf:cell.recoveryOf,cause:cell.cause,correction:cell.correction,correctionEvidenceHash:cell.correctionEvidenceHash}:{})};
+            const metadata={condition:cell.condition,caseId:c.id,caseHash:hash(c),inputHash:hash(c.input),family:c.family,cluster:c.cluster,repeat:cell.repeat,roleHash:hash(role),source:'actual-model',businessExecution:'none',batchId:plan.id,implementationHash:implementationHash(),...(x.exploratory?{taskVersion:x.exploratory.taskVersion,taskSpecificationHash:x.exploratory.casesHash,rubricHash:x.exploratory.rubricHash,amendmentHash:x.exploratory.amendmentHash}:{}),...(cell.recoveryOf?{recoveryOf:cell.recoveryOf,cause:cell.cause,correction:cell.correction,correctionEvidenceHash:cell.correctionEvidenceHash}:{})};
             const port=providerPort(x.spec.route,x.auth.projectId,x.auth.credentialFile,x.ledger.port(plan.stage,metadata),transport);
             try{x.ledger.finish(request.requestId,await port.run(request),null);}
             catch(e){if(x.ledger.get(request.requestId))x.ledger.finish(request.requestId,null,(e as any).code??'MODEL_FAILED');else throw e;}
@@ -138,7 +138,7 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
 }
 
 function boundedTotals(x:any){const t=x.ledger.totals(),carry=x.ledger.carryExposure();return {current:t,historicalExposureMinor:carry,totalExposureMinor:carry+t.reserved+t.settled,unusedExposureMinor:x.spec.limits.totalMinor-carry-t.reserved-t.settled,stages:Object.fromEntries(Object.keys(x.spec.limits.stages).map(s=>[s,{...x.ledger.totals(s),attemptLimit:x.spec.limits.stages[s].attempts}]))};}
-export function boundedReport(root:string){const x=opened(root,true);try{return {mission:'028',authorizationHash:x.authorizationHash,route:x.spec.route,exposure:boundedTotals(x),attempts:x.ledger.rows().map(publicAttempt),humanReviewCount:x.ledger.rows().filter(r=>x.store.get('experiment-review',x.ledger.key(r.id))).length,measuredImprovement:null,protectedFreeze:existsSync(join(root,'freeze.json'))};}finally{x.store.close();}}
+export function boundedReport(root:string){const x=opened(root,true);try{return {mission:'028',authorizationHash:x.authorizationHash,route:x.spec.route,exposure:boundedTotals(x),attempts:x.ledger.rows().map(publicAttempt),humanReviewCount:x.ledger.rows().filter(r=>x.store.get('experiment-review',x.ledger.key(r.id))).length,assistedReviewCount:x.ledger.rows().filter(r=>x.store.get('exploratory-assisted-review',x.ledger.key(r.id))).length,taskVersion:x.exploratory?.taskVersion??'original',independentCorrectionSeconds:null,measuredImprovement:null,protectedFreeze:existsSync(join(root,'freeze.json'))};}finally{x.store.close();}}
 
 // Founder-supplied access correction lets the already authorized Astra smoke perform
 // its own mandatory count. It does not repeat the exhausted Sol diagnostic.
@@ -154,12 +154,12 @@ export function recordCalibration(root:string,envelope:any){const x=opened(root,
     requireThat(Array.isArray(r.attemptIds)&&r.attemptIds.length>=2&&r.attemptIds.every((id:string)=>x.store.get('experiment-review',x.ledger.key(id))),'CALIBRATION_REVIEWS_REQUIRED');
     x.store.transaction(()=>x.store.put('founder-calibration','open',r,null));return {recorded:true};
 }finally{x.store.close();}}
-function checkLock(root:string,x:any){const l=readJSON(join(root,'exploratory-lock.json'));requireThat(l.baselineHash===hash(readJSON(join(root,'baseline.json')))&&l.challengerHash===hash(readJSON(join(root,'challenger.json')))&&l.rubricHash===hash(readJSON(join(root,'rubric.json')))&&l.casesHash===x.spec.casesHash&&l.executionHash===executionHash(x.spec),'EXPLORATORY_LOCK_CHANGED');return l;}
+function checkLock(root:string,x:any){const l=readJSON(join(root,'exploratory-lock.json'));requireThat(l.baselineHash===hash(readJSON(join(root,'baseline.json')))&&l.challengerHash===hash(readJSON(join(root,'challenger.json')))&&l.rubricHash===(x.exploratory?.rubricHash??hash(readJSON(join(root,'rubric.json'))))&&l.casesHash===(x.exploratory?.casesHash??x.spec.casesHash)&&l.amendmentHash===(x.exploratory?.amendmentHash??null)&&l.executionHash===executionHash(x.spec),'EXPLORATORY_LOCK_CHANGED');return l;}
 export function lockExploratory(root:string){const x=opened(root);try{
-    requireThat(x.store.get('founder-calibration','open')?.complete,'FOUNDER_CALIBRATION_REQUIRED');requireThat(x.ledger.totals('validation').attempts===0,'VALIDATION_ALREADY_STARTED');
+    requireThat(x.exploratory||x.store.get('founder-calibration','open')?.complete,'FOUNDER_CALIBRATION_REQUIRED');requireThat(x.ledger.totals('validation').attempts===0,'VALIDATION_ALREADY_STARTED');
     const baseline=readJSON(join(root,'baseline.json')),challenger=readJSON(join(root,'challenger.json'));requireThat(challenger.baselineHash===hash(baseline),'CANDIDATE_PROVENANCE_MISMATCH');
-    for(const condition of ['baseline','challenger'] as const){const role=roleArtifact(root,condition,x.spec.route.model),rows=x.ledger.rows().filter(r=>r.stage==='development'&&r.metadata.roleHash===hash(role));requireThat(rows.length>0&&rows.every(r=>x.store.get('experiment-review',x.ledger.key(r.id))),'DEVELOPMENT_REVIEWS_REQUIRED');}
-    const cases:Case[]=readJSON(join(root,'cases.json'));const pairs=cases.filter(c=>c.split==='validation').flatMap(c=>[0,1].map(repeat=>({caseId:c.id,repeat}))).sort((a,b)=>hash({seed:280911,...a}).localeCompare(hash({seed:280911,...b})));
+    for(const condition of ['baseline','challenger'] as const){const role=roleArtifact(root,condition,x.spec.route.model),rows=x.ledger.rows().filter(r=>r.stage==='development'&&r.metadata.roleHash===hash(role)&&(!x.exploratory||r.metadata.taskSpecificationHash===x.exploratory.casesHash));requireThat(rows.length>0&&rows.every(r=>{const review=exploratoryReviewFor(x,r);return review&&typeof review.accepted==='boolean'&&typeof review.critical==='boolean';}),'DEVELOPMENT_REVIEWS_REQUIRED');}
+    const cases:Case[]=x.exploratory?.cases??readJSON(join(root,'cases.json'));const pairs=cases.filter(c=>c.split==='validation').flatMap(c=>[0,1].map(repeat=>({caseId:c.id,repeat}))).sort((a,b)=>hash({seed:280911,...a}).localeCompare(hash({seed:280911,...b})));
     const order=pairs.flatMap((p,i)=>(i%2?['challenger','baseline']:['baseline','challenger']).map(condition=>({...p,condition})));
-    const l={kind:'exploratory-comparison-lock',baselineHash:hash(baseline),challengerHash:hash(challenger),rubricHash:hash(readJSON(join(root,'rubric.json'))),casesHash:x.spec.casesHash,executionHash:executionHash(x.spec),exposure:boundedTotals(x),order,decisionRule:'Exploratory advance only with more paired accepted outputs, no challenger critical failure, no increase in unnecessary escalation, complete human review and no worse mean measured correction time; otherwise retain baseline or inconclusive. No broad superiority inference.',revision:'alias; immutability unverified; protected freeze remains gated',at:new Date().toISOString()};writeJSON(join(root,'exploratory-lock.json'),l,true);return l;
+    const l={kind:'exploratory-comparison-lock',baselineHash:hash(baseline),challengerHash:hash(challenger),rubricHash:x.exploratory?.rubricHash??hash(readJSON(join(root,'rubric.json'))),casesHash:x.exploratory?.casesHash??x.spec.casesHash,amendmentHash:x.exploratory?.amendmentHash??null,executionHash:executionHash(x.spec),exposure:boundedTotals(x),order,reviewMode:x.exploratory?.reviewMode??'measured-human',independentCorrectionSeconds:null,decisionRule:x.exploratory?'Exploratory selection only: more paired accepted outputs, no candidate critical failures, no increased unnecessary escalation, all attempts reviewed with declared assistance, within authorized resources. Ambiguity is inconclusive. Independent timing and final qualification remain missing; no correction-effort advantage claim.':'Exploratory advance only with more paired accepted outputs, no challenger critical failure, no increase in unnecessary escalation, complete human review and no worse mean measured correction time; otherwise retain baseline or inconclusive. No broad superiority inference.',revision:'alias; immutability unverified; protected freeze remains gated',at:new Date().toISOString()};writeJSON(join(root,'exploratory-lock.json'),l,true);return l;
 }finally{x.store.close();}}

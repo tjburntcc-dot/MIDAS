@@ -43,7 +43,8 @@ export function authorization(root: string, allowExpired = false) {
     const spec = readJSON(join(root, 'spec.json'));
     const envelope = readJSON(join(root, 'authorization.json'));
     const auth = verified(envelope, readFileSync(join(root, 'auth', 'owner.pub'), 'utf8'));
-    if(spec.implementationHash!==implementationHash()){
+    const exploratory=existsSync(join(root,'exploratory-amendment.json'))?validateExploratoryAmendment(root,readJSON(join(root,'exploratory-amendment.json')),spec,auth):null;
+    if(spec.implementationHash!==implementationHash()&&!exploratory){
         requireThat(existsSync(join(root,'implementation-release.json')),'IMPLEMENTATION_CHANGED');
         const release=verified(readJSON(join(root,'implementation-release.json')),readFileSync(join(root,'auth/owner.pub'),'utf8'));
         requireThat(release.kind==='implementation-release'&&release.authorizationHash===hash(auth)&&release.previousImplementationHash===spec.implementationHash&&release.implementationHash===implementationHash()&&release.reason?.length>20,'IMPLEMENTATION_CHANGED');
@@ -54,7 +55,28 @@ export function authorization(root: string, allowExpired = false) {
     requireThat(typeof auth.projectId === 'string' && auth.projectId.startsWith('proj_') && typeof auth.credentialFile === 'string' && auth.credentialFile.length > 0, 'PROJECT_CREDENTIAL_REQUIRED');
     requireThat(typeof auth.approvedBy === 'string' && auth.approvedBy.length > 0 && typeof auth.approvalReference === 'string' && auth.approvalReference.length > 0 && Number.isFinite(Date.parse(auth.expiresAt)) && (allowExpired || Date.parse(auth.expiresAt) > Date.now()), 'AUTHORIZATION_EXPIRED_OR_UNSIGNED');
     requireThat(hash(auth.route) === hash(spec.route) && hash(auth.limits) === hash(spec.limits), 'AUTHORIZATION_LIMIT_MISMATCH');
-    return { spec, auth, authorizationHash: hash(auth) };
+    return { spec, auth, authorizationHash: hash(auth), exploratory };
+}
+/** One explicit Mission028 amendment; never replaces the original spending account. */
+function validateExploratoryAmendment(root:string,envelope:any,spec:any,auth:any){
+    const a=verified(envelope,readFileSync(join(root,'auth/owner.pub'),'utf8'));
+    requireThat(a.kind==='exploratory-task-review-amendment'&&a.authorizationHash===hash(auth)&&a.originalExecutionHash===executionHash(spec)&&a.implementationHash===implementationHash(),'EXPLORATORY_AMENDMENT_MISMATCH');
+    requireThat(auth.boundedMission&&auth.allowProtected===false&&a.expiresAt===auth.expiresAt&&a.approvalReference?.length>20&&a.reason?.length>20,'EXPLORATORY_AMENDMENT_AUTHORITY');
+    requireThat(a.reviewMode==='ai-assisted-exploratory'&&a.independentValidation===false&&a.independentCorrectionTime===null&&a.protectedRequirementsUnchanged===true,'EXPLORATORY_REVIEW_SCOPE');
+    requireThat(a.casesFile==='cases.synthetic-v3.json'&&a.rubricFile==='rubric.synthetic-v3.json'&&a.taskVersion==='synthetic-support-v3','EXPLORATORY_ARTIFACT_PATH');
+    const cases=readJSON(join(root,a.casesFile)),rubric=readJSON(join(root,a.rubricFile)),original=readJSON(join(root,'cases.json'));
+    requireThat(hash(original)===spec.casesHash&&hash(cases)===a.casesHash&&hash(rubric)===a.rubricHash,'EXPLORATORY_ARTIFACT_CHANGED');
+    requireThat(cases.length===original.length&&cases.every((c:any,i:number)=>c.id===original[i].id&&c.split===original[i].split&&c.family===original[i].family&&c.cluster===original[i].cluster&&c.rights==='purpose-built-synthetic'),'EXPLORATORY_POPULATION_CHANGED');
+    requireThat(a.calibrationEvidenceFile==='reports/assisted-calibration-status.json'&&hash(readJSON(join(root,a.calibrationEvidenceFile)))===a.calibrationEvidenceHash,'EXPLORATORY_CALIBRATION_EVIDENCE');
+    return {...a,amendmentHash:hash(a),cases,rubric};
+}
+export function installExploratoryAmendment(root:string,envelope:any){
+    const spec=readJSON(join(root,'spec.json')),auth=verified(readJSON(join(root,'authorization.json')),readFileSync(join(root,'auth/owner.pub'),'utf8'));
+    requireThat(auth.approved&&auth.specHash===executionHash(spec)&&Date.parse(auth.expiresAt)>Date.now(),'AUTHORIZATION_EXPIRED_OR_UNSIGNED');
+    const a=validateExploratoryAmendment(root,envelope,spec,auth);
+    requireThat(!existsSync(join(root,'freeze.json'))&&!existsSync(join(root,'exploratory-lock.json')),'EXPERIMENT_FROZEN');
+    if(existsSync(join(root,'experiment.sqlite'))){const db=new DatabaseSync(join(root,'experiment.sqlite'),{readOnly:true});try{requireThat(db.prepare("SELECT body FROM entities WHERE kind='model-attempt'").all().every(x=>JSON.parse(String(x.body)).finishedAt),'IN_FLIGHT_IMPLEMENTATION_PINNED');}finally{db.close();}}
+    writeJSON(join(root,'exploratory-amendment.json'),envelope,true);return {amendmentHash:a.amendmentHash,authorizationUnchanged:true,originalCalibrationPassed:false,independentCorrectionTime:null};
 }
 export function installImplementationRelease(root:string,envelope:any){
     const key=readFileSync(join(root,'auth/owner.pub'),'utf8'),auth=verified(readJSON(join(root,'authorization.json')),key),spec=readJSON(join(root,'spec.json')),r=verified(envelope,key);

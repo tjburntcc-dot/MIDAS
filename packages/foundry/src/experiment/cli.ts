@@ -2,8 +2,8 @@ import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport,recordCalibr
 import { resolve, join } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { prepare, approve, readJSON, writeJSON, signed, keypair, installImplementationRelease } from './config.ts';
-import { runDevelopment, reviewPacket, recordReview, candidate, freeze, report, openExperiment } from './workflow.ts';
+import { prepare, approve, readJSON, writeJSON, signed, keypair, installImplementationRelease, installExploratoryAmendment } from './config.ts';
+import { runDevelopment, reviewPacket, recordReview, candidate, freeze, report, openExperiment, recordExploratoryReview } from './workflow.ts';
 import { rehearse } from './rehearsal.ts';
 import { createManifest, evaluateNext, releaseAggregate, replayAggregate } from './custodian.ts';
 import { requireThat, object } from '../contracts.ts';
@@ -24,6 +24,8 @@ export async function main(argv = process.argv.slice(2)) {
     else if(command==='bounded-report')result=boundedReport(root);
     else if(command==='resolve-access')result=recordAccessResolution(root,readJSON(args.file));
     else if(command==='release-implementation')result=installImplementationRelease(root,readJSON(args.file));
+    else if(command==='amend-exploratory')result=installExploratoryAmendment(root,readJSON(args.file));
+    else if(command==='review-assisted')result=recordExploratoryReview(root,readJSON(args.file));
     else if(command==='calibrate')result=recordCalibration(root,readJSON(args.file));
     else if(command==='lock-exploratory')result=lockExploratory(root);
     else if (command === 'prepare')
