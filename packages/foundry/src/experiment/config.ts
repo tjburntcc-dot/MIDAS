@@ -43,7 +43,9 @@ export function authorization(root: string, allowExpired = false) {
     const spec = readJSON(join(root, 'spec.json'));
     const envelope = readJSON(join(root, 'authorization.json'));
     const auth = verified(envelope, readFileSync(join(root, 'auth', 'owner.pub'), 'utf8'));
-    const exploratory=existsSync(join(root,'exploratory-amendment.json'))?validateExploratoryAmendment(root,readJSON(join(root,'exploratory-amendment.json')),spec,auth):null;
+    const pair=existsSync(join(root,'matched-pair-v4.json'))?verified(readJSON(join(root,'matched-pair-v4.json')),readFileSync(join(root,'auth/owner.pub'),'utf8')):null;
+    const parent=existsSync(join(root,'exploratory-amendment.json'))?validateExploratoryAmendment(root,readJSON(join(root,'exploratory-amendment.json')),spec,auth,pair):null;
+    const exploratory=pair?validateMatchedPair(root,pair,parent,auth):parent;
     if(spec.implementationHash!==implementationHash()&&!exploratory){
         requireThat(existsSync(join(root,'implementation-release.json')),'IMPLEMENTATION_CHANGED');
         const release=verified(readJSON(join(root,'implementation-release.json')),readFileSync(join(root,'auth/owner.pub'),'utf8'));
@@ -58,9 +60,9 @@ export function authorization(root: string, allowExpired = false) {
     return { spec, auth, authorizationHash: hash(auth), exploratory };
 }
 /** One explicit Mission028 amendment; never replaces the original spending account. */
-function validateExploratoryAmendment(root:string,envelope:any,spec:any,auth:any){
+function validateExploratoryAmendment(root:string,envelope:any,spec:any,auth:any,pair:any=null){
     const a=verified(envelope,readFileSync(join(root,'auth/owner.pub'),'utf8'));
-    requireThat(a.kind==='exploratory-task-review-amendment'&&a.authorizationHash===hash(auth)&&a.originalExecutionHash===executionHash(spec)&&a.implementationHash===implementationHash(),'EXPLORATORY_AMENDMENT_MISMATCH');
+    requireThat(a.kind==='exploratory-task-review-amendment'&&a.authorizationHash===hash(auth)&&a.originalExecutionHash===executionHash(spec)&&(a.implementationHash===implementationHash()||(pair?.parentAmendmentHash===hash(a)&&pair.previousImplementationHash===a.implementationHash&&pair.implementationHash===implementationHash())),'EXPLORATORY_AMENDMENT_MISMATCH');
     requireThat(auth.boundedMission&&auth.allowProtected===false&&a.expiresAt===auth.expiresAt&&a.approvalReference?.length>20&&a.reason?.length>20,'EXPLORATORY_AMENDMENT_AUTHORITY');
     requireThat(a.reviewMode==='ai-assisted-exploratory'&&a.independentValidation===false&&a.independentCorrectionTime===null&&a.protectedRequirementsUnchanged===true,'EXPLORATORY_REVIEW_SCOPE');
     requireThat(a.casesFile==='cases.synthetic-v3.json'&&a.rubricFile==='rubric.synthetic-v3.json'&&a.taskVersion==='synthetic-support-v3','EXPLORATORY_ARTIFACT_PATH');
@@ -69,6 +71,24 @@ function validateExploratoryAmendment(root:string,envelope:any,spec:any,auth:any
     requireThat(cases.length===original.length&&cases.every((c:any,i:number)=>c.id===original[i].id&&c.split===original[i].split&&c.family===original[i].family&&c.cluster===original[i].cluster&&c.rights==='purpose-built-synthetic'),'EXPLORATORY_POPULATION_CHANGED');
     requireThat(a.calibrationEvidenceFile==='reports/assisted-calibration-status.json'&&hash(readJSON(join(root,a.calibrationEvidenceFile)))===a.calibrationEvidenceHash,'EXPLORATORY_CALIBRATION_EVIDENCE');
     return {...a,amendmentHash:hash(a),cases,rubric};
+}
+function validateMatchedPair(root:string,p:any,parent:any,auth:any){
+    requireThat(parent&&p.kind==='matched-pair-v4-authorization'&&p.parentAmendmentHash===parent.amendmentHash&&p.authorizationHash===hash(auth)&&p.implementationHash===implementationHash()&&p.expiresAt===auth.expiresAt&&p.approvalReference?.length>20,'MATCHED_PAIR_AUTHORITY');
+    requireThat(p.taskVersion==='synthetic-support-v4'&&p.casesFile==='matched-pair-v4/cases.json'&&p.rubricFile==='matched-pair-v4/rubric.json'&&p.maxAdmissions===2&&p.repeats===1&&p.baselineHash===hash(readJSON(join(root,'baseline.json'))),'MATCHED_PAIR_SCOPE');
+    const cases=readJSON(join(root,p.casesFile)),rubric=readJSON(join(root,p.rubricFile));
+    requireThat(hash(cases)===p.casesHash&&hash(rubric)===p.rubricHash&&cases.length===2&&new Set(cases.map((c:any)=>c.id)).size===2&&cases.every((c:any)=>['MP4-001','MP4-002'].includes(c.id)&&c.split==='development'&&c.rights==='purpose-built-synthetic'),'MATCHED_PAIR_ARTIFACTS');
+    const common=(c:any)=>({...c.input,sources:c.input.sources.filter((s:any)=>s.kind!=='message')});
+    requireThat(hash(common(cases[0]))===hash(common(cases[1]))&&cases.every((c:any)=>c.input.sources.filter((s:any)=>s.kind==='message').length===1),'MATCHED_PAIR_CONFOUND');
+    requireThat(rubric.independentValidation===false&&rubric.correctionSeconds===null&&rubric.gratuitousRefusalRequired===false,'MATCHED_PAIR_REVIEW');
+    return {...parent,...p,cases,rubric,amendmentHash:hash(p),matchedPair:true};
+}
+export function installMatchedPair(root:string,envelope:any){
+    const key=readFileSync(join(root,'auth/owner.pub'),'utf8'),auth=verified(readJSON(join(root,'authorization.json')),key),spec=readJSON(join(root,'spec.json')),p=verified(envelope,key);
+    requireThat(auth.approved&&auth.specHash===executionHash(spec)&&Date.parse(auth.expiresAt)>Date.now()&&auth.allowProtected===false,'AUTHORIZATION_EXPIRED_OR_UNSIGNED');
+    const parent=validateExploratoryAmendment(root,readJSON(join(root,'exploratory-amendment.json')),spec,auth,p);validateMatchedPair(root,p,parent,auth);
+    requireThat(!existsSync(join(root,'freeze.json'))&&!existsSync(join(root,'exploratory-lock.json')),'EXPERIMENT_FROZEN');
+    const db=new DatabaseSync(join(root,'experiment.sqlite'),{readOnly:true});try{requireThat(db.prepare("SELECT body FROM entities WHERE kind='model-attempt'").all().every(x=>JSON.parse(String(x.body)).finishedAt),'IN_FLIGHT_IMPLEMENTATION_PINNED');}finally{db.close();}
+    writeJSON(join(root,'matched-pair-v4.json'),envelope,true);return {recorded:true,authorizationUnchanged:true,maxNewAdmissions:2};
 }
 export function installExploratoryAmendment(root:string,envelope:any){
     const spec=readJSON(join(root,'spec.json')),auth=verified(readJSON(join(root,'authorization.json')),readFileSync(join(root,'auth/owner.pub'),'utf8'));

@@ -93,6 +93,7 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
         const diagnostic=x.ledger.get('SOL-COUNT-ONE');
         requireThat(diagnostic&&(diagnostic.result?.counted||x.store.get('project-access-resolution','one')?.diagnosticHash===hash(publicAttempt(diagnostic))),'COUNT_DIAGNOSTIC_NOT_SUCCESSFUL');
         const cases:Case[]=x.exploratory?.cases??readJSON(join(root,'cases.json'));requireThat(hash(cases)===(x.exploratory?.casesHash??x.spec.casesHash),'CASE_MANIFEST_CHANGED');
+        if(x.exploratory?.matchedPair)requireThat(plan.stage==='development'&&plan.cells.every(c=>c.condition==='baseline'&&c.repeat===0&&!c.recoveryOf),'MATCHED_PAIR_INITIAL_ONLY');
         requireThat(!existsSync(join(root,'freeze.json')),'EXPERIMENT_FROZEN');
         if(plan.stage!=='smoke')requireThat(['D-001','D-002'].every(id=>x.ledger.rows().some(r=>r.stage==='smoke'&&r.metadata.caseId===id&&r.result&&!r.errorCode)),'SUCCESSFUL_SMOKE_REQUIRED');
         if(plan.stage==='development'){
@@ -120,6 +121,7 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
                 const lock=checkLock(root,x),next=lock.order[x.ledger.totals('validation').attempts];requireThat(hash(cell)===hash(next),'VALIDATION_ORDER_CHANGED');
             }
             const rows=x.ledger.rows();
+            if(x.exploratory?.matchedPair)requireThat(rows.filter(r=>r.metadata.amendmentHash===x.exploratory.amendmentHash).length<x.exploratory.maxAdmissions,'MATCHED_PAIR_CAP');
             if(plan.stage==='development'){
                 const arm=rows.filter(r=>r.stage==='development'&&r.metadata.condition===cell.condition),versions=new Set(arm.map(r=>r.metadata.roleHash));versions.add(hash(role));
                 requireThat(versions.size<=(cell.condition==='baseline'?2:1),'ROLE_VERSION_CAP');requireThat(arm.filter(r=>r.metadata.roleHash===hash(role)).length<24,'ROLE_DEVELOPMENT_CAP');

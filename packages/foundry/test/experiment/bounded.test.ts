@@ -5,10 +5,12 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {StateStore} from '../../src/state.ts';
 import {canonical,rawHash,hash} from '../../src/contracts.ts';
-import {keypair,signed,writeJSON,readJSON,executionHash,installImplementationRelease,implementationHash,installExploratoryAmendment} from '../../src/experiment/config.ts';
+import {keypair,signed,writeJSON,readJSON,executionHash,installImplementationRelease,implementationHash,installExploratoryAmendment,installMatchedPair} from '../../src/experiment/config.ts';
 import {developmentCases,offlineOutput} from '../../src/experiment/task.ts';
 import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport,recordAccessResolution} from '../../src/experiment/bounded.ts';
 import {prepareSyntheticV3} from '../../tools/prepare-synthetic-v3.mjs';
+import {prepareMatchedPair} from '../../tools/prepare-matched-pair-v4.mjs';
+import {prospectiveCases} from '../../tools/resolve-d014.mjs';
 import {ModelLedger} from '../../src/experiment/ledger.ts';
 import {openExperiment,requestFor,roleArtifact,runDevelopment,recordExploratoryReview,freeze} from '../../src/experiment/workflow.ts';
 function setup(){
@@ -74,4 +76,18 @@ test('signed exploratory amendment changes task/review gate without resetting al
  const review={kind:'exploratory-assisted-review',source:'codex-assisted-analysis',independentValidation:false,correctionSeconds:null,attemptId:row.id,attemptHash:hash(row.result),amendmentHash:hash(a),accepted:true,critical:false,unnecessaryEscalation:false,reason:'Synthetic test review only; no real human measurements.',evidence:['test fixture'],dimensions:{correctness:true,evidenceSupport:true,uncertainty:true,escalation:true,prohibitedPromises:true}};
  assert.throws(()=>recordExploratoryReview(t.root,{...review,correctionSeconds:1}),/SCOPE/);recordExploratoryReview(t.root,review);const report=boundedReport(t.root);assert.equal(report.humanReviewCount,0);assert.equal(report.assistedReviewCount,1);assert.throws(()=>freeze(t.root,{}),/CUSTODIAN_REVIEWER_REQUIRED/);
  const changed=readJSON(join(t.root,'cases.synthetic-v3.json'));changed[0].input.brief='changed';writeJSON(join(t.root,'cases.synthetic-v3.json'),changed);assert.throws(()=>boundedReport(t.root),/ARTIFACT_CHANGED/);
+});
+
+test('matched pair keeps the account, runs two fresh baseline cells once, and rejects repeats, artifacts and scope changes',async()=>{
+ const t=setup(),m=mock(t.root);await boundedDiagnostic(t.root,m.transport);await boundedBatch(t.root,plan('pair-setup-smoke'),m.transport);
+ writeJSON(join(t.root,'reports/assisted-calibration-status.json'),{kind:'test-only-assisted-calibration'});prepareSyntheticV3(t.root);installExploratoryAmendment(t.root,signed(readJSON(join(t.root,'exploratory-amendment.request.json')),t.keys.privateKey));
+ mkdirSync(join(t.root,'prospective-v4'));writeJSON(join(t.root,'prospective-v4/cases.synthetic-v4.json'),prospectiveCases(readJSON(join(t.root,'cases.synthetic-v3.json'))));prepareMatchedPair(t.root);
+ const grant=readFileSync(join(t.root,'authorization.json')),parent=readFileSync(join(t.root,'exploratory-amendment.json')),before=boundedReport(t.root).exposure,p=readJSON(join(t.root,'matched-pair-v4/authorization.request.json'));
+ assert.throws(()=>installMatchedPair(t.root,signed({...p,maxAdmissions:3},t.keys.privateKey)),/MATCHED_PAIR_SCOPE/);assert.throws(()=>installMatchedPair(t.root,signed({...p,parentAmendmentHash:'wrong'},t.keys.privateKey)),/MATCHED_PAIR_AUTHORITY/);installMatchedPair(t.root,signed(p,t.keys.privateKey));assert.deepEqual(boundedReport(t.root).exposure,before);
+ let counts=0,calls=0;const transport:any=async(url:string,init:any)=>{const b=JSON.parse(init.body);assert.match(b.input,/constitutes a refund-approval request requiring referral/);assert.ok(!b.input.includes('MP4-'));assert.ok(!b.input.includes('gratuitousRefusalRequired'));if(url.endsWith('input_tokens')){counts++;return new Response(JSON.stringify({object:'response.input_tokens',input_tokens:800}));}calls++;const c=readJSON(join(t.root,'matched-pair-v4/cases.json')).find((c:any)=>canonical({task:'operate',context:{case:c.input},tools:[]})===b.input);return new Response(JSON.stringify({model:b.model,id:'resp_pair_mock',status:'completed',service_tier:'default',usage:{input_tokens:800,output_tokens:100},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(offlineOutput(c))}]}]}));};
+ const batch=readJSON(join(t.root,'matched-pair-v4/batch.json'));await boundedBatch(t.root,batch,transport);await boundedBatch(t.root,batch,transport);assert.equal(counts,2);assert.equal(calls,2);assert.equal(boundedReport(t.root).exposure.totalExposureMinor,before.totalExposureMinor+104);
+ await assert.rejects(boundedBatch(t.root,{...batch,id:'no-repeat',cells:[{...batch.cells[0],repeat:1}]},transport),/MATCHED_PAIR_INITIAL_ONLY/);
+ await assert.rejects(boundedBatch(t.root,{...batch,id:'no-challenger',cells:[{...batch.cells[0],condition:'challenger'}]},transport),/MATCHED_PAIR_INITIAL_ONLY/);
+ assert.deepEqual(readFileSync(join(t.root,'authorization.json')),grant);assert.deepEqual(readFileSync(join(t.root,'exploratory-amendment.json')),parent);
+ const changed=readJSON(join(t.root,'matched-pair-v4/cases.json'));changed[0].input.brief='changed';writeJSON(join(t.root,'matched-pair-v4/cases.json'),changed);assert.throws(()=>boundedReport(t.root),/MATCHED_PAIR_ARTIFACTS/);
 });
