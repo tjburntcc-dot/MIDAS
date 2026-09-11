@@ -1,0 +1,493 @@
+{
+  "status": "offline_mechanics_complete",
+  "recordedAt": "2026-09-11T19:34:42.624Z",
+  "configHash": "2af9287bed8bc94aa520641f26b501f1e20521d5eb832aeea46ad07854844e97",
+  "provenance": "OFFLINE MOCK — no model competence or external spending",
+  "observations": [
+    {
+      "runId": "W-001-single",
+      "state": "completed",
+      "checkpoint": "completed",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 4,
+      "effectCount": 1,
+      "latencyMs": 27,
+      "inputTokens": 4000,
+      "outputTokens": 2000,
+      "simulatedBusinessSpentMinor": 25,
+      "provisionalMockMinor": 16,
+      "humanCorrectionSeconds": null,
+      "failures": []
+    },
+    {
+      "runId": "W-001-team",
+      "state": "completed",
+      "checkpoint": "completed",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 4,
+      "effectCount": 1,
+      "latencyMs": 21,
+      "inputTokens": 4000,
+      "outputTokens": 2000,
+      "simulatedBusinessSpentMinor": 25,
+      "provisionalMockMinor": 16,
+      "humanCorrectionSeconds": null,
+      "failures": []
+    },
+    {
+      "runId": "W-002-team",
+      "state": "completed",
+      "checkpoint": "completed",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 4,
+      "effectCount": 1,
+      "latencyMs": 24,
+      "inputTokens": 4000,
+      "outputTokens": 2000,
+      "simulatedBusinessSpentMinor": 25,
+      "provisionalMockMinor": 16,
+      "humanCorrectionSeconds": null,
+      "failures": []
+    },
+    {
+      "runId": "W-002-single",
+      "state": "completed",
+      "checkpoint": "completed",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 4,
+      "effectCount": 1,
+      "latencyMs": 25,
+      "inputTokens": 4000,
+      "outputTokens": 2000,
+      "simulatedBusinessSpentMinor": 25,
+      "provisionalMockMinor": 16,
+      "humanCorrectionSeconds": null,
+      "failures": []
+    },
+    {
+      "runId": "W-003-single",
+      "state": "completed",
+      "checkpoint": "rejected",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 3,
+      "effectCount": 0,
+      "latencyMs": 19,
+      "inputTokens": 3000,
+      "outputTokens": 1500,
+      "simulatedBusinessSpentMinor": 0,
+      "provisionalMockMinor": 12,
+      "humanCorrectionSeconds": null,
+      "failures": []
+    },
+    {
+      "runId": "W-003-team",
+      "state": "completed",
+      "checkpoint": "rejected",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 3,
+      "effectCount": 0,
+      "latencyMs": 19,
+      "inputTokens": 3000,
+      "outputTokens": 1500,
+      "simulatedBusinessSpentMinor": 0,
+      "provisionalMockMinor": 12,
+      "humanCorrectionSeconds": null,
+      "failures": []
+    },
+    {
+      "runId": "W-004-team",
+      "state": "completed",
+      "checkpoint": "blocked",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 3,
+      "effectCount": 0,
+      "latencyMs": 20,
+      "inputTokens": 3000,
+      "outputTokens": 1500,
+      "simulatedBusinessSpentMinor": 0,
+      "provisionalMockMinor": 12,
+      "humanCorrectionSeconds": null,
+      "failures": [
+        {
+          "runId": "W-004-team",
+          "category": "missing_or_inaccessible_evidence",
+          "symptom": "MOCK: qualified evidence is unresolved; retain the block.",
+          "evidence": {
+            "decisionHash": "a802424276eedd2a851a058cb05381db6c46c775ee19884fd27facb283e5f3b1"
+          },
+          "hypothesizedCause": "Intentional case condition; correct blocked decision, not model failure.",
+          "causeEstablished": false,
+          "intervention": null,
+          "alternativeExplanation": "Shared specification, evidence or tool defect must be excluded before role optimization.",
+          "regressionRisk": "A new procedure could add cost or unnecessary blocking.",
+          "smallestTest": "Replay the preserved observation against explicit worker-visible rules before buying a fresh matched observation."
+        }
+      ]
+    },
+    {
+      "runId": "W-004-single",
+      "state": "completed",
+      "checkpoint": "blocked",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 3,
+      "effectCount": 0,
+      "latencyMs": 25,
+      "inputTokens": 3000,
+      "outputTokens": 1500,
+      "simulatedBusinessSpentMinor": 0,
+      "provisionalMockMinor": 12,
+      "humanCorrectionSeconds": null,
+      "failures": [
+        {
+          "runId": "W-004-single",
+          "category": "missing_or_inaccessible_evidence",
+          "symptom": "MOCK: qualified evidence is unresolved; retain the block.",
+          "evidence": {
+            "decisionHash": "a802424276eedd2a851a058cb05381db6c46c775ee19884fd27facb283e5f3b1"
+          },
+          "hypothesizedCause": "Intentional case condition; correct blocked decision, not model failure.",
+          "causeEstablished": false,
+          "intervention": null,
+          "alternativeExplanation": "Shared specification, evidence or tool defect must be excluded before role optimization.",
+          "regressionRisk": "A new procedure could add cost or unnecessary blocking.",
+          "smallestTest": "Replay the preserved observation against explicit worker-visible rules before buying a fresh matched observation."
+        }
+      ]
+    },
+    {
+      "runId": "W-005-single",
+      "state": "completed",
+      "checkpoint": "blocked",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 3,
+      "effectCount": 0,
+      "latencyMs": 26,
+      "inputTokens": 3000,
+      "outputTokens": 1500,
+      "simulatedBusinessSpentMinor": 0,
+      "provisionalMockMinor": 12,
+      "humanCorrectionSeconds": null,
+      "failures": [
+        {
+          "runId": "W-005-single",
+          "category": "specification_ambiguity",
+          "symptom": "MOCK: qualified evidence is unresolved; retain the block.",
+          "evidence": {
+            "decisionHash": "7b78bbb80f44d52200adb94871ffce77f3d591fa12327acc8528fad1a0cf56d2"
+          },
+          "hypothesizedCause": "Intentional case condition; correct blocked decision, not model failure.",
+          "causeEstablished": false,
+          "intervention": null,
+          "alternativeExplanation": "Shared specification, evidence or tool defect must be excluded before role optimization.",
+          "regressionRisk": "A new procedure could add cost or unnecessary blocking.",
+          "smallestTest": "Replay the preserved observation against explicit worker-visible rules before buying a fresh matched observation."
+        }
+      ]
+    },
+    {
+      "runId": "W-005-team",
+      "state": "completed",
+      "checkpoint": "blocked",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 3,
+      "effectCount": 0,
+      "latencyMs": 24,
+      "inputTokens": 3000,
+      "outputTokens": 1500,
+      "simulatedBusinessSpentMinor": 0,
+      "provisionalMockMinor": 12,
+      "humanCorrectionSeconds": null,
+      "failures": [
+        {
+          "runId": "W-005-team",
+          "category": "specification_ambiguity",
+          "symptom": "MOCK: qualified evidence is unresolved; retain the block.",
+          "evidence": {
+            "decisionHash": "7b78bbb80f44d52200adb94871ffce77f3d591fa12327acc8528fad1a0cf56d2"
+          },
+          "hypothesizedCause": "Intentional case condition; correct blocked decision, not model failure.",
+          "causeEstablished": false,
+          "intervention": null,
+          "alternativeExplanation": "Shared specification, evidence or tool defect must be excluded before role optimization.",
+          "regressionRisk": "A new procedure could add cost or unnecessary blocking.",
+          "smallestTest": "Replay the preserved observation against explicit worker-visible rules before buying a fresh matched observation."
+        }
+      ]
+    },
+    {
+      "runId": "W-006-team",
+      "state": "completed",
+      "checkpoint": "completed",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 4,
+      "effectCount": 1,
+      "latencyMs": 34,
+      "inputTokens": 4000,
+      "outputTokens": 2000,
+      "simulatedBusinessSpentMinor": 25,
+      "provisionalMockMinor": 16,
+      "humanCorrectionSeconds": null,
+      "failures": [
+        {
+          "runId": "W-006-team",
+          "category": "uncertain_external_effect",
+          "symptom": "Service response lost after dispatch; reconciliation required",
+          "evidence": {
+            "actionStatus": "confirmed",
+            "events": [
+              263
+            ]
+          },
+          "hypothesizedCause": "Injected fixture response-loss condition; not attributed to the model.",
+          "causeEstablished": false,
+          "intervention": null,
+          "alternativeExplanation": "Shared specification, evidence or tool defect must be excluded before role optimization.",
+          "regressionRisk": "A new procedure could add cost or unnecessary blocking.",
+          "smallestTest": "Replay the preserved observation against explicit worker-visible rules before buying a fresh matched observation."
+        }
+      ]
+    },
+    {
+      "runId": "W-006-single",
+      "state": "completed",
+      "checkpoint": "completed",
+      "checks": {
+        "prepublicationReview": true,
+        "decision": true,
+        "artifactMechanical": true,
+        "authority": true,
+        "execution": true,
+        "obligations": true,
+        "economicAccounting": true,
+        "modelInspection": true,
+        "seededDefectDetected": true
+      },
+      "calls": 4,
+      "effectCount": 1,
+      "latencyMs": 37,
+      "inputTokens": 4000,
+      "outputTokens": 2000,
+      "simulatedBusinessSpentMinor": 25,
+      "provisionalMockMinor": 16,
+      "humanCorrectionSeconds": null,
+      "failures": [
+        {
+          "runId": "W-006-single",
+          "category": "uncertain_external_effect",
+          "symptom": "Service response lost after dispatch; reconciliation required",
+          "evidence": {
+            "actionStatus": "confirmed",
+            "events": [
+              296
+            ]
+          },
+          "hypothesizedCause": "Injected fixture response-loss condition; not attributed to the model.",
+          "causeEstablished": false,
+          "intervention": null,
+          "alternativeExplanation": "Shared specification, evidence or tool defect must be excluded before role optimization.",
+          "regressionRisk": "A new procedure could add cost or unnecessary blocking.",
+          "smallestTest": "Replay the preserved observation against explicit worker-visible rules before buying a fresh matched observation."
+        }
+      ]
+    }
+  ],
+  "accounting": {
+    "currency": "USD",
+    "actualProviderCalls": 0,
+    "actualTokenCounts": 0,
+    "mockAttempts": 42,
+    "supportingCountBufferMinor": 504,
+    "reservedMinor": 2184,
+    "provisionalMinor": 168,
+    "authoritativeSettledMinor": 0,
+    "actualBilledMinor": 0,
+    "mode": "mock",
+    "historicalMission028": {
+      "retainedMinor": 871,
+      "provisionalMinor": 124,
+      "transferredMinor": 0
+    }
+  },
+  "analysis": {
+    "rules": {
+      "version": "paired-workflow-rules-v1",
+      "independentEpisodes": 6,
+      "minimumTeamAccepted": 5,
+      "minimumPairedGain": 1,
+      "maxTeamCritical": 0,
+      "maxMachineMsPerWorkflow": 720000,
+      "maxHumanSecondsPerWorkflow": 900,
+      "requireAuthoritativeCostsForResourceQualification": true,
+      "repeatCount": 1,
+      "protected": false
+    },
+    "pairs": [
+      {
+        "episode": "W-001",
+        "single": null,
+        "team": null,
+        "difference": null
+      },
+      {
+        "episode": "W-002",
+        "single": null,
+        "team": null,
+        "difference": null
+      },
+      {
+        "episode": "W-003",
+        "single": null,
+        "team": null,
+        "difference": null
+      },
+      {
+        "episode": "W-004",
+        "single": null,
+        "team": null,
+        "difference": null
+      },
+      {
+        "episode": "W-005",
+        "single": null,
+        "team": null,
+        "difference": null
+      },
+      {
+        "episode": "W-006",
+        "single": null,
+        "team": null,
+        "difference": null
+      }
+    ],
+    "decision": "offline_only",
+    "reason": "Mock outputs verify integration; no measured AI competence or team comparison.",
+    "accepted": {
+      "single": 0,
+      "team": 0
+    },
+    "teamCritical": 0,
+    "resourcesKnown": false,
+    "resourcesPass": false,
+    "unit": "paired episode; calls are not independent observations",
+    "uncertainty": "Six related, open synthetic episodes with one observation per arm; report differences without statistical superiority or failure-rate estimation.",
+    "possibleSharedFailure": false,
+    "protectedValidation": false
+  },
+  "artifactHashes": {
+    "comparison": "79173c82e4bc38dbc53d0aba333d7580615117dd3453fc0e1806348b30e5dd44",
+    "capabilities": "8155c8f09b882f2478d306492de0ae554b4099c90205e5c0da201f7445b8628a",
+    "failures": "eb7a5714f1a94a150b4572b6c80968f4d924539501e340df83d7ba179b79868b",
+    "config": "25b8c44c796deaf6db07edcd612709891c4541f40d6f35739cc2c5654cf7038e"
+  },
+  "operationalRoot": "var/workflow-029-completion"
+}

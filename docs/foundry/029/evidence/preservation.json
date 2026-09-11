@@ -1,0 +1,62 @@
+{
+  "at": "2026-09-11T19:37:18.402Z",
+  "trees": [
+    {
+      "name": "canonical",
+      "path": "C:/Users/14844/Downloads/MIDAS",
+      "expected": "8d2c6b3db3fe5d1c63493e2774844eda0af013af",
+      "head": "8d2c6b3db3fe5d1c63493e2774844eda0af013af",
+      "status": ""
+    },
+    {
+      "name": "foundry027",
+      "path": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-027",
+      "expected": "13edfb9796e7d5ed28b86935244ec9917840c0e4",
+      "head": "13edfb9796e7d5ed28b86935244ec9917840c0e4",
+      "status": ""
+    },
+    {
+      "name": "mission028",
+      "path": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028",
+      "expected": "f6dce49150519ca5551d66ee0eb8a85624cf3c6b",
+      "head": "f6dce49150519ca5551d66ee0eb8a85624cf3c6b",
+      "status": ""
+    }
+  ],
+  "origin": "https://github.com/tjburntcc-dot/MIDAS.git",
+  "base": "f6dce49150519ca5551d66ee0eb8a85624cf3c6b",
+  "implementationHead": "67d8a57e5f193bd636232137748c44d46cd2cdfc",
+  "branch": "codex/business-workflow-team-v0-029",
+  "changedPaths": [
+    "packages/foundry/src/contracts.ts",
+    "packages/foundry/src/experiment/ledger.ts",
+    "packages/foundry/src/lab/fixture-service.ts",
+    "packages/foundry/src/model-port.ts",
+    "packages/foundry/src/runtime.ts",
+    "packages/foundry/src/workflow/analysis.ts",
+    "packages/foundry/src/workflow/cli.ts",
+    "packages/foundry/src/workflow/config.ts",
+    "packages/foundry/src/workflow/report.ts",
+    "packages/foundry/src/workflow/review.ts",
+    "packages/foundry/src/workflow/runner.ts",
+    "packages/foundry/src/workflow/task.ts",
+    "packages/foundry/test/model-port.test.ts",
+    "packages/foundry/test/runtime-extension.test.ts",
+    "packages/foundry/test/workflow-analysis.test.ts",
+    "packages/foundry/test/workflow-budget.test.ts",
+    "packages/foundry/test/workflow-process.test.ts",
+    "packages/foundry/test/workflow-review.test.ts",
+    "packages/foundry/test/workflow-task.test.ts",
+    "packages/foundry/test/workflow.test.ts",
+    "packages/foundry/tools/typecheck-workflow.mjs"
+  ],
+  "mission028": {
+    "attemptRows": 17,
+    "unfinished": 0,
+    "ledgerReservedMinor": 845,
+    "carryInMinor": 26,
+    "totalRetainedMinor": 871,
+    "closureSha256": "d301a6f44cf4181827e37c9baf01e0c3aefebbc924c9996e029078f292a512a9"
+  },
+  "campaign": "No campaign artifacts opened, reconstructed or modified; confined Foundry diff and unchanged canonical checkout verified."
+}

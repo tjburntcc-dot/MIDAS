@@ -1,0 +1,149 @@
+{
+  "kind": "workflow-execution-grant",
+  "version": "workflow-029-v1",
+  "approved": false,
+  "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-029\\var\\workflow-029-live-proposed",
+  "configHash": "faaee48d53a38707ac2e4a4f053af15991ccec291d9a094f282f134ecfb177aa",
+  "implementationHash": "cf791ddfba08e65cba36976604a128b0640ba870189e373afa40b89fe8ad702c",
+  "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+  "credentialFile": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key",
+  "route": {
+    "authorizationId": "workflow-029",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "high",
+    "serviceTier": "default",
+    "inputTokenCeiling": 8192,
+    "maxOutputTokens": 8192,
+    "deadlineMs": 180000,
+    "maxCallCost": {
+      "minorUnits": 52,
+      "currency": "USD"
+    },
+    "pricing": {
+      "inputMinorPerMillion": 1250,
+      "outputMinorPerMillion": 5000,
+      "source": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+      "effectiveAt": "2026-09-11T00:00:00Z"
+    }
+  },
+  "limits": {
+    "totalMinor": 3000,
+    "overheadReserve": {
+      "minor": 504,
+      "reason": "Conservative unpriced supporting-count exposure buffer; not a provider price or historical transfer"
+    },
+    "concurrency": 1,
+    "astraCountRequests": 48,
+    "stages": {
+      "smoke": {
+        "minor": 416,
+        "attempts": 8
+      },
+      "development": {
+        "minor": 2080,
+        "attempts": 40
+      },
+      "validation": {
+        "minor": 0,
+        "attempts": 0
+      },
+      "evaluation": {
+        "minor": 0,
+        "attempts": 0
+      }
+    },
+    "allocations": [
+      {
+        "metadataKey": "workflow",
+        "value": "W-001-single",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-001-team",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-002-team",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-002-single",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-003-single",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-003-team",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-004-team",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-004-single",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-005-single",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-005-team",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-006-team",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "workflow",
+        "value": "W-006-single",
+        "attempts": 4,
+        "minor": 208
+      },
+      {
+        "metadataKey": "configuration",
+        "value": "single",
+        "attempts": 24,
+        "minor": 1248
+      },
+      {
+        "metadataKey": "configuration",
+        "value": "team",
+        "attempts": 24,
+        "minor": 1248
+      }
+    ]
+  },
+  "data": "synthetic workflow episodes only; no customer/protected data",
+  "expiresAt": "2026-09-25T22:00:00Z",
+  "reviewer": "Mason",
+  "humanMinutes": 210,
+  "recoveryAdmissions": 0,
+  "allowProtected": false,
+  "allowBusinessActions": false
+}
