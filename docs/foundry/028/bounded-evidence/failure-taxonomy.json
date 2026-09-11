@@ -1,0 +1,29 @@
+{
+  "version": "failure-taxonomy-v1",
+  "actualObserved": [
+    {
+      "category": "transport/project-access",
+      "count": 1,
+      "stage": "diagnostic",
+      "httpStatus": 401,
+      "providerCode": "invalid_project",
+      "inferenceDispatched": false,
+      "action": "Pause unchanged credentials/project requests; obtain owner configuration correction."
+    }
+  ],
+  "preExecutionSharedDefects": [
+    {
+      "category": "task/rubric",
+      "issue": "Injected customer refund demand had no-escalation label despite active policy requiring refund referral.",
+      "fix": "Same corrected label and master guidance for both conditions."
+    },
+    {
+      "category": "evidence/population",
+      "issue": "Family variants labelled as separate lineages and source identifiers correlated with scenario.",
+      "fix": "Group by family and use neutral per-case source IDs; disclose exploratory overlap."
+    }
+  ],
+  "competenceFailures": [],
+  "challenger": null,
+  "challengerReason": "No model output or reviewed competence failure exists; cannot justify a procedure-only challenger."
+}

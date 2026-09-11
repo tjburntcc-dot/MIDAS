@@ -1,0 +1,79 @@
+{
+  "payload": {
+    "kind": "model-experiment-authorization",
+    "approved": true,
+    "approvalReference": "Explicit user message: MIDAS MISSION 028 \u2014 BOUNDED SPECIALIST DEVELOPMENT AND VALIDATION; maximum USD55 TOTAL, Sol count1, Astra smoke2+recovery2, development72, validation24, supporting counts100; September25 2026 22:00 UTC.",
+    "approvedBy": "Mission 028 founder",
+    "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+    "credentialMethod": "explicit API key file read only after verified authorization; no environment fallback",
+    "credentialFile": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-028\\var\\foundry-smoke-028\\auth\\provider\\openai.key",
+    "protectedCredentialFile": null,
+    "permittedData": "Existing purpose-built synthetic development/validation inputs; single historical D-001 Sol count. No protected final material.",
+    "specHash": "8da95ffeb6466a600ceceefde8d70a986e0ccfe920db4f993dcfc123d73b54d8",
+    "limits": {
+      "totalMinor": 5500,
+      "carryIn": [
+        {
+          "id": "A-46b97f4083c1f59ca2e9419439b469408dece367",
+          "exposureMinor": 13,
+          "evidenceHash": "daed9278f446d18ca2f401fb6b87b7d89edabd7606e29be8726d234807c32cdc"
+        },
+        {
+          "id": "A-829f417d04e6f55e1e75543876635122a57e63e4",
+          "exposureMinor": 13,
+          "evidenceHash": "121022934114d8036b4952ce4ce98f128bab3bea793273f8aa2cac0238223882"
+        }
+      ],
+      "concurrency": 1,
+      "astraCountRequests": 100,
+      "smokePrimary": 2,
+      "smokeRecovery": 2,
+      "stages": {
+        "diagnostic": {
+          "minor": 13,
+          "attempts": 1
+        },
+        "smoke": {
+          "minor": 208,
+          "attempts": 4
+        },
+        "development": {
+          "minor": 3744,
+          "attempts": 72
+        },
+        "validation": {
+          "minor": 1248,
+          "attempts": 24
+        },
+        "evaluation": {
+          "minor": 0,
+          "attempts": 0
+        }
+      }
+    },
+    "route": {
+      "authorizationId": "foundry-028-bounded",
+      "model": "gpt-6-astra",
+      "reasoningEffort": "high",
+      "serviceTier": "default",
+      "maxOutputTokens": 8192,
+      "inputTokenCeiling": 8192,
+      "deadlineMs": 180000,
+      "maxCallCost": {
+        "minorUnits": 52,
+        "currency": "USD"
+      },
+      "pricing": {
+        "inputMinorPerMillion": 1250,
+        "outputMinorPerMillion": 5000,
+        "source": "https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M",
+        "effectiveAt": "2026-09-11T00:00:00Z"
+      }
+    },
+    "expiresAt": "2026-09-25T22:00:00Z",
+    "pricingVerifiedAt": "2026-09-11",
+    "allowProtected": false,
+    "boundedMission": true
+  },
+  "signature": "fWz2iuU10XcwPYvXeY+hm0VDI0N0OGGiAPyRfOcjjDDqsjMCmVGovlwBaRKKKZscs/sB74eo3t6Bep1QEyc8AA=="
+}

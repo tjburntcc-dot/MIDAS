@@ -1,0 +1,60 @@
+{
+  "kind": "experimental-capability-record",
+  "mission": "028",
+  "task": "Billing-status response and operator playbook",
+  "businessContextRequired": [
+    "Authorized current policy with effective dates and scope",
+    "Dated invoice-status evidence or explicit missing evidence",
+    "Customer request",
+    "Read-and-advise authority and tone"
+  ],
+  "requiredTools": [],
+  "retrieval": "Supplied sources only; retrieval competence untested",
+  "authorityLimits": [
+    "No refunds",
+    "No account modification",
+    "No guaranteed payment dates",
+    "No business actions"
+  ],
+  "baselineVersion": "baseline-master-v1",
+  "baselineArtifact": "baseline.initial.json",
+  "model": {
+    "route": "gpt-6-astra",
+    "reasoning": "high",
+    "serviceTier": "default",
+    "immutableRevision": null,
+    "accessVerified": false
+  },
+  "observedPerformance": null,
+  "evidencePopulation": "12 development and six closely related open synthetic validation cases; not customer or confidential holdout material",
+  "actualInferenceAttempts": 0,
+  "knownFailureModes": [
+    {
+      "kind": "provider-project-access",
+      "evidence": "Sol count HTTP401 invalid_project; req_be084a4686c04a1b8153035a88a1e3bb",
+      "scope": "Project context rejected; exact membership/key/ID cause unresolved"
+    }
+  ],
+  "escalationNeeds": [
+    "Project owner for project/key association",
+    "Founder for semantic review and measured correction",
+    "Independent custodian for future protected cases"
+  ],
+  "costs": {
+    "currency": "USD",
+    "retainedExposureMinor": 39,
+    "authoritativeSettledMinor": 0,
+    "authoritativeBillingEvidenceAvailable": false,
+    "actualSpend": null,
+    "usageBasedProvisionalEstimate": null
+  },
+  "latency": {
+    "countDiagnosticMs": 1217,
+    "inferenceMs": null
+  },
+  "humanCorrectionSeconds": null,
+  "qualificationStatus": "experimental-non-production-unqualified",
+  "candidateDecision": "blocked",
+  "productionPromotion": false,
+  "teamAssignmentUse": "No competence-based assignment supported yet; records access prerequisite and task/context/authority contract only"
+}

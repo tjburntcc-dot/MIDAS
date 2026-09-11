@@ -1,0 +1,32 @@
+{
+  "kind": "protected-comparison-readiness",
+  "status": "not_frozen",
+  "baseline": "baseline-master-v1",
+  "baselineEvidence": "No successful inference yet",
+  "challenger": null,
+  "validationResults": null,
+  "population": "Existing open synthetic billing cases; six related families",
+  "gates": {
+    "projectAccess": "blocked: HTTP401 invalid_project",
+    "founderCalibration": "pending actual outputs and timed review",
+    "reviewedDevelopmentFailure": "none observed; no challenger justification",
+    "exploratoryLock": "not created",
+    "immutableModelRevision": "unverified alias; cannot satisfy protected freeze",
+    "independentCustody": "not established; no protected cases created",
+    "protectedCalibrationManifest": "not supplied",
+    "protectedSpendingRelease": "not authorized"
+  },
+  "forbiddenActions": [
+    "create protected cases in developer workspace",
+    "claim measured role superiority",
+    "promote or certify",
+    "run protected evaluation"
+  ],
+  "nextAuthorizedCommandsAfterEvidencedSameProjectCorrection": [
+    "resolve-access",
+    "bounded-batch smoke-primary-1",
+    "bounded-batch smoke-primary-2",
+    "bounded-batch baseline-calibration-1",
+    "review-pack"
+  ]
+}

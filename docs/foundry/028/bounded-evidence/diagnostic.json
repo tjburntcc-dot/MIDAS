@@ -1,0 +1,44 @@
+{
+  "id": "SOL-COUNT-ONE",
+  "stage": "diagnostic",
+  "metadata": {
+    "caseId": "D-001",
+    "model": "gpt-5.6-sol",
+    "operation": "token_count_only",
+    "source": "actual-provider"
+  },
+  "requestHash": "0b5638188b12509830efaefc04d5e2f2f37662d98a3043865b04e6f4c397aef3",
+  "status": "failed",
+  "errorCode": "TOKEN_COUNT_HTTP_ERROR",
+  "inferenceDispatchIntent": false,
+  "countDispatchIntent": true,
+  "reservationMinor": 13,
+  "cost": {
+    "basis": "admission before token-count/provider access",
+    "money": null,
+    "status": "unknown"
+  },
+  "invoice": null,
+  "observation": {
+    "latencyMs": 1220,
+    "tokenCount": {
+      "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+      "errorParameter": null,
+      "httpStatus": 401,
+      "inferenceRequestHash": "0b5638188b12509830efaefc04d5e2f2f37662d98a3043865b04e6f4c397aef3",
+      "inputTokens": null,
+      "latencyMs": 1217,
+      "message": "Provider rejected the project.",
+      "messageSource": "local_allowlist",
+      "operation": "token_count",
+      "phase": "http_error",
+      "providerErrorCode": "invalid_project",
+      "providerErrorType": "invalid_request_error",
+      "providerRequestId": "req_be084a4686c04a1b8153035a88a1e3bb",
+      "requestHash": "e49066a04492f65d85e99aaaae9867b8703689263677f732cfc83a344636a23e",
+      "unrecognizedErrorFieldsWithheld": false
+    }
+  },
+  "admittedAt": "2026-09-11T01:06:52.167Z",
+  "finishedAt": "2026-09-11T01:06:53.387Z"
+}
