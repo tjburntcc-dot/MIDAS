@@ -19,6 +19,8 @@ export const masterProcedure = `Act as an excellent business workflow owner. Est
 export function rolesFor(configuration: Configuration) { const role = (id: string, procedure: string): Role => ({ id, version: 'workflow-role-v1', procedure, competencies: ['support_playbook', 'artifact_delivery', 'outcome_verification'], tools: ['lab.evidence', 'lab.publish', 'lab.readback'], predecessor: null, model: route.model, qualification: 'experimental_unqualified' }); const single = role('workflow-owner', masterProcedure); const owner = role('workflow-owner', masterProcedure + ' You own evidence gathering, business decision and first draft. Hand off explicit evidence and rationale.'); const verifier = role('outcome-verifier', masterProcedure + ' You independently review and revise the supplied proposal before approval, then inspect observed delivery. Do not assume the owner is correct.'); return configuration === 'single' ? { analyst: single, operator: single, verifier: single } : { analyst: owner, operator: verifier, verifier }; }
 export function prepare(root: string, mode: 'mock' | 'live' = 'mock', profile: 'original' | 'value' | 'recovery' | 'w006' = 'original', parentRoot?: string) { const c = prepareConfig(root, mode, episodes, profile, parentRoot); write(root, 'procedures.json', { version: 'workflow-role-v1', single: rolesFor('single'), team: rolesFor('team') }, true); return c; }
 export type RunOptions = {
+    /** Offline business-loop binding only. Frozen into the run extension identity. */
+    businessContext?: { version: string; planHash: string; understanding: unknown; bottleneck: unknown; workPlan: unknown };
     fault?: string;
     crash?: string;
     checkpoint?: string;
@@ -42,6 +44,7 @@ export async function runWorkflow(root: string, runId: string, options: RunOptio
         requireThat(item, 'UNDECLARED_WORKFLOW');
         const grant = checkGrant(root, c);
         requireThat(c.mode === 'mock' || (!options.fault && !options.crash), 'LIVE_FAULT_INJECTION_DENIED');
+        requireThat(!options.businessContext || c.mode === 'mock', 'BUSINESS_LOOP_LIVE_NOT_AUTHORIZED');
         const ledger = new ModelLedger(store, accountScope, grant.hash, c.limits);
         const s = workflowScope(runId), p = worker(s), env = environmentFor(item.episode);
         if (isLinkedVersion(c.version)) requireThat(runId === c.schedule[0].runId, 'RECOVERY_WORKFLOW_ONLY');
@@ -53,7 +56,7 @@ export async function runWorkflow(root: string, runId: string, options: RunOptio
         }
         if (c.mode === 'live' && c.version !== valueVersion && !isLinkedVersion(c.version) && item.stage !== 'smoke')
             requireThat(existsSync(join(root, 'continuation.json')) && read(root, 'continuation.json').configHash === hash(c), 'DIAGNOSTIC_REVIEW_REQUIRED');
-        const extension: any = { id: hash({ version: c.version, mode: c.mode, configuration: item.configuration, implementation: c.implementationHash, roles: rolesFor(item.configuration) }), maxModelCost: route.maxCallCost, skipLearning: true, reviewTerminalDecision: true, roles: () => rolesFor(item.configuration), validate: validateWorkflowOutput,
+        const extension: any = { id: hash({ version: c.version, mode: c.mode, configuration: item.configuration, implementation: c.implementationHash, roles: rolesFor(item.configuration), ...(options.businessContext ? { businessContextHash: hash(options.businessContext) } : {}) }), maxModelCost: route.maxCallCost, skipLearning: true, reviewTerminalDecision: true, roles: () => rolesFor(item.configuration), validate: validateWorkflowOutput,
             context: ({ run, task, observed }: any) => buildWorkflowContext(run, task, observed, store.get('model', scopeKey(run.scope) + '/operate')?.result?.output ?? null, options),
             recover: (id: string) => ledger.get(id)?.result ?? null,
             afterModelPersist: (task: string) => crashAt(options, 'persisted-' + task),
@@ -123,6 +126,7 @@ export async function runWorkflow(root: string, runId: string, options: RunOptio
 export function buildWorkflowContext(run: any, task: string, observed: any, priorReview: any, options: RunOptions = {}) {
     const evidence = (run.evidence ?? []).map((response: any) => ({ ...response, ...(response.requested ? { requested: { variable: response.requested.variable, source: response.requested.source, deadline: response.requested.deadline, maxCost: response.requested.maxCost } } : {}) }));
     const base: any = { snapshot: run.snapshot, evidence, contextVersion: 'workflow-context-v3', toolVersion: 'fixture-tools-v1', evidenceDeadline: new Date(Date.parse(run.createdAt) + 86400000).toISOString() };
+    if (options.businessContext) base.business = options.businessContext;
     if (task === 'decide' || task === 'operate') base.question = run.question;
     if (task === 'operate' || task === 'verify') {
         const { draft, ...decision } = run.decision ?? {};
