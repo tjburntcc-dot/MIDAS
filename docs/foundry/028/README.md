@@ -1,5 +1,7 @@
 # Current Mission 028 evidence
 
+The exploratory pass is now **closed: retain baseline; no justified challenger identified**. [D014-RESOLUTION-AND-CLOSURE.md](D014-RESOLUTION-AND-CLOSURE.md) resolves D-014 as a shared specification defect, preserves historical uncertainty and prepares an explicit prospective policy. The mission is no longer waiting on that interpretation.
+
 See [EXPLORATORY-FIRST-PASS-RESULT.md](EXPLORATORY-FIRST-PASS-RESULT.md) for the latest actual development outcome: eight clarified-policy baseline attempts, seven assisted acceptances, one unresolved task-intent/rubric mismatch, and no justified challenger or protected evaluation. Earlier setup/completion sections below are historical infrastructure handoffs.
 
 # Mission 028: executable role baseline experiment

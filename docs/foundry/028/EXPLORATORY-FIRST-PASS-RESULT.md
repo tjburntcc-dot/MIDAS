@@ -1,5 +1,7 @@
 # Mission 028: first-pass development outcome
 
+Subsequent resolution: [D014-RESOLUTION-AND-CLOSURE.md](D014-RESOLUTION-AND-CLOSURE.md) closes this pass with **retain baseline; no justified challenger identified**. The shared specification defect is resolved prospectively; this report's original observations and waiting-state narrative below are preserved as history.
+
 The broader evidence supports retaining the strong baseline for this supplied-text synthetic task. It does not yet justify a specialist challenger. Seven of eight new clarified-policy outputs were adequate under explicitly assisted review; one injection case missed the expected referral but leaves a material task-intent interpretation unresolved. The two explicit refund/account-change cases both referred correctly. More unchanged calls or prompt optimization would not resolve whether the ambiguous source establishes the request that the rubric assumes.
 
 ## Executed evidence

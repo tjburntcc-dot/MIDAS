@@ -1,0 +1,14 @@
+{
+  "originalFilesUnchanged": true,
+  "originalAttemptsUnchanged": true,
+  "d014OutputUnchanged": true,
+  "d014ReviewUnchanged": true,
+  "pendingAttempts": 0,
+  "totalRetainedMinor": 767,
+  "newProviderRequests": 0,
+  "focusedTests": {
+    "passed": 2,
+    "failed": 0
+  },
+  "executionCoreChanged": false
+}
