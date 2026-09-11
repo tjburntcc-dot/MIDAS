@@ -1,0 +1,78 @@
+{
+  "kind": "assisted-calibration-status",
+  "recordedAt": "2026-09-11T10:50:51.867Z",
+  "sourceSha256": "18b99cc522a8f1b25c87e5d97c645c9c23b1a48d7d6e8c8007456e17889925a3",
+  "sourceExportedAt": "2026-09-11T02:07:21.423Z",
+  "metrics": {
+    "assistedJudgments": 4,
+    "assistedAccepted": 4,
+    "assistedCritical": 0,
+    "independentHumanReviews": 0,
+    "eligibleIndependentTimingObservations": 0,
+    "independentReviewCorrectionSeconds": null,
+    "meanIndependentReviewCorrectionSeconds": null
+  },
+  "implementationHash": "28f764f5df44ff3f667d704ff896153c270ff5bf6a73e6c8ac33e9d5ce47e600",
+  "humanReviewCount": 0,
+  "calibrationGate": null,
+  "exposure": {
+    "current": {
+      "attempts": 7,
+      "reserved": 325,
+      "settled": 0,
+      "provisional": 41,
+      "unresolved": 7
+    },
+    "historicalExposureMinor": 26,
+    "totalExposureMinor": 351,
+    "unusedExposureMinor": 5149,
+    "stages": {
+      "diagnostic": {
+        "attempts": 1,
+        "reserved": 13,
+        "settled": 0,
+        "provisional": 0,
+        "unresolved": 1,
+        "attemptLimit": 1
+      },
+      "smoke": {
+        "attempts": 2,
+        "reserved": 104,
+        "settled": 0,
+        "provisional": 12,
+        "unresolved": 2,
+        "attemptLimit": 4
+      },
+      "development": {
+        "attempts": 4,
+        "reserved": 208,
+        "settled": 0,
+        "provisional": 29,
+        "unresolved": 4,
+        "attemptLimit": 72
+      },
+      "validation": {
+        "attempts": 0,
+        "reserved": 0,
+        "settled": 0,
+        "provisional": 0,
+        "unresolved": 0,
+        "attemptLimit": 24
+      },
+      "evaluation": {
+        "attempts": 0,
+        "reserved": 0,
+        "settled": 0,
+        "provisional": 0,
+        "unresolved": 0,
+        "attemptLimit": 0
+      }
+    }
+  },
+  "providerCallsThisCorrection": 0,
+  "independentValidation": false,
+  "decision": "Baseline unchanged; no consequential failure established by four assisted judgments. Resolve D-001 escalation interpretation and calibration eligibility before further development.",
+  "unresolvedRubricQuestion": "D-001: does a coherently pending invoice with unconfirmed collection require immediate referral, or verification followed by conditional referral?",
+  "reviewRequirement": "Existing runtime requires signed measured reviews for calibration. This amendment neither supplies those nor changes the gate. Assistance does not establish independent validation.",
+  "rawExportVerified": true
+}

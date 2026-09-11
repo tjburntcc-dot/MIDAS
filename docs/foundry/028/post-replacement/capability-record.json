@@ -74,7 +74,20 @@
   },
   "humanCorrectionSeconds": null,
   "qualificationStatus": "experimental-non-production-unqualified",
-  "candidateDecision": "awaiting founder review",
+  "candidateDecision": "Baseline unchanged; no consequential failure established by four assisted judgments. Resolve D-001 escalation interpretation and calibration eligibility before further development.",
   "productionPromotion": false,
-  "teamAssignmentUse": "Transport and structured-output compatibility demonstrated on six synthetic trials. Human task-quality qualification remains unmeasured."
+  "teamAssignmentUse": "Six successful synthetic transport trials and four AI-assisted founder calibration judgments. Independent task-quality validation and independent review/correction effort remain unmeasured; experimental only.",
+  "assistedCalibration": {
+    "assistedJudgments": 4,
+    "assistedAccepted": 4,
+    "assistedCritical": 0,
+    "independentHumanReviews": 0,
+    "eligibleIndependentTimingObservations": 0,
+    "independentReviewCorrectionSeconds": null,
+    "meanIndependentReviewCorrectionSeconds": null,
+    "sourceSha256": "18b99cc522a8f1b25c87e5d97c645c9c23b1a48d7d6e8c8007456e17889925a3",
+    "annotation": "reviews/calibration-assisted-18b99cc522a8f1b25c87e5d97c645c9c23b1a48d7d6e8c8007456e17889925a3.json",
+    "independentValidation": false,
+    "limitations": "Assisted acceptance is exploratory calibration evidence only. No independent quality validation, measured independent correction effort or specialist improvement is established. Do not import these records as experiment-review or mark the existing calibration gate complete."
+  }
 }

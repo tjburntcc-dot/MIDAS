@@ -1,5 +1,7 @@
 # Mission 028: successful Astra smoke and first baseline evidence
 
+Subsequent evidence correction: all four founder reviews were AI-assisted. See [ASSISTED-CALIBRATION-CORRECTION.md](ASSISTED-CALIBRATION-CORRECTION.md) for the preserved export, superseding provenance annotation, timing exclusions and still-incomplete review gate. The instructions and results below describe the earlier smoke/calibration handoff; its blanket unassisted export attestation has been corrected in the review page.
+
 The credential replacement resolved the observed project-access failure for the authorized Astra route. Six actual Astra High inferences completed: two transport smoke cases and four initial baseline development cases. All returned gpt-6-astra, completed status, usable strict-contract JSON and usage inside the approved limits. This establishes route/output compatibility and supplies real baseline material; it does not yet establish reviewed task competence or specialist improvement.
 
 ## Executed scope and accounting
