@@ -34,7 +34,7 @@ export type Role = {
     tools: string[];
     predecessor: string | null;
     model: string;
-    qualification: 'fixture_only';
+    qualification: 'fixture_only' | 'experimental_unqualified';
 };
 export type ModelRequest = {
     scope: Scope;

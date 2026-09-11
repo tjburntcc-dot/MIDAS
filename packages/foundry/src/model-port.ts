@@ -108,6 +108,11 @@ export function responsesModelPort(options: {
                 const text = (raw.output ?? []).flatMap((item: any) => item.content ?? []).filter((item: any) => item.type === 'output_text').map((item: any) => item.text).join('');
                 requireThat(text.length > 0, 'MODEL_OUTPUT_MISSING');
                 const output = JSON.parse(text);
+                // Preserve the model's bounded JSON artifact, not HTTP headers or the provider envelope.
+                // A provider echo of the credential is redacted before durable diagnostic storage.
+                const diagnosticOutput=JSON.parse(JSON.stringify(output).split(credential).join('[REDACTED]'));
+                await budget.observed?.(request,{outputArtifact:diagnosticOutput});
+                requireThat(!text.includes(credential), 'MODEL_SENSITIVE_OUTPUT');
                 validateOutput(request.task, output);
                 return modelResult({ output, usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost: actual }, route: { provider: 'openai-responses', model: raw.model, kind: 'live' }, metadata: { providerRequestId: requestId, cachedInputTokens: Number.isSafeInteger(usage.input_tokens_details?.cached_tokens) ? usage.input_tokens_details.cached_tokens : null, latencyMs: Date.now() - started } });
             }

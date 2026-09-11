@@ -66,6 +66,15 @@ export class FixtureService implements ActionPort {
         }
         return this.attest(p, result);
     }
+    /** Read-only report projection. Unlike reconcile, absence never seals an effect key. */
+    observe(p: Proposal): Observation {
+        proposal(p);
+        const key = businessKey(p.scope) + '/' + p.idempotencyKey;
+        const row = this.db.prepare('SELECT requestHash,result FROM effects WHERE key=?').get(key);
+        if (!row) return {status:'unknown'};
+        requireThat(row.requestHash === hash(p), 'EXTERNAL_IDEMPOTENCY_CONFLICT');
+        return this.attest(p, JSON.parse(String(row.result)));
+    }
     reconcile(p: Proposal): Observation {
         proposal(p);
         if (this.fault === 'unavailable')

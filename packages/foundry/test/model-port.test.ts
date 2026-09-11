@@ -29,3 +29,9 @@ test('invalid output does not overwrite already recorded provisional usage with 
     assert.deepEqual(t.calls.map(x => x.kind), ['reserve', 'settle']);
     assert.equal(t.calls[1].cost.status, 'provisional');
 });
+test('failed schema output preserves bounded diagnostic artifact and credential echoes never persist or return',async()=>{
+ for(const content of [{wrong:'shape'},{decision:'FAKE-NOT-A-CREDENTIAL'}]){
+  const observed:any[]=[];const t=inputs({budget:{async reserve(){},async settle(){},async uncertain(){},async observed(_r:any,o:any){observed.push(o);}},transport:async()=>new Response(JSON.stringify({id:'mock',model:'explicit-test-model',status:'completed',usage:{input_tokens:20,output_tokens:10},output:[{content:[{type:'output_text',text:JSON.stringify(content)}]}]}))});
+  await assert.rejects(t.port.run(t.request));assert.ok(observed.some(x=>x.outputArtifact));assert.doesNotMatch(JSON.stringify(observed),/FAKE-NOT-A-CREDENTIAL/);
+ }
+});
