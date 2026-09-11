@@ -1,3 +1,7 @@
+# Current Mission 028 evidence
+
+See [EXPLORATORY-FIRST-PASS-RESULT.md](EXPLORATORY-FIRST-PASS-RESULT.md) for the latest actual development outcome: eight clarified-policy baseline attempts, seven assisted acceptances, one unresolved task-intent/rubric mismatch, and no justified challenger or protected evaluation. Earlier setup/completion sections below are historical infrastructure handoffs.
+
 # Mission 028: executable role baseline experiment
 
 Gate 1 (offline implementation and readiness) is complete. No actual-model attempt,

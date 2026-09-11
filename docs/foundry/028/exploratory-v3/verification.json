@@ -1,0 +1,15 @@
+{
+  "tests": 103,
+  "failed": 0,
+  "semanticTypecheck": {
+    "compiler": "6.0.3",
+    "strict": true,
+    "skipLibCheck": true,
+    "errors": 0,
+    "sourceFiles": 15
+  },
+  "originalFilesUnchanged": true,
+  "originalAttemptsUnchanged": true,
+  "providerFixturesUsedForTests": true,
+  "actualProviderCallsSeparate": true
+}
