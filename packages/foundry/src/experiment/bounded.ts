@@ -90,7 +90,8 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
     try{
         for(const field of ['id','decision','whyCallsHelp','expectedArtifact','existingEvidenceInsufficient'])requireThat(typeof (plan as any)[field]==='string'&&(plan as any)[field].length>3,'BATCH_DECISION_REQUIRED');
         requireThat(['smoke','development','validation'].includes(plan.stage)&&plan.cells.length>0&&plan.cells.length<=4,'BOUNDED_BATCH_SIZE');
-        requireThat(x.ledger.get('SOL-COUNT-ONE')?.result?.counted,'COUNT_DIAGNOSTIC_NOT_SUCCESSFUL');
+        const diagnostic=x.ledger.get('SOL-COUNT-ONE');
+        requireThat(diagnostic&&(diagnostic.result?.counted||x.store.get('project-access-resolution','one')?.diagnosticHash===hash(publicAttempt(diagnostic))),'COUNT_DIAGNOSTIC_NOT_SUCCESSFUL');
         const cases:Case[]=readJSON(join(root,'cases.json'));requireThat(hash(cases)===x.spec.casesHash,'CASE_MANIFEST_CHANGED');
         requireThat(!existsSync(join(root,'freeze.json')),'EXPERIMENT_FROZEN');
         if(plan.stage!=='smoke')requireThat(['D-001','D-002'].every(id=>x.ledger.rows().some(r=>r.stage==='smoke'&&r.metadata.caseId===id&&r.result&&!r.errorCode)),'SUCCESSFUL_SMOKE_REQUIRED');
@@ -125,7 +126,7 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
             }
             const failed=rows.filter(r=>r.stage!=='diagnostic'&&r.errorCode);
             requireThat(failed.every(r=>rows.some(s=>s.metadata.recoveryOf===r.id&&!s.errorCode&&s.finishedAt)||cell.recoveryOf===r.id),'TRANSPORT_FAILURE_REQUIRES_RESOLUTION');
-            const metadata={condition:cell.condition,caseId:c.id,caseHash:hash(c),inputHash:hash(c.input),family:c.family,cluster:c.cluster,repeat:cell.repeat,roleHash:hash(role),source:'actual-model',businessExecution:'none',batchId:plan.id,...(cell.recoveryOf?{recoveryOf:cell.recoveryOf,cause:cell.cause,correction:cell.correction,correctionEvidenceHash:cell.correctionEvidenceHash}:{})};
+            const metadata={condition:cell.condition,caseId:c.id,caseHash:hash(c),inputHash:hash(c.input),family:c.family,cluster:c.cluster,repeat:cell.repeat,roleHash:hash(role),source:'actual-model',businessExecution:'none',batchId:plan.id,implementationHash:implementationHash(),...(cell.recoveryOf?{recoveryOf:cell.recoveryOf,cause:cell.cause,correction:cell.correction,correctionEvidenceHash:cell.correctionEvidenceHash}:{})};
             const port=providerPort(x.spec.route,x.auth.projectId,x.auth.credentialFile,x.ledger.port(plan.stage,metadata),transport);
             try{x.ledger.finish(request.requestId,await port.run(request),null);}
             catch(e){if(x.ledger.get(request.requestId))x.ledger.finish(request.requestId,null,(e as any).code??'MODEL_FAILED');else throw e;}
@@ -138,6 +139,15 @@ export async function boundedBatch(root:string,plan:Batch,transport:typeof fetch
 
 function boundedTotals(x:any){const t=x.ledger.totals(),carry=x.ledger.carryExposure();return {current:t,historicalExposureMinor:carry,totalExposureMinor:carry+t.reserved+t.settled,unusedExposureMinor:x.spec.limits.totalMinor-carry-t.reserved-t.settled,stages:Object.fromEntries(Object.keys(x.spec.limits.stages).map(s=>[s,{...x.ledger.totals(s),attemptLimit:x.spec.limits.stages[s].attempts}]))};}
 export function boundedReport(root:string){const x=opened(root,true);try{return {mission:'028',authorizationHash:x.authorizationHash,route:x.spec.route,exposure:boundedTotals(x),attempts:x.ledger.rows().map(publicAttempt),humanReviewCount:x.ledger.rows().filter(r=>x.store.get('experiment-review',x.ledger.key(r.id))).length,measuredImprovement:null,protectedFreeze:existsSync(join(root,'freeze.json'))};}finally{x.store.close();}}
+
+// Founder-supplied access correction lets the already authorized Astra smoke perform
+// its own mandatory count. It does not repeat the exhausted Sol diagnostic.
+export function recordAccessResolution(root:string,envelope:any){const x=opened(root);try{
+    const r=verified(envelope,readFileSync(join(root,'auth/owner.pub'),'utf8')),d=x.ledger.get('SOL-COUNT-ONE');
+    requireThat(d?.finishedAt&&['invalid_project','invalid_api_key','permission_denied'].includes(d.observation?.tokenCount?.providerErrorCode),'ACCESS_FAILURE_REQUIRED');
+    requireThat(r.kind==='project-access-resolution'&&r.authorizationHash===x.authorizationHash&&r.projectId===x.auth.projectId&&r.diagnosticHash===hash(publicAttempt(d))&&r.source==='founder-observed-configuration'&&r.cause?.length>20&&r.correctiveAction?.length>20&&/^[a-f0-9]{64}$/.test(r.nonSecretEvidenceHash),'ACCESS_CORRECTION_EVIDENCE_REQUIRED');
+    x.store.transaction(()=>x.store.put('project-access-resolution','one',r,null));return {recorded:true,providerAccessStillUnverified:true,next:'First Astra smoke admission includes its own mandatory count; no Sol retry.'};
+}finally{x.store.close();}}
 
 export function recordCalibration(root:string,envelope:any){const x=opened(root,true);try{
     const r=verified(envelope,x.spec.reviewerPublicKey);requireThat(r.kind==='founder-calibration'&&r.reviewer===x.spec.reviewer&&r.complete===true&&r.reviewReference&&r.rubricHash===hash(readJSON(join(root,'rubric.json'))),'FOUNDER_CALIBRATION_REQUIRED');

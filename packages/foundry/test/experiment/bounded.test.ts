@@ -5,9 +5,9 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {StateStore} from '../../src/state.ts';
 import {canonical,rawHash,hash} from '../../src/contracts.ts';
-import {keypair,signed,writeJSON,readJSON,executionHash} from '../../src/experiment/config.ts';
+import {keypair,signed,writeJSON,readJSON,executionHash,installImplementationRelease,implementationHash} from '../../src/experiment/config.ts';
 import {developmentCases,offlineOutput} from '../../src/experiment/task.ts';
-import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport} from '../../src/experiment/bounded.ts';
+import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport,recordAccessResolution} from '../../src/experiment/bounded.ts';
 import {ModelLedger} from '../../src/experiment/ledger.ts';
 import {openExperiment,requestFor,roleArtifact,runDevelopment} from '../../src/experiment/workflow.ts';
 function setup(){
@@ -40,4 +40,17 @@ test('carry-in evidence uniqueness and aggregate/stage/count ceilings are enforc
 });
 test('smoke recovery requires a finished failed predecessor plus corrective evidence, uses new identity and retains predecessor',async()=>{
  const t=setup(),m=mock(t.root,true);await boundedDiagnostic(t.root,m.transport);const failed=await boundedBatch(t.root,plan('primary-fail'),m.transport);const parent=failed.attempts[0].id;const recovery={caseId:'D-001',repeat:0,condition:'baseline',recoveryOf:parent};await assert.rejects(boundedBatch(t.root,plan('no-evidence','smoke',[recovery as any]),m.transport),/RECOVERY_EVIDENCE_REQUIRED/);const good=mock(t.root);await boundedBatch(t.root,plan('corrected','smoke',[{...recovery,cause:'Mock permission configuration was incorrect.',correction:'Mock access configuration corrected and verified.',correctionEvidenceHash:hash('mock correction only')}]),good.transport);const rows=boundedReport(t.root).attempts;assert.equal(rows.filter(r=>r.stage==='smoke').length,2);assert.equal(rows.find(r=>r.id===parent)!.reservationMinor,52);assert.equal(rows.find(r=>r.metadata.recoveryOf===parent)!.inferenceDispatchIntent,true);
+});
+
+test('documented same-project access correction permits authorized Astra count without a second Sol call',async()=>{
+ const t=setup();let sol=0;const fail:any=async()=>{sol++;return new Response(JSON.stringify({error:{type:'invalid_request_error',code:'invalid_project'}}),{status:401});};
+ const d=await boundedDiagnostic(t.root,fail);const r={kind:'project-access-resolution',authorizationHash:hash(t.grant),projectId:'proj_test',diagnosticHash:hash(d),source:'founder-observed-configuration',cause:'Mock key belonged to a different project.',correctiveAction:'Mock owner corrected project key access in dashboard.',nonSecretEvidenceHash:hash('MOCK EVIDENCE')};
+ assert.throws(()=>recordAccessResolution(t.root,signed({...r,projectId:'proj_different'},t.keys.privateKey)),/ACCESS_CORRECTION_EVIDENCE_REQUIRED/);
+ recordAccessResolution(t.root,signed(r,t.keys.privateKey));const m=mock(t.root);await boundedBatch(t.root,plan('post-correction','smoke',[{caseId:'D-001',repeat:0,condition:'baseline'}]),m.transport);assert.equal(sol,1);assert.equal(m.counts(),1);assert.equal(m.inferences(),1);assert.equal(boundedReport(t.root).exposure.totalExposureMinor,91);
+});
+test('implementation release cannot alter grant and cannot be installed over an unfinished attempt',async()=>{
+ const t=setup(),spec=readJSON(join(t.root,'spec.json')),release={kind:'implementation-release',authorizationHash:hash(t.grant),previousImplementationHash:spec.implementationHash,implementationHash:implementationHash(),reason:'Focused offline correction under existing user authorization.'};
+ assert.throws(()=>installImplementationRelease(t.root,signed({...release,authorizationHash:hash('other')},t.keys.privateKey)),/IMPLEMENTATION_CHANGED/);
+ const x=openExperiment(t.root),c=readJSON(join(t.root,'cases.json'))[0],r=requestFor(x.spec.scope,roleArtifact(t.root,'baseline','gpt-6-astra'),c,0,'smoke',52),bytes='mock';try{await x.ledger.port('smoke',{caseId:c.id}).prepare!(r,{minorUnits:52,currency:'USD'},rawHash(bytes),bytes);assert.throws(()=>installImplementationRelease(t.root,signed(release,t.keys.privateKey)),/IN_FLIGHT_IMPLEMENTATION_PINNED/);x.ledger.finish(r.requestId,null,'MOCK_FAILED');}finally{x.store.close();}
+ const before=readFileSync(join(t.root,'authorization.json'));installImplementationRelease(t.root,signed(release,t.keys.privateKey));assert.deepEqual(readFileSync(join(t.root,'authorization.json')),before);assert.equal(boundedReport(t.root).exposure.totalExposureMinor,78);
 });

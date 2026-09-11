@@ -1,8 +1,8 @@
-import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport,recordCalibration,lockExploratory} from './bounded.ts';
+import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport,recordCalibration,lockExploratory,recordAccessResolution} from './bounded.ts';
 import { resolve, join } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { prepare, approve, readJSON, writeJSON, signed, keypair } from './config.ts';
+import { prepare, approve, readJSON, writeJSON, signed, keypair, installImplementationRelease } from './config.ts';
 import { runDevelopment, reviewPacket, recordReview, candidate, freeze, report, openExperiment } from './workflow.ts';
 import { rehearse } from './rehearsal.ts';
 import { createManifest, evaluateNext, releaseAggregate, replayAggregate } from './custodian.ts';
@@ -22,6 +22,8 @@ export async function main(argv = process.argv.slice(2)) {
     else if(command==='bounded-diagnostic')result=await boundedDiagnostic(root);
     else if(command==='bounded-batch')result=await boundedBatch(root,readJSON(args.file));
     else if(command==='bounded-report')result=boundedReport(root);
+    else if(command==='resolve-access')result=recordAccessResolution(root,readJSON(args.file));
+    else if(command==='release-implementation')result=installImplementationRelease(root,readJSON(args.file));
     else if(command==='calibrate')result=recordCalibration(root,readJSON(args.file));
     else if(command==='lock-exploratory')result=lockExploratory(root);
     else if (command === 'prepare')
