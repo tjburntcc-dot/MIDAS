@@ -28,7 +28,8 @@ export function supportBrief(): Brief {
 export function executionFor(loop: BusinessLoop, planId: string, root: string) {
     const p = loop.getPlan(planId);
     requireThat(p?.opportunity?.adapter === adapterId, 'SUPPORTED_PLAN_REQUIRED');
-    requireThat(hash(p.opportunity) === hash(supportBrief().opportunities[0]), 'ADAPTER_TASK_CONTRACT_MISMATCH');
+    const taskContract = (o: any) => ({ adapter: o.adapter, tasks: o.tasks, acceptance: o.acceptance });
+    requireThat(hash(taskContract(p.opportunity)) === hash(taskContract(supportBrief().opportunities[0])), 'ADAPTER_TASK_CONTRACT_MISMATCH');
     // Current integrated adapter executes only the proven single baseline. Other assignments remain honest proposals.
     requireThat(p.team.workers.length === 1 && p.team.workers[0].id === 'workflow-owner' && p.team.workers[0].version === 'workflow-role-v1' && p.team.workers[0].procedure === rolesFor('single').operator.procedure, 'ASSIGNMENT_NOT_IMPLEMENTED_BY_ADAPTER');
     return { root: resolve(root, 'executions', hash({ scope: loop.scope, planId }).slice(0, 24)), runId: 'W-001-single', adapter: adapterId };

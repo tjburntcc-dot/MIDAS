@@ -20,6 +20,8 @@ export type RunExtension = {
     skipLearning?: boolean;
     reviewTerminalDecision?: boolean;
     afterModelPersist?: (task: ModelRequest['task']) => void;
+    /** Adapter-owned propagation of a reviewed recommendation; original decision remains immutable evidence. */
+    reviewedDecision?: (run: any, output: any) => any;
 };
 export class RunController {
     store: StateStore;
@@ -222,12 +224,18 @@ export class RunController {
             }
             else if (run.phase === 'prepare') {
                 const output = await this.model(s, principal, model, 'operate', run.roles.operator);
+                const reviewedDecision = this.extension?.reviewedDecision?.(structuredClone(run), structuredClone(output));
+                if (reviewedDecision) {
+                    const { draft: reviewedDraft, ...plain } = reviewedDecision;
+                    requireThat(environment.validateDecision(run.snapshot, run.evidence, plain).ok, 'REVIEWED_DECISION_INVALID');
+                }
                 const draft = environment.actionFor(output);
                 const b = this.authority.business(s);
                 requireThat(run.roles.operator.tools.includes(draft.toolId), 'TOOL_NOT_ALLOWED');
                 const p = proposal({ id: 'publish', scope: s, taskId: 'prepare', ...draft, payloadHash: hash(draft.payload), policyVersion: s.dataPolicyVersion, businessVersion: b.stateVersion, roleVersion: run.roles.operator.version, idempotencyKey: s.runId + '-publish' });
                 const proposalRef = this.store.transaction(() => this.store.record(s, 'proposal', 'ActionProposal', p, [run.refs.plan]));
-                this.update(s, run._version, { phase: 'waiting_approval', proposal: p, refs: { ...run.refs, proposal: proposalRef } }, 'approval_requested', { proposalId: p.id, proposalHash: hash(p), cost: p.estimatedCost });
+                const reviewedRef = reviewedDecision ? this.store.transaction(() => this.store.record(s, 'reviewed-decision', 'ReviewedDecision', reviewedDecision, [run.refs.decision])) : null;
+                this.update(s, run._version, { phase: 'waiting_approval', proposal: p, ...(reviewedDecision ? { decision: reviewedDecision } : {}), refs: { ...run.refs, proposal: proposalRef, ...(reviewedRef ? { reviewedDecision: reviewedRef } : {}) } }, 'approval_requested', { proposalId: p.id, proposalHash: hash(p), cost: p.estimatedCost });
                 return this.inspect(principal, s);
             }
             else if (run.phase === 'waiting_approval' || run.phase === 'reconciling') {

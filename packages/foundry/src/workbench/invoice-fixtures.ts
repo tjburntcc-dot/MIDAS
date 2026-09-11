@@ -1,0 +1,12 @@
+/** OFFLINE MOCK ONLY. Deterministic fixture outputs exercise plumbing, not AI competence. No transport. */
+import type {InvoiceBundle,InvoiceRecommendation,InvoiceStage} from './invoice.ts';
+export function invoiceMockRecommendation(b:InvoiceBundle):InvoiceRecommendation{
+ let remaining=b.cashMinor;const rows=[...b.invoices].sort((a,b)=>a.priority-b.priority||a.due.localeCompare(b.due)||a.id.localeCompare(b.id)).map(i=>{
+ const receipt=b.evidence.find(e=>e.id===i.receiptSource&&e.status==='current'&&e.invoiceId===i.id),duplicate=b.invoices.some(j=>j.id<i.id&&j.supplier===i.supplier&&j.obligation===i.obligation);
+ const eligible=!duplicate&&i.poMinor===i.invoiceMinor&&receipt&&receipt.receivedMinor!==null;
+ const potential=eligible?Math.max(0,Math.min(i.invoiceMinor,receipt.receivedMinor!)-i.creditMinor):0,amount=potential<=remaining?potential:0;remaining-=amount;
+ const reason=duplicate?'Duplicate economic obligation':i.poMinor!==i.invoiceMinor?'PO mismatch':!receipt||receipt.receivedMinor===null?'No usable receiving evidence':potential>remaining+amount?'Cash priority limit':amount?'Matched receipt and allocated credit under current policy':'Zero net eligible obligation';
+ return {invoiceId:i.id,decision:(amount?'release':'hold') as 'release'|'hold',amountMinor:amount,sourceRefs:[b.policy.id,i.sourceId,...(receipt?[receipt.id]:[]),...(i.creditSource?[i.creditSource]:[])],rationale:`OFFLINE MOCK: ${reason}`,nextEvidenceRequest:amount?null:`Finance owner: resolve ${reason.toLowerCase()} before reconsideration`,owner:'finance-owner'};
+ });return {rows,summary:'OFFLINE MOCK internal packet; no payments or model competence claimed'};
+}
+export function invoiceMockOutput(stage:InvoiceStage,b:InvoiceBundle,context:any={}):any{switch(stage){case'investigate':return {requests:b.permittedLookups.filter(id=>!b.evidence.some(e=>e.id===id)),unknowns:['Delivery evidence must be current and available'],rationale:'OFFLINE MOCK requests permitted missing receipt records'};case'draft':return invoiceMockRecommendation(b);case'review':return {recommendation:invoiceMockRecommendation(b),changes:context.recommendation?['OFFLINE MOCK recomputed complete replacement from sources']:[]};case'inspect':return {status:context.verified===true?'pass':'unknown',findings:['OFFLINE MOCK inspection is not independent semantic validation'],evidenceRefs:context.verified===true?['authenticated-receipt','readback']:[]};default:throw Error('INVOICE_STAGE_UNSUPPORTED');}}
