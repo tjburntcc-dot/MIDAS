@@ -4,8 +4,10 @@ import { readFileSync, existsSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { prepare, runWorkflow, status, approvalView, approve, open } from './runner.ts';
 import { report } from './report.ts';
+import { valueReport } from './value-report.ts';
+import { recordValueDecision } from './value-gate.ts';
 import { reviewInteractive } from './review.ts';
-import { authorize, configFor, write, read, accountScope, checkGrant } from './config.ts';
+import { authorize, configFor, write, read, accountScope, checkGrant, valueVersion } from './config.ts';
 import { ModelLedger } from '../experiment/ledger.ts';
 import { hash, requireThat } from '../contracts.ts';
 async function main() {
@@ -14,9 +16,11 @@ async function main() {
     let result: any;
     if (command === 'prepare')
         result = prepare(root, (v.mode ?? 'mock') as any);
+    else if (command === 'prepare-value')
+        result = prepare(root, (v.mode ?? 'mock') as any, 'value');
     else if (command === 'preflight') {
         const c = configFor(root);
-        result = { ready: true, mode: c.mode, implementationHash: c.implementationHash, casesHash: c.casesHash, providerCalls: 0, callMap: ['investigate evidence', 'decide and draft', 'review and revise', 'inspect readback'], humanDependencies: ['exact publication approval', 'independent semantic review and measured correction time'], liveAuthorized: existsSync(join(root, 'authorization.json')) };
+        result = { ready: true, mode: c.mode, implementationHash: c.implementationHash, casesHash: c.casesHash, providerCalls: 0, callMap: ['investigate evidence', 'decide and draft', 'review and revise', 'inspect readback'], humanDependencies: ['exact publication approval (asynchronous in value-v2)', 'independent semantic review/timing needed only for claims requiring them; not fabricated or promised'], liveAuthorized: existsSync(join(root, 'authorization.json')) };
         write(root, 'preflight.json', result);
     }
     else if (command === 'run' || command === 'resume') {
@@ -29,6 +33,7 @@ async function main() {
     }
     else if (command === 'run-all') {
         const c = configFor(root);
+        requireThat(c.mode === 'mock' || c.version !== valueVersion, 'VALUE_BATCH_MUST_BE_EXPLICIT');
         const results = [];
         for (const item of c.schedule) {
             if (c.mode === 'live' && item.stage !== 'smoke' && !existsSync(join(root, 'continuation.json')))
@@ -36,6 +41,18 @@ async function main() {
             results.push(await runWorkflow(root, item.runId));
         }
         result = results;
+    }
+    else if (command === 'select-value') {
+        requireThat(v.run && v.file, 'RUN_AND_DECISION_FILE_REQUIRED');
+        const { config, store } = open(root);
+        try { requireThat(config.version === valueVersion, 'VALUE_PROFILE_REQUIRED'); result = recordValueDecision(root, config, store, v.run!, JSON.parse(readFileSync(v.file!, 'utf8'))); } finally { store.close(); }
+    }
+    else if (command === 'value-report') {
+        const r = valueReport(root);
+        result = { recommendation: r.recommendation, path: join(root, 'reports/value-report.html'), accounting: r.accounting };
+    }
+    else if (command === 'approval-view') {
+        requireThat(v.run, 'RUN_REQUIRED'); result = approvalView(root, v.run!); write(root, 'reports/' + v.run + '-approval.json', result);
     }
     else if (command === 'reconcile-billing') {
         requireThat(v.file, 'SIGNED_BILLING_FILE_REQUIRED');
@@ -95,6 +112,7 @@ async function main() {
     }
     else if (command === 'continue') {
         const c = configFor(root);
+        requireThat(c.version !== valueVersion, 'VALUE_PROFILE_USES_DECISION_RELEASES');
         requireThat(v.file, 'REVIEW_FILE_REQUIRED');
         const review = JSON.parse(readFileSync(v.file!, 'utf8'));
         const r = report(root);
@@ -105,7 +123,7 @@ async function main() {
         result = { continuationRecorded: true };
     }
     else
-        throw Error('Commands: prepare, preflight, run, approve, resume, status, demo, report, review, authorize, continue');
+        throw Error('Commands: prepare, prepare-value, select-value, value-report, approval-view, preflight, run, approve, resume, status, demo, report, review, authorize, continue');
     console.log(JSON.stringify(result, null, 2));
 }
 main().catch(e => { console.error(JSON.stringify({ error: e.code ?? 'WORKFLOW_ERROR', message: e.message })); process.exitCode = 1; });
