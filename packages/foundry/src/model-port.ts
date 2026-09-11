@@ -37,7 +37,7 @@ export function responsesModelPort(options: {
     budget: ModelBudgetPort;
     schemaForTask: (task: string) => any;
     validateOutput: (task: string, output: any) => void;
-    countInputTokens: (body: any) => number | Promise<number>;
+    countInputTokens: (body: any, request?:ModelRequest) => number | Promise<number>;
     transport?: typeof fetch;
 }): ModelPort {
     const { apiKey, budget, schemaForTask, validateOutput } = options;
@@ -79,7 +79,7 @@ export function responsesModelPort(options: {
             const started=Date.now();let admitted=false,usageRecorded=false;
             try {
                 if(budget.prepare){await budget.prepare(request,maximum,digest,bytes);admitted=true;}
-                const inputTokens=await options.countInputTokens(structuredClone(body));
+                const inputTokens=await options.countInputTokens(structuredClone(body),request);
                 safeInteger(inputTokens);requireThat(inputTokens<=route.inputTokenCeiling,'MODEL_INPUT_EXCEEDS_ADMISSION');
                 const credential=apiKey();requireThat(typeof credential==='string' && credential.length>0,'MODEL_ACCESS_REQUIRED');
                 await budget.reserve(request,maximum,digest);admitted=true;

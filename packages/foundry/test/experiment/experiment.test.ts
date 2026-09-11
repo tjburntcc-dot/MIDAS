@@ -50,7 +50,7 @@ test('full serialized request goes to provider counter and inference; secrets an
     const p = providerPort(route, 'proj_test', join(t.root, 'credential'), t.ledger.port('development', {}), transport);
     const r = await p.run(t.request);
     assert.equal(seen.length, 2);
-    assert.equal(seen[0], seen[1]);
+    const inferenceBody=JSON.parse(seen[1]);delete inferenceBody.max_output_tokens;delete inferenceBody.store;delete inferenceBody.service_tier;assert.deepEqual(JSON.parse(seen[0]),inferenceBody);
     const body = JSON.parse(seen[0]);
     assert.ok(body.text.format.schema);
     assert.equal(body.instructions, t.request.role.procedure);

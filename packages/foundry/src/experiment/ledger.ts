@@ -56,7 +56,7 @@ export class ModelLedger {
                         requireThat(!account.halted, 'ACCOUNT_HALTED');
                         requireThat(part.attempts < cap.attempts, 'ATTEMPT_CAP');
                         requireThat(all.settled + all.reserved + amount.minorUnits <= this.limits.totalMinor && part.settled + part.reserved + amount.minorUnits <= cap.minor, 'AGGREGATE_BUDGET_EXCEEDED');
-                        this.store.put('model-attempt', this.key(r.requestId), { id: r.requestId, scope: r.scope, stage, lease, requestHash: digest, requestBytes: bytes, request: structuredClone(r), metadata: structuredClone(metadata), reservation: amount.minorUnits, status: 'admitted', inferenceDispatchIntent: false, cost: { status: 'unknown', money: null, basis: 'admission before token-count/provider access' }, observation: null, result: null, invoice: null, admittedAt: new Date().toISOString() }, null);
+                        this.store.put('model-attempt', this.key(r.requestId), { id: r.requestId, scope: r.scope, stage, lease, requestHash: digest, requestBytesPersisted: false, request: structuredClone(r), metadata: structuredClone(metadata), reservation: amount.minorUnits, status: 'admitted', inferenceDispatchIntent: false, cost: { status: 'unknown', money: null, basis: 'admission before token-count/provider access' }, observation: null, result: null, invoice: null, admittedAt: new Date().toISOString() }, null);
                         this.store.event(this.scope, 'experiment.admitted', { id: r.requestId, stage, requestHash: digest, reservation: amount });
                     });
                 }
@@ -66,7 +66,7 @@ export class ModelLedger {
                 }
             },
             reserve: async (r, amount, digest) => { mutate(r, row => { requireThat(row.requestHash === digest && row.reservation === amount.minorUnits && !row.inferenceDispatchIntent, 'ATTEMPT_ALREADY_DISPATCHED'); return { ...row, inferenceDispatchIntent: true, status: 'pending', dispatchAt: new Date().toISOString() }; }); },
-            observed: async (r, observation) => { mutate(r, row => ({ ...row, observation })); },
+            observed: async (r, observation) => { mutate(r, row => ({ ...row, observation: {...(row.observation??{}),...observation} })); },
             settle: async (r, cost, providerRequestId) => { requireThat(cost.status === 'provisional', 'PROVIDER_USAGE_NOT_AN_INVOICE'); mutate(r, row => ({ ...row, cost, providerRequestId, status: 'provisional' })); },
             uncertain: async (r, reason) => { mutate(r, row => ({ ...row, status: 'uncertain', errorCode: reason })); },
         };
