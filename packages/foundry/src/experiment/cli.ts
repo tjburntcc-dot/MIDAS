@@ -1,3 +1,4 @@
+import {prepareBounded,boundedDiagnostic,boundedBatch,boundedReport,recordCalibration,lockExploratory} from './bounded.ts';
 import { resolve, join } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -12,12 +13,18 @@ export async function main(argv = process.argv.slice(2)) {
         requireThat(argv[i].startsWith('--') && argv[i + 1] && !argv[i + 1].startsWith('--') && !Object.hasOwn(args, argv[i].slice(2)), 'INVALID_ARGUMENT');
         args[argv[i].slice(2)] = argv[i + 1];
     }
-    object(args, [], ['root', 'file', 'key', 'condition', 'procedure', 'failures', 'rationale', 'boundary', 'cases', 'release', 'attempt', 'reason']);
+    object(args, [], ['root', 'file', 'key', 'condition', 'procedure', 'failures', 'rationale', 'boundary', 'cases', 'release', 'attempt', 'reason','old-root','diagnostic-root']);
     const root = resolve(args.root ?? 'var/foundry-experiment-028');
     let result: any;
     if (command === 'help')
         return { commands: 'prepare | rehearse | keygen | sign | sign-invoice | authorize | smoke | develop | validate | review-pack | review | candidate | freeze | custodian-manifest | evaluate | aggregate | replay-analysis | reconcile | interrupt | contaminate | report', live: 'explicit signed numerical authorization required; no automatic retry/fallback' };
-    if (command === 'prepare')
+    if(command==='bounded-prepare')result=prepareBounded(root,resolve(args['old-root']??'var/foundry-smoke-028'),resolve(args['diagnostic-root']??'var/foundry-count-diagnostic-028'));
+    else if(command==='bounded-diagnostic')result=await boundedDiagnostic(root);
+    else if(command==='bounded-batch')result=await boundedBatch(root,readJSON(args.file));
+    else if(command==='bounded-report')result=boundedReport(root);
+    else if(command==='calibrate')result=recordCalibration(root,readJSON(args.file));
+    else if(command==='lock-exploratory')result=lockExploratory(root);
+    else if (command === 'prepare')
         result = prepare(root);
     else if (command === 'rehearse')
         result = await rehearse(root);

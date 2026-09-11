@@ -1,3 +1,4 @@
+import {boundedJSON,sanitizeCountResponse} from './experiment/token-count.ts';
 import { canonical, hash, identifier, modelResult, money, requireThat, safeInteger, scope, FoundryError, rawHash } from './contracts.ts';
 import type { Cost, ModelPort, ModelRequest, ModelResult, Money } from './contracts.ts';
 /** An admission/billing port belongs to trusted application code, never model text.
@@ -83,13 +84,16 @@ export function responsesModelPort(options: {
                 safeInteger(inputTokens);requireThat(inputTokens<=route.inputTokenCeiling,'MODEL_INPUT_EXCEEDS_ADMISSION');
                 const credential=apiKey();requireThat(typeof credential==='string' && credential.length>0,'MODEL_ACCESS_REQUIRED');
                 await budget.reserve(request,maximum,digest);admitted=true;
-                const response=await transport('https://api.openai.com/v1/responses',{method:'POST',headers:{authorization:'Bearer '+credential,'content-type':'application/json',...(route.projectId?{'OpenAI-Project':route.projectId}:{})},body:bytes,signal:AbortSignal.timeout(route.deadlineMs)});
+                const response=await transport('https://api.openai.com/v1/responses',{method:'POST',headers:{authorization:'Bearer '+credential,'content-type':'application/json',...(route.projectId?{'OpenAI-Project':route.projectId}:{})},body:bytes,redirect:'error',signal:AbortSignal.timeout(route.deadlineMs)});
+                const raw=await boundedJSON(response,262144) as any;
+                await budget.observed?.(request,{inferenceHTTP:sanitizeCountResponse(response.status,response.headers.get('x-request-id'),raw,credential)});
                 requireThat(response.ok, 'MODEL_HTTP_ERROR');
-                const raw = await response.json() as any;
+                requireThat(raw&&typeof raw==='object','MODEL_RESPONSE_INVALID');
                 const requestId = typeof raw.id === 'string' ? raw.id : null;
                 const usage = raw.usage;
                 await budget.observed?.(request,{providerRequestId:requestId,model:typeof raw.model==='string'?raw.model:null,status:typeof raw.status==='string'?raw.status:null,inputTokens:Number.isSafeInteger(usage?.input_tokens)?usage.input_tokens:null,outputTokens:Number.isSafeInteger(usage?.output_tokens)?usage.output_tokens:null,cachedInputTokens:Number.isSafeInteger(usage?.input_tokens_details?.cached_tokens)?usage.input_tokens_details.cached_tokens:null,latencyMs:Date.now()-started});
                 requireThat(raw.model === route.model, 'RETURNED_MODEL_MISMATCH');
+                requireThat(!raw.service_tier||raw.service_tier===route.serviceTier,'RETURNED_TIER_MISMATCH');
                 requireThat(usage && Number.isSafeInteger(usage.input_tokens) && Number.isSafeInteger(usage.output_tokens), 'MODEL_USAGE_MISSING');
                 safeInteger(usage.input_tokens);
                 safeInteger(usage.output_tokens);

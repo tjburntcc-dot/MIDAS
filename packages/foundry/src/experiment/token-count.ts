@@ -20,10 +20,10 @@ export function sanitizeCountResponse(status:number,requestId:unknown,body:any,s
  const parameter=safeValue(body?.error?.param)&&parameters.has(body.error.param)?body.error.param:null;
  return {httpStatus:Number.isInteger(status)&&status>=100&&status<=599?status:null,providerErrorType:type,providerErrorCode:code,providerRequestId:id,errorParameter:parameter,message:code?messages[code]:status>=400?'Provider returned an HTTP error; unrecognized message withheld.':null,messageSource:'local_allowlist',unrecognizedErrorFieldsWithheld:!!body?.error&&(!type||!code)};
 }
-async function boundedJSON(response:Response){
+export async function boundedJSON(response:Response,maxBytes=16384){
  if(!response.body)return null;
  const reader=response.body.getReader();let size=0;const chunks:Uint8Array[]=[];
- try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>16384){await reader.cancel();return null;}chunks.push(part.value);}return JSON.parse(Buffer.concat(chunks).toString('utf8'));}
+ try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>maxBytes){await reader.cancel();return null;}chunks.push(part.value);}return JSON.parse(Buffer.concat(chunks).toString('utf8'));}
  catch{return null;}finally{reader.releaseLock();}
 }
 /** Only this endpoint is reachable here. No inference, redirects, retries or raw-body logging. */

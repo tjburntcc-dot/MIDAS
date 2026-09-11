@@ -16,12 +16,13 @@ export function roleArtifact(root: string, condition: 'baseline' | 'challenger',
     requireThat(typeof value.version==='string'&&value.version.length>0&&value.taskContractHash===taskContractHash&&typeof value.procedure === 'string' && value.procedure.trim().length > 0, 'PROCEDURE_REQUIRED');
     return { id: 'operator', version: value.version, procedure: value.procedure, competencies: ['billing-status-support'], tools: [], predecessor: condition === 'challenger' ? value.predecessorVersion : null, model, qualification: 'fixture_only' };
 }
-export function requestFor(scope: any, role: Role, c: Case, repeat: number, stage: Stage): ModelRequest {
-    return { scope, requestId: 'A-' + hash({ scope, role: hash(role), caseId: c.id, input: hash(c.input), repeat, stage }).slice(0, 40), role, task: 'operate', context: { case: c.input }, limits: { maxCost: { minorUnits: 13, currency: 'USD' }, maxAttempts: 1, maxHumanMinutes: 10 }, tools: [] };
+export function requestFor(scope: any, role: Role, c: Case, repeat: number, stage: Stage, maxCostMinor=13): ModelRequest {
+    return { scope, requestId: 'A-' + hash({ scope, role: hash(role), caseId: c.id, input: hash(c.input), repeat, stage }).slice(0, 40), role, task: 'operate', context: { case: c.input }, limits: { maxCost: { minorUnits: maxCostMinor, currency: 'USD' }, maxAttempts: 1, maxHumanMinutes: 10 }, tools: [] };
 }
-export async function runDevelopment(root: string, stage: Exclude<Stage, 'evaluation'>, condition: 'baseline' | 'challenger', transport?: typeof fetch) {
+export async function runDevelopment(root: string, stage: 'smoke'|'development'|'validation', condition: 'baseline' | 'challenger', transport?: typeof fetch) {
     const x = openExperiment(root);
     try {
+        requireThat(!x.auth.boundedMission,'BOUNDED_BATCH_REQUIRED');
         requireThat(resolve(root)===x.spec.developmentRoot&&hostname()===x.spec.developerHost,'AUTHORIZED_DEVELOPMENT_LOCATION_REQUIRED');
         requireThat(!existsSync(join(root, 'freeze.json')), 'EXPERIMENT_FROZEN');
         const cases: Case[] = readJSON(join(root, 'cases.json'));
@@ -32,7 +33,7 @@ export async function runDevelopment(root: string, stage: Exclude<Stage, 'evalua
         const completed = [];
         for (const c of selected)
             for (let repeat = 0; repeat < repeats; repeat++) {
-                const request = requestFor(x.spec.scope, role, c, repeat, stage);
+                const request = requestFor(x.spec.scope, role, c, repeat, stage,x.spec.route.maxCallCost.minorUnits);
                 const old = x.ledger.get(request.requestId);
                 if (old) {
                     requireThat(old.finishedAt, 'ATTEMPT_UNRESOLVED_NO_RETRY');
