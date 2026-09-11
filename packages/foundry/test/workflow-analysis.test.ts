@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {analyze} from '../src/workflow/analysis.ts';
+const complete=()=>Array.from({length:6},(_,i)=>['single','team'].map(configuration=>({episode:'W'+i,configuration,semanticAccepted:true,deterministicAccepted:true,semanticReview:{critical:false},actualBilledMinor:100,humanWorkSeconds:300,latencyMs:20000}))).flat();
+test('paired decisions prefer simple, detect team regression, require resources and never infer competence from mocks',()=>{const rows=complete();assert.equal(analyze(rows,'mock').decision,'offline_only');assert.equal(analyze(rows,'live').decision,'prefer_simpler_if_sufficient');rows[0].semanticAccepted=false;assert.equal(analyze(rows,'live').decision,'advance_for_confirmation');(rows[1] as any).actualBilledMinor=null;assert.equal(analyze(rows,'live').decision,'inconclusive');rows[0].semanticAccepted=true;rows[1].semanticAccepted=false;assert.equal(analyze(rows,'live').decision,'team_regression');});
+test('missing reviews never silently pass, critical error cannot be traded for quality count',()=>{const rows=complete();(rows[0] as any).semanticAccepted=null;assert.equal(analyze(rows,'live').decision,'inconclusive');rows[0].semanticAccepted=false;rows[1].semanticReview.critical=true;assert.equal(analyze(rows,'live').decision,'inconclusive');});
