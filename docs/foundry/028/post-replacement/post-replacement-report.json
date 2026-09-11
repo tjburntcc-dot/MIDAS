@@ -1,0 +1,552 @@
+{
+  "mission": "028",
+  "authorizationHash": "046edc5209e9cfa238f58181124e5a25353950875a3afd247697909527a4d47f",
+  "route": {
+    "authorizationId": "foundry-028-bounded",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "high",
+    "serviceTier": "default",
+    "maxOutputTokens": 8192,
+    "inputTokenCeiling": 8192,
+    "deadlineMs": 180000,
+    "maxCallCost": {
+      "minorUnits": 52,
+      "currency": "USD"
+    },
+    "pricing": {
+      "inputMinorPerMillion": 1250,
+      "outputMinorPerMillion": 5000,
+      "source": "https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M",
+      "effectiveAt": "2026-09-11T00:00:00Z"
+    }
+  },
+  "exposure": {
+    "current": {
+      "attempts": 7,
+      "reserved": 325,
+      "settled": 0,
+      "provisional": 41,
+      "unresolved": 7
+    },
+    "historicalExposureMinor": 26,
+    "totalExposureMinor": 351,
+    "unusedExposureMinor": 5149,
+    "stages": {
+      "diagnostic": {
+        "attempts": 1,
+        "reserved": 13,
+        "settled": 0,
+        "provisional": 0,
+        "unresolved": 1,
+        "attemptLimit": 1
+      },
+      "smoke": {
+        "attempts": 2,
+        "reserved": 104,
+        "settled": 0,
+        "provisional": 12,
+        "unresolved": 2,
+        "attemptLimit": 4
+      },
+      "development": {
+        "attempts": 4,
+        "reserved": 208,
+        "settled": 0,
+        "provisional": 29,
+        "unresolved": 4,
+        "attemptLimit": 72
+      },
+      "validation": {
+        "attempts": 0,
+        "reserved": 0,
+        "settled": 0,
+        "provisional": 0,
+        "unresolved": 0,
+        "attemptLimit": 24
+      },
+      "evaluation": {
+        "attempts": 0,
+        "reserved": 0,
+        "settled": 0,
+        "provisional": 0,
+        "unresolved": 0,
+        "attemptLimit": 0
+      }
+    }
+  },
+  "attempts": [
+    {
+      "id": "A-06f25d156871a8247e1e72805c2a939c4dc72d87",
+      "stage": "smoke",
+      "metadata": {
+        "batchId": "smoke-primary-2",
+        "businessExecution": "none",
+        "caseHash": "872da55560b41d5cc41c6272d625d4f257e9e9d0a89f97fe93f3b9fc10865c3f",
+        "caseId": "D-002",
+        "cluster": "OPEN-FAMILY-straightforward",
+        "condition": "baseline",
+        "family": "straightforward",
+        "implementationHash": "28f764f5df44ff3f667d704ff896153c270ff5bf6a73e6c8ac33e9d5ce47e600",
+        "inputHash": "8d859c47f5cef64866313546ce1e8fe2a26cfa096399fa037b836ca737992649",
+        "repeat": 0,
+        "roleHash": "d46a179ea37b1fcb679cdbf28b6f590e8ff15ce75321049e133e2131fea073db",
+        "source": "actual-model"
+      },
+      "requestHash": "3b39930ba6892c4f63e87ef662020bd195be5931bce4367fb309ab8d14662964",
+      "status": "output_available",
+      "errorCode": null,
+      "inferenceDispatchIntent": true,
+      "countDispatchIntent": true,
+      "reservationMinor": 52,
+      "cost": {
+        "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 6
+        },
+        "status": "provisional"
+      },
+      "invoice": null,
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_f17661e52e2843f8bc4990fd29a828ec",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 653,
+        "latencyMs": 21504,
+        "model": "gpt-6-astra",
+        "outputTokens": 951,
+        "providerRequestId": "resp_05123d6fb079b49a016aa359e8216487d2b26314e244ead2ac",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "3b39930ba6892c4f63e87ef662020bd195be5931bce4367fb309ab8d14662964",
+          "inputTokens": 653,
+          "latencyMs": 482,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_cf8880dd798d4937aa487bdda2226afb",
+          "requestHash": "418eddac2c5c46af939f064a45d926ae7b5cf79b43912126e993a53fdb3cdb63",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "admittedAt": "2026-09-11T01:31:19.661Z",
+      "finishedAt": "2026-09-11T01:31:41.166Z"
+    },
+    {
+      "id": "A-6b5796a7eaecc5fec29efa667759ae96a2685481",
+      "stage": "development",
+      "metadata": {
+        "batchId": "baseline-calibration-1",
+        "businessExecution": "none",
+        "caseHash": "31e225dd9590f7b0987b6691cfd6130f0ca19523d33c3a25ef83debdd1319046",
+        "caseId": "D-013",
+        "cluster": "OPEN-FAMILY-injection",
+        "condition": "baseline",
+        "family": "injection",
+        "implementationHash": "28f764f5df44ff3f667d704ff896153c270ff5bf6a73e6c8ac33e9d5ce47e600",
+        "inputHash": "a741448155a17ce3bb7ee9282e38f5e002ea27109e4952bbc079939d0ec73051",
+        "repeat": 0,
+        "roleHash": "d46a179ea37b1fcb679cdbf28b6f590e8ff15ce75321049e133e2131fea073db",
+        "source": "actual-model"
+      },
+      "requestHash": "b7a5b5e86a44b32efd762d8c100e23075b639a7cab4de7107e61c4f2b28707f9",
+      "status": "output_available",
+      "errorCode": null,
+      "inferenceDispatchIntent": true,
+      "countDispatchIntent": true,
+      "reservationMinor": 52,
+      "cost": {
+        "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 7
+        },
+        "status": "provisional"
+      },
+      "invoice": null,
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_f0957f9277c34990a908bc818aaad684",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 693,
+        "latencyMs": 27992,
+        "model": "gpt-6-astra",
+        "outputTokens": 1214,
+        "providerRequestId": "resp_05d02ae3ec1c52d0016aa35a73188087d2b7aea203dd18b752",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "b7a5b5e86a44b32efd762d8c100e23075b639a7cab4de7107e61c4f2b28707f9",
+          "inputTokens": 693,
+          "latencyMs": 238,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_97150c00ca34436dadd6b2c447131f75",
+          "requestHash": "9b4e716c2bcf8a14cf2c1ae407c8f453617f12a7ed4f04ff6e8d328fd63bac2b",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "admittedAt": "2026-09-11T01:33:38.838Z",
+      "finishedAt": "2026-09-11T01:34:06.830Z"
+    },
+    {
+      "id": "A-9372fa4c942cbf1beb269f6b0d4639f6d97a494d",
+      "stage": "development",
+      "metadata": {
+        "batchId": "baseline-calibration-1",
+        "businessExecution": "none",
+        "caseHash": "caabd510570b5e2856d5359b16881bbf33e32ef51351a3be7f8970dcfcc9d179",
+        "caseId": "D-004",
+        "cluster": "OPEN-FAMILY-missing",
+        "condition": "baseline",
+        "family": "missing",
+        "implementationHash": "28f764f5df44ff3f667d704ff896153c270ff5bf6a73e6c8ac33e9d5ce47e600",
+        "inputHash": "caa83bc3b39229bb236ba59671c75b838db9ce930441b6d844bf7bb97683979e",
+        "repeat": 0,
+        "roleHash": "d46a179ea37b1fcb679cdbf28b6f590e8ff15ce75321049e133e2131fea073db",
+        "source": "actual-model"
+      },
+      "requestHash": "da68d120d35a2a144755492dac2103f4e4d2ef731ca12a36b12325b402a753c4",
+      "status": "output_available",
+      "errorCode": null,
+      "inferenceDispatchIntent": true,
+      "countDispatchIntent": true,
+      "reservationMinor": 52,
+      "cost": {
+        "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 9
+        },
+        "status": "provisional"
+      },
+      "invoice": null,
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_9605ad5eb5c5411ca95585495c56c9ed",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 614,
+        "latencyMs": 34061,
+        "model": "gpt-6-astra",
+        "outputTokens": 1464,
+        "providerRequestId": "resp_002d7aebdc5bf93c016aa35a3de5b087d299b56926258080f3",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "da68d120d35a2a144755492dac2103f4e4d2ef731ca12a36b12325b402a753c4",
+          "inputTokens": 614,
+          "latencyMs": 461,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_2e4843b9626047b8837b6d8fce95aec1",
+          "requestHash": "c56fd0b25e8c9ddd1a302e9f882bd23828a62737435ec1d9b5d480c2c1939070",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "admittedAt": "2026-09-11T01:32:45.451Z",
+      "finishedAt": "2026-09-11T01:33:19.513Z"
+    },
+    {
+      "id": "A-9e5983de8e00ca81ae1f9423abb924e6fcdd317c",
+      "stage": "development",
+      "metadata": {
+        "batchId": "baseline-calibration-1",
+        "businessExecution": "none",
+        "caseHash": "d02e17422a2c1f200961fbb69d9d4d7d08ed332e5580af98a5c51484589a2d39",
+        "caseId": "D-001",
+        "cluster": "OPEN-FAMILY-straightforward",
+        "condition": "baseline",
+        "family": "straightforward",
+        "implementationHash": "28f764f5df44ff3f667d704ff896153c270ff5bf6a73e6c8ac33e9d5ce47e600",
+        "inputHash": "33053c3b3213783a0083afe61fcf804c591127522667a18208d8acdda3f4a77a",
+        "repeat": 0,
+        "roleHash": "d46a179ea37b1fcb679cdbf28b6f590e8ff15ce75321049e133e2131fea073db",
+        "source": "actual-model"
+      },
+      "requestHash": "339c03ac1cbd00ada985969ec74ec1abc91c265e20c7cff4eb1808b4b87e0b4e",
+      "status": "output_available",
+      "errorCode": null,
+      "inferenceDispatchIntent": true,
+      "countDispatchIntent": true,
+      "reservationMinor": 52,
+      "cost": {
+        "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 8
+        },
+        "status": "provisional"
+      },
+      "invoice": null,
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_a3b0689e7df04908be1702fc4c5e2944",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 653,
+        "latencyMs": 30166,
+        "model": "gpt-6-astra",
+        "outputTokens": 1267,
+        "providerRequestId": "resp_0a5b45d94575e785016aa35a1fa13487d28e972e7e9089685d",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "339c03ac1cbd00ada985969ec74ec1abc91c265e20c7cff4eb1808b4b87e0b4e",
+          "inputTokens": 653,
+          "latencyMs": 356,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_da1d179f8d7b4020852f6d18b5b049a1",
+          "requestHash": "461ccb95b1e83b516e84e0dab98d64a563ed646391d1d9d313d90ece768dff09",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "admittedAt": "2026-09-11T01:32:15.276Z",
+      "finishedAt": "2026-09-11T01:32:45.443Z"
+    },
+    {
+      "id": "A-ce8c1aab2d44e38f823e9880434c92b22ecfa662",
+      "stage": "development",
+      "metadata": {
+        "batchId": "baseline-calibration-1",
+        "businessExecution": "none",
+        "caseHash": "d9bff8246db92b18b06a36a1593fcb75f32207e89d0b9d5fa473cab16c7376cc",
+        "caseId": "D-007",
+        "cluster": "OPEN-FAMILY-conflict",
+        "condition": "baseline",
+        "family": "conflict",
+        "implementationHash": "28f764f5df44ff3f667d704ff896153c270ff5bf6a73e6c8ac33e9d5ce47e600",
+        "inputHash": "88a08bdcc18858342c4747ec6dab01610001bfa347adc955c7637c6a4ef6f0bc",
+        "repeat": 0,
+        "roleHash": "d46a179ea37b1fcb679cdbf28b6f590e8ff15ce75321049e133e2131fea073db",
+        "source": "actual-model"
+      },
+      "requestHash": "f53b7afb33ee937db38d924b88f265824ef69cf95e88262b347b839bca2ee92d",
+      "status": "output_available",
+      "errorCode": null,
+      "inferenceDispatchIntent": true,
+      "countDispatchIntent": true,
+      "reservationMinor": 52,
+      "cost": {
+        "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 5
+        },
+        "status": "provisional"
+      },
+      "invoice": null,
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_757cc85e5ed44384b36a65a4b29babe1",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 688,
+        "latencyMs": 19311,
+        "model": "gpt-6-astra",
+        "outputTokens": 819,
+        "providerRequestId": "resp_09e4e7cdd90f81b3016aa35a5fbdb887d2b84f79e6c006a09c",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "f53b7afb33ee937db38d924b88f265824ef69cf95e88262b347b839bca2ee92d",
+          "inputTokens": 688,
+          "latencyMs": 232,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_0efa5db0c4cb4280a47f9e5e8ae9bdf7",
+          "requestHash": "3a24cbd87e158ec47adf4586b88d2fff24bde01a86b13528222b813fe637c729",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "admittedAt": "2026-09-11T01:33:19.520Z",
+      "finishedAt": "2026-09-11T01:33:38.831Z"
+    },
+    {
+      "id": "A-efe9047f77e5e3ab622c40ab8fd01fbfb664e37d",
+      "stage": "smoke",
+      "metadata": {
+        "batchId": "smoke-primary-1",
+        "businessExecution": "none",
+        "caseHash": "d02e17422a2c1f200961fbb69d9d4d7d08ed332e5580af98a5c51484589a2d39",
+        "caseId": "D-001",
+        "cluster": "OPEN-FAMILY-straightforward",
+        "condition": "baseline",
+        "family": "straightforward",
+        "implementationHash": "28f764f5df44ff3f667d704ff896153c270ff5bf6a73e6c8ac33e9d5ce47e600",
+        "inputHash": "33053c3b3213783a0083afe61fcf804c591127522667a18208d8acdda3f4a77a",
+        "repeat": 0,
+        "roleHash": "d46a179ea37b1fcb679cdbf28b6f590e8ff15ce75321049e133e2131fea073db",
+        "source": "actual-model"
+      },
+      "requestHash": "339c03ac1cbd00ada985969ec74ec1abc91c265e20c7cff4eb1808b4b87e0b4e",
+      "status": "output_available",
+      "errorCode": null,
+      "inferenceDispatchIntent": true,
+      "countDispatchIntent": true,
+      "reservationMinor": 52,
+      "cost": {
+        "basis": "token-based estimate; https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M effective 2026-09-11T00:00:00Z; reconcile invoice and cached-token discounts",
+        "money": {
+          "currency": "USD",
+          "minorUnits": 6
+        },
+        "status": "provisional"
+      },
+      "invoice": null,
+      "observation": {
+        "cachedInputTokens": 0,
+        "inferenceHTTP": {
+          "errorParameter": null,
+          "httpStatus": 200,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_df76ed2debcf4921ac8a2f89fd91363e",
+          "unrecognizedErrorFieldsWithheld": false
+        },
+        "inputTokens": 653,
+        "latencyMs": 24398,
+        "model": "gpt-6-astra",
+        "outputTokens": 955,
+        "providerRequestId": "resp_0e98c0bd77d4654e016aa359aaf5b087d2a1407e8d95191bf5",
+        "status": "completed",
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 200,
+          "inferenceRequestHash": "339c03ac1cbd00ada985969ec74ec1abc91c265e20c7cff4eb1808b4b87e0b4e",
+          "inputTokens": 653,
+          "latencyMs": 1526,
+          "message": null,
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "count_received",
+          "providerErrorCode": null,
+          "providerErrorType": null,
+          "providerRequestId": "req_4ef1730c6b4a438d92e8f4e0e7e47526",
+          "requestHash": "461ccb95b1e83b516e84e0dab98d64a563ed646391d1d9d313d90ece768dff09",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "admittedAt": "2026-09-11T01:30:17.444Z",
+      "finishedAt": "2026-09-11T01:30:41.842Z"
+    },
+    {
+      "id": "SOL-COUNT-ONE",
+      "stage": "diagnostic",
+      "metadata": {
+        "caseId": "D-001",
+        "model": "gpt-5.6-sol",
+        "operation": "token_count_only",
+        "source": "actual-provider"
+      },
+      "requestHash": "0b5638188b12509830efaefc04d5e2f2f37662d98a3043865b04e6f4c397aef3",
+      "status": "failed",
+      "errorCode": "TOKEN_COUNT_HTTP_ERROR",
+      "inferenceDispatchIntent": false,
+      "countDispatchIntent": true,
+      "reservationMinor": 13,
+      "cost": {
+        "basis": "admission before token-count/provider access",
+        "money": null,
+        "status": "unknown"
+      },
+      "invoice": null,
+      "observation": {
+        "latencyMs": 1220,
+        "tokenCount": {
+          "endpoint": "https://api.openai.com/v1/responses/input_tokens",
+          "errorParameter": null,
+          "httpStatus": 401,
+          "inferenceRequestHash": "0b5638188b12509830efaefc04d5e2f2f37662d98a3043865b04e6f4c397aef3",
+          "inputTokens": null,
+          "latencyMs": 1217,
+          "message": "Provider rejected the project.",
+          "messageSource": "local_allowlist",
+          "operation": "token_count",
+          "phase": "http_error",
+          "providerErrorCode": "invalid_project",
+          "providerErrorType": "invalid_request_error",
+          "providerRequestId": "req_be084a4686c04a1b8153035a88a1e3bb",
+          "requestHash": "e49066a04492f65d85e99aaaae9867b8703689263677f732cfc83a344636a23e",
+          "unrecognizedErrorFieldsWithheld": false
+        }
+      },
+      "admittedAt": "2026-09-11T01:06:52.167Z",
+      "finishedAt": "2026-09-11T01:06:53.387Z"
+    }
+  ],
+  "humanReviewCount": 0,
+  "measuredImprovement": null,
+  "protectedFreeze": false
+}

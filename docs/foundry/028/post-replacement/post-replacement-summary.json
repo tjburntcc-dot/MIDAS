@@ -1,0 +1,47 @@
+{
+  "authorizationHash": "046edc5209e9cfa238f58181124e5a25353950875a3afd247697909527a4d47f",
+  "route": {
+    "authorizationId": "foundry-028-bounded",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "high",
+    "serviceTier": "default",
+    "maxOutputTokens": 8192,
+    "inputTokenCeiling": 8192,
+    "deadlineMs": 180000,
+    "maxCallCost": {
+      "minorUnits": 52,
+      "currency": "USD"
+    },
+    "pricing": {
+      "inputMinorPerMillion": 1250,
+      "outputMinorPerMillion": 5000,
+      "source": "https://developers.openai.com/api/docs/pricing ; standard Astra input $10/M, conservative cache-write input $12.50/M, output $50/M",
+      "effectiveAt": "2026-09-11T00:00:00Z"
+    }
+  },
+  "stages": {
+    "smoke": 2,
+    "development": 4,
+    "validation": 0
+  },
+  "inputTokens": 3954,
+  "outputTokens": 6670,
+  "cachedInputTokens": 0,
+  "conservativeProvisionalMinor": 41,
+  "smokeProvisionalMinor": 12,
+  "developmentProvisionalMinor": 29,
+  "totalRetainedExposureMinor": 351,
+  "unusedExposureMinor": 5149,
+  "authoritativeSettlementsMinor": 0,
+  "actualBillingKnown": false,
+  "latencyMs": {
+    "min": 19311,
+    "max": 34061,
+    "mean": 26238.666666666668
+  },
+  "founderReviews": 0,
+  "founderCorrectionSeconds": null,
+  "decision": "awaiting founder calibration; no challenger justified yet",
+  "recoveryAdmissions": 0,
+  "astraCountRequests": 6
+}

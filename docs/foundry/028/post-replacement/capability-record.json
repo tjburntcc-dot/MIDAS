@@ -1,0 +1,80 @@
+{
+  "kind": "experimental-capability-record",
+  "mission": "028",
+  "task": "Billing-status response and operator playbook",
+  "businessContextRequired": [
+    "Authorized current policy with effective dates and scope",
+    "Dated invoice-status evidence or explicit missing evidence",
+    "Customer request",
+    "Read-and-advise authority and tone"
+  ],
+  "requiredTools": [],
+  "retrieval": "Supplied sources only; retrieval competence untested",
+  "authorityLimits": [
+    "No refunds",
+    "No account modification",
+    "No guaranteed payment dates",
+    "No business actions"
+  ],
+  "baselineVersion": "baseline-master-v1",
+  "baselineArtifact": "baseline.initial.json",
+  "model": {
+    "route": "gpt-6-astra",
+    "reasoning": "high",
+    "serviceTier": "default",
+    "immutableRevision": null,
+    "accessVerified": true,
+    "accessObservedAt": "2026-09-11T01:30:41.842Z"
+  },
+  "observedPerformance": {
+    "transportCompleted": 6,
+    "outputContractValid": 6,
+    "developmentOutputs": 4,
+    "humanAccepted": null,
+    "criticalFailuresHumanReviewed": null,
+    "validation": null
+  },
+  "evidencePopulation": "12 development and six closely related open synthetic validation cases; not customer or confidential holdout material",
+  "actualInferenceAttempts": 6,
+  "knownFailureModes": [
+    {
+      "kind": "provider-project-access",
+      "evidence": "Sol count HTTP401 invalid_project; req_be084a4686c04a1b8153035a88a1e3bb",
+      "scope": "Project context rejected; exact membership/key/ID cause unresolved"
+    },
+    {
+      "kind": "objective-check false-positive",
+      "scope": "Diagnostic substring matcher flags negated guaranteed-payment phrase; not a verified model critical failure."
+    }
+  ],
+  "escalationNeeds": [
+    "Project owner for project/key association",
+    "Founder for semantic review and measured correction",
+    "Independent custodian for future protected cases"
+  ],
+  "costs": {
+    "currency": "USD",
+    "retainedExposureMinor": 351,
+    "authoritativeSettledMinor": 0,
+    "authoritativeBillingEvidenceAvailable": false,
+    "actualSpend": null,
+    "usageBasedProvisionalEstimate": {
+      "minorUnits": 41,
+      "currency": "USD",
+      "basis": "Conservative inference token estimate, rounded per attempt; counts and invoices unresolved"
+    }
+  },
+  "latency": {
+    "countDiagnosticMs": 1217,
+    "inferenceMs": null,
+    "inferenceAttemptRangeMs": [
+      19311,
+      34061
+    ]
+  },
+  "humanCorrectionSeconds": null,
+  "qualificationStatus": "experimental-non-production-unqualified",
+  "candidateDecision": "awaiting founder review",
+  "productionPromotion": false,
+  "teamAssignmentUse": "Transport and structured-output compatibility demonstrated on six synthetic trials. Human task-quality qualification remains unmeasured."
+}

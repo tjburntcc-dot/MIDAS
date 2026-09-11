@@ -1,0 +1,10 @@
+✔ review page escapes source text, uses no external resource, and requires manual scores before exporting measured observations (2.8294ms)
+✔ interrupted review exports missing timing rather than fabricated correction effort (0.7246ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130.3202
