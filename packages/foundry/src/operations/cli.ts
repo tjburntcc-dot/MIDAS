@@ -5,8 +5,9 @@ import { workspace,bootstrap,serveOperations } from './server.ts';
 import { owner } from './manager.ts';
 import { OFFLINE_URL,offlineManager } from './offline.ts';
 import { scopeKey,requireThat,hash } from '../contracts.ts';
-import { startLearning } from './study.ts';
+import { startLearning,recordImprovementCase } from './study.ts';
 import { prepareLive,loadLive } from './trusted.ts';
+import { prepareAstra,prepareGmailTest } from './launch.ts';
 const args=process.argv.slice(2),command=args[0];
 const option=(name:string,fallback='')=>{const i=args.indexOf('--'+name);return i>=0?args[i+1]:fallback;};
 const root=resolve(option('root','var/operating-workbench-030'));
@@ -14,6 +15,8 @@ async function main(){
     if(command==='serve'){const live=option('live-grant')?{envelopeFile:resolve(option('live-grant')),trustAnchorFile:resolve(option('trust-anchor')),channelEnvelopeFile:option('channel-grant')?resolve(option('channel-grant')):undefined}:undefined;const app=await serveOperations(root,Number(option('port','43130')),live);console.log(JSON.stringify({url:app.url,root,mode:live?'live grant loaded; exact effects separately gated':'offline-preparation; live disabled unless explicitly configured'}));return;}
     const w=workspace(root);try{
         if(command==='prepare'){bootstrap(w);console.log(JSON.stringify({root,businesses:w.bare.list().map(b=>({id:b.id,name:b.name})),providerCalls:0}));return;}
+        if(command==='prepare-astra'){console.log(JSON.stringify(prepareAstra(root,w.bare)));return;}
+        if(command==='prepare-gmail-test'){console.log(JSON.stringify(prepareGmailTest(root,w.bare,option('sender'),option('recipients').split(','))));return;}
         if(command==='demo'){
             const b=w.bare.create({id:'demo-'+randomUUID().slice(0,12),name:'Offline tool-library operating test',goal:'Investigate tool-library stock and collection information and prepare a useful validation request.',mode:'offline',allowedUrls:[OFFLINE_URL],configuration:option('configuration','single') as any});
             const rt=offlineManager(root,w.store,[b]),p=owner(b.id);const ready=await rt.manager.run(p,b.id);const exact=ready.approvals[0].batchHash;
@@ -26,6 +29,7 @@ async function main(){
         }
         const id=option('business','midas-owned-venture');
         if(command==='prepare-live'){console.log(JSON.stringify(prepareLive(root,w.bare.get(id))));return;}
+        if(command==='record-improvement-case'){console.log(JSON.stringify(recordImprovementCase(w.bare,owner(id),id,JSON.parse(readFileSync(resolve(option('evidence')),'utf8')))));return;}
         // Historical reports remain readable after an implementation change. Reading
         // state must not construct or replace a model account or enter credentials.
         if(command==='status'||command==='report'){const report=w.bare.view(id);if(command==='report'){mkdirSync(join(root,'reports'),{recursive:true});writeFileSync(join(root,'reports',id+'.json'),JSON.stringify(report,null,2));}console.log(JSON.stringify(report,null,2));return;}

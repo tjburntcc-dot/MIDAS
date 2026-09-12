@@ -10,6 +10,7 @@ export const draftSchema=obj({title:short,buyer:text,offer:text,scope:list(text,
     outreach:list(obj({to:{type:'string',maxLength:254,pattern:'^[A-Za-z0-9.!#$%&\u0027*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'},recipientSourceId:id,eligibilityReason:text,subject:{...short,maxLength:120,pattern:'^[^\\r\\n]+$'},body:{...text,maxLength:6000},sourceIds:list(id,24,1)}),4)});
 export const decisionSchema=obj({action:{type:'string',enum:['request_evidence','draft','stop']},reason:text,query:nullable(short),sourceUrls:list({...short,maxLength:2048},4),claims:list(claimSchema,24),bottlenecks:list(obj({description:text,sourceIds:list(id),uncertainty:text,priority:{type:'integer',minimum:1,maximum:3}}),3),draft:nullable(draftSchema)});
 export const reviewSchema=obj({verdict:{type:'string',enum:['ready','needs_evidence','reject']},reason:text,query:nullable(short),sourceUrls:list({...short,maxLength:2048},4),replacement:nullable(draftSchema),changes:list(text),limitations:list(text)});
+export function draftOnlySchema(schema:any){const copy=structuredClone(schema);const draft=copy.properties.draft??copy.properties.replacement;draft.anyOf[0].properties.outreach.maxItems=0;return copy;}
 /** Provider-visible constraints and the local structural validator have one source. */
 export function structure(s:any,v:any):void {
     if(s.anyOf){requireThat(s.anyOf.some((part:any)=>{try{structure(part,v);return true;}catch{return false;}}),'OUTPUT_UNION');return;}
