@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173e35">
+  <title>MIDAS · Portfolio</title>
+  <link rel="stylesheet" href="/portfolio.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to workspace</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Portfolio navigation">
+      <a class="brand" href="/" aria-label="MIDAS portfolio"><span class="brand-mark" aria-hidden="true">M</span><span>MIDAS<small>THE OWNER WORKSPACE</small></span></a>
+      <nav id="primary-navigation" class="primary-nav" aria-label="Main sections"></nav>
+      <div class="venture-navigation"><p class="sidebar-label">YOUR VENTURES</p><nav id="venture-navigation" aria-label="Ventures"></nav></div>
+      <div class="sidebar-footer"><span class="connection-dot" id="connection-dot"></span><div><strong id="connection-label">Connecting to local workspace</strong><p>Persisted on this computer</p></div></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar"><div id="breadcrumbs">Portfolio</div><div class="topbar-actions"><span id="last-updated"></span><button id="refresh-button" class="button quiet small" type="button"><span aria-hidden="true">↻</span> Refresh</button></div></header>
+      <main id="main" tabindex="-1"><div id="notice" role="status" aria-live="polite"></div><div id="workspace"><section class="loading-state"><div class="loading-mark" aria-hidden="true"></div><h1>Opening your portfolio</h1><p>Reading ventures, work and the latest saved results.</p></section></div></main>
+      <footer class="page-footer"><span>MIDAS · Local operating workspace</span><span id="runtime-status">Waiting for persisted state</span></footer>
+    </div>
+  </div>
+  <dialog id="detail-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><h2 id="dialog-title"></h2><button class="icon-button" type="button" data-close-dialog aria-label="Close details">×</button></div><div id="dialog-body"></div></dialog>
+  <script src="/portfolio.js" defer></script>
+</body>
+</html>

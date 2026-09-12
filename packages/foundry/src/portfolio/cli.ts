@@ -1,0 +1,52 @@
+import { resolve,join } from 'node:path';
+import { mkdirSync,writeFileSync,readFileSync,existsSync } from 'node:fs';
+import { StateStore } from '../state.ts';
+import { hash,requireThat } from '../contracts.ts';
+import { buildResponsesBody } from '../model-port.ts';
+import { countPayload } from '../experiment/token-count.ts';
+import { signed } from '../experiment/config.ts';
+import { Portfolio } from './core.ts';
+import { portfolioScope } from './contracts.ts';
+import { LocalWorkTools } from './tools.ts';
+import { EvidenceLibrary } from './evidence.ts';
+import { PortfolioEngine } from './engine.ts';
+import { preparePortfolio,offlinePortfolioModel } from './prepare.ts';
+import { prepareOperatingRelease } from './release.ts';
+import { prepareCommercialPackets } from './commercial.ts';
+import { createTaskPreparer } from './task-preparation.ts';
+import { loadLivePortfolio,writePortfolioProposal,portfolioImplementationHash } from './live.ts';
+import { servePortfolio,portfolioView } from './server.ts';
+const args=process.argv.slice(2),command=args[0]??'status';
+const flag=(name:string,fallback:string)=>{const i=args.indexOf(name);return i<0?fallback:args[i+1];};
+if(command==='restore'){requireThat(!args.includes('--live')&&['--backup','--target','--manifest-hash'].every(f=>args.includes(f)),'RESTORE_EXPLICIT_INPUTS_REQUIRED');const {restorePortfolio}=await import('./continuity.ts');console.log(JSON.stringify(restorePortfolio({backupRoot:resolve(flag('--backup','')),targetRoot:resolve(flag('--target','')),expectedManifestHash:flag('--manifest-hash','')}),null,2));process.exit(0);}
+if(command==='backup')requireThat(!args.includes('--live')&&args.includes('--backup')&&args.includes('--root'),'BACKUP_EXPLICIT_INPUTS_REQUIRED');
+const root=resolve(flag('--root','var/portfolio-031'));mkdirSync(root,{recursive:true});
+requireThat(!(args.includes('--live')&&args.includes('--mock')),'EXPLICIT_MODE_CONFLICT');
+const store=new StateStore(join(root,'portfolio.sqlite')),portfolio=new Portfolio(store),tools=new LocalWorkTools({store,root,scopeFor:portfolioScope});
+const live=command==='reconcile'?loadLivePortfolio(root,store,{purpose:'billing'}):args.includes('--live')?loadLivePortfolio(root,store):null;
+const evidence=new EvidenceLibrary(store,{publicRead:Boolean(live),search:live?.search});
+const model=live?.worker??(args.includes('--mock')?offlinePortfolioModel(tools):undefined),engine=new PortfolioEngine({portfolio,tools,evidence,model,prepareTask:createTaskPreparer(portfolio,tools,evidence),accounting:live?.totals,recoveryAuthority:live?.recoveryEvidence});
+const json=(x:unknown)=>console.log(JSON.stringify(x,null,2));
+if(command==='prepare'){const prepared=preparePortfolio(portfolio,tools,evidence);json({prepared,release:prepareOperatingRelease(portfolio,evidence),commercial:prepareCommercialPackets(portfolio)});store.close();}
+else if(command==='run'){await engine.recover();const task=flag('--task','');const result=task?await engine.runTask(task):await engine.drain();prepareCommercialPackets(portfolio);json({result,accounting:live?.totals()??{providerRequests:0,localComputeCost:null}});store.close();}
+else if(command==='reconcile'){requireThat(live&&args.includes('--statement'),'BILLING_STATEMENT_REQUIRED');json(live.reconcileBilling(JSON.parse(readFileSync(resolve(flag('--statement','')),'utf8'))));store.close();}
+else if(command==='recover-incomplete'){requireThat(live,'SIGNED_RECOVERY_AUTHORITY_REQUIRED');json(engine.prepareRecovery(flag('--task',''),flag('--parent','')));store.close();}
+else if(command==='recover'){json(await engine.recover());store.close();}
+else if(command==='serve'){await engine.recover();const app=servePortfolio({engine,tools,port:Number(flag('--port','43131'))});json({url:await app.ready,root,mode:model?.kind??'disabled',providerCallsAuthorized:Boolean(live),automaticDispatch:false});const close=async()=>{await app.close();store.close();process.exit(0);};process.once('SIGINT',close);process.once('SIGTERM',close);}
+else if(command==='propose'){
+ requireThat(!live,'PROPOSE_MUST_BE_OFFLINE');prepareOperatingRelease(portfolio,evidence);
+ const id=flag('--id','portfolio-031-operating-v1'),directory=resolve(flag('--output',join(root,'proposal',id)));
+ const proposal=writePortfolioProposal(directory,{root,id,projectId:'proj_H01ORqdOPQM6vdGwQYsqFL5r',credentialFile:'C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key',expiresAt:flag('--expires','2026-09-25T22:00:00.000Z'),countUncertaintyMinor:400,recoveryAdmissions:2,billingPublicKey:args.includes('--billing-public-key')?readFileSync(resolve(flag('--billing-public-key','')),'utf8'):null,ventures:portfolio.snapshot().ventures.map(v=>({id:v.id,goal:v.goal,capabilities:['research.investigate','quality.review','portfolio.plan','portfolio.reassess','service.brief','software.build','commercial.prepare'],tools:['workspace.list','workspace.read','workspace.replace','check.run','artifact.publish_local','research.search','research.fetch','research.read'],workCalls:v.id==='midas-intelligence'?1:17,searchCalls:v.id==='midas-intelligence'?0:2}))});
+ const preview=await engine.previewRequest('release-readiness/investigate-v2'),body=buildResponsesBody(proposal.operating.route,preview.request,preview.schema);
+ writeFileSync(join(directory,'initial-responses-body.json'),JSON.stringify(body,null,2),{flag:'wx'});writeFileSync(join(directory,'initial-count-body.json'),JSON.stringify(countPayload(body),null,2),{flag:'wx'});
+ writeFileSync(join(directory,'payload-audit.json'),JSON.stringify({implementationHash:portfolioImplementationHash(),proposalHash:hash(proposal),bodyHash:hash(body),schemaHash:hash(preview.schema),serializedBytes:Buffer.byteLength(JSON.stringify(body)),inputTokens:'unknown until authorized provider count',providerAccess:'not probed',credentialRead:false,providerRequests:0,counts:0,stages:'research tools → sourced report → actual report review → decision and bounded work',procedureComparison:'zero released calls; requires evidence-supported fair study'},null,2),{flag:'wx'});json({directory,proposalHash:hash(proposal),maximumExposureMinor:proposal.maximumExposureMinor,providerRequests:0});store.close();
+}
+else if(command==='preflight'){json({root,implementationHash:portfolioImplementationHash(),signedGrantValid:Boolean(live),providerAccess:'not probed',credentialRead:false,providerRequests:0,accounting:live?.totals()??null,recovery:await engine.recover(),runnable:portfolio.snapshot().tasks.filter(t=>t.runnable).map(t=>t.id)});store.close();}
+else if(command==='sign-proposal'){
+ requireThat(!live,'SIGN_OFFLINE_ONLY');const path=resolve(flag('--proposal','')),proposal=JSON.parse(readFileSync(path,'utf8')),expected=flag('--approve-proposal-hash',''),reference=flag('--approval-reference','');requireThat(expected.length===64&&hash(proposal)===expected&&reference.length>0,'EXACT_OWNER_APPROVAL_REQUIRED');requireThat(proposal.portfolio.root===root&&proposal.approved===false&&proposal.portfolio.implementationHash===portfolioImplementationHash(),'PROPOSAL_STALE');requireThat(!existsSync(join(root,'portfolio.authorization.json')),'EXISTING_GRANT_PRESERVED');
+ const publicKey=readFileSync(resolve(flag('--owner-public-key','')),'utf8'),key=readFileSync(resolve(flag('--owner-private-key','')),'utf8');const approvedBy=flag('--principal','Mason');proposal.operating.approvedBy=approvedBy;proposal.operating.approvalReference=reference;proposal.portfolio.approvedBy=approvedBy;proposal.portfolio.approvalReference=reference;proposal.portfolio.approved=true;proposal.portfolio.operatingGrantHash=hash(proposal.operating);const envelope={...signed(proposal.portfolio,key),operatingEnvelope:signed(proposal.operating,key)};
+ loadLivePortfolio(root,store,{envelope,trustedPublicKey:publicKey});mkdirSync(join(root,'auth'),{recursive:true});writeFileSync(join(root,'auth','portfolio-owner.pub'),publicKey,{flag:'wx'});writeFileSync(join(root,'portfolio.authorization.json'),JSON.stringify(envelope,null,2),{flag:'wx'});json({signed:true,reference,providerRequests:0,credentialRead:false});store.close();
+}
+else if(command==='backup'){const {backupPortfolio}=await import('./continuity.ts');json(backupPortfolio(store,{sourceRoot:root,backupRoot:resolve(flag('--backup',''))}));store.close();}
+else if(command==='report'||command==='status'){const snapshot={...portfolioView(engine,tools),accounting:live?.totals()??null};if(command==='report'){mkdirSync(join(root,'reports'),{recursive:true});writeFileSync(join(root,'reports/portfolio.json'),JSON.stringify(snapshot,null,2));}json(snapshot);store.close();}
+else throw Error('Commands: prepare; run --mock|--live [--task venture/task]; serve [--mock|--live]; recover; propose; preflight [--live]; sign-proposal; backup; restore; status; report. No provider route is implicit.');
