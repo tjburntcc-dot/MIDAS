@@ -1,5 +1,7 @@
 # MIDAS operating workspace — Mission 030
 
+The accepted offline checkpoint remains preserved. The current unsigned execution request is [Astra High v3](ASTRA-EXECUTION-V3.md), with a $23 maximum, a hypothesis-challenging investigation, conditional comparison, bounded recovery and a separately selectable Gmail test. Open `http://127.0.0.1:43130/?id=midas-venture-investigation-v3` to review it. The original Sol proposal below is historical; no live grant has been signed by this revision.
+
 This release connects an owner goal, permitted research, persisted business understanding, experimental worker assignment, draft and substantive review, exact communication approval, a durable outbox, inbound evidence and procedure comparison. Its completed verification is offline. The prepared founder workspace contains development-assistant research and proposals, clearly separated from runtime observations.
 
 ## Open the working product
