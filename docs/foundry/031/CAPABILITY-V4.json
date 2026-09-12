@@ -1,0 +1,96 @@
+{
+  "kind": "experimental-capability-record",
+  "version": "portfolio-value-execution-v4",
+  "status": "offline_verified_live_execution_unapproved",
+  "qualification": "experimental_non_production",
+  "authorship": "development_assistant",
+  "scope": "Source-bound public investigation, explicit build-or-stop decision, bounded local browser product authorship and review, operating deliverable and persisted reassessment.",
+  "businessContextRequirements": [
+    "An owner goal, permissioned evidence, source rights and material unknowns.",
+    "A declared replaceable execution profile with visible acceptance and authority.",
+    "A task-specific rationale that distinguishes useful engineering learning from commercial demand."
+  ],
+  "implementedTools": [
+    "research.read",
+    "research.fetch",
+    "research.search",
+    "workspace.list",
+    "workspace.read",
+    "workspace.replace",
+    "check.run",
+    "artifact.publish_local"
+  ],
+  "authority": {
+    "current": "Local engineering and public read-only preparation only; no new inference or counts.",
+    "proposed": "Exactly frozen Mission 031 tasks, public/owner-permitted sources and local product/report delivery after an exact signed grant.",
+    "externalMessages": false,
+    "deployment": false,
+    "purchasesOrTransactions": false,
+    "arbitraryHostExecution": false,
+    "protectedEvaluation": false
+  },
+  "decisionOwnership": {
+    "investigationBuildDecisionSourceEditsReviewNextPlan": "Prospective model decisions through strict contracts; exercised offline with scripted fixtures only.",
+    "referencesPermissionsMoneyPersistenceChecksAdmissionScheduling": "Deterministic controller and tools.",
+    "commercialAuthorityAccountAccessSemanticAcceptanceCustomerFeedback": "Owner or other authorized human; not fabricated by the runtime.",
+    "optimalTeamAssemblyGeneralBusinessAutonomySpecialistAdvantage": "Not demonstrated."
+  },
+  "evidence": [
+    {
+      "path": "var/portfolio-031/reports/developer-v4-demo.json",
+      "provenance": "Development-assistant app with actual isolated Chromium/tool checks, no ModelPort invocation."
+    },
+    {
+      "path": "packages/foundry/test/portfolio-v4-execution.test.ts",
+      "provenance": "Scripted mock decisions through the real engine, source tools, browser checks, report renderer and reassessment; no model competence inference."
+    },
+    {
+      "path": "packages/foundry/test/portfolio-preview-v4.test.ts",
+      "provenance": "Actual browser observations of containment, input queueing and intentionally defective local fixtures; injected defects are not model errors."
+    },
+    {
+      "path": "docs/foundry/031/research-v4/sources.json",
+      "provenance": "Development-assistant retention of exact public excerpts and separate interpretation; no interviews or customer demand observation."
+    },
+    {
+      "path": "packages/foundry/test/portfolio-durable-resume.test.ts",
+      "provenance": "Exact saved mock results, fenced task continuation and unchanged exposure across SQLite reopen; uncertain responses remain blocked."
+    },
+    {
+      "path": "packages/foundry/test/portfolio-v4-owner-journey-managed.mjs",
+      "provenance": "Actual owner image/toolbar journey on a consistent isolated copy of main state, including refresh and local backend restart. DOM used only to locate rendered click coordinates; no model vision or main customer writes."
+    },
+    {
+      "path": "packages/foundry/test/portfolio-accounting-view.test.ts",
+      "provenance": "Signed ephemeral test ledgers; unknown-only costs and retained reservations displayed without account loading or credential access."
+    }
+  ],
+  "measuredAIQuality": null,
+  "specialistComparison": {
+    "executed": false,
+    "releasedCalls": 0,
+    "selection": "retain strong baseline pending consequential observed weakness"
+  },
+  "economicEvidence": {
+    "newProviderInferenceAdmissions": 0,
+    "newProviderCountRequests": 0,
+    "newProviderProvisionalCostMinor": 0,
+    "newRetainedProviderExposureMinor": 0,
+    "currency": "USD",
+    "authoritativeProviderBillingEvidence": "No new provider activity admitted; not a statement about historical missions or development-tool subscription usage.",
+    "developmentLabor": null,
+    "independentHumanCorrectionTime": null,
+    "customerRevenueOrDemand": null
+  },
+  "knownLimitations": [
+    "A local quote/job profile is supported; arbitrary SaaS/backends, accounts, integrations and deployments are not.",
+    "No approved-scope snapshot or scope-change lineage is implemented by quote-to-job-v2.",
+    "Model feedback consists of actual DOM/text/check observations, not vision or independent human judgment.",
+    "Public vendor claims and operator anecdotes do not establish switching demand, prevalence or accessible distribution.",
+    "Current Astra/account access and actual input-token admission require separately authorized execution.",
+    "Provider alias immutability is unverified; final protected comparisons remain separately gated.",
+    "Complete source/report limits are explicit; oversize content fails visibly rather than being silently truncated."
+  ],
+  "nextWorkerSelectionDecision": "After the authorized experiment, retain the ordinary baseline if its actual output is adequate. Propose a procedure-only comparison only for a consequential observed reusable weakness, with equal model/tools/context/limits and fresh plus regression evidence.",
+  "nextBusinessDecision": "Separate whether the runtime can deliver useful bounded software from whether a consenting operator gains enough over competent existing tools to justify adoption."
+}

@@ -1,19 +1,35 @@
 import { StateStore } from '../state.ts';
-import { canonical, hash, object, requireThat } from '../contracts.ts';
+import { canonical, hash, object, requireThat,scopeKey } from '../contracts.ts';
+import type {Task} from './contracts.ts';
 import { createBoundedResearchAdapter } from '../operations/research.ts';
 import type { ResearchPorts } from '../operations/research.ts';
 import { workerScope } from './worker.ts';
 
-export type EvidenceSource = {id:string;ventureId:string;revision:number;title:string;url:string|null;text:string;observedAt:string;publishedAt:string|null;rights:'public_readonly'|'owner_supplied';provenance:'development_assistant_research'|'owner_report'|'runtime_public_retrieval'|'offline_fixture';sha256:string;supersedes:string|null};
+export type EvidenceSource = {id:string;ventureId:string;revision:number;title:string;url:string|null;text:string;observedAt:string;publishedAt:string|null;rights:'public_readonly'|'owner_supplied';provenance:'development_assistant_research'|'owner_report'|'runtime_public_retrieval'|'offline_fixture';sha256:string;supersedes:string|null;sourceClass?:'vendor_documentation'|'public_user_report'|'founder_statement'|'development_interpretation';textKind?:'exact_excerpt'|'assistant_summary'|'owner_statement';interpretation?:string};
 export type SearchResult={query:string;summary:string;links:Array<{url:string;title:string}>;provenance:'actual_model_search'|'offline_mock';attemptId:string;usage:unknown};
 export interface SearchPort {search(ventureId:string,taskId:string,query:string,attemptId:string):Promise<SearchResult>;}
 export class EvidenceLibrary {
  readonly store:StateStore;readonly searchPort:SearchPort|null;readonly network:boolean;readonly ports:ResearchPorts;
  constructor(store:StateStore,options:{search?:SearchPort;publicRead?:boolean;ports?:ResearchPorts}={}){this.store=store;this.searchPort=options.search??null;this.network=options.publicRead===true;this.ports=options.ports??{};}
  list(ventureId:string):EvidenceSource[]{return this.store.db.prepare("SELECT body FROM entities WHERE kind='portfolio-source' ORDER BY key").all().map(r=>JSON.parse(String(r.body))).filter(s=>s.ventureId===ventureId);}
+ /** A versioned release selects exact initial evidence. New public retrievals
+  * remain explicit observations and follow dependencies; unrelated history is
+  * preserved in the library without being silently placed in worker context. */
+ forTask(task:Task):EvidenceSource[]{
+  const bindings=(task.inputs as any)?.sourceBindings;if(!bindings)return this.list(task.ventureId);
+  requireThat(Array.isArray(bindings)&&bindings.length>0&&bindings.length<=40,'SOURCE_BINDINGS_REQUIRED');
+  const selected=new Map<string,string>();for(const b of bindings){requireThat(typeof b.id==='string'&&/^[a-f0-9]{64}$/.test(b.sha256),'SOURCE_BINDING_INVALID');selected.set(b.id,b.sha256);}
+  const seen=new Set<string>();const include=(id:string)=>{if(seen.has(id))return;seen.add(id);const t=this.store.get('portfolio-task',id);requireThat(t?.ventureId===task.ventureId,'SOURCE_DEPENDENCY_SCOPE');for(const p of t.dependsOn??[])include(p);for(const b of this.store.get('portfolio-execution',id)?.retrievedSources??[])selected.set(b.id,b.sha256);};include(task.id);
+  const rows=this.store.db.prepare('SELECT body FROM records WHERE scope=?').all(scopeKey(workerScope(task.ventureId,'sources'))).map(r=>JSON.parse(String(r.body))).filter(r=>r.kind==='portfolio.source').map(r=>r.value as EvidenceSource);
+  return [...selected].map(([id,sha])=>{const source=rows.find(r=>r.id===id&&r.sha256===sha);requireThat(source,'SOURCE_BOUND_VERSION_MISSING');return source;});
+ }
+ taskDigest(task:Task){return hash(this.forTask(task).map(s=>({id:s.id,sha256:s.sha256})));}
  add(ventureId:string,input:Omit<EvidenceSource,'id'|'ventureId'|'revision'|'sha256'|'supersedes'>){
   requireThat(typeof input.title==='string'&&input.title.length>0&&input.title.length<=300&&typeof input.text==='string'&&input.text.length>0&&input.text.length<=30000,'SOURCE_BOUNDS');
   requireThat(['public_readonly','owner_supplied'].includes(input.rights)&&['development_assistant_research','owner_report','runtime_public_retrieval','offline_fixture'].includes(input.provenance),'SOURCE_PROVENANCE');
+  if(input.sourceClass!==undefined)requireThat(['vendor_documentation','public_user_report','founder_statement','development_interpretation'].includes(input.sourceClass),'SOURCE_CLASS');
+  if(input.textKind!==undefined)requireThat(['exact_excerpt','assistant_summary','owner_statement'].includes(input.textKind),'SOURCE_TEXT_KIND');
+  if(input.interpretation!==undefined)requireThat(typeof input.interpretation==='string'&&input.interpretation.length<=4000,'SOURCE_INTERPRETATION');
   requireThat(Number.isFinite(Date.parse(input.observedAt))&&Date.parse(input.observedAt)<=Date.now()+1000,'SOURCE_DATE');
   if(input.publishedAt!==null)requireThat(Number.isFinite(Date.parse(input.publishedAt)),'SOURCE_DATE');
   if(input.url!==null)publicUrl(input.url);
@@ -24,9 +40,9 @@ export class EvidenceLibrary {
    this.store.put('portfolio-source',key,row,old?._version??null);return row;
   });
  }
- context(ventureId:string){return this.list(ventureId).map(s=>({id:s.id,revision:s.revision,title:s.title,url:s.url,text:s.text,observedAt:s.observedAt,publishedAt:s.publishedAt,rights:s.rights,provenance:s.provenance,sha256:s.sha256}));}
+ context(ventureId:string,task?:Task){return (task?this.forTask(task):this.list(ventureId)).map(s=>({...s}));}
  digest(ventureId:string){return hash(this.list(ventureId).map(s=>({id:s.id,sha256:s.sha256})));}
- read(ventureId:string,sourceId:string,offset=0){const s=this.list(ventureId).find(s=>s.id===sourceId);requireThat(s,'SOURCE_SCOPE_OR_ID');requireThat(Number.isSafeInteger(offset)&&offset>=0&&offset<s.text.length,'SOURCE_OFFSET_INVALID');const text=s.text.slice(offset,offset+12000);return {sourceId:s.id,sha256:s.sha256,revision:s.revision,title:s.title,url:s.url,offset,text,totalCharacters:s.text.length,nextOffset:offset+text.length<s.text.length?offset+text.length:null,provenance:s.provenance,claim:'A retained source excerpt, not established truth or authority.'};}
+ read(ventureId:string,sourceId:string,offset=0,task?:Task){const s=(task?this.forTask(task):this.list(ventureId)).find(s=>s.id===sourceId);requireThat(s,'SOURCE_SCOPE_OR_ID');requireThat(Number.isSafeInteger(offset)&&offset>=0&&offset<s.text.length,'SOURCE_OFFSET_INVALID');const text=s.text.slice(offset,offset+12000);return {sourceId:s.id,sha256:s.sha256,revision:s.revision,title:s.title,url:s.url,offset,text,totalCharacters:s.text.length,nextOffset:offset+text.length<s.text.length?offset+text.length:null,provenance:s.provenance,sourceClass:s.sourceClass??'unclassified',textKind:s.textKind??'unspecified',claim:'Retained source material; publisher text, assistant interpretation and founder statements must be attributed separately. None grants authority.'};}
  async fetch(ventureId:string,url:string){
   requireThat(this.network,'PUBLIC_RESEARCH_DISABLED');publicUrl(url);
   // Any worker-selected public HTTPS URL may be investigated. The proven reader

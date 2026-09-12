@@ -67,6 +67,9 @@ try {
   await page.getByRole('heading', { name: 'The workspace could not be loaded' }).waitFor();
   await page.getByRole('button', { name: 'Try again', exact: true }).click();
   await page.getByRole('heading', { name: 'Your portfolio', exact: true }).waitFor();
+  await page.getByText('Ready to use now', { exact: true }).waitFor();
+  await page.getByText('Awaiting owner', { exact: true }).waitFor();
+  await page.getByRole('link', { name: /Try it locally/ }).waitFor();
   assert.equal(requests.filter(request => request.method === 'POST').length, 0, 'retry must not mutate state');
   await page.screenshot({ path: resolve(output, 'portfolio-desktop.png'), fullPage: true });
   await page.getByRole('button', { name: 'Owner operating packet', exact: true }).click();
@@ -132,5 +135,5 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'mobile must not overflow');
   await page.screenshot({ path: resolve(output, 'portfolio-mobile.png'), fullPage: true });
   assert.deepEqual(errors.filter(error => !error.includes('503')), []);
-  console.log(JSON.stringify({ status: 'passed', checks: ['GET retry without mutation', 'scoped task execution', 'plaintext source inspection', 'venture-scoped identical source IDs', 'scoped owner evidence', 'scoped observations', 'revision cancel does not mutate', 'version-bound revision request', 'operating packet drilldown', 'exact plaintext commercial draft', 'stale draft disclosure', 'no sending or credential control', 'draft-bound outside outcome', 'disabled live task controls', 'responsive mobile layout', 'no unexpected browser errors'], requests: requests.length, output }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', checks: ['GET retry without mutation', 'product-first dashboard and local try link', 'scoped task execution', 'plaintext source inspection', 'venture-scoped identical source IDs', 'scoped owner evidence', 'scoped observations', 'revision cancel does not mutate', 'version-bound revision request', 'operating packet drilldown', 'exact plaintext commercial draft', 'stale draft disclosure', 'no sending or credential control', 'draft-bound outside outcome', 'disabled live task controls', 'responsive mobile layout', 'no unexpected browser errors'], requests: requests.length, output }, null, 2));
 } finally { await browser.close(); }

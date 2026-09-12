@@ -11,7 +11,7 @@ export const workerSchema = {
  type:'object',additionalProperties:false,required:['action','reason','toolCall'],properties:{
   action:{type:'string',enum:['tool','complete','blocked']},reason:text,
   toolCall:{anyOf:[{type:'null'},{type:'object',additionalProperties:false,required:['name','arguments'],properties:{
-   name:{type:'string',enum:TOOL_NAMES},arguments:{type:'object',additionalProperties:false,required:['path','content','expectedHash','query','url'],properties:{path:nullable(160),content:nullable(48000),expectedHash:nullable(64),query:nullable(500),url:nullable(2000)}}
+   name:{type:'string',enum:TOOL_NAMES},arguments:{type:'object',additionalProperties:false,required:['path','content','expectedHash','query','url'],properties:{path:nullable(150),content:nullable(48000),expectedHash:{...nullable(64),pattern:'^[a-f0-9]{64}$'},query:nullable(500),url:nullable(2000)}}
   }}]}
  }
 };
@@ -23,7 +23,7 @@ export function validateWorker(out:unknown):asserts out is WorkerDecision {
  requireThat(x.toolCall!==null,'WORKER_TOOL_REQUIRED');object(x.toolCall,['name','arguments']);
  requireThat(TOOL_NAMES.includes(x.toolCall.name),'WORKER_TOOL_UNSUPPORTED');
  const a=x.toolCall.arguments;object(a,['path','content','expectedHash','query','url']);
- for(const [key,max] of Object.entries({path:160,content:48000,expectedHash:64,query:500,url:2000})){
+ for(const [key,max] of Object.entries({path:150,content:48000,expectedHash:64,query:500,url:2000})){
   const value=a[key as keyof typeof a];requireThat(value===null||(typeof value==='string'&&value.length<=max),'WORKER_ARGUMENT_INVALID');
  }
  const allowed:Record<string,string[]>={'workspace.list':[],'workspace.read':['path'],'workspace.replace':['path','content','expectedHash'],'check.run':[],'artifact.publish_local':[],'research.search':['query'],'research.fetch':['url'],'research.read':['path','query']};
@@ -54,4 +54,4 @@ export class BudgetedWorker implements WorkerModel {
 }
 export function requestIdentity(call:WorkerCall){return hash({ventureId:call.ventureId,goal:call.goal,sourceHosts:call.sourceHosts,request:call.request,schema:call.schema,...(call.recoveryOf?{recoveryOf:call.recoveryOf}:{})});}
 export function mockResult(output:unknown,latencyMs=0):ModelResult{return {output,usage:{inputTokens:null,outputTokens:null,cost:{status:'known',money:{currency:'USD',minorUnits:0},basis:'Explicit offline mock; no provider request. Local compute and engineering labor unmeasured.'}},route:{provider:'offline',model:'deterministic-test-double',kind:'fixture'},metadata:{providerRequestId:null,cachedInputTokens:null,latencyMs}};}
-export function boundedContext(value:unknown){const bytes=canonical(value);requireThat(Buffer.byteLength(bytes)<=56000,'PORTFOLIO_CONTEXT_TOO_LARGE');return JSON.parse(bytes);}
+export function boundedContext(value:unknown,maxBytes=56000){requireThat([56000,72000].includes(maxBytes),'CONTEXT_LIMIT_INVALID');const bytes=canonical(value);requireThat(Buffer.byteLength(bytes)<=maxBytes,'PORTFOLIO_CONTEXT_TOO_LARGE');return JSON.parse(bytes);}
