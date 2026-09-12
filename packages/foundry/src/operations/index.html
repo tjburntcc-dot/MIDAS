@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MIDAS · Owner workspace</title>
+  <link rel="stylesheet" href="/ops.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/">MIDAS <span>Owner workspace</span></a>
+      <p class="side-kicker">OPERATING CONSOLE</p>
+      <nav aria-label="Workspace sections" id="navigation">
+        <button data-view="business" class="active"><span>01</span> Business</button>
+        <button data-view="work"><span>02</span> Work</button>
+        <button data-view="team"><span>03</span> Team</button>
+        <button data-view="pipeline"><span>04</span> Pipeline</button>
+        <button data-view="results"><span>05</span> Results</button>
+        <button data-view="approvals"><span>06</span> Approvals</button>
+      </nav>
+      <div class="side-note"><i></i><strong>Owner-controlled operation</strong><p>External effects require an exact, active approval.</p></div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <div><p class="eyebrow">MIDAS / BUSINESS OPERATIONS</p><h1 id="page-title">Business</h1></div>
+        <div id="business-picker"></div>
+      </header>
+      <div id="notice" aria-live="polite"></div>
+      <section id="workspace" aria-live="polite"><div class="loading">Loading the persisted workspace…</div></section>
+    </main>
+  </div>
+  <script src="/ops.js" defer></script>
+</body>
+</html>

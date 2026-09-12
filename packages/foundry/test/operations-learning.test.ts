@@ -31,6 +31,10 @@ function fixtureOutput(context: ProcedureWorkerContext) {
 }
 function invoker(run: (request: MeteredInvocation) => any): OperatingModelInvoker { return { kind: 'operating-models', invoke: async request => run(request) }; }
 
+test('shared provider access failure stops comparison and replay does not admit the remaining cells',async()=>{
+    const h=harness();try{const f=frozen(h.app);let calls=0;const failing=invoker(()=>{calls++;throw Object.assign(Error('sanitized'),{code:'MODEL_HTTP_ERROR'});});const first=await h.app.compare(principal,scope,f.id,failing);assert.equal(calls,1);assert.equal(first.attempts.length,1);assert.equal(first.analysis.completedPairs,0);assert.equal(first.analysis.failures[0].errorCode,'MODEL_HTTP_ERROR');await h.app.compare(principal,scope,f.id,failing);assert.equal(calls,1);}finally{h.close();}
+});
+
 test('strict extraction schema creates an unqualified hypothesis and literal guards keep source email and private overlay values out of reusable procedure', () => {
     const h = harness(); try {
         assert.equal(PROCEDURE_EXTRACTION_SCHEMA.additionalProperties, false); assert.equal(PROCEDURE_WORK_OUTPUT_SCHEMA.additionalProperties, false);
