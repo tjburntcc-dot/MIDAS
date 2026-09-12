@@ -1,7 +1,7 @@
 import { resolve,join } from 'node:path';
 import { mkdirSync,writeFileSync,readFileSync,existsSync } from 'node:fs';
 import { StateStore } from '../state.ts';
-import { hash,requireThat } from '../contracts.ts';
+import { hash,requireThat,canonical } from '../contracts.ts';
 import { buildResponsesBody } from '../model-port.ts';
 import { countPayload } from '../experiment/token-count.ts';
 import { signed } from '../experiment/config.ts';
@@ -11,6 +11,7 @@ import { LocalWorkTools } from './tools.ts';
 import { EvidenceLibrary } from './evidence.ts';
 import { PortfolioEngine } from './engine.ts';
 import { preparePortfolio,offlinePortfolioModel } from './prepare.ts';
+import { prepareIntegratedRelease,integratedTaskAllowances } from './integrated-release.ts';
 import { prepareOperatingRelease } from './release.ts';
 import { prepareCommercialPackets } from './commercial.ts';
 import { createTaskPreparer } from './task-preparation.ts';
@@ -34,12 +35,15 @@ else if(command==='recover-incomplete'){requireThat(live,'SIGNED_RECOVERY_AUTHOR
 else if(command==='recover'){json(await engine.recover());store.close();}
 else if(command==='serve'){await engine.recover();const app=servePortfolio({engine,tools,port:Number(flag('--port','43131'))});json({url:await app.ready,root,mode:model?.kind??'disabled',providerCallsAuthorized:Boolean(live),automaticDispatch:false});const close=async()=>{await app.close();store.close();process.exit(0);};process.once('SIGINT',close);process.once('SIGTERM',close);}
 else if(command==='propose'){
- requireThat(!live,'PROPOSE_MUST_BE_OFFLINE');prepareOperatingRelease(portfolio,evidence);
+ requireThat(!live,'PROPOSE_MUST_BE_OFFLINE');const integrated=args.includes('--integrated');if(integrated)prepareIntegratedRelease(portfolio,evidence);else prepareOperatingRelease(portfolio,evidence);
  const id=flag('--id','portfolio-031-operating-v1'),directory=resolve(flag('--output',join(root,'proposal',id)));
- const proposal=writePortfolioProposal(directory,{root,id,projectId:'proj_H01ORqdOPQM6vdGwQYsqFL5r',credentialFile:'C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key',expiresAt:flag('--expires','2026-09-25T22:00:00.000Z'),countUncertaintyMinor:400,recoveryAdmissions:2,billingPublicKey:args.includes('--billing-public-key')?readFileSync(resolve(flag('--billing-public-key','')),'utf8'):null,ventures:portfolio.snapshot().ventures.map(v=>({id:v.id,goal:v.goal,capabilities:['research.investigate','quality.review','portfolio.plan','portfolio.reassess','service.brief','software.build','commercial.prepare'],tools:['workspace.list','workspace.read','workspace.replace','check.run','artifact.publish_local','research.search','research.fetch','research.read'],workCalls:v.id==='midas-intelligence'?1:17,searchCalls:v.id==='midas-intelligence'?0:2}))});
- const preview=await engine.previewRequest('release-readiness/investigate-v2'),body=buildResponsesBody(proposal.operating.route,preview.request,preview.schema);
+ const proposal=writePortfolioProposal(directory,{root,id,projectId:'proj_H01ORqdOPQM6vdGwQYsqFL5r',credentialFile:'C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key',expiresAt:flag('--expires','2026-09-25T22:00:00.000Z'),countUncertaintyMinor:400,recoveryAdmissions:2,billingPublicKey:args.includes('--billing-public-key')?readFileSync(resolve(flag('--billing-public-key','')),'utf8'):null,...(integrated?{tasks:integratedTaskAllowances(portfolio)}:{}),ventures:portfolio.snapshot().ventures.filter(v=>!integrated||v.id==='quote-desk').map(v=>({id:v.id,goal:v.goal,capabilities:['research.investigate','quality.review','portfolio.plan','portfolio.reassess','service.brief','software.build','commercial.prepare'],tools:['workspace.list','workspace.read','workspace.replace','check.run','artifact.publish_local','research.search','research.fetch','research.read'],workCalls:integrated?34:v.id==='midas-intelligence'?1:17,searchCalls:v.id==='midas-intelligence'?0:2}))});
+ const previewEngine=integrated?new PortfolioEngine({portfolio,tools,evidence,prepareTask:createTaskPreparer(portfolio,tools,evidence),accounting:()=>({taskAllocations:proposal.portfolio.tasks})}):engine;
+ const preview=await previewEngine.previewRequest(integrated?'quote-desk/investigate-v3':'release-readiness/investigate-v2'),body=buildResponsesBody(proposal.operating.route,preview.request,preview.schema);
  writeFileSync(join(directory,'initial-responses-body.json'),JSON.stringify(body,null,2),{flag:'wx'});writeFileSync(join(directory,'initial-count-body.json'),JSON.stringify(countPayload(body),null,2),{flag:'wx'});
- writeFileSync(join(directory,'payload-audit.json'),JSON.stringify({implementationHash:portfolioImplementationHash(),proposalHash:hash(proposal),bodyHash:hash(body),schemaHash:hash(preview.schema),serializedBytes:Buffer.byteLength(JSON.stringify(body)),inputTokens:'unknown until authorized provider count',providerAccess:'not probed',credentialRead:false,providerRequests:0,counts:0,stages:'research tools → sourced report → actual report review → decision and bounded work',procedureComparison:'zero released calls; requires evidence-supported fair study'},null,2),{flag:'wx'});json({directory,proposalHash:hash(proposal),maximumExposureMinor:proposal.maximumExposureMinor,providerRequests:0});store.close();
+ writeFileSync(join(directory,'initial-responses-bytes.json'),canonical(body),{flag:'wx'});writeFileSync(join(directory,'initial-count-bytes.json'),canonical(countPayload(body)),{flag:'wx'});
+ if(integrated)writeFileSync(join(directory,'task-manifest.json'),JSON.stringify({tasks:integratedTaskAllowances(portfolio).map(t=>({allowance:t,task:portfolio.getTask(t.id)})),sources:evidence.list('quote-desk').map(({text,...source})=>source),laterRequests:'Assembled from actual tool outputs and exact input artifact versions; cannot be serialized before those observations exist.'},null,2),{flag:'wx'});
+ writeFileSync(join(directory,'payload-audit.json'),JSON.stringify({implementationHash:portfolioImplementationHash(),proposalHash:hash(proposal),bodyHash:hash(body),schemaHash:hash(preview.schema),serializedBytes:Buffer.byteLength(JSON.stringify(body)),inputTokens:'unknown until authorized provider count',providerAccess:'not probed',credentialRead:false,providerRequests:0,counts:0,stages:integrated?'research / build-or-stop / write-run-test-repair / product review / operating deliverable / outcome decision':'research / report / report review / planning',procedureComparison:'zero released calls; requires evidence-supported fair study'},null,2),{flag:'wx'});json({directory,proposalHash:hash(proposal),maximumExposureMinor:proposal.maximumExposureMinor,providerRequests:0});store.close();
 }
 else if(command==='preflight'){json({root,implementationHash:portfolioImplementationHash(),signedGrantValid:Boolean(live),providerAccess:'not probed',credentialRead:false,providerRequests:0,accounting:live?.totals()??null,recovery:await engine.recover(),runnable:portfolio.snapshot().tasks.filter(t=>t.runnable).map(t=>t.id)});store.close();}
 else if(command==='sign-proposal'){

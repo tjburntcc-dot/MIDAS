@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { StateStore } from '../src/state.ts';
 import { hash,scopeKey } from '../src/contracts.ts';
 import { keypair,signed } from '../src/experiment/config.ts';
-import { createPortfolioProposal,loadLivePortfolio,portfolioRecoveryInstruction } from '../src/portfolio/live.ts';
+import { createPortfolioProposal,loadLivePortfolio,portfolioRecoveryInstruction,taskDefinitionHash } from '../src/portfolio/live.ts';
 import type { WorkerCall } from '../src/portfolio/worker.ts';
 import { makeWorkerRequest,workerSchema,validateWorker } from '../src/portfolio/worker.ts';
 import { searchBody,searchCountBody,searchPolicy } from '../src/portfolio/search.ts';
@@ -90,4 +90,19 @@ test('billing-only loading works after execution expiry and cannot issue work or
   const billing=loadLivePortfolio(f.root,f.store,{envelope:env,trustedPublicKey:f.keys.publicKey,purpose:'billing',execution:{kind:'mock',transport:f.transport}}),before=f.requests.length;await assert.rejects(()=>billing.worker.run(f.call('not-executable')),/BILLING_ONLY/);await assert.rejects(()=>billing.search.search('venture','venture/build','not executable','blocked-search'),/BILLING_ONLY/);
   const statement={kind:'closed_attempt_invoice',projectId:'proj_test',authorizationHash:hash(f.proposal.operating),scope:scopeKey(f.proposal.operating.accountScope),attemptId:'closed-after-expiry',requestHash:row.requestHash,providerRequestId:row.providerRequestId,actual:{currency:'USD',minorUnits:124},evidenceSha256:hash('Explicit offline overage fixture'),issuer:'ephemeral-test-billing-authority',closedAt:new Date(Date.now()).toISOString()};const result=billing.reconcileBilling({statement,signature:signed(statement,f.keys.privateKey).signature});assert.equal(result.accounting.settledMinor,124);assert.equal(result.accounting.retainedMinor,25);assert.equal(f.store.get('experiment-account',scopeKey(f.proposal.operating.accountScope)).halted,true);assert.equal(f.requests.length,before);
  }finally{t.mock.restoreAll();f.close();}
+});
+
+
+test('frozen integrated task caps forbid counter transfer, changed definitions and unlisted generated work before transport',async()=>{
+ const f=fixture({workCalls:4,recoveryAdmissions:2,searchCalls:0});try{
+  const original=f.store.get('portfolio-task','venture/build'),first={...original,title:'Build',objective:'Bounded build',dependsOn:[],acceptance:['Check'],requiredChecks:['delivery.current'],requiredCompetencies:[],resource:{modelCalls:3,localToolRuns:4},inputs:{}};f.store.transaction(()=>{f.store.put('portfolio-task','venture/build',first,original._version);f.store.put('portfolio-task','venture/review',{...first,id:'venture/review'},null);});
+  f.proposal.portfolio.tasks=[{id:'venture/build',definitionHash:taskDefinitionHash(first),workCalls:1},{id:'venture/review',definitionHash:taskDefinitionHash(f.store.get('portfolio-task','venture/review')),workCalls:1}];
+  const ports=f.load();await ports.worker.run(f.call());const before=f.requests.length;
+  await assert.rejects(()=>ports.worker.run(f.call('extra-build')),/FROZEN_TASK_CAP/);assert.equal(f.requests.length,before);
+  f.store.transaction(()=>{const t=f.store.get('portfolio-task','venture/build');f.store.put('portfolio-task',t.id,{...t,objective:'Alter the approved job'},t._version);});
+  await assert.rejects(()=>ports.worker.run(f.call('changed')),/FROZEN_TASK_SCOPE/);assert.equal(f.requests.length,before);
+  f.store.transaction(()=>f.store.put('portfolio-task','venture/generated',{...first,id:'venture/generated'},null));
+  const call={...f.call('generated'),request:makeWorkerRequest({ventureId:'venture',taskId:'venture/generated',attemptId:'generated',tools:first.allowedTools,context:{goal:'bounded'}})};
+  await assert.rejects(()=>ports.worker.run(call),/FROZEN_TASK_SCOPE/);assert.equal(f.requests.length,before);
+ }finally{f.close();}
 });

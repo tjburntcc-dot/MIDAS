@@ -102,3 +102,14 @@ test('offline CLI proposal signing uses matching approval references and never o
   const preflight=command('preflight','--live');assert.equal(preflight.signedGrantValid,true);assert.equal(preflight.providerRequests,0);assert.equal(preflight.credentialRead,false);assert.equal(existsSync(providerCredential),false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+
+test('integrated CLI freezes the exact six-task request and smaller quote without opening credentials',{timeout:30000},()=>{
+ const root=mkdtempSync(join(tmpdir(),'portfolio-integrated-proposal-')),cli=resolve('packages/foundry/src/portfolio/cli.ts');
+ const command=(...args:string[])=>JSON.parse(execFileSync(process.execPath,[cli,...args,'--root',root],{encoding:'utf8',timeout:20000}));
+ try{
+  command('prepare');const output=join(root,'unsigned');const prepared=command('propose','--integrated','--id','portfolio-031-integrated-test','--output',output);
+  const request=JSON.parse(readFileSync(join(output,'portfolio.authorization.request.json'),'utf8')),body=JSON.parse(readFileSync(join(output,'initial-responses-body.json'),'utf8')),context=JSON.parse(body.input).context;
+  assert.equal(readFileSync(join(output,'initial-responses-bytes.json'),'utf8'),JSON.stringify(JSON.parse(readFileSync(join(output,'initial-responses-bytes.json'),'utf8'))));assert.equal(JSON.parse(readFileSync(join(output,'task-manifest.json'),'utf8')).tasks.length,6);assert(JSON.parse(readFileSync(join(output,'payload-audit.json'),'utf8')).stages.includes('write-run-test-repair'));assert.equal(prepared.maximumExposureMinor,5182);assert.equal(request.inferenceAdmissions,36);assert.equal(request.countAdmissions,36);assert.equal(request.portfolio.tasks.length,6);assert.equal(request.portfolio.tasks.reduce((n:any,t:any)=>n+t.workCalls,0),32);assert.equal(request.portfolio.recovery.maxAdmissions,2);assert(context.task.inputs.release==='integrated-build-v3');assert.equal(context.remaining.modelCalls,8);assert(context.task.objective.includes('against'));assert.equal(request.approved,false);assert.equal(prepared.providerRequests,0);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
