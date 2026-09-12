@@ -12,6 +12,7 @@ import { hash,canonical } from '../src/contracts.ts';
 import { prepareAstra,prepareGmailTest,BUSINESS_ID,MAIL_ID,TEST_MESSAGES } from '../src/operations/launch.ts';
 import { draftOnlySchema,decisionSchema,reviewSchema,structure } from '../src/operations/contracts.ts';
 import { startLearning,recordImprovementCase } from '../src/operations/study.ts';
+import { OperatingMail,DurableMockMail } from '../src/operations/communication.ts';
 
 function base(){const root=mkdtempSync(join(tmpdir(),'midas-astra-proposal-')),store=new StateStore(join(root,'state.sqlite')),bare=new OperatingManager({store,researchPorts:()=>({})});return {root,store,bare};}
 function recoveryHarness(fault:'incomplete'|'uncertain'|'access'|'all-incomplete'){
@@ -44,6 +45,7 @@ test('Astra proposal preserves historical unsigned bytes and serializes the actu
 test('optional Gmail uses a separate zero-model-call business and exact unsent messages',()=>{
  const h=base();try{h.bare.create({id:'midas-owned-venture',name:'Parent',goal:'Historical idea',mode:'live',allowedUrls:[]});const p=prepareAstra(h.root,h.bare);const original=hash(h.bare.get(BUSINESS_ID));
   assert.throws(()=>prepareGmailTest(h.root,h.bare,'a@example.com',['b@example.com','b@example.com']),/DISTINCT/);
+  assert.throws(()=>prepareGmailTest(h.root,h.bare,'sender@example.com',['sender@example.com','stop@example.com']),/DISTINCT/);
   const mail=prepareGmailTest(h.root,h.bare,'sender@example.com',['ack@example.com','stop@example.com']);
   assert.equal(hash(h.bare.get(BUSINESS_ID)),original);assert.equal(p.grant.businesses.find(b=>b.id===MAIL_ID)!.maxCalls,0);assert.equal(mail.externalMessages,0);
   assert.deepEqual(mail.messages.map((m:any)=>({subject:m.subject,body:m.body})),TEST_MESSAGES);assert.equal(h.bare.get(MAIL_ID).approvedBatch,null);
@@ -65,6 +67,18 @@ test('the same failed parent cannot obtain a second fresh replacement',async()=>
  const request={...parent.request,scope:h.b.scope,requestId:'another-replacement',context:{...parent.request.context,recoveryInstruction}};
  await assert.rejects(h.models.invoke(owner(h.b.id),{businessId:h.b.id,goalHash:hash(h.b.goal),sourceHosts:h.manager.hosts(h.b),attemptId:request.requestId,stage:'recovery',recoveryOf:parent.id,request,schema:JSON.parse(raw.bytes).text.format.schema,validate:()=>{}}),/OPERATING_RECOVERY_ALREADY_CLAIMED/);
  assert.equal(h.inferences(),4);assert.equal(h.models.ledger.rows().length,4);
+ }finally{h.store.close();}
+});
+test('two exact controlled messages respect cadence before admitting the second and cannot duplicate effects',async()=>{
+ const h=base();try{
+  h.bare.create({id:'midas-owned-venture',name:'Parent',goal:'Historical idea',mode:'live',allowedUrls:[]});prepareAstra(h.root,h.bare);prepareGmailTest(h.root,h.bare,'sender@example.com',['ack@example.com','stop@example.com']);
+  let b=h.bare.get(MAIL_ID);b.mode='offline';h.bare.save(b,'test.only_mock');const keys=keypair(),transport=new DurableMockMail(h.store);
+  const mail=new OperatingMail(h.store,transport,{mode:'mock',sender:'sender@example.com',permittedRecipients:['ack@example.com','stop@example.com'],expiresAt:'2099-01-01T00:00:00Z',maxMessages:2,maxPolls:8,minimumIntervalSeconds:1,maxFollowUpsPerThread:0,approvalReference:'OFFLINE TEST APPROVAL',eligibilityBasis:'Fictional test mailboxes',businessIds:[MAIL_ID]},keys);
+  const m=new OperatingManager({store:h.store,communication:mail,researchPorts:()=>({})});await m.ensureApprovalQueue(MAIL_ID);const batch=m.view(MAIL_ID).approvals[0].batchHash;await m.approve(owner(MAIL_ID),MAIL_ID,batch);
+  await m.dispatch(owner(MAIL_ID),MAIL_ID,batch);await assert.rejects(m.dispatch(owner(MAIL_ID),MAIL_ID,batch),/DISPATCH_STATE_CHANGED/);await mail.dispatch(m.get(MAIL_ID),batch);
+  const effects=h.store.db.prepare("SELECT body FROM entities WHERE kind='mock-mail-provider'").all();assert.equal(effects.length,2);
+  const rows=m.view(MAIL_ID).outbox;assert.ok(rows.every((r:any)=>r.status==='provider_accepted'));const account=JSON.parse(String(h.store.db.prepare("SELECT body FROM entities WHERE kind='communication-account'").get()!.body));assert.equal(account.send,2);
+  const events=h.store.events(owner(MAIL_ID),b.scope).filter(e=>e.kind==='mail_dispatch_claimed');assert.equal(events.length,2);assert.ok(Date.parse(events[1].at)-Date.parse(events[0].at)>=990);
  }finally{h.store.close();}
 });
 test('the exact proposed envelope runs a mocked reviewed rejection without mail or comparison spending',async()=>{
