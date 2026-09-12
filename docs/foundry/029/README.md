@@ -67,3 +67,7 @@ The strict semantic check uses existing TypeScript 6.0.3 and existing Node decla
 ## Interactive integrated workbench
 
 See [WORKBENCH-COMPLETION.md](WORKBENCH-COMPLETION.md) for the runnable owner journey, assignment reuse and verification. The [pre-extension reconciliation](WORKBENCH-RECONCILIATION.md) preserves the original gaps. [WORKBENCH-LIVE-PROPOSAL.md](WORKBENCH-LIVE-PROPOSAL.md) is unsigned preparation only.
+
+## Founder-owned venture workspace (current default)
+
+[Founder-owned business creation](venture/COMPLETION.md) is the current owner journey. The synthetic invoice diagnostic is paused; its proposal and implementation remain preserved. Public research and prepared assets are development-assistant authored, with no new provider or external business execution.

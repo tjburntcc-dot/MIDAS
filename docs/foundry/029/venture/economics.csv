@@ -1,0 +1,7 @@
+currency,price_minor,assumed_nonlabor_minor,total_founder_hours,assumed_hourly_opportunity_cost_minor,contribution_before_omitted_costs_minor,status
+USD,14900,1000,2,2500,8900,assumption_not_observation
+USD,14900,1000,4,2500,3900,assumption_not_observation
+USD,14900,1000,6,2500,-1100,assumption_not_observation
+USD,14900,1000,4,1500,7900,assumption_not_observation
+USD,14900,1000,4,3500,-100,assumption_not_observation
+USD,14900,1000,4,5000,-6100,assumption_not_observation

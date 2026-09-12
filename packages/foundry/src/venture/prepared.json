@@ -1,0 +1,567 @@
+{
+  "version": "founder-venture-preparation-v1",
+  "provenance": {
+    "author": "Development assistant",
+    "createdAt": "2026-09-11T23:43:03Z",
+    "runtimeGenerated": false,
+    "externalActionsExecuted": false,
+    "customerEvidence": "none",
+    "research": "Public read-only pages; exact URLs and retrieval dates retained."
+  },
+  "founder": {
+    "objective": "Build MIDAS into an adaptive business-building system; use one Mason-owned venture as its first real operating environment.",
+    "facts": [
+      {
+        "text": "Mason explicitly owns the proposed first venture and remains decision maker for external actions.",
+        "sourceIds": [
+          "F-001"
+        ]
+      },
+      {
+        "text": "Existing local software can retain sources, plans, authority, attempts and verified fixture outcomes.",
+        "sourceIds": [
+          "R-001"
+        ]
+      },
+      {
+        "text": "Historical exploratory support work retained the strong baseline; no justified specialist advantage was established.",
+        "sourceIds": [
+          "R-001"
+        ]
+      },
+      {
+        "text": "Mason attends school and wants an ambitious but realistic two-week plan.",
+        "sourceIds": [
+          "F-002"
+        ]
+      },
+      {
+        "text": "Explicit assets: MIDAS, a laptop, current AI development tools and willingness to learn, interview, sell and deliver.",
+        "sourceIds": [
+          "F-002"
+        ]
+      }
+    ],
+    "unknowns": [
+      "Actual hours compatible with school, sleep and existing commitments; recommended schedule is not confirmed availability.",
+      "Demonstrated skill in reproducing website defects and reviewing claims.",
+      "Any permitted route to a service owner or small agency owner; no network supplied.",
+      "Business cash budget: none supplied; personal savings are not authorized funds.",
+      "Geography, channel permissions and availability of a webmaster to act on reports."
+    ],
+    "constraints": [
+      "No provider/count calls, credentials, purchases, publication or contact under this preparation.",
+      "No inferred network, labor, domain expertise or stale personal-resource information.",
+      "Prepared materials are development-assistant authored; no customer validation has occurred."
+    ]
+  },
+  "candidates": [
+    {
+      "id": "V-001",
+      "name": "Estimate-path check for residential cleaning firms",
+      "rank": 1,
+      "buyer": "Owner of an independent residential cleaning firm with an existing website and estimate-request route.",
+      "problem": "A broken or unclear estimate path could waste acquisition effort; frequency and monetary impact are unverified.",
+      "offer": "Fixed-scope evidence-backed issue report and webmaster tickets, not a website rebuild.",
+      "acquisition": "Provisional Raleigh-only manual discovery: review at most 10 official residential-cleaning websites in at most two hours; verify segment, estimate route and whether a relevant business-contact channel exists. Record source URL/date and unknown ownership; do not compile personal contacts. Mason then approves a maximum five interview invitations and exact messages/channel separately. No invitations sent; discovered sites are not qualified leads.",
+      "delivery": "Agree URL/scope; inspect allowed public route; collect screenshots/reproduction; review findings; deliver prioritized tickets; record acceptance and timing.",
+      "costDrivers": [
+        "Founder acquisition and interview time",
+        "Manual browser evidence and review",
+        "Rework and webmaster handoff",
+        "Any later approved inference; none now"
+      ],
+      "assumptions": [
+        "Owners recognize a consequential problem.",
+        "An actionable report is worth a provisional USD 149.",
+        "Someone can implement the fixes.",
+        "Mason can reach buyers and judge functional claims."
+      ],
+      "validation": "Five bounded interviews and a sample review; seek a request for written pilot scope, not hypothetical praise.",
+      "sourceIds": [
+        "S-001",
+        "S-002",
+        "S-003",
+        "S-005",
+        "B-001",
+        "B-002",
+        "B-003"
+      ],
+      "why": "Small deliverable and short learning loop reuse evidence, review and outcome controls without creating a new platform. Buyer access is the largest weakness."
+    },
+    {
+      "id": "V-002",
+      "name": "Contact-path release QA for small web agencies",
+      "rank": 2,
+      "buyer": "Owner or project manager of a small agency shipping service-business websites.",
+      "problem": "Late contact-path defects can create client rework; our frequency and impact are unknown.",
+      "offer": "White-label pre-launch functional check and reproducible release tickets.",
+      "acquisition": "Owner-approved introductions or individually selected agency business contact channel; no relationship assumed.",
+      "delivery": "Agency supplies permitted staging URL and release criteria; inspect and report; agency owns fixes and release.",
+      "costDrivers": [
+        "Coordination and deadline burden",
+        "Access setup",
+        "Technical review and false-positive correction"
+      ],
+      "assumptions": [
+        "Agency lacks sufficient internal QA.",
+        "An unproven external reviewer is trusted.",
+        "Repeat jobs offset acquisition effort."
+      ],
+      "validation": "Interview agency owners about last release and existing QA; show the same sample and ask what would make it usable.",
+      "sourceIds": [
+        "S-002",
+        "S-003"
+      ],
+      "why": "Could rank first if Mason already has agency access; currently stronger competition and unknown trust/access make it less immediately grounded."
+    },
+    {
+      "id": "V-003",
+      "name": "Monthly review-theme action digest",
+      "rank": 3,
+      "buyer": "Single-location service owner with enough owner-permitted reviews to reveal recurring issues.",
+      "problem": "Feedback might not become operational action; frequency and willingness to pay are unknown.",
+      "offer": "Source-linked themes, unresolved questions and proposed actions; no public replies or review solicitation.",
+      "acquisition": "Owner-approved interviews with local operators; no owned audience assumed.",
+      "delivery": "Receive permitted corpus; summarize with source links; owner reviews actions; track whether anything changes.",
+      "costDrivers": [
+        "Recurring data handling",
+        "Semantic review and context",
+        "Owner attention and follow-through"
+      ],
+      "assumptions": [
+        "Digest changes decisions rather than duplicating tools.",
+        "Owner has enough feedback and permission to use it."
+      ],
+      "validation": "Ask owners to show their current process; request an action they would take from an example before offering recurrence.",
+      "sourceIds": [
+        "S-004",
+        "S-005"
+      ],
+      "why": "Established substitutes and recurring attention burden are less attractive before any buyer is known."
+    }
+  ],
+  "selectedId": "V-001",
+  "offer": {
+    "segment": "Owner of an independent residential cleaning firm with an existing website and estimate-request route.",
+    "promise": "A short reproducible issue report for the homepage-to-estimate route, with owner/webmaster actions.",
+    "scope": [
+      "One website; up to five pages",
+      "Desktop and narrow mobile",
+      "Up to five prioritized findings",
+      "One factual-correction round"
+    ],
+    "exclusions": [
+      "No form submission, calls, profile access or edits",
+      "No accessibility/security/SEO certification",
+      "No revenue or conversion guarantee"
+    ],
+    "priceAssumption": {
+      "currency": "USD",
+      "minor": 14900,
+      "confirmed": false
+    },
+    "differentiationHypothesis": "Manual reconstruction of one consequential customer task, contradictions requiring owner decisions, and reproducible webmaster tickets. This differs from an automated score, but buyers may still prefer free tools or their webmaster; interview evidence must decide."
+  },
+  "sample": {
+    "title": "Can a visitor request an estimate?",
+    "provenance": "Illustrative invented company and deliberately seeded defects; development-assistant authored. No customer website was audited.",
+    "findings": [
+      {
+        "id": "SAMP-1",
+        "issue": "Estimate link has no matching fragment target",
+        "evidence": "<a href=\"#estimate\">Request an estimate</a>; no id=\"estimate\" exists",
+        "fix": "Point to the owner-confirmed contact section, then retest pointer/keyboard navigation.",
+        "status": "seeded example"
+      },
+      {
+        "id": "SAMP-2",
+        "issue": "Two conflicting service areas",
+        "evidence": "Hero says North County; contact says South County only.",
+        "fix": "Ask owner; do not choose or silently edit.",
+        "status": "seeded example"
+      },
+      {
+        "id": "SAMP-3",
+        "issue": "No usable next step",
+        "evidence": "Send details has no contact method or process.",
+        "fix": "Insert owner-approved contact method; do not invent a reply deadline.",
+        "status": "seeded example"
+      }
+    ],
+    "deliverablePath": "docs/foundry/029/venture/SAMPLE-REPORT.md",
+    "specimenPath": "docs/foundry/029/venture/sample-site.html"
+  },
+  "interview": [
+    "How did your last three estimate requests reach you? What is verifiable?",
+    "When did a customer last report a failed or confusing contact process? Record never if none.",
+    "Who checks after changes and who fixes defects? What effort does that require?",
+    "What makes an outside report unnecessary? What is more urgent?",
+    "Which sample finding would you act on or ignore, and why?",
+    "Would you request a written USD 149 pilot scope? Who decides? This is a price test, not a sale.",
+    "May we follow up? Record explicit permission separately."
+  ],
+  "outreach": {
+    "subject": "A question about how you check your estimate-request page",
+    "body": "Hi [name], I'm Mason. I'm exploring a small service that checks the route from a service-business website to an estimate request and gives the owner a short, reproducible fix list. I have not audited your site and am not claiming you have a problem. Could I ask for 15 minutes about how you currently check that route and who handles fixes? I can show a clearly labeled sample. If this is not relevant, no need to reply. [Owner-approved identity/contact details]",
+    "status": "draft; not sent; recipients and channel require separate approval"
+  },
+  "economics": {
+    "currency": "USD",
+    "assumptions": {
+      "priceMinor": 14900,
+      "nonlaborMinor": 1000,
+      "hourlyOpportunityCostMinor": 2500,
+      "founderHours": null,
+      "conversionRate": null,
+      "businessBudgetMinor": null
+    },
+    "formula": "contributionMinor = 14900 - 1000 - totalFounderHours * 2500; before unpriced fees, taxes, refunds and other costs",
+    "scenarios": [
+      {
+        "totalFounderHours": 2,
+        "contributionMinor": 8900
+      },
+      {
+        "totalFounderHours": 4,
+        "contributionMinor": 3900
+      },
+      {
+        "totalFounderHours": 6,
+        "contributionMinor": -1100
+      }
+    ],
+    "warning": "All values are sensitivity assumptions. Founder acquisition, delivery and correction time are unknown, not free. No spend is authorized."
+  },
+  "validation": {
+    "maxConversations": 5,
+    "acquisitionHourCap": 2,
+    "interviewMinuteCap": 75,
+    "status": "proposed; founder capacity and outreach authority missing",
+    "advance": "At least two concrete recent problems/checking costs and one requested written USD 149 pilot scope with an identified user/fixer. This is buying interest, not a sale.",
+    "revise": "Problem exists but report cannot be acted on: revise channel or scope once, version the change.",
+    "stop": "No access within time cap, no actionable need across five conversations, or measured production burden defeats price.",
+    "limitations": "Five conversations are discovery, not a representative demand estimate; preserve nonresponses and negatives."
+  },
+  "plan": [
+    {
+      "id": "T-01",
+      "task": "Confirm founder access and attention",
+      "competencies": [
+        "Commercial judgment",
+        "Permission and availability"
+      ],
+      "owner": "Mason",
+      "status": "waiting for owner",
+      "dependsOn": [],
+      "acceptance": "Record current time availability and permitted buyer-access route; none inferred."
+    },
+    {
+      "id": "T-02",
+      "task": "Inspect sample and select provisional segment",
+      "competencies": [
+        "Evidence review",
+        "Scope judgment"
+      ],
+      "owner": "Mason with development-assistant preparation",
+      "status": "prepared; not adopted",
+      "dependsOn": [
+        "T-01"
+      ],
+      "acceptance": "Owner adopts a versioned proposal; no outreach authority implied."
+    },
+    {
+      "id": "T-03",
+      "task": "Prepare bounded interview and recipient list",
+      "competencies": [
+        "Research",
+        "Source discipline"
+      ],
+      "owner": "Single research/delivery worker, experimental",
+      "status": "guide prepared; recipients not selected",
+      "dependsOn": [
+        "T-02"
+      ],
+      "acceptance": "Exact channel, recipients and message presented for separate owner approval."
+    },
+    {
+      "id": "T-04",
+      "task": "Conduct up to five interviews",
+      "competencies": [
+        "Listening",
+        "Commercial judgment",
+        "Consent"
+      ],
+      "owner": "Mason",
+      "status": "not authorized or executed",
+      "dependsOn": [
+        "T-03"
+      ],
+      "acceptance": "Original notes, permission, negative evidence and measured time recorded."
+    },
+    {
+      "id": "T-05",
+      "task": "Decide stop, revise or request a pilot",
+      "competencies": [
+        "Evidence synthesis",
+        "Economics"
+      ],
+      "owner": "Mason; one worker proposes synthesis",
+      "status": "waiting for real observations",
+      "dependsOn": [
+        "T-04"
+      ],
+      "acceptance": "Apply predetermined criteria; delivered assets and praise do not count as sales."
+    }
+  ],
+  "sources": [
+    {
+      "id": "F-001",
+      "title": "Founder-owned business creation instruction",
+      "url": "conversation:founder-owned-business-creation",
+      "published": "2026-09-11",
+      "retrieved": "2026-09-11",
+      "claim": "Mason owns the first venture; MIDAS remains the adaptive business-building product. Local work and public research only.",
+      "limit": "Does not supply skills, a buyer network, labor availability or a business budget."
+    },
+    {
+      "id": "R-001",
+      "title": "Verified connected workbench completion",
+      "url": "docs/foundry/029/WORKBENCH-COMPLETION.md",
+      "published": "2026-09-11",
+      "retrieved": "2026-09-11",
+      "claim": "Persistent business state, scoped evidence proposals, support/invoice fixture workflows, approval and verified outcomes implemented.",
+      "limit": "Software and synthetic evidence are not market demand or founder domain expertise."
+    },
+    {
+      "id": "S-001",
+      "title": "Google: Manage your local business links",
+      "url": "https://support.google.com/business/answer/6218037?hl=en",
+      "published": null,
+      "retrieved": "2026-09-11",
+      "claim": "Business Profiles can link to customer actions, including appointments and orders.",
+      "limit": "Documents available channels, not how often they fail or willingness to pay for an audit."
+    },
+    {
+      "id": "S-002",
+      "title": "UserTesting plans",
+      "url": "https://www.usertesting.com/plans",
+      "published": null,
+      "retrieved": "2026-09-11",
+      "claim": "A commercial substitute offers task-based tests and real participant feedback; pricing is requested from the vendor.",
+      "limit": "Competitor activity does not prove demand for our narrower inspection."
+    },
+    {
+      "id": "S-003",
+      "title": "NN/g: The Theory Behind Heuristic Evaluations",
+      "url": "https://www.nngroup.com/articles/how-to-conduct-a-heuristic-evaluation/theory-heuristic-evaluations/",
+      "published": "1994-11-01",
+      "retrieved": "2026-09-11",
+      "claim": "Inspection can identify interface issues; different evaluators find different problems.",
+      "limit": "Old methodological source, not current market evidence. Individual inspection is not complete usability proof."
+    },
+    {
+      "id": "S-004",
+      "title": "BrightLocal pricing",
+      "url": "https://www.brightlocal.com/pricing/",
+      "published": null,
+      "retrieved": "2026-09-11",
+      "claim": "Established local-search and reputation products are substitutes for review-digest work.",
+      "limit": "No vendor revenue, buyer access or willingness to pay us is inferred. No subscription required."
+    },
+    {
+      "id": "S-005",
+      "title": "SCORE: Market research",
+      "url": "https://www.score.org/market-research/",
+      "published": null,
+      "retrieved": "2026-09-11",
+      "claim": "Public market information and direct customer research play distinct roles in validation.",
+      "limit": "General guidance, not evidence that this offer has buyers."
+    },
+    {
+      "id": "F-002",
+      "title": "Founder context clarification in this conversation",
+      "url": "conversation:founder-context-clarification",
+      "published": "2026-09-11",
+      "retrieved": "2026-09-11",
+      "claim": "Mason attends school, wants an ambitious realistic two-week schedule, has MIDAS/laptop/current AI development tools, and is willing to learn, interview, sell and deliver. No network or domain expertise supplied.",
+      "limit": "Does not confirm available hours or authorize outreach, expenditure or external action."
+    },
+    {
+      "id": "B-001",
+      "title": "Cleaned Fresh official public website",
+      "url": "https://www.cleanedfresh.com/",
+      "published": null,
+      "retrieved": "2026-09-11",
+      "claim": "Site describes residential service in Raleigh and the Triangle. Homepage presents repeated quote calls to action and a personalized-estimate form requesting contact and property details; the page states a one-business-day response expectation.",
+      "limit": "Public page observation, not a qualified lead, contact permission, test of delivery, owner verification or evidence of willingness to buy."
+    },
+    {
+      "id": "B-002",
+      "title": "Cleaning Sessions Co. official public website",
+      "url": "https://www.cleaningsessionsco.com/",
+      "published": null,
+      "retrieved": "2026-09-11",
+      "claim": "Site describes Raleigh/Cary residential cleaning and nearby service areas. Homepage exposes an instant-estimate route and a separate quote-request form with service choices and preferred response channel.",
+      "limit": "Public page observation, not a qualified lead, contact permission, test of delivery, owner verification or evidence of willingness to buy."
+    },
+    {
+      "id": "B-003",
+      "title": "Gleaming Cleaning Services official public website",
+      "url": "https://gleamingcleaningservices.com/",
+      "published": null,
+      "retrieved": "2026-09-11",
+      "claim": "Site describes residential cleaning in Raleigh and nearby Wake County communities. Homepage describes a ZIP-code-first pricing route and links to a ZenMaid booking page; public business contact alternatives are displayed.",
+      "limit": "Public page observation, not a qualified lead, contact permission, test of delivery, owner verification or evidence of willingness to buy."
+    }
+  ],
+  "nextDecision": {
+    "question": "Confirm whether the proposed 20 hours/week fits school, sleep and commitments, and choose a permitted route for finding the first five qualified owners. No outreach is authorized by this choice alone.",
+    "default": "Keep V-001 provisional; no outreach, purchases or runtime spending.",
+    "unknowns": [
+      "Feasible schedule",
+      "Geography and exact permitted acquisition channel",
+      "Demonstrated report-review skill",
+      "Any explicitly allocated business cash budget"
+    ]
+  },
+  "assets": [
+    {
+      "title": "Validation package",
+      "path": "docs/foundry/029/venture/VALIDATION-PACKAGE.md"
+    },
+    {
+      "title": "Sample issue report",
+      "path": "docs/foundry/029/venture/SAMPLE-REPORT.md"
+    },
+    {
+      "title": "Local specimen site",
+      "path": "docs/foundry/029/venture/sample-site.html"
+    },
+    {
+      "title": "Economics sensitivity CSV",
+      "path": "docs/foundry/029/venture/economics.csv"
+    },
+    {
+      "title": "Public buyer-route research",
+      "path": "docs/foundry/029/venture/BUYER-EVIDENCE.md"
+    }
+  ],
+  "schedule": {
+    "status": "recommendation, not confirmed availability or external-action authority",
+    "weeks": 2,
+    "hoursPerWeek": 20,
+    "totalHours": 40,
+    "guardrail": "Recommended maximum, not a quota. School obligations and normal sleep come first. Weekdays: one two-hour block only after commitments; weekend five-hour totals include breaks. Cut or cancel blocks when prerequisites are absent or school needs time; do not replace blocked customer work with 40 hours of busywork.",
+    "allocations": [
+      {
+        "category": "Buyer evidence and permission preparation",
+        "hours": 12,
+        "detail": "6 hours per week. Prepare qualification and consent workflow now; interviews/outreach happen only after separate approval. If approval is absent, do not substitute invented conversations."
+      },
+      {
+        "category": "Learn and demonstrate report quality",
+        "hours": 8,
+        "detail": "4 hours per week. Practice on owned/local specimens; reproduce findings, distinguish facts from hypotheses, and learn browser evidence capture. This is learning cost, not expertise."
+      },
+      {
+        "category": "Sample/pilot delivery and review",
+        "hours": 10,
+        "detail": "5 hours per week. Improve sample and measure work now; customer pilot requires separate scope/permission. Preserve actual timing and failed attempts."
+      },
+      {
+        "category": "MIDAS evidence and decision system",
+        "hours": 6,
+        "detail": "3 hours per week. Record evidence, accepted/rejected claims, assumptions and next decisions; do not build new SaaS features to avoid buyer uncertainty."
+      },
+      {
+        "category": "Owner decision and contingency",
+        "hours": 4,
+        "detail": "2 hours per week. Review evidence, scope, schedule and stop criteria; protect contingency for school demands."
+      }
+    ],
+    "weekOne": "Establish permission/access route, demonstrate reproducible sample quality, prepare precise buyer questions. If separately approved, prioritize first buyer conversations over extra features.",
+    "weekTwo": "Use actual buyer evidence to stop/revise or propose a scoped pilot; measure production effort. Without access, report blocked commercial validation and preserve preparation assets.",
+    "calendar": [
+      {
+        "day": "Monday",
+        "hours": 2,
+        "focus": "Buyer evidence and permitted-access preparation"
+      },
+      {
+        "day": "Tuesday",
+        "hours": 2,
+        "focus": "Learn and reproduce a manual finding on owned/local material"
+      },
+      {
+        "day": "Wednesday",
+        "hours": 2,
+        "focus": "Buyer evidence; conversations only with separate authority"
+      },
+      {
+        "day": "Thursday",
+        "hours": 2,
+        "focus": "Sample delivery and timed quality review"
+      },
+      {
+        "day": "Friday",
+        "hours": 2,
+        "focus": "Evidence synthesis and next decision"
+      },
+      {
+        "day": "Saturday",
+        "hours": 5,
+        "focus": "Two focused blocks plus breaks: delivery/practice and any authorized buyer work"
+      },
+      {
+        "day": "Sunday",
+        "hours": 5,
+        "focus": "Review, MIDAS records, school planning and contingency; unused contingency becomes free time"
+      }
+    ]
+  },
+  "buyerEvidence": {
+    "geography": "Raleigh, North Carolina / immediately adjacent Triangle service area",
+    "geographyBasis": "Deliberately bounded research sample; not inferred Mason location, network or final sales territory.",
+    "observations": [
+      {
+        "sourceId": "B-001",
+        "business": "Cleaned Fresh",
+        "url": "https://www.cleanedfresh.com/",
+        "observedRoute": "Homepage presents repeated quote calls to action and a personalized-estimate form requesting contact and property details; the page states a one-business-day response expectation.",
+        "method": "Read-only page retrieval; no form interaction, submission, inbox or browser behavior test.",
+        "scopeEvidence": "Site describes residential service in Raleigh and the Triangle.",
+        "needEvidence": "No defect or unmet need established. Existing quote form/process may already be sufficient."
+      },
+      {
+        "sourceId": "B-002",
+        "business": "Cleaning Sessions Co.",
+        "url": "https://www.cleaningsessionsco.com/",
+        "observedRoute": "Homepage exposes an instant-estimate route and a separate quote-request form with service choices and preferred response channel.",
+        "method": "Read-only page retrieval; no estimator input, form interaction or submission.",
+        "scopeEvidence": "Site describes Raleigh/Cary residential cleaning and nearby service areas.",
+        "needEvidence": "No defect or unmet need established. Existing calculator and alternative contact channels are substitutes for our proposed help."
+      },
+      {
+        "sourceId": "B-003",
+        "business": "Gleaming Cleaning Services",
+        "url": "https://gleamingcleaningservices.com/",
+        "observedRoute": "Homepage describes a ZIP-code-first pricing route and links to a ZenMaid booking page; public business contact alternatives are displayed.",
+        "method": "Read-only homepage retrieval; no ZIP entered, third-party booking opened, call or submission.",
+        "scopeEvidence": "Site describes residential cleaning in Raleigh and nearby Wake County communities.",
+        "needEvidence": "No defect or unmet need established. A structured quote process is already present."
+      }
+    ],
+    "inference": "Three discoverable official sites expose the proposed job and business contact routes. This makes manual prospect discovery plausible, not owner response/access or demand proven.",
+    "commercialVerdict": "Still weakly differentiated until an owner identifies an actionable gap beyond their existing website tools/webmaster. Do not build more features or claim demand from these observations."
+  },
+  "discoveryProcedure": [
+    "Choose Raleigh as a reversible research geography; Mason may substitute a place with better permitted access before recruiting.",
+    "Search public web for Raleigh residential cleaning estimate. Open official business websites manually; stop at 10 distinct firms or two hours, whichever comes first. Deduplicate franchises/brands and reject commercial-only sites.",
+    "Record only official domain, service geography, residential scope, visible estimate route, existence of a suitable business-contact channel, retrieval date and ownership unknowns. Do not scrape personal details or infer an owner email.",
+    "Rank by segment fit and ability to act on a report, not alleged defects or flattering predictions. Sites with good existing processes may be unsuitable; retain that negative evidence.",
+    "Present up to five possible invitations with exact recipient/channel/message for separate owner approval; these must not be sent through customer quote forms disguised as cleaning inquiries.",
+    "After approved invitations, cap completed discovery interviews at five. No automatic extra invitations or repeated follow-up; any shortfall is missing evidence, not permission to expand the bound.",
+    "If no suitable channel or owner access emerges, stop this recruitment route. Prefer an actual introduction/agency access if Mason supplies one; otherwise reassess the venture before new tooling."
+  ]
+}
