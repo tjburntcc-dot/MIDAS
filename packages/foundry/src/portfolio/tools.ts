@@ -1,0 +1,79 @@
+import { randomUUID } from 'node:crypto';
+import { StateStore } from '../state.ts';
+import { hash, rawHash, requireThat, scopeKey } from '../contracts.ts';
+import type { Scope, Ref } from '../contracts.ts';
+import { checkServiceBrief, renderServiceBrief } from './products.ts';
+import type { SourceFile, WorkKind, BriefInputs, Check } from './products.ts';
+import { checkQuoteApplication, emptyQuoteState, validatePreviewRequest } from './preview.ts';
+import type { PreviewStateRequest } from './preview.ts';
+
+export type Manifest={revision:number;sha256:string;files:Array<{path:string;sha256:string;bytes:number}>;ref:Ref};
+export type Workspace={ventureId:string;taskId:string;kind:WorkKind;files:SourceFile[];inputs:any;provenance:string;manifest:Manifest;checks:Check[];checkedManifest:string|null;published:any|null;_version?:number};
+export type ToolCall={ventureId:string;taskId:string;tool:string;args:any;invocationId?:string;operationId?:string};
+export type ToolObservation={ok:boolean;tool:string;observationId:string;manifest:Manifest|null;checks:Check[];changes:any[];output:any;error?:string};
+const requiredChecks={software:['software.sandbox','software.line-totals','software.job-transition','software.persistence','software.export','software.bridge-isolation','software.network'],service:['service.structure','service.sources','service.coverage','service.input-binding']};
+export const mandatoryCheckIds=(kind:WorkKind)=>[...requiredChecks[kind]];
+export const localToolIds=['workspace.list','workspace.read','workspace.replace','check.run','artifact.publish_local'] as const;
+const pathCheck=(path:any)=>requireThat(typeof path==='string'&&path.length<=150&&/^[A-Za-z0-9][A-Za-z0-9_.-]*(?:\/[A-Za-z0-9][A-Za-z0-9_.-]*)*$/.test(path)&&!path.split('/').some(p=>p==='.'||p==='..'||p.startsWith('.')),'WORKSPACE_PATH_DENIED');
+function validateFiles(files:SourceFile[]){requireThat(Array.isArray(files)&&files.length>0&&files.length<=32,'WORKSPACE_FILES_INVALID');let bytes=0;const seen=new Set();for(const f of files){pathCheck(f.path);requireThat(!seen.has(f.path)&&typeof f.content==='string'&&Buffer.byteLength(f.content)<=262144,'WORKSPACE_FILE_INVALID');seen.add(f.path);bytes+=Buffer.byteLength(f.content);}requireThat(bytes<=1048576,'WORKSPACE_SIZE_LIMIT');}
+/** Workspace source is stored as immutable SQLite artifacts, never written to a
+ * host executable path. Only trusted browser/document tools interpret it. */
+export class LocalWorkTools{
+ readonly store:StateStore;readonly root:string;readonly scopeFor:(ventureId:string)=>Scope;readonly launchBrowser?:()=>Promise<any>;
+ constructor(options:{store:StateStore;root:string;scopeFor:(ventureId:string)=>Scope;taskFor?:(ventureId:string,taskId:string)=>any;browserLauncher?:()=>Promise<any>}){this.store=options.store;this.root=options.root;this.scopeFor=options.scopeFor;this.launchBrowser=options.browserLauncher;}
+ private key(ventureId:string,taskId:string){requireThat(typeof taskId==='string'&&taskId.length>0&&taskId.length<=250&&!/[\x00-\x1f]/.test(taskId),'TASK_ID_INVALID');return scopeKey(this.scopeFor(ventureId))+'/'+encodeURIComponent(taskId);}
+ private manifest(s:Scope,taskId:string,kind:WorkKind,files:SourceFile[],inputs:any,revision:number,parent?:Ref):Manifest{
+  validateFiles(files);const entries=[...files].sort((a,b)=>a.path.localeCompare(b.path)).map(f=>({path:f.path,sha256:rawHash(f.content),bytes:Buffer.byteLength(f.content)}));const digest=hash({kind,files:entries,inputs});
+  const id='source-'+hash(taskId).slice(0,16)+'-'+revision;const ref=this.store.record(s,id,'LocalSourceRevision',{taskId,kind,revision,sha256:digest,files,inputs},parent?[parent]:[]);return {revision,sha256:digest,files:entries,ref};
+ }
+ seed(ventureId:string,taskId:string,input:{kind:WorkKind;files:SourceFile[];inputs?:any;provenance:string}):Manifest{
+  requireThat(['software','service'].includes(input.kind)&&typeof input.provenance==='string'&&input.provenance.length>0,'WORKSPACE_SEED_INVALID');const key=this.key(ventureId,taskId),existing=this.store.get('local-workspace',key);if(existing){requireThat(existing.kind===input.kind,'WORKSPACE_KIND_PINNED');return existing.manifest;}
+  const inputs=structuredClone(input.inputs??{}),files=structuredClone(input.files);if(input.kind==='service'){requireThat(Array.isArray(inputs.sources)&&Array.isArray(inputs.requiredSourceIds)&&inputs.sources.length>0,'SERVICE_INPUTS_REQUIRED');for(const s of inputs.sources)requireThat(typeof s.id==='string'&&typeof s.text==='string'&&s.text.length<=50000&&typeof s.rights==='string'&&typeof s.title==='string','SERVICE_SOURCE_INVALID');requireThat(new Set(inputs.sources.map((s:any)=>s.id)).size===inputs.sources.length&&inputs.requiredSourceIds.every((id:string)=>inputs.sources.some((s:any)=>s.id===id)),'SERVICE_SOURCE_SCOPE');}
+  return this.store.transaction(()=>{const manifest=this.manifest(this.scopeFor(ventureId),taskId,input.kind,files,inputs,1);this.store.put('local-workspace',key,{ventureId,taskId,kind:input.kind,files,inputs,provenance:input.provenance,manifest,checks:[],checkedManifest:null,published:null},null);return manifest;});
+ }
+ load(ventureId:string,taskId:string):Workspace{const w=this.store.get('local-workspace',this.key(ventureId,taskId));requireThat(w&&w.ventureId===ventureId&&w.taskId===taskId,'WORKSPACE_NOT_FOUND');return w;}
+ /** Controller-only evidence refresh. Workers cannot edit permissions/checks. */
+ updateInputs(ventureId:string,taskId:string,inputs:BriefInputs,reason:string):Manifest{
+  const w=this.load(ventureId,taskId),key=this.key(ventureId,taskId);requireThat(w.kind==='service'&&reason.trim().length>0,'TRUSTED_INPUT_UPDATE_INVALID');
+  requireThat(inputs.title===w.inputs.title&&inputs.client===w.inputs.client&&inputs.asOf===w.inputs.asOf,'TRUSTED_INPUT_METADATA_PINNED');
+  requireThat(Array.isArray(inputs.sources)&&inputs.sources.length>0&&inputs.sources.every(s=>s&&typeof s.id==='string'&&s.id.trim().length>0&&s.id.length<=200&&typeof s.text==='string'&&s.text.length<=50000&&typeof s.rights==='string'&&typeof s.title==='string')&&new Set(inputs.sources.map(s=>s.id)).size===inputs.sources.length,'SERVICE_SOURCE_INVALID');
+  requireThat(Array.isArray(inputs.requiredSourceIds)&&w.inputs.requiredSourceIds.every((id:string)=>inputs.requiredSourceIds.includes(id))&&inputs.requiredSourceIds.every(id=>inputs.sources.some(s=>s.id===id)),'REQUIRED_SOURCE_REMOVAL_DENIED');
+  requireThat(w.inputs.sources.every((source:{id:string})=>inputs.sources.some(s=>s.id===source.id)),'SOURCE_REMOVAL_DENIED');
+  if(hash(inputs)===hash(w.inputs))return w.manifest;
+  return this.store.transaction(()=>{const latest=this.load(ventureId,taskId);requireThat(latest._version===w._version,'WORKSPACE_CONCURRENT');const manifest=this.manifest(this.scopeFor(ventureId),taskId,w.kind,w.files,inputs,w.manifest.revision+1,w.manifest.ref);this.store.put('local-workspace',key,{...w,inputs:structuredClone(inputs),manifest,checks:[],checkedManifest:null,published:null},w._version!);this.store.event(this.scopeFor(ventureId),'portfolio.input_contract_updated',{taskId,reason,previousManifest:w.manifest.sha256,manifest:manifest.sha256,sourceIds:inputs.sources.map(s=>s.id)});return manifest;});
+ }
+ toolContract(){return [{id:'workspace.list',description:'Inspect the current file paths, hashes and check results.'},{id:'workspace.read',description:'Read one source file. Arguments: {path}.'},{id:'workspace.replace',description:'Replace or create one source file. Arguments: {path,content,expectedHash}; expectedHash is null only for a new file. Does not change acceptance checks or source permissions.'},{id:'check.run',description:'Run mandatory trusted checks on the current source manifest. No host commands. Arguments: {}.'},{id:'artifact.publish_local',description:'Publish a verified current revision to local delivery storage. Arguments: {}. Customer acceptance remains an open obligation.'}];}
+ recoverOperation(operationId:string,ventureId:string,taskId:string):ToolObservation|null{return this.store.get('local-tool-call',this.key(ventureId,taskId)+'/'+operationId)?.result??null;}
+ async execute(call:ToolCall):Promise<ToolObservation>{
+  requireThat(!call.operationId||!call.invocationId||call.operationId===call.invocationId,'TOOL_OPERATION_ID_CONFLICT');const key=this.key(call.ventureId,call.taskId),s=this.scopeFor(call.ventureId),id=call.operationId??call.invocationId??randomUUID(),attemptKey=key+'/'+id;
+  const digest=hash({ventureId:call.ventureId,taskId:call.taskId,tool:call.tool,args:call.args??{}}),prior=this.store.get('local-tool-call',attemptKey);
+  if(prior){requireThat(prior.requestHash===digest,'TOOL_INVOCATION_CONFLICT');requireThat(prior.result,'TOOL_RESULT_UNCERTAIN');return prior.result;}
+  this.store.transaction(()=>this.store.put('local-tool-call',attemptKey,{id,requestHash:digest,status:'running',tool:call.tool,startedAt:new Date().toISOString()},null));
+  const saveResult=(result:ToolObservation)=>{const row=this.store.get('local-tool-call',attemptKey);if(row.result)return row.result;this.store.put('local-tool-call',attemptKey,{...row,status:'completed',result,finishedAt:new Date().toISOString()},row._version);this.store.record(s,'tool-'+hash(attemptKey).slice(0,32),'LocalToolObservation',result);this.store.event(s,'portfolio.tool_observed',{taskId:call.taskId,tool:call.tool,ok:result.ok,observationId:id,manifestHash:result.manifest?.sha256??null});return result;};
+  const finish=(result:ToolObservation)=>this.store.transaction(()=>saveResult(result));
+  try{requireThat((localToolIds as readonly string[]).includes(call.tool),'TOOL_NOT_ALLOWED');let w=this.load(call.ventureId,call.taskId);const args=call.args??{};let output:any=null,changes:any[]=[];
+   if(call.tool==='workspace.list')output={files:w.manifest.files,kind:w.kind,inputs:w.inputs};
+   else if(call.tool==='workspace.read'){pathCheck(args.path);const file=w.files.find(f=>f.path===args.path);requireThat(file,'WORKSPACE_FILE_NOT_FOUND');output={...file,sha256:rawHash(file.content)};}
+   else if(call.tool==='workspace.replace'){
+    pathCheck(args.path);requireThat(typeof args.content==='string','WORKSPACE_CONTENT_REQUIRED');const old=w.files.find(f=>f.path===args.path),before=old?rawHash(old.content):null;requireThat(args.expectedHash===before,'WORKSPACE_STALE_FILE');const files=old?w.files.map(f=>f.path===args.path?{path:f.path,content:args.content}:f):[...w.files,{path:args.path,content:args.content}];validateFiles(files);
+    const saved=this.store.transaction(()=>{const latest=this.load(call.ventureId,call.taskId);requireThat(latest._version===w._version,'WORKSPACE_CONCURRENT');const manifest=this.manifest(s,w.taskId,w.kind,files,w.inputs,w.manifest.revision+1,w.manifest.ref);const next=this.store.put('local-workspace',key,{...w,files,manifest,checks:[],checkedManifest:null,published:null},w._version!);saveResult({ok:true,tool:call.tool,observationId:id,manifest:next.manifest,checks:[],changes:[{path:args.path,beforeHash:before,afterHash:rawHash(args.content)}],output:{revision:next.manifest.revision,invalidated:['checks','local-publication']}});return next;});w=saved;changes=[{path:args.path,beforeHash:before,afterHash:rawHash(args.content)}];output={revision:w.manifest.revision,invalidated:['checks','local-publication']};
+   }else if(call.tool==='check.run'){
+    const checkHash=w.manifest.sha256;
+    const checks=w.kind==='software'?await checkQuoteApplication({ventureId:w.ventureId,taskId:w.taskId,manifestHash:checkHash,files:w.files,launchBrowser:this.launchBrowser,stateHandler:body=>this.previewState(w.ventureId,w.taskId,body,'check-'+id)}):checkServiceBrief(w.files,w.inputs as BriefInputs).checks;
+    w=this.store.transaction(()=>{const latest=this.load(call.ventureId,call.taskId);requireThat(latest.manifest.sha256===checkHash,'CHECK_SOURCE_CHANGED');return this.store.put('local-workspace',key,{...latest,checks,checkedManifest:checkHash},latest._version!);});output={passed:requiredChecks[w.kind].every(id=>checks.some(c=>c.id===id&&c.passed))&&!checks.some(c=>c.required&&!c.passed),checkProfile:w.kind==='software'?'quote-product-core-v1':'source-brief-core-v1',claim:'Executed local checks; actual-model competence and customer outcomes not established'};
+   }else if(call.tool==='artifact.publish_local'){
+    requireThat(w.checkedManifest===w.manifest.sha256&&requiredChecks[w.kind].every(id=>w.checks.some(c=>c.id===id&&c.passed))&&!w.checks.some(c=>c.required&&!c.passed),'CURRENT_CHECKS_REQUIRED');
+    if(w.published)output=w.published;
+    else{const report=w.kind==='service'?checkServiceBrief(w.files,w.inputs as BriefInputs).report:null;const files=w.kind==='service'?[{path:'report.html',content:renderServiceBrief(report,w.inputs as BriefInputs)},...w.files,{path:'sources.json',content:JSON.stringify(w.inputs,null,2)}]:w.files;const payload={taskId:w.taskId,manifest:w.manifest,files,checks:w.checks,provenance:w.provenance,obligations:report?.obligations??[],delivery:{mode:'local',customerAcknowledged:false}};
+     output=this.store.transaction(()=>{const latest=this.load(call.ventureId,call.taskId);requireThat(latest._version===w._version,'WORKSPACE_CONCURRENT');const ref=this.store.artifact(s,'local-delivery-'+hash({key,hash:w.manifest.sha256}).slice(0,32),payload);const publication={ref,manifestHash:w.manifest.sha256,payloadHash:hash(payload),publishedAt:new Date().toISOString(),fileNames:files.map(f=>f.path),obligations:payload.obligations,deliveryMode:'local',customerAcknowledged:false};this.store.put('local-workspace',key,{...w,published:publication},w._version!);saveResult({ok:true,tool:call.tool,observationId:id,manifest:w.manifest,checks:w.checks,changes:[],output:publication});return publication;});w=this.load(call.ventureId,call.taskId);
+    }
+   }
+   return finish({ok:call.tool==='check.run'?Boolean(output.passed):true,tool:call.tool,observationId:id,manifest:w.manifest,checks:w.checks,changes,output});
+  }catch(error){let w:Workspace|null=null;try{w=this.load(call.ventureId,call.taskId);}catch{}return finish({ok:false,tool:call.tool,observationId:id,manifest:w?.manifest??null,checks:w?.checks??[],changes:[],output:null,error:((error as any).code??(error as Error).message).slice(0,2000)});}
+ }
+ previewState(ventureId:string,taskId:string,body:any,namespace='owner'){
+  const w=this.load(ventureId,taskId);requireThat(w.kind==='software','PREVIEW_SOFTWARE_REQUIRED');validatePreviewRequest(body,{ventureId,taskId,manifestHash:w.manifest.sha256});const key=this.key(ventureId,taskId)+'/'+namespace;
+  return this.store.transaction(()=>{const prior=this.store.get('local-preview-state',key);let state=prior?.state??emptyQuoteState(),version=prior?.version??0;if(body.operation==='write'){requireThat(body.expectedVersion===version,'PREVIEW_STATE_STALE');state=structuredClone(body.state);version++;this.store.put('local-preview-state',key,{ventureId,taskId,version,state,manifestHash:w.manifest.sha256},prior?prior._version:null);}return {version,state};});
+ }
+ download(ventureId:string,taskId:string,path?:string){const w=this.load(ventureId,taskId);requireThat(w.published&&w.published.manifestHash===w.manifest.sha256,'LOCAL_PUBLICATION_REQUIRED');const s=this.scopeFor(ventureId),payload=this.store.readArtifact({id:'local-delivery-reader',tenantId:s.tenantId,businessId:s.businessId,permissions:['read']},s,w.published.ref.id);requireThat(hash(payload)===w.published.payloadHash,'LOCAL_DELIVERY_READBACK_MISMATCH');if(path){const file=payload.files.find((f:SourceFile)=>f.path===path);requireThat(file,'DELIVERY_FILE_NOT_FOUND');return {fileName:path,mimeType:path.endsWith('.html')?'text/html; charset=utf-8':path.endsWith('.json')?'application/json; charset=utf-8':'text/plain; charset=utf-8',content:file.content};}return {fileName:'artifact-bundle.json',mimeType:'application/json; charset=utf-8',content:JSON.stringify(payload,null,2)};}
+}
