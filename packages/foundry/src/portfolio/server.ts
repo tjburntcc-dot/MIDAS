@@ -28,8 +28,12 @@ export function portfolioView(engine:PortfolioEngine,tools:LocalWorkTools){
   const id=intent?.call?.attemptId;
   if(!id)return null;
   const binding=engine.rows('portfolio-work-binding').find(b=>b.attemptId===id),request=p.store.get('operating-request',id+'-request'),job=jobs.find(j=>j.requestHash===(binding?.bodyHash??request?.requestHash)&&(!request||j.grantHash===request.grantHash));
-  if(!job)return null;
-  return {responseId:job.responseId,status:job.status??'unknown',retrievalRequests:job.retrievals,completionDeadlineAt:job.completionDeadlineAt,resumeUntil:job.resumeUntil,terminalPersisted:Boolean(job.terminal)};
+  const taskBindings=engine.rows('portfolio-work-binding').filter(b=>b.taskId===t.id);
+  const terminalIncompleteAttempts=jobs.filter(job=>taskBindings.some(binding=>binding.bodyHash===job.requestHash)&&['incomplete','failed','cancelled'].includes(job.terminal?.status)).length;
+  if(!job)return {responseId:null,status:'unknown',retrievalRequests:0,completionDeadlineAt:null,resumeUntil:null,terminalPersisted:false,completionState:'completion_unknown',terminalIncompleteAttempts};
+  const terminalStatus=job.terminal?.status;
+  const completionState=job.terminal?(terminalStatus==='completed'?'terminal_completed':'terminal_incomplete'):job.responseId?'in_progress':'completion_unknown';
+  return {responseId:job.responseId,status:job.status??terminalStatus??'unknown',retrievalRequests:job.retrievals,completionDeadlineAt:job.completionDeadlineAt,resumeUntil:job.resumeUntil,terminalPersisted:Boolean(job.terminal),completionState,terminalIncompleteAttempts};
  };
  const tasks=s.tasks.map(t=>({providerExecution:responseProgress(t),...t,executionMode:(t.inputs as any)?.requiresGrant?'actual_model':engine.model.kind,modelDisabledUntilGrant:needsGrant(t),controls:t.status==='running'?['pause','cancel']:t.status==='paused'?['resume','cancel']:t.status==='queued'?[...(t.runnable&&!needsGrant(t)?['run']:[]),'pause','cancel']:[],worker:t.workerId??'baseline-worker',description:t.objective,lastActivity:t.updatedAt}));
  const artifacts=s.artifacts.map(a=>{
