@@ -35,3 +35,11 @@ View contract: `{businesses:[{id,name,mode}],business:null|{id,name,website,goal
 Business facts stay source-linked and incomplete. Owner notes are reports, not independently verified truth. Unknown benefit/cost is null. Offline response content is a disclosed development-authored test double. It proves execution/correction mechanics only. Actual inference requires a new exact grant through existing admission mechanisms; no generic API-key bypass. Local owner acceptance is not independent semantic validation. All customer effects and hosting deployment remain blocked. Product preview is local, not live business operation.
 
 Historical retained Mission 031 exposure: 1917 USD cents, counted only in historical archive. Pilot provider admissions and exposure: zero. Founder review timing is measured only when a real session starts/ends and the owner marks assistance accurately.
+
+## Integrated release checkpoint
+
+The evidence, worker registry, two execution profiles, owner server/UI, correction/outcome/learning bridge, backup/restore and explicit signed execution bindings are implemented. Real browser inspection found and corrected long technical check labels, stale review controls and a CSV label on JSON export. Bounded integration review found stale company context could otherwise survive until dispatch; new work and authorization now pin company/source context prospectively. Historical responses and artifacts remain preserved.
+
+The default workspace has no real company data and no new grant. A separately labeled Harbor Workshop demo contains a readable response packet and a functional local inquiry application, both produced through the controller's test-double worker and actual tools/checks. Full correction, outcome, learning and restart behavior is verified in separate development test stores. These do not impersonate Mason's approval or the business owner's judgment.
+
+Final verification and preservation results are recorded in `COMPLETION.md` and ignored `var/owner-pilot-032/verification/`. No additional provider or token-count request, credential read, installation, deployment, customer communication or purchase was made.

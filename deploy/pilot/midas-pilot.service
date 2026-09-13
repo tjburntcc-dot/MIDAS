@@ -1,0 +1,20 @@
+# Prepared template only. No remote installation or deployment has occurred.
+# Install as the approved unprivileged owner's user service after host authorization.
+[Unit]
+Description=MIDAS single-owner pilot (local authority only)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/midas
+ExecStart=/usr/bin/node packages/foundry/src/pilot/cli.ts serve --root /srv/midas-private/pilot --port 43143
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+# Node >=24.19, installed Playwright and Chromium must be verified separately.
+# Provide writable browser temp and state paths for the approved unprivileged user.
+
+[Install]
+WantedBy=default.target

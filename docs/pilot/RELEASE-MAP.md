@@ -1,0 +1,25 @@
+# Governing release status
+
+This maps the immediate first-owner pilot assignment to code. The longer-term roadmap remains governing: adaptive understanding, opportunity discovery, evidence-based teams, specialist improvement and portfolio operation. This release does not redefine MIDAS as an invoice, support or furniture business.
+
+| Required capability | Implementation and current decision owner | Evidence / remaining boundary |
+|---|---|---|
+| Onboard a fresh business | `pilot/knowledge.ts`, owner dashboard/server; owner supplies sources and rights | Local persistence/import/selection verified. Real company facts not supplied; website URL is reference only. |
+| Understand and diagnose | Existing `workbench/evidence.ts` ModelPort schema and validators, composed by `PilotKnowledge` | Exact source quotes, permissions, stale metadata and partial proposals checked. Test-double diagnosis executed; real model diagnosis prepared only. |
+| Rank useful work | Model-proposal contract includes alternatives, unknowns, estimate basis and supported tools. Owner selects outcome in dashboard | Fixture ranking is development-authored. No learned causal or economic prioritizer claimed. |
+| Work planning and worker assignment | Existing `Portfolio`, `PortfolioEngine`, `ProcedureRegistry` through `pilot/execution.ts` and `learning.ts` | Actual task leases, dependencies, fixed resource limits and pinned procedures. Eligibility is declared tool/job fit; demonstrated company competence unknown. |
+| Response deliverable | Existing source-grounded service profile and complete-task finalization | Actual source edits, citation checks, local artifact, readback. Semantic usefulness requires owner review; sending unsupported. |
+| Substantive implementation | New replaceable `business-site-v1` profile, existing tools/browser containment | Functional local inquiry application, configured required inputs, correction, persistence/export and actual Chromium checks. Fixture-authored source; no production website deployment. |
+| Correct authoritative work | Fresh linked review tasks and exact targeted patches; local approval binds producing task + artifact hash | Prior source/evidence preserved; stale acceptance denied. Literal mock edits do not prove general semantic repair. |
+| Learn from outcomes | Owner-reported outcome → persistent company revision and rule-based next action | Accepted/needs-change/not-useful are distinct. No invented demand, profit or causal improvement. |
+| Improve workers | Observed correction → explicit cause hypothesis/candidate → existing fair comparison registry → retain baseline → later assignment | Separate developer-visible fixtures exercise mechanics. Strong baseline retained; no measured specialist improvement or protected holdout claim. |
+| Owner dashboard | `pilot/index.html`, `app.js`, `style.css`, server routes | Real persisted controls, artifacts, correction, outcomes, inbox, evidence selection and archive. No fixture default company. |
+| Restart and isolation | Existing SQLite, leases/finalization/preview state plus private backup/restore and scoped server API | Interruption after persisted response, failed browser, stale/cross-business actions and restored state tested. Single-owner local security model; multi-owner public hosting unimplemented. |
+| Live integration | Exact diagnosis and task bindings reuse OperatingModels/Portfolio, signed grants, request admission and durable Responses | Both paths tested with injected mock count/background transport, same-ID restart recovery and fail-closed binding checks. No valid new pilot approval/data envelope. Current owner server cannot dispatch paid calls; CLI requires exact signed authority. Current route/pricing verification remains a live gate; R5 is untouched. |
+| Hosted operation | Runnable source and user-service/SSH deployment preparation | No host/account/budget supplied or deployment authorized. Browser/runtime provisioning and public identity/TLS boundary remain external/hosted gates. |
+
+## Contribution to the product loop
+
+Evidence import and ModelPort proposal contracts make business understanding traceable. Ranked hypotheses connect that understanding to executable outcomes, not invented capabilities. Procedure-bound assignment chooses the smallest supported worker configuration. Shared execution tools produce and independently check real local artifacts. Exact owner corrections create durable learning evidence, and the registry tests whether a reusable procedure change deserves future selection. Owner outcomes update the business model and the next action while preserving unknown economics. The dashboard joins these components into an inspectable owner journey.
+
+Still unimplemented as general intelligence: autonomous unrestricted web/account research, causal bottleneck discovery, optimal team search, demonstrated frontier superiority, unrestricted host coding, autonomous external communications and multi-business profitable portfolio operation. The release preserves those goals without representing them as current capability.

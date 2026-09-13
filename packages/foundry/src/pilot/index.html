@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#192824">
+  <title>MIDAS · Your operating desk</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to your workspace</a>
+  <button class="nav-scrim" data-action="close-nav" aria-label="Close navigation" hidden></button>
+  <aside class="sidebar" id="sidebar" aria-label="Workspace navigation">
+    <a class="brand" href="#overview" aria-label="MIDAS home"><span class="brand-mark" aria-hidden="true">M</span><span>MIDAS<small>THE OPERATING DESK</small></span></a>
+    <div class="sidebar-caption">YOUR WORKSPACE</div>
+    <nav id="primary-nav" aria-label="Main navigation"></nav>
+    <div class="sidebar-bottom"><button class="nav-link secondary-nav" data-action="navigate" data-page="archive"><span aria-hidden="true">↗</span> Archive</button><div class="local-note"><span class="status-dot"></span><div>Private local pilot<small>Connected services stay explicit.</small></div></div><span class="release-label">MIDAS / 032</span></div>
+  </aside>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button menu-toggle" data-action="toggle-nav" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div id="business-control" class="business-control"><span class="muted">Your operating desk</span></div>
+      <div id="top-actions" class="top-actions"></div>
+    </header>
+    <main id="main" tabindex="-1"><div class="loading-state" role="status"><span class="loader"></span><h1>Opening your desk</h1><p>Reading the saved business context.</p></div></main>
+    <footer class="page-footer"><span>Useful work. Visible evidence. Your decision.</span><span>Local pilot <span aria-hidden="true">·</span> <span id="connection-label">Connecting</span></span></footer>
+  </div>
+  <dialog id="owner-dialog" aria-labelledby="dialog-title"><div class="dialog-heading"><div><p id="dialog-eyebrow" class="eyebrow"></p><h2 id="dialog-title"></h2></div><button class="icon-button" data-action="close-dialog" aria-label="Close dialog">×</button></div><div id="dialog-content"></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
