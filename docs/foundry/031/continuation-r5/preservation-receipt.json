@@ -1,0 +1,79 @@
+{
+  "at": "2026-09-13T21:56:41.913Z",
+  "proposalHash": "0c786b5c8a3e37c2c41d73459f905c40c37db96c3818256f952f3da02ac05bd4",
+  "implementationHash": "2894368cfdb12f704115cea9e2e3382e601a150d684ac04b7323988713205043",
+  "verifiedBase": "d5d25ba9d11eac9f79239e3b69b435894aff7a76",
+  "implementationCommit": "7466951",
+  "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-credit-r5\\var\\portfolio-031-continuation-r5",
+  "branch": "codex/portfolio-credit-continuation-v4-031",
+  "acceptedResearchUnchanged": true,
+  "acceptedResearchBytes": 17908,
+  "acceptedResearchHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+  "initialReconstructed": true,
+  "parentSnapshotHash": "001b0fcfb481e4f6c6fd99a4bfca9f87b11729f38e93567298be446942f6f9fb",
+  "diagnosticHash": "c114383e5ae432cec5defbdcbe36ac7a2c6654e8d7f6abd19a06b9cc743f2850",
+  "providerRequests": 0,
+  "credentialRead": false,
+  "privateKeyRead": false,
+  "signed": false,
+  "parentRetired": false,
+  "exposure": {
+    "historical": 1917,
+    "incremental": 2665,
+    "combined": 4582,
+    "countBufferIncludedOnce": 400
+  },
+  "limits": {
+    "inferences": 14,
+    "counts": 14,
+    "recovery": 0,
+    "sameIdRetrievals": 3360
+  },
+  "tasks": [
+    {
+      "id": "quote-desk/decide-v4-r5",
+      "attempts": 0,
+      "status": "queued",
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/build-v4-r5",
+      "attempts": 0,
+      "status": "queued",
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/review-product-v4-r5",
+      "attempts": 0,
+      "status": "queued",
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/operate-v4-r5",
+      "attempts": 0,
+      "status": "queued",
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/adapt-v4-r5",
+      "attempts": 0,
+      "status": "queued",
+      "artifacts": 0
+    }
+  ],
+  "verification": {
+    "focusedAndStageRegressionTests": 20,
+    "strictTypecheckErrors": 0,
+    "sourceFiles": 46,
+    "ownerStateVerified": "http://127.0.0.1:43142/",
+    "ownerServerMode": "disabled"
+  },
+  "files": {
+    "portfolio.authorization.request.json": "4857f3519bb08dc7dde888f8ad3d15eb841f08c0b8265a7966f47425257bdf4e",
+    "initial-responses-bytes.json": "f0e3c4208a9646aec10cd9fcc7120ac829e4b766f731eea5c6515fe039ee1608",
+    "initial-count-bytes.json": "de5dcd4e6a8461b183744fe7695564ad4a7bb3e092078d2108d0bacf76c18a00",
+    "task-manifest.json": "6829a084c338e1feda499738b4654476d119b93c408a3d4e579ba26186fa8604",
+    "accepted-r1-brief.json": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+    "payload-audit.json": "4f07bb71ae343f4c9b6acc62edfeb09d2eb7d3e6c38293948720b7a4952c15f5"
+  }
+}

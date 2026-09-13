@@ -1,0 +1,752 @@
+{
+  "tasks": [
+    {
+      "allowance": {
+        "id": "quote-desk/decide-v4-r5",
+        "stageContract": "build-gate-v1",
+        "workCalls": 1,
+        "definitionHash": "3b604a97ff0584ae5cb9b5f3b9d906b22116c4dcb76930287542c40abde34703"
+      },
+      "contract": {
+        "id": "build-gate-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 24576,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 164
+        },
+        "ordinaryAdmissions": 1
+      },
+      "task": {
+        "acceptance": [
+          "The strict result records exactly one build or stop decision, bounded rationale, strongest alternative, at least one allowed source reference and every unresolved blocking condition.",
+          "A build decision has no unresolved blocking condition; a stop decision gates only the four fresh R5 descendants without rewriting historical tasks or outcomes.",
+          "The decision distinguishes bounded engineering value from commercial validation and makes no unsupported demand, revenue, labor-saving, specialist or customer claim."
+        ],
+        "allowedTools": [],
+        "attempts": 0,
+        "capability": "portfolio.plan",
+        "createdAt": "2026-09-13T21:54:55.968Z",
+        "dependsOn": [],
+        "id": "quote-desk/decide-v4-r5",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationReplacement": {
+            "diagnosticHash": "c114383e5ae432cec5defbdcbe36ac7a2c6654e8d7f6abd19a06b9cc743f2850",
+            "failedAttemptId": "p031-2c7a9771c07a9c24-0",
+            "failedTaskId": "quote-desk/decide-v4-r4",
+            "kind": "owner-approved-credit-failure-replacement-r5",
+            "originalOutcomePreserved": true,
+            "providerFailure": "credit_balance_exhausted",
+            "requiresFreshApproval": true,
+            "reservationPreserved": true
+          },
+          "continuationVersion": "value-release-v4-credit-continuation-r5",
+          "enforceHandoff": true,
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "build-gate-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "research",
+        "lease": null,
+        "localId": "decide-v4-r5",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Use the authenticated accepted investigation and supplied current evidence to make one compact build-or-stop decision for the declared quote-to-job-v2 local engineering prototype. Give the bounded engineering or commercial rationale, strongest alternative, exact supporting reference IDs, and any blocking conditions. Do not repeat the investigation, create tasks, treat either partial R3 response as a decision, or infer demand. A stop decision cancels only the four fresh R5 descendants without admitting them.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-credit-continuation-r5",
+        "planRevision": 13,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "proposal.reference_checks"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 4,
+          "modelCalls": 1,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Decide whether this bounded build is worth its next admission",
+        "updatedAt": "2026-09-13T21:54:55.968Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/build-v4-r5",
+        "stageContract": "product-build-v1",
+        "workCalls": 5,
+        "definitionHash": "fb6332f6c16392663382e5f7d2ac45c6d6c663bbe2d24c2078fb66b2b2c6be30"
+      },
+      "contract": {
+        "id": "product-build-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 32768,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 205
+        },
+        "ordinaryAdmissions": 5
+      },
+      "task": {
+        "acceptance": [
+          "The complete worker-visible quote-to-job-v2 journey passes, including invalid-input handling, reopen/edit, multiple saved records, persistence, CSV and narrow layout.",
+          "A first-time owner can understand and use the local product without mission documentation.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "software.build",
+        "createdAt": "2026-09-13T21:54:55.968Z",
+        "dependsOn": [
+          "quote-desk/decide-v4-r5"
+        ],
+        "id": "quote-desk/build-v4-r5",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-credit-continuation-r5",
+          "enforceHandoff": true,
+          "executionProfile": "quote-to-job-v2",
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "product-build-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "build-v4-r5",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Starting from the unseeded authoritative workspace, build the declared quote-to-job-v2 local browser product. It must create itemized USD quotes, preserve stable IDs and all records through save/reload/edit, update the same record through job statuses, report invalid inputs and failed persistence honestly, recover in the supported fresh-session and same-directory-restart cases, remain usable at narrow width, and export guarded all-record CSV. Use actual source and current browser/DOM checks. Keep adequate source, repair consequential defects from observed feedback, and submit complete only after a current passing check. Completion triggers controller-owned checks, publication, authenticated readback and closure; do not repeat research, expand the profile or claim commercial validation. Five ordinary admissions bound the write, check, one repair/check path and completion.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-credit-continuation-r5",
+        "planRevision": 13,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 22,
+          "modelCalls": 5,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Build a useful local quote-to-job product from blank source",
+        "updatedAt": "2026-09-13T21:54:55.968Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/review-product-v4-r5",
+        "stageContract": "product-review-v1",
+        "workCalls": 4,
+        "definitionHash": "201f4e32772c2dc6e968370ba034ed5b0db31cbda4830995eaabf36a19f1bb0b"
+      },
+      "contract": {
+        "id": "product-review-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 32768,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 205
+        },
+        "ordinaryAdmissions": 4
+      },
+      "task": {
+        "acceptance": [
+          "The actual authoritative product is reviewed against its visible contract; any claimed change is backed by preserved source and observed checks.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "quality.review",
+        "createdAt": "2026-09-13T21:54:55.968Z",
+        "dependsOn": [
+          "quote-desk/build-v4-r5"
+        ],
+        "id": "quote-desk/review-product-v4-r5",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-credit-continuation-r5",
+          "enforceHandoff": true,
+          "executionProfile": "quote-to-job-v2",
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "product-review-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "review-product-v4-r5",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Review the exact authoritative quote-to-job-v2 product, upstream artifact/manifest binding, source revision history and current browser/DOM observations. Check itemized arithmetic and USD parsing, stable identity, preservation of every quote, reopen/edit, same-record status transitions, invalid/error feedback, supported persistence recovery, first-use clarity, narrow layout and guarded CSV. Retain adequate source unchanged; correct only consequential evidenced defects and run a new current check after any correction. Submit complete with the substantive changes or reason the source remained adequate and its unresolved limits. Completion triggers controller-owned publication/readback. Four ordinary admissions bound check, one repair/check path and completion.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-credit-continuation-r5",
+        "planRevision": 13,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "source-review"
+        ],
+        "resource": {
+          "localToolRuns": 14,
+          "modelCalls": 4,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Review the actual product and retain or correct it with evidence",
+        "updatedAt": "2026-09-13T21:54:55.968Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/operate-v4-r5",
+        "stageContract": "operating-delivery-v1",
+        "workCalls": 3,
+        "definitionHash": "cc8b82576b137a87831cfe532fab80b95bf917a1029546ce5d0ee50ec9d706c0"
+      },
+      "contract": {
+        "id": "operating-delivery-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 24576,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 164
+        },
+        "ordinaryAdmissions": 3
+      },
+      "task": {
+        "acceptance": [
+          "The rendered operating packet contains the actual product-use and next-action assets required by operating-packet-v1, with exact artifact binding and honest economics.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "service.brief",
+        "createdAt": "2026-09-13T21:54:55.968Z",
+        "dependsOn": [
+          "quote-desk/review-product-v4-r5"
+        ],
+        "id": "quote-desk/operate-v4-r5",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-credit-continuation-r5",
+          "enforceHandoff": true,
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "operatingProfile": "operating-packet-v1",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "operating-delivery-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "operate-v4-r5",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Create the operating-packet-v1 brief.json from the exact reviewed product, accepted research, gate/review decisions, artifact identities and actual checks. Include practical try/demo steps, the narrow switching hypothesis and strongest contrary evidence, one explicitly unsent customer test, unknown cost/labor/access, acceptance and stop criteria, and one concrete next owner action. Preserve exact source and artifact references; separate observed behavior from vendor assertions and hypotheses. Write or repair only from actual feedback, then submit complete for controller-owned checks, local publication, authenticated readback and closure. Do not send, transact, infer demand or claim unobserved savings. Three ordinary admissions permit write/complete or write/correction/complete. If finalization itself first reveals a defect requiring repair and another completion, remaining capacity may be insufficient; do not claim success or borrow another stage’s calls.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-credit-continuation-r5",
+        "planRevision": 13,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 14,
+          "modelCalls": 3,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Deliver the reviewed product and a usable next business action",
+        "updatedAt": "2026-09-13T21:54:55.968Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/adapt-v4-r5",
+        "stageContract": "outcome-review-v1",
+        "workCalls": 1,
+        "definitionHash": "5708de99cdeb192bbbbc7c1de6e3375b91ff8cf2fb1c271d57de5605df7910cc"
+      },
+      "contract": {
+        "id": "outcome-review-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 24576,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 164
+        },
+        "ordinaryAdmissions": 1
+      },
+      "task": {
+        "acceptance": [
+          "The strict result records exactly one continue, revise or stop recommendation, actual observed results, allowed reference IDs, limitations, and one bounded next action with dependency and acceptance.",
+          "The recommendation binds the actual R5 artifacts/checks and accepted research, and distinguishes runtime authorship, deterministic evidence, outside intervention and untested commercial claims.",
+          "The result creates no task or authority, reopens no research, certifies no competence and preserves every historical outcome and obligation."
+        ],
+        "allowedTools": [],
+        "attempts": 0,
+        "capability": "portfolio.plan",
+        "createdAt": "2026-09-13T21:54:55.968Z",
+        "dependsOn": [
+          "quote-desk/operate-v4-r5"
+        ],
+        "id": "quote-desk/adapt-v4-r5",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-credit-continuation-r5",
+          "enforceHandoff": true,
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "outcome-review-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "research",
+        "lease": null,
+        "localId": "adapt-v4-r5",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Assess the completed R5 build, review and operating delivery from their authenticated artifacts, checks, accepted research and preserved obligations. Return one continue, revise or stop recommendation with bounded rationale, observed results, exact reference IDs, limitations, and one next action with a concrete dependency and acceptance condition. Separate runtime authorship, deterministic checks, development-assistant intervention and untested commercial claims. Do not create tasks, rank a portfolio, reopen research, certify competence, or infer demand, revenue, labor savings or independent validation.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-credit-continuation-r5",
+        "planRevision": 13,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "proposal.reference_checks"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 4,
+          "modelCalls": 1,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Use the delivered work to choose the next useful action or stop",
+        "updatedAt": "2026-09-13T21:54:55.968Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    }
+  ],
+  "lineage": {
+    "kind": "portfolio-v4-credit-continuation-r5",
+    "parentRoot": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-contracts-r4\\var\\portfolio-031-continuation-r4",
+    "parentGrantHash": "213decd665025018b6bb0f4cae0b9c1e405a22c8ddd350cf5064dd0784192e80",
+    "parentOperatingHash": "b19e60cb1aa94a12e1d10e2d7b864afe2ef97f2ffd7d29332aa8222bf0a9c197",
+    "parentProposalHash": "2d177f6a5bd89e656899eba56823f09066f880f98e526c756be994873e46af69",
+    "parentGrantFileHash": "ec5f642508b8d7507a4901faddbecab95bcc20a2c6a4de9a8db611834a8609c9",
+    "parentSnapshotHash": "001b0fcfb481e4f6c6fd99a4bfca9f87b11729f38e93567298be446942f6f9fb",
+    "diagnosticHash": "c114383e5ae432cec5defbdcbe36ac7a2c6654e8d7f6abd19a06b9cc743f2850",
+    "backupManifestHash": "a19d45f11bb9a0ba6d31b4b7fb27c93cf32aa8d84b68c00d850412272c31e3b3",
+    "backupDatabaseHash": "9a74a76902c95133841e985c54c8bf5c323466fce8add034091aed08efda6e45",
+    "restoreHash": "c5565e4a935dc0ca80bc05b374bb318156ee6bc416aacc65b7c36aec1a961628",
+    "historical": {
+      "admissions": 12,
+      "counts": 12,
+      "reservedMinor": 1517,
+      "provisionalMinor": 574,
+      "settledMinor": 0,
+      "countBufferMinor": 400
+    },
+    "carryId": "portfolio-031-history-through-r4-credit-failure",
+    "combinedCeilingMinor": 4582,
+    "combinedAdmissionLimit": 26,
+    "originalCeilingMinor": 4582,
+    "originalAdmissionLimit": 26,
+    "tasks": [
+      {
+        "parentId": "quote-desk/decide-v4-r4",
+        "id": "quote-desk/decide-v4-r5",
+        "stageContract": "build-gate-v1",
+        "workCalls": 1
+      },
+      {
+        "parentId": "quote-desk/build-v4-r4",
+        "id": "quote-desk/build-v4-r5",
+        "stageContract": "product-build-v1",
+        "workCalls": 5
+      },
+      {
+        "parentId": "quote-desk/review-product-v4-r4",
+        "id": "quote-desk/review-product-v4-r5",
+        "stageContract": "product-review-v1",
+        "workCalls": 4
+      },
+      {
+        "parentId": "quote-desk/operate-v4-r4",
+        "id": "quote-desk/operate-v4-r5",
+        "stageContract": "operating-delivery-v1",
+        "workCalls": 3
+      },
+      {
+        "parentId": "quote-desk/adapt-v4-r4",
+        "id": "quote-desk/adapt-v4-r5",
+        "stageContract": "outcome-review-v1",
+        "workCalls": 1
+      }
+    ],
+    "sourceArtifactHash": "478c66db4ebbe9e9060c19cbed853a622244f14f005bd687c3185c90c8bff6da",
+    "historicalRetrievals": 2,
+    "diagnosticRetrievals": 1,
+    "maxNewRetrievals": 3360,
+    "durability": {
+      "policyHash": "3725f1a6158f104143ed778de2914f297a229ab9d19cb6991f5c6cab242db1c1",
+      "requestBody": {
+        "background": true,
+        "store": true
+      },
+      "applicationStateRetention": "store-true-provider-retention-at-least-30-days",
+      "zeroDataRetentionCompatibility": "not-guaranteed",
+      "createAcknowledgementGap": "unknown-no-resubmit",
+      "retrieval": {
+        "method": "GET",
+        "admittedResponseIdsOnly": true,
+        "inferenceAdmissions": false,
+        "countAdmissions": false,
+        "maxPerResponse": 240,
+        "maxAcrossGrantedResponses": 3360
+      },
+      "remoteMutation": {
+        "cancel": false,
+        "delete": false,
+        "retryPost": false
+      }
+    }
+  },
+  "replacement": {
+    "kind": "owner-approved-credit-failure-replacement-r5",
+    "failedTaskId": "quote-desk/decide-v4-r4",
+    "failedAttemptId": "p031-2c7a9771c07a9c24-0",
+    "providerFailure": "credit_balance_exhausted",
+    "diagnosticHash": "c114383e5ae432cec5defbdcbe36ac7a2c6654e8d7f6abd19a06b9cc743f2850",
+    "originalOutcomePreserved": true,
+    "reservationPreserved": true,
+    "requiresFreshApproval": true
+  },
+  "historyIsNotCurrentWork": true
+}

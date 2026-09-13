@@ -1,0 +1,74 @@
+{
+  "proposalHash": "0c786b5c8a3e37c2c41d73459f905c40c37db96c3818256f952f3da02ac05bd4",
+  "implementationHash": "2894368cfdb12f704115cea9e2e3382e601a150d684ac04b7323988713205043",
+  "bodyHash": "f0e3c4208a9646aec10cd9fcc7120ac829e4b766f731eea5c6515fe039ee1608",
+  "payloadBytes": 41104,
+  "contextBytes": 37524,
+  "researchHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+  "researchBytes": 17908,
+  "contracts": [
+    {
+      "id": "build-gate-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 24576,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 164
+      },
+      "ordinaryAdmissions": 1
+    },
+    {
+      "id": "product-build-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 205
+      },
+      "ordinaryAdmissions": 5
+    },
+    {
+      "id": "product-review-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 205
+      },
+      "ordinaryAdmissions": 4
+    },
+    {
+      "id": "operating-delivery-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 24576,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 164
+      },
+      "ordinaryAdmissions": 3
+    },
+    {
+      "id": "outcome-review-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 24576,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 164
+      },
+      "ordinaryAdmissions": 1
+    }
+  ],
+  "incrementalExposureMinor": 2665,
+  "historicalRetainedMinor": 1917,
+  "combinedExposureMinor": 4582,
+  "newInferences": 14,
+  "newCounts": 14,
+  "newRecoveryInferences": 0,
+  "maxNewRetrievals": 3360,
+  "firstInference": "Real build-or-stop judgment; no smoke.",
+  "billingReadiness": "Owner must resolve independently; not probed or inferred from diagnostic GET.",
+  "providerRequests": 0,
+  "credentialRead": false,
+  "signed": false,
+  "parentRetired": false
+}
