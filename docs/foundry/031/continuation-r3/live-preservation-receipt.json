@@ -1,0 +1,42 @@
+{
+  "verifiedAt": "2026-09-13T17:12:18.407Z",
+  "proposalHash": "af14b710d2b1ed96f10cd4cdef28bdccbe2025254ba8b5d6ea814052b6663bc2",
+  "signedGrantHash": "a93c4f993dbfe84b89e6f907ace77bc60bd9e744d195b061f8ae31e6031c7689",
+  "operatingGrantHash": "d1503f805104b763780f831c3268fbce2ae4380dea5ac3f4d11c89de64bbf718",
+  "implementationHash": "a0fb095e12028ce547827ffc381bd372ebb02076c7e25afd9ffba6790c1e26b6",
+  "result": "governed_stop_no_complete_decision_no_product",
+  "newInferenceAdmissions": 2,
+  "newCounts": 2,
+  "newRetrievals": 146,
+  "recoveryAdmissions": 1,
+  "newProvisionalMinor": 190,
+  "newReservedMinor": 246,
+  "historicalRetainedMinor": 1507,
+  "combinedRetainedMinor": 1753,
+  "combinedProvisionalMinor": 574,
+  "combinedCeilingMinor": 4582,
+  "unusedMinor": 2829,
+  "authoritativeSettlementsRecorded": 0,
+  "settledCostKnown": false,
+  "originalR2Outcome": "unknown",
+  "originalR2ReservationMinor": 123,
+  "originalR2RecordHashPreserved": true,
+  "R2ExecutionRetiredToExactR3": true,
+  "researchBytesUnchanged": true,
+  "noSeededOrAuthoredR3Application": true,
+  "noActiveTaskLeases": true,
+  "terminalHashes": [
+    {
+      "responseId": "resp_0753b49c8f412da3006aa6d4f0ff4c87d2baa2364d225df268",
+      "terminalHash": "7d7be886f487d15cd2136583d5def9b13a492c44befb952b2e7bfc35113f099c"
+    },
+    {
+      "responseId": "resp_059a4e036a33e18f006aa6d6d7f85487d2ba8d921431a15675",
+      "terminalHash": "6ca0cb569b3f69e5f04ad057e93a05d0779b649ea28201e7573af0077df3c89a"
+    }
+  ],
+  "frozenCodeUnchanged": true,
+  "privateCredentialsExported": false,
+  "backupManifestHash": "06b766d947c052725b051a5f0f9d7350268803ae97ba48da5bc5173536f64035",
+  "backupDatabaseHash": "66b6ab573c6975dadc5b54edb173f68ad0733f4f810568652c7217e77e59803e"
+}
