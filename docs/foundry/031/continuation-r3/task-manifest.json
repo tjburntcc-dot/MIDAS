@@ -1,0 +1,710 @@
+{
+  "tasks": [
+    {
+      "allowance": {
+        "id": "quote-desk/decide-v4-r3",
+        "definitionHash": "0f6fef2755f7828ff1cca28a0cfca291b7b49ee0e8bcc17a55fe7f8720f400f9",
+        "workCalls": 1
+      },
+      "task": {
+        "acceptance": [
+          "A specific commercial or engineering rationale supports the bounded prototype, or the dependent build is explicitly stopped.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [],
+        "attempts": 0,
+        "capability": "portfolio.plan",
+        "createdAt": "2026-09-13T16:31:51.860Z",
+        "dependsOn": [],
+        "id": "quote-desk/decide-v4-r3",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "budgetGuidance": "The frozen ordinary allowance belongs to substantive work. For bounded-finalize-v1, a worker complete submission triggers controller-run current checks, local publication, authenticated readback and closure without extra model decisions. Repair only from actual feedback. One held recovery admission is usable solely after a signed known-incomplete durable response and never increases ordinary task allowances. The uncertain R2 timeout remains historical and is not eligible for resubmission.",
+          "continuationReplacement": {
+            "kind": "approved-fresh-replacement-of-uncertain-r2-v1",
+            "preservesReservation": true,
+            "preservesUncertainOutcome": true,
+            "replacementTaskId": "quote-desk/decide-v4-r3",
+            "uncertainAttemptId": "p031-e2fd5c331b2304ca-0",
+            "uncertainRequestBodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+            "uncertainTaskId": "quote-desk/decide-v4-r2"
+          },
+          "continuationVersion": "value-release-v4-durable-continuation-r3",
+          "enforceHandoff": true,
+          "feedbackPolicy": "defer_to_declared_decision",
+          "prototypeGate": {
+            "alternativeName": "quote-to-job",
+            "cancelUnlessPrototype": [
+              "quote-desk/build-v4-r3",
+              "quote-desk/review-product-v4-r3",
+              "quote-desk/operate-v4-r3",
+              "quote-desk/adapt-v4-r3"
+            ]
+          },
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ]
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "research",
+        "lease": null,
+        "localId": "decide-v4-r3",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Read the full actual investigation and its evidence. Include exactly one alternative named quote-to-job. Select prototype only when the declared quote-to-job-v2 local product can answer a consequential named question or accomplish useful bounded work. State whether the rationale is commercial or engineering. Missing buyer interviews alone do not prohibit an engineering experiment; the existence of a profile or a desire to consume the budget does not justify one. Compare the experiment with a competent development agent building the small product directly. If the valuable job needs unsupported approval snapshots, integrations, deployment or other features, record the gap; do not silently substitute another product into this grant. A decision other than prototype causes the controller to cancel build-v4-r3, review-product-v4-r3, operate-v4-r3 and adapt-v4-r3 without paid admissions to them. Explain alternatives, assumptions and next action. Newly proposed tasks may be retained in the backlog but this six-task grant cannot execute them. One structured planning response is available.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-durable-continuation-r3",
+        "planRevision": 11,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "proposal.reference_checks"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 4,
+          "modelCalls": 3,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Decide whether this bounded build is worth its next admission",
+        "updatedAt": "2026-09-13T16:31:51.860Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/build-v4-r3",
+        "definitionHash": "03f7a5ea50b2f91dc1f676ee445c2ab89945c79e3cf669afc91f55870b4e44c5",
+        "workCalls": 10
+      },
+      "task": {
+        "acceptance": [
+          "The complete worker-visible quote-to-job-v2 journey passes, including invalid-input handling, reopen/edit, multiple saved records, persistence, CSV and narrow layout.",
+          "A first-time owner can understand and use the local product without mission documentation.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "software.build",
+        "createdAt": "2026-09-13T16:31:51.860Z",
+        "dependsOn": [
+          "quote-desk/decide-v4-r3"
+        ],
+        "id": "quote-desk/build-v4-r3",
+        "inputArtifacts": [],
+        "inputs": {
+          "budgetGuidance": "The frozen ordinary allowance belongs to substantive work. For bounded-finalize-v1, a worker complete submission triggers controller-run current checks, local publication, authenticated readback and closure without extra model decisions. Repair only from actual feedback. One held recovery admission is usable solely after a signed known-incomplete durable response and never increases ordinary task allowances. The uncertain R2 timeout remains historical and is not eligible for resubmission.",
+          "continuationVersion": "value-release-v4-durable-continuation-r3",
+          "enforceHandoff": true,
+          "executionProfile": "quote-to-job-v2",
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ]
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "build-v4-r3",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Use the actual decision and the visible quote-to-job-v2 profile to author your own self-contained app.html from the blank workspace. Do not copy the development-assistant reference/demo or imply its authorship is yours. The product should explain its purpose to a first-time operator, accept real customer/work details, validate prices and quantities, save/reopen/edit without losing records, track job states, recover after reload and export faithful CSV. Follow all visible persistence, selector, money, layout and source-size rules. Use the actual check.run rendered-text/control/geometry/error observations to diagnose consequential failures; they are DOM evidence, not model vision. Correct only observed or substantiated problems and rerun unchanged checks. Publish locally after acceptance; no deployment, sending, payments or arbitrary backend. Ten ordinary decisions include writing, any tests/repairs, publication and completion. Current source/hash is available in context; avoid redundant reads.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-durable-continuation-r3",
+        "planRevision": 11,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 22,
+          "modelCalls": 12,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Build a useful local quote-to-job product from blank source",
+        "updatedAt": "2026-09-13T16:31:51.860Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/review-product-v4-r3",
+        "definitionHash": "aec112af7ac3feca6098c4f81befaefad0686be984f7facbb34aa46598ecd899",
+        "workCalls": 6
+      },
+      "task": {
+        "acceptance": [
+          "The actual authoritative product is reviewed against its visible contract; any claimed change is backed by preserved source and observed checks.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "quality.review",
+        "createdAt": "2026-09-13T16:31:51.860Z",
+        "dependsOn": [
+          "quote-desk/build-v4-r3"
+        ],
+        "id": "quote-desk/review-product-v4-r3",
+        "inputArtifacts": [],
+        "inputs": {
+          "budgetGuidance": "The frozen ordinary allowance belongs to substantive work. For bounded-finalize-v1, a worker complete submission triggers controller-run current checks, local publication, authenticated readback and closure without extra model decisions. Repair only from actual feedback. One held recovery admission is usable solely after a signed known-incomplete durable response and never increases ordinary task allowances. The uncertain R2 timeout remains historical and is not eligible for resubmission.",
+          "continuationVersion": "value-release-v4-durable-continuation-r3",
+          "enforceHandoff": true,
+          "executionProfile": "quote-to-job-v2",
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ]
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "review-product-v4-r3",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Inspect the actual copied app.html, exact upstream delivery/readback, revision history and bounded browser/DOM check observations. Review the user job, arithmetic and money parsing, full quote persistence, reopen/edit, job transitions, invalid/error feedback, first-use clarity and narrow layout against quote-to-job-v2. Use check.run for current rendered observations; screenshot retention alone is not vision review. Correct substantive defects in the authoritative source and rerun checks, or retain an adequate implementation unchanged. Do not invent a flaw or force a revision. Publish the checked authoritative result and explain actual changes and remaining limits. This is strong ordinary baseline self-review, not an independent human or specialist comparison. Six ordinary decisions include optional reading/correction, checks, publication and completion; use source already present in context.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-durable-continuation-r3",
+        "planRevision": 11,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "source-review"
+        ],
+        "resource": {
+          "localToolRuns": 14,
+          "modelCalls": 8,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Review the actual product and retain or correct it with evidence",
+        "updatedAt": "2026-09-13T16:31:51.860Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/operate-v4-r3",
+        "definitionHash": "0643d8a9d12807864d5e85c56de46e0a68222137fcd923076cc1d8c166f7eac4",
+        "workCalls": 6
+      },
+      "task": {
+        "acceptance": [
+          "The rendered operating packet contains the actual product-use and next-action assets required by operating-packet-v1, with exact artifact binding and honest economics.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "service.brief",
+        "createdAt": "2026-09-13T16:31:51.860Z",
+        "dependsOn": [
+          "quote-desk/review-product-v4-r3"
+        ],
+        "id": "quote-desk/operate-v4-r3",
+        "inputArtifacts": [],
+        "inputs": {
+          "budgetGuidance": "The frozen ordinary allowance belongs to substantive work. For bounded-finalize-v1, a worker complete submission triggers controller-run current checks, local publication, authenticated readback and closure without extra model decisions. Repair only from actual feedback. One held recovery admission is usable solely after a signed known-incomplete durable response and never increases ordinary task allowances. The uncertain R2 timeout remains historical and is not eligible for resubmission.",
+          "continuationVersion": "value-release-v4-durable-continuation-r3",
+          "enforceHandoff": true,
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "operatingProfile": "operating-packet-v1",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ]
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "operate-v4-r3",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Use the actual reviewed product source, manifest/artifact hashes, authenticated local readback and check evidence plus the permitted business sources. Follow the visible operating-packet-v1 format and put every requested section where the renderer preserves it. Produce a precise offer or rejection, practical product demo/use steps, check results versus unknowns, founder interview questions, an explicitly unsent outreach draft, economics assumptions with unknown labor/access, acceptance and stop criteria, and the next owner action. Bind the packet to the exact reviewed artifact. Make these assets usable for deciding or conducting the next authorized validation step; do not write another generic research summary. Distinguish tool observations from quoted source assertions and untested interpretations. No buyer, revenue, independent correction-time result or outbound action is invented. Check, publish locally and complete within six ordinary decisions, preserving room for a justified repair.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-durable-continuation-r3",
+        "planRevision": 11,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 14,
+          "modelCalls": 8,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Deliver the reviewed product and a usable next business action",
+        "updatedAt": "2026-09-13T16:31:51.860Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/adapt-v4-r3",
+        "definitionHash": "d42e26f3822668264978656992c5d221a253b41b4a9020cfcbe353b83cfe4358",
+        "workCalls": 1
+      },
+      "task": {
+        "acceptance": [
+          "The next decision cites actual delivered work and changes or retains allocation for a concrete reason.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [],
+        "attempts": 0,
+        "capability": "portfolio.plan",
+        "createdAt": "2026-09-13T16:31:51.860Z",
+        "dependsOn": [
+          "quote-desk/operate-v4-r3"
+        ],
+        "id": "quote-desk/adapt-v4-r3",
+        "inputArtifacts": [],
+        "inputs": {
+          "budgetGuidance": "The frozen ordinary allowance belongs to substantive work. For bounded-finalize-v1, a worker complete submission triggers controller-run current checks, local publication, authenticated readback and closure without extra model decisions. Repair only from actual feedback. One held recovery admission is usable solely after a signed known-incomplete durable response and never increases ordinary task allowances. The uncertain R2 timeout remains historical and is not eligible for resubmission.",
+          "continuationVersion": "value-release-v4-durable-continuation-r3",
+          "enforceHandoff": true,
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ]
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "research",
+        "lease": null,
+        "localId": "adapt-v4-r3",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Read the full actual operating packet, reviewed artifact evidence and retained observations. Reassess the seven investigation questions in light of what this run actually established. Revise priority and propose only the smallest consequential next tasks or a justified stop. Distinguish software execution competence, local artifact usefulness, commercial evidence and unknown founder/customer costs. Retain an adequate ordinary baseline. A consequential observed weakness may motivate a scoped procedure hypothesis and fair future evaluation, not a claimed specialist advantage or paid comparison now. Newly created tasks are persisted outside this frozen grant and cannot release further provider work. Return one complete structured planning response.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-durable-continuation-r3",
+        "planRevision": 11,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "proposal.reference_checks"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 4,
+          "modelCalls": 3,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Use the delivered work to choose the next useful action or stop",
+        "updatedAt": "2026-09-13T16:31:51.860Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    }
+  ],
+  "lineage": {
+    "kind": "portfolio-v4-durable-continuation-r3",
+    "parentRoot": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-finalization-r2\\var\\portfolio-031-continuation-r2",
+    "parentGrantFileHash": "65806070b33e98aae5a385e6235625b69306bf75e413e193c1c74669b3ad2919",
+    "parentGrantHash": "bdd48b6297da5858d3526446d1d0a91e606c259c9f1d69b1ace80353b0cb483c",
+    "parentOperatingHash": "b693950c48b43a8695735b3005d37b920ea6eedf1f60e990ba84a3475a35d87f",
+    "parentProposalHash": "3a14c090c51c88c624a7d9649f77cb0a27c6c9a339761ba59464067c086d98cb",
+    "backupManifestHash": "8710f65f0e3a3ae37b073254b9e9d8154313d8700576677318e8bdb0e5ccc742",
+    "backupDatabaseHash": "c596db5974009bae617e5bcd9f05c0db135538ee14718ecc27c0118cf6182e45",
+    "restoreHash": "e8a8750d574c253e5d16c35a0be425c1a034fc86c1c29e8b1cbcb5239282814d",
+    "attemptsHash": "0aa8a42f739e4e931021d2d1d2beb358a1f16dad769d2ff28fadee0b52d10c79",
+    "bindingsHash": "2e9f6ba8b5a9d60953ff00f728c6ebb3ed84b775cba00f08b7a7d2655a7d4365",
+    "accountHash": "1e2f78a39108cbabbf8ad5185ae1dd961172370f69fb0e003bf7740d1948e34f",
+    "parentTasksHash": "410db2add1db09f5a9c2d4a8d381f6c3b7dd3f82c3142e883fa78a613d15299b",
+    "parentAttemptHash": "c3ad5f0e1183164fc771a9b61f925fe42f4b33c58e45c4879a8f838617caa923",
+    "parentBindingHash": "e42d73db254efaded5c71d30b8c142039f1eb17cc222249a7d3d533e3bb71178",
+    "parentRequestRecordHash": "398e54431b5a8e67c891502be942b99c4b206f1e90f6b4a0abdb4696e7c020f4",
+    "parentTaskStateHash": "7dc74ae2927bc27c0b14da527318ec0439fed699c6020705bb3a26fdcffe028a",
+    "parentStepHash": "bd2be0af9dba10d11df1f687ab809176f4ba3746fe2d2144082a91df1edff06b",
+    "parentSourceArtifactHash": "478c66db4ebbe9e9060c19cbed853a622244f14f005bd687c3185c90c8bff6da",
+    "parentRequestBodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+    "parentRequestHash": "2f5a04543029e1b614317ac1b06f8962bbe5a4996b7ede479e85e6f52c46b2b0",
+    "parentSchemaHash": "c6c647fd71b5aa760906c952eea852ceafb742a321d3bfc56e9848cf58b9cdeb",
+    "parentTaskId": "quote-desk/decide-v4-r2",
+    "parentAttemptId": "p031-e2fd5c331b2304ca-0",
+    "sourceArtifactId": "quote-desk/accepted-investigation-v4-r2-source",
+    "sourceArtifactHash": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+    "sourceManifestHash": "12977fd9cbfca824f57e0e4111f6063a8ae05894f3729534c736350661ab096c",
+    "sourcePayloadHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+    "sourceBriefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+    "sourceBriefBytes": 17908,
+    "carryId": "portfolio-031-history-through-r2-uncertain",
+    "historical": {
+      "admissions": 9,
+      "counts": 9,
+      "reservedMinor": 1107,
+      "provisionalMinor": 384,
+      "settledMinor": 0,
+      "countBufferMinor": 400
+    },
+    "durability": {
+      "policyHash": "3725f1a6158f104143ed778de2914f297a229ab9d19cb6991f5c6cab242db1c1",
+      "requestBody": {
+        "background": true,
+        "store": true
+      },
+      "applicationStateRetention": "store-true-provider-retention-at-least-30-days",
+      "zeroDataRetentionCompatibility": "not-guaranteed",
+      "createAcknowledgementGap": "unknown-no-resubmit",
+      "retrieval": {
+        "method": "GET",
+        "admittedResponseIdsOnly": true,
+        "inferenceAdmissions": false,
+        "countAdmissions": false,
+        "maxPerResponse": 240,
+        "maxAcrossGrantedResponses": 6000
+      },
+      "remoteMutation": {
+        "cancel": false,
+        "delete": false,
+        "retryPost": false
+      }
+    },
+    "combinedCeilingMinor": 4582,
+    "combinedAdmissionLimit": 34,
+    "originalCeilingMinor": 5182,
+    "originalAdmissionLimit": 36,
+    "replacement": {
+      "kind": "approved-fresh-replacement-of-uncertain-r2-v1",
+      "uncertainTaskId": "quote-desk/decide-v4-r2",
+      "uncertainAttemptId": "p031-e2fd5c331b2304ca-0",
+      "uncertainRequestBodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+      "replacementTaskId": "quote-desk/decide-v4-r3",
+      "preservesUncertainOutcome": true,
+      "preservesReservation": true
+    },
+    "tasks": [
+      {
+        "parentId": "quote-desk/decide-v4-r2",
+        "id": "quote-desk/decide-v4-r3",
+        "workCalls": 1
+      },
+      {
+        "parentId": "quote-desk/build-v4-r2",
+        "id": "quote-desk/build-v4-r3",
+        "workCalls": 10
+      },
+      {
+        "parentId": "quote-desk/review-product-v4-r2",
+        "id": "quote-desk/review-product-v4-r3",
+        "workCalls": 6
+      },
+      {
+        "parentId": "quote-desk/operate-v4-r2",
+        "id": "quote-desk/operate-v4-r3",
+        "workCalls": 6
+      },
+      {
+        "parentId": "quote-desk/adapt-v4-r2",
+        "id": "quote-desk/adapt-v4-r3",
+        "workCalls": 1
+      }
+    ]
+  },
+  "preservedArtifact": {
+    "id": "quote-desk/accepted-investigation-v4-r2-source",
+    "version": 1,
+    "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+    "manifestHash": "12977fd9cbfca824f57e0e4111f6063a8ae05894f3729534c736350661ab096c",
+    "payloadHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+    "briefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+    "briefBytes": 17908
+  },
+  "uncertainR2": {
+    "attemptId": "p031-e2fd5c331b2304ca-0",
+    "taskId": "quote-desk/decide-v4-r2",
+    "attemptHash": "c3ad5f0e1183164fc771a9b61f925fe42f4b33c58e45c4879a8f838617caa923",
+    "requestRecordHash": "398e54431b5a8e67c891502be942b99c4b206f1e90f6b4a0abdb4696e7c020f4",
+    "requestBodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+    "taskStateHash": "7dc74ae2927bc27c0b14da527318ec0439fed699c6020705bb3a26fdcffe028a",
+    "outcome": "unknown; no response identity or output was persisted",
+    "reservationMinor": 123,
+    "preserved": true
+  },
+  "laterRequests": "Depend on actual durable decisions, controller checks and authoritative artifact identities. Each inference request is persisted and counted before one POST. Only known admitted response IDs may be retrieved with GET."
+}

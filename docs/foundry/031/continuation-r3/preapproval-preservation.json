@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-09-13T16:34:15.957Z",
+  "proposalHash": "af14b710d2b1ed96f10cd4cdef28bdccbe2025254ba8b5d6ea814052b6663bc2",
+  "implementationHash": "a0fb095e12028ce547827ffc381bd372ebb02076c7e25afd9ffba6790c1e26b6",
+  "parentPublicSignaturesAndLineageValid": true,
+  "parentRetired": false,
+  "activeR3Authority": false,
+  "pristineR3Tasks": true,
+  "unseededApp": true,
+  "acceptedResearchPreserved": true,
+  "parentStopBackupPreserved": true,
+  "archivedProposalBytesMatch": true,
+  "parentAttempt": "p031-e2fd5c331b2304ca-0",
+  "parentAttemptHash": "c3ad5f0e1183164fc771a9b61f925fe42f4b33c58e45c4879a8f838617caa923",
+  "parentOutcome": "unknown",
+  "historical": {
+    "admissions": 9,
+    "counts": 9,
+    "reservedMinor": 1107,
+    "provisionalMinor": 384,
+    "settledMinor": 0,
+    "countBufferMinor": 400
+  },
+  "incrementalMinor": 3075,
+  "combinedMinor": 4582,
+  "newProviderRequests": 0,
+  "privateKeysRead": false,
+  "credentialRead": false
+}

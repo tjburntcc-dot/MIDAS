@@ -1,0 +1,364 @@
+{
+  "portfolio": {
+    "kind": "portfolio-execution-grant-v1",
+    "approved": false,
+    "id": "portfolio-031-value-build-v4-r3",
+    "mode": "live",
+    "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-durable-r3\\var\\portfolio-031-continuation-r3",
+    "host": "Mason_Hemmer",
+    "account": "profile-path:C:\\Users\\14844",
+    "implementationHash": "a0fb095e12028ce547827ffc381bd372ebb02076c7e25afd9ffba6790c1e26b6",
+    "operatingImplementationHash": "c9f72ec3e0046a2bc751d930c1a8cba243d17ca093e741d7caf9e71aef578421",
+    "operatingGrantHash": "78084e9ae8e2207c194e90e152ffd90acbdf9a7abc2d36e2f9ab5fe91fcaaba9",
+    "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+    "credentialFile": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key",
+    "accountScope": {
+      "tenantId": "mason",
+      "businessId": "portfolio-models",
+      "runId": "portfolio-031-value-build-v4-r3",
+      "dataPolicyVersion": "portfolio-live-v1",
+      "mode": "fixture"
+    },
+    "expiresAt": "2026-09-25T22:00:00.000Z",
+    "approvedBy": "",
+    "approvalReference": "",
+    "route": {
+      "background": {
+        "kind": "durable-background-v1",
+        "store": true,
+        "pollIntervalMs": 5000,
+        "retrievalDeadlineMs": 15000,
+        "completionDeadlineMs": 900000,
+        "resumeWindowMs": 86400000,
+        "maxRetrievals": 240,
+        "maxConsecutiveReadErrors": 3
+      },
+      "authorizationId": "portfolio-031-value-build-v4-r3",
+      "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+      "model": "gpt-6-astra",
+      "reasoningEffort": "max",
+      "serviceTier": "default",
+      "maxOutputTokens": 16384,
+      "deadlineMs": 60000,
+      "inputTokenCeiling": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 123
+      },
+      "pricing": {
+        "inputMinorPerMillion": 1250,
+        "outputMinorPerMillion": 5000,
+        "source": "https://developers.openai.com/api/docs/models/gpt-6-astra ; conservative cache-write input ceiling $12.50/M and output $50/M",
+        "effectiveAt": "2026-09-12T00:00:00.000Z"
+      }
+    },
+    "ventures": [
+      {
+        "id": "quote-desk",
+        "goalHash": "82b625c2018e86458df0bc769f93b67dc2fd59e865070cd73c55361ff8b4ac59",
+        "capabilities": [
+          "research.investigate",
+          "quality.review",
+          "portfolio.plan",
+          "portfolio.reassess",
+          "service.brief",
+          "software.build",
+          "commercial.prepare"
+        ],
+        "tools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "sourceHosts": [],
+        "workCalls": 25,
+        "searchCalls": 0
+      }
+    ],
+    "countUncertaintyMinor": 400,
+    "countPolicy": "separate-unpriced-count-reserve-v1",
+    "providerConcurrency": 1,
+    "automaticRetries": 0,
+    "recovery": {
+      "kind": "known-incomplete-v1",
+      "maxAdmissions": 1
+    },
+    "externalAuthority": false,
+    "historicalAuthorizationTransfer": false,
+    "dataPolicy": "permitted-owner-inputs-and-public-sources-v1",
+    "searchPolicyHash": "20fdefe101639c2ad404953f8eada087b773b7a75247c38ff88d4ee600ee2794",
+    "procedureHashes": [
+      "f2e700a98731ab21049cc4176a9f093083879d0befafe0a3a3f21291038d5015",
+      "4cd7e9530e4d14ca4d87cd8020f88337e8b3e78a7eee5c94db909e8276f0225a"
+    ],
+    "tasks": [
+      {
+        "id": "quote-desk/decide-v4-r3",
+        "definitionHash": "0f6fef2755f7828ff1cca28a0cfca291b7b49ee0e8bcc17a55fe7f8720f400f9",
+        "workCalls": 1
+      },
+      {
+        "id": "quote-desk/build-v4-r3",
+        "definitionHash": "03f7a5ea50b2f91dc1f676ee445c2ab89945c79e3cf669afc91f55870b4e44c5",
+        "workCalls": 10
+      },
+      {
+        "id": "quote-desk/review-product-v4-r3",
+        "definitionHash": "aec112af7ac3feca6098c4f81befaefad0686be984f7facbb34aa46598ecd899",
+        "workCalls": 6
+      },
+      {
+        "id": "quote-desk/operate-v4-r3",
+        "definitionHash": "0643d8a9d12807864d5e85c56de46e0a68222137fcd923076cc1d8c166f7eac4",
+        "workCalls": 6
+      },
+      {
+        "id": "quote-desk/adapt-v4-r3",
+        "definitionHash": "d42e26f3822668264978656992c5d221a253b41b4a9020cfcbe353b83cfe4358",
+        "workCalls": 1
+      }
+    ],
+    "initialRequests": [
+      {
+        "taskId": "quote-desk/decide-v4-r3",
+        "bodyHash": "0bc380cafd396718c3bc8e739053f77f14a3b38e1469242e018178e1f7884614",
+        "schemaHash": "c6c647fd71b5aa760906c952eea852ceafb742a321d3bfc56e9848cf58b9cdeb"
+      }
+    ],
+    "continuation": {
+      "kind": "portfolio-v4-durable-continuation-r3",
+      "parentRoot": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-finalization-r2\\var\\portfolio-031-continuation-r2",
+      "parentGrantFileHash": "65806070b33e98aae5a385e6235625b69306bf75e413e193c1c74669b3ad2919",
+      "parentGrantHash": "bdd48b6297da5858d3526446d1d0a91e606c259c9f1d69b1ace80353b0cb483c",
+      "parentOperatingHash": "b693950c48b43a8695735b3005d37b920ea6eedf1f60e990ba84a3475a35d87f",
+      "parentProposalHash": "3a14c090c51c88c624a7d9649f77cb0a27c6c9a339761ba59464067c086d98cb",
+      "backupManifestHash": "8710f65f0e3a3ae37b073254b9e9d8154313d8700576677318e8bdb0e5ccc742",
+      "backupDatabaseHash": "c596db5974009bae617e5bcd9f05c0db135538ee14718ecc27c0118cf6182e45",
+      "restoreHash": "e8a8750d574c253e5d16c35a0be425c1a034fc86c1c29e8b1cbcb5239282814d",
+      "attemptsHash": "0aa8a42f739e4e931021d2d1d2beb358a1f16dad769d2ff28fadee0b52d10c79",
+      "bindingsHash": "2e9f6ba8b5a9d60953ff00f728c6ebb3ed84b775cba00f08b7a7d2655a7d4365",
+      "accountHash": "1e2f78a39108cbabbf8ad5185ae1dd961172370f69fb0e003bf7740d1948e34f",
+      "parentTasksHash": "410db2add1db09f5a9c2d4a8d381f6c3b7dd3f82c3142e883fa78a613d15299b",
+      "parentAttemptHash": "c3ad5f0e1183164fc771a9b61f925fe42f4b33c58e45c4879a8f838617caa923",
+      "parentBindingHash": "e42d73db254efaded5c71d30b8c142039f1eb17cc222249a7d3d533e3bb71178",
+      "parentRequestRecordHash": "398e54431b5a8e67c891502be942b99c4b206f1e90f6b4a0abdb4696e7c020f4",
+      "parentTaskStateHash": "7dc74ae2927bc27c0b14da527318ec0439fed699c6020705bb3a26fdcffe028a",
+      "parentStepHash": "bd2be0af9dba10d11df1f687ab809176f4ba3746fe2d2144082a91df1edff06b",
+      "parentSourceArtifactHash": "478c66db4ebbe9e9060c19cbed853a622244f14f005bd687c3185c90c8bff6da",
+      "parentRequestBodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+      "parentRequestHash": "2f5a04543029e1b614317ac1b06f8962bbe5a4996b7ede479e85e6f52c46b2b0",
+      "parentSchemaHash": "c6c647fd71b5aa760906c952eea852ceafb742a321d3bfc56e9848cf58b9cdeb",
+      "parentTaskId": "quote-desk/decide-v4-r2",
+      "parentAttemptId": "p031-e2fd5c331b2304ca-0",
+      "sourceArtifactId": "quote-desk/accepted-investigation-v4-r2-source",
+      "sourceArtifactHash": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+      "sourceManifestHash": "12977fd9cbfca824f57e0e4111f6063a8ae05894f3729534c736350661ab096c",
+      "sourcePayloadHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+      "sourceBriefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+      "sourceBriefBytes": 17908,
+      "carryId": "portfolio-031-history-through-r2-uncertain",
+      "historical": {
+        "admissions": 9,
+        "counts": 9,
+        "reservedMinor": 1107,
+        "provisionalMinor": 384,
+        "settledMinor": 0,
+        "countBufferMinor": 400
+      },
+      "durability": {
+        "policyHash": "3725f1a6158f104143ed778de2914f297a229ab9d19cb6991f5c6cab242db1c1",
+        "requestBody": {
+          "background": true,
+          "store": true
+        },
+        "applicationStateRetention": "store-true-provider-retention-at-least-30-days",
+        "zeroDataRetentionCompatibility": "not-guaranteed",
+        "createAcknowledgementGap": "unknown-no-resubmit",
+        "retrieval": {
+          "method": "GET",
+          "admittedResponseIdsOnly": true,
+          "inferenceAdmissions": false,
+          "countAdmissions": false,
+          "maxPerResponse": 240,
+          "maxAcrossGrantedResponses": 6000
+        },
+        "remoteMutation": {
+          "cancel": false,
+          "delete": false,
+          "retryPost": false
+        }
+      },
+      "combinedCeilingMinor": 4582,
+      "combinedAdmissionLimit": 34,
+      "originalCeilingMinor": 5182,
+      "originalAdmissionLimit": 36,
+      "replacement": {
+        "kind": "approved-fresh-replacement-of-uncertain-r2-v1",
+        "uncertainTaskId": "quote-desk/decide-v4-r2",
+        "uncertainAttemptId": "p031-e2fd5c331b2304ca-0",
+        "uncertainRequestBodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+        "replacementTaskId": "quote-desk/decide-v4-r3",
+        "preservesUncertainOutcome": true,
+        "preservesReservation": true
+      },
+      "tasks": [
+        {
+          "parentId": "quote-desk/decide-v4-r2",
+          "id": "quote-desk/decide-v4-r3",
+          "workCalls": 1
+        },
+        {
+          "parentId": "quote-desk/build-v4-r2",
+          "id": "quote-desk/build-v4-r3",
+          "workCalls": 10
+        },
+        {
+          "parentId": "quote-desk/review-product-v4-r2",
+          "id": "quote-desk/review-product-v4-r3",
+          "workCalls": 6
+        },
+        {
+          "parentId": "quote-desk/operate-v4-r2",
+          "id": "quote-desk/operate-v4-r3",
+          "workCalls": 6
+        },
+        {
+          "parentId": "quote-desk/adapt-v4-r2",
+          "id": "quote-desk/adapt-v4-r3",
+          "workCalls": 1
+        }
+      ]
+    }
+  },
+  "operating": {
+    "kind": "operations-model-grant-v1",
+    "mode": "live",
+    "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-durable-r3\\var\\portfolio-031-continuation-r3",
+    "host": "Mason_Hemmer",
+    "implementationHash": "c9f72ec3e0046a2bc751d930c1a8cba243d17ca093e741d7caf9e71aef578421",
+    "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+    "credentialFile": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key",
+    "billingPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEArQe+p9bwm+YzBFs/CnXr81BHHGx8uRHAWuGyHENFobw=\n-----END PUBLIC KEY-----\n",
+    "expiresAt": "2026-09-25T22:00:00.000Z",
+    "approvedBy": "",
+    "approvalReference": "",
+    "accountScope": {
+      "tenantId": "mason",
+      "businessId": "portfolio-models",
+      "runId": "portfolio-031-value-build-v4-r3",
+      "dataPolicyVersion": "portfolio-live-v1",
+      "mode": "fixture"
+    },
+    "route": {
+      "background": {
+        "kind": "durable-background-v1",
+        "store": true,
+        "pollIntervalMs": 5000,
+        "retrievalDeadlineMs": 15000,
+        "completionDeadlineMs": 900000,
+        "resumeWindowMs": 86400000,
+        "maxRetrievals": 240,
+        "maxConsecutiveReadErrors": 3
+      },
+      "authorizationId": "portfolio-031-value-build-v4-r3",
+      "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+      "model": "gpt-6-astra",
+      "reasoningEffort": "max",
+      "serviceTier": "default",
+      "maxOutputTokens": 16384,
+      "deadlineMs": 60000,
+      "inputTokenCeiling": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 123
+      },
+      "pricing": {
+        "inputMinorPerMillion": 1250,
+        "outputMinorPerMillion": 5000,
+        "source": "https://developers.openai.com/api/docs/models/gpt-6-astra ; conservative cache-write input ceiling $12.50/M and output $50/M",
+        "effectiveAt": "2026-09-12T00:00:00.000Z"
+      }
+    },
+    "limits": {
+      "totalMinor": 4582,
+      "concurrency": 1,
+      "astraCountRequests": 25,
+      "overheadReserve": {
+        "minor": 400,
+        "reason": "The SAME historical unpriced token-count and durable retrieval uncertainty reserve, carried once; no second count/read buffer is allocated."
+      },
+      "stages": {
+        "smoke": {
+          "minor": 0,
+          "attempts": 0
+        },
+        "development": {
+          "minor": 3075,
+          "attempts": 25
+        },
+        "validation": {
+          "minor": 0,
+          "attempts": 0
+        },
+        "evaluation": {
+          "minor": 0,
+          "attempts": 0
+        }
+      },
+      "allocations": [
+        {
+          "metadataKey": "businessId",
+          "value": "quote-desk",
+          "attempts": 25,
+          "minor": 3075
+        },
+        {
+          "metadataKey": "stage",
+          "value": "portfolio-work",
+          "attempts": 25,
+          "minor": 3075
+        },
+        {
+          "metadataKey": "stage",
+          "value": "portfolio-search",
+          "attempts": 0,
+          "minor": 0
+        }
+      ],
+      "carryIn": [
+        {
+          "id": "portfolio-031-history-through-r2-uncertain",
+          "exposureMinor": 1107,
+          "evidenceHash": "e911a12e95f8b39da6b0a0fc4dde9e4df13f3dcdff71210fccea892693a53496"
+        }
+      ]
+    },
+    "businesses": [
+      {
+        "id": "quote-desk",
+        "goalHash": "82b625c2018e86458df0bc769f93b67dc2fd59e865070cd73c55361ff8b4ac59",
+        "sourceHosts": [],
+        "maxCalls": 25
+      }
+    ],
+    "retries": 0,
+    "providerConcurrency": 1,
+    "countDeadlineMs": 10000,
+    "externalAuthority": false,
+    "countRequestByteCeiling": 196608
+  },
+  "approved": false,
+  "providerRequests": 0,
+  "inferenceAdmissions": 25,
+  "countAdmissions": 25,
+  "maximumExposureMinor": 4582,
+  "incrementalExposureMinor": 3075,
+  "historicalRetainedMinor": 1507,
+  "currency": "USD",
+  "instructions": "Review exact scope and limits. Both payloads require owner signatures; set matching approvedBy/approvalReference, approve the outer payload, and recompute its operatingGrantHash after finalizing the inner payload. No historical grants transfer. A linked continuation retires parent execution authority before new dispatch and preserves its evidence and exposure."
+}

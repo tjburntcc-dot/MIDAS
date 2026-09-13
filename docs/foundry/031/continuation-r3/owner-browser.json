@@ -1,0 +1,9 @@
+{
+  "origin": "http://127.0.0.1:43138",
+  "passed": true,
+  "refresh": true,
+  "mobileWidth": 390,
+  "overflow": false,
+  "pageErrors": [],
+  "provenance": "Read-only inspection of mock-completed workspace; no live model inference or credential access."
+}

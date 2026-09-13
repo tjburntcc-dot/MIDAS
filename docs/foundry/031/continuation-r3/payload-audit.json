@@ -1,0 +1,48 @@
+{
+  "proposalHash": "af14b710d2b1ed96f10cd4cdef28bdccbe2025254ba8b5d6ea814052b6663bc2",
+  "implementationHash": "a0fb095e12028ce547827ffc381bd372ebb02076c7e25afd9ffba6790c1e26b6",
+  "bodyHash": "0bc380cafd396718c3bc8e739053f77f14a3b38e1469242e018178e1f7884614",
+  "schemaHash": "c6c647fd71b5aa760906c952eea852ceafb742a321d3bfc56e9848cf58b9cdeb",
+  "contextBytes": 42311,
+  "payloadBytes": 48310,
+  "acceptedBriefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+  "acceptedBriefBytes": 17908,
+  "historical": {
+    "admissions": 9,
+    "counts": 9,
+    "reservedMinor": 1107,
+    "provisionalMinor": 384,
+    "settledMinor": 0,
+    "countBufferMinor": 400
+  },
+  "incrementalExposureMinor": 3075,
+  "combinedExposureMinor": 4582,
+  "originalCeilingMinor": 5182,
+  "combinedAdmissions": 34,
+  "originalAdmissionLimit": 36,
+  "inputTokens": "Unknown until authorized full-payload count",
+  "model": "gpt-6-astra",
+  "reasoning": {
+    "effort": "max"
+  },
+  "serviceTier": "default",
+  "background": true,
+  "store": true,
+  "applicationStateRetention": "store:true uses provider application-state retention of at least 30 days per current documentation; the exact deletion time is not guaranteed, and this packet makes no zero-data-retention compatibility claim",
+  "retrievalPolicy": {
+    "onlyAlreadyAdmittedResponseIds": true,
+    "maxPerResponse": 240,
+    "maxAcross25Responses": 6000,
+    "retrievalDeadlineMs": 15000,
+    "completionDeadlineMs": 900000,
+    "resumeWindowMs": 86400000,
+    "maxConsecutiveReadErrors": 3,
+    "pricing": "GET retrieval and count endpoint pricing are unestablished; the same USD 4.00 uncertainty buffer covers both without treating either as free"
+  },
+  "earlyCreateGap": "A POST whose acknowledgement is lost before a response ID is persisted remains unknown. It is never resubmitted, cancelled or deleted by this amendment.",
+  "providerRequests": 0,
+  "credentialRead": false,
+  "privateKeyRead": false,
+  "signed": false,
+  "parentRetired": false
+}
