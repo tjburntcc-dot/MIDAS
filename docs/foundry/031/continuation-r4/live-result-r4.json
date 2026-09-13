@@ -1,0 +1,125 @@
+{
+  "at": "2026-09-13T18:46:17.354Z",
+  "proposalHash": "2d177f6a5bd89e656899eba56823f09066f880f98e526c756be994873e46af69",
+  "implementationHash": "be10dd1038505781070c2dc87415c31aa46d5e8ed7d08603b62e686899817f89",
+  "signedGrantFileHash": "fb41f5b1a74c8a92d3d9384cfa42343f1c542033fbbe18d53245760420010df9",
+  "attempt": {
+    "id": "p031-2c7a9771c07a9c24-0",
+    "requestHash": "5cddf8742690bff9794a73e751dc7f593a6c2cdcaaff9bd22bbd92f4e23afb36",
+    "status": "failed",
+    "errorCode": "MODEL_USAGE_MISSING",
+    "reservation": 164,
+    "dispatchAt": "2026-09-13T18:43:22.022Z",
+    "finishedAt": "2026-09-13T18:43:27.942Z",
+    "countDispatchIntent": true,
+    "inferenceDispatchIntent": true
+  },
+  "response": {
+    "completionDeadlineAt": "2026-09-13T18:58:22.026Z",
+    "consecutiveReadErrors": 0,
+    "createDispatched": true,
+    "createdAt": "2026-09-13T18:43:20.744Z",
+    "dispatchAt": "2026-09-13T18:43:22.026Z",
+    "events": [
+      {
+        "at": "2026-09-13T18:43:22.449Z",
+        "errorParameter": null,
+        "httpStatus": 200,
+        "message": null,
+        "messageSource": "local_allowlist",
+        "operation": "create",
+        "phase": "headers",
+        "providerErrorCode": null,
+        "providerErrorType": null,
+        "providerRequestId": "req_ef8794e9fc9544ceabdb8f8c20cbe0b9",
+        "unrecognizedErrorFieldsWithheld": false
+      },
+      {
+        "at": "2026-09-13T18:43:22.462Z",
+        "operation": "retrieve",
+        "phase": "dispatch_intent",
+        "responseId": "resp_0a21f75cf3898a96006aa6eec8de0087d2a16fc185bdc9c795",
+        "seq": 1
+      },
+      {
+        "at": "2026-09-13T18:43:22.652Z",
+        "errorParameter": null,
+        "httpStatus": 200,
+        "message": null,
+        "messageSource": "local_allowlist",
+        "operation": "retrieve",
+        "phase": "headers",
+        "providerErrorCode": null,
+        "providerErrorType": null,
+        "providerRequestId": "req_3ae8059f94c8421cb40f12bc467e626a",
+        "seq": 1,
+        "unrecognizedErrorFieldsWithheld": false
+      },
+      {
+        "at": "2026-09-13T18:43:27.674Z",
+        "operation": "retrieve",
+        "phase": "dispatch_intent",
+        "responseId": "resp_0a21f75cf3898a96006aa6eec8de0087d2a16fc185bdc9c795",
+        "seq": 2
+      },
+      {
+        "at": "2026-09-13T18:43:27.935Z",
+        "errorParameter": null,
+        "httpStatus": 200,
+        "message": null,
+        "messageSource": "local_allowlist",
+        "operation": "retrieve",
+        "phase": "headers",
+        "providerErrorCode": null,
+        "providerErrorType": null,
+        "providerRequestId": "req_2ca9922315ff42ff8d23689740637cb8",
+        "seq": 2,
+        "unrecognizedErrorFieldsWithheld": false
+      }
+    ],
+    "grantHash": "b19e60cb1aa94a12e1d10e2d7b864afe2ef97f2ffd7d29332aa8222bf0a9c197",
+    "identityAt": "2026-09-13T18:43:22.458Z",
+    "owner": null,
+    "ownerPid": null,
+    "policyHash": "3725f1a6158f104143ed778de2914f297a229ab9d19cb6991f5c6cab242db1c1",
+    "requestHash": "5cddf8742690bff9794a73e751dc7f593a6c2cdcaaff9bd22bbd92f4e23afb36",
+    "responseId": "resp_0a21f75cf3898a96006aa6eec8de0087d2a16fc185bdc9c795",
+    "resumeUntil": "2026-09-14T18:43:22.026Z",
+    "retrievals": 2,
+    "status": "failed",
+    "terminal": {
+      "background": true,
+      "id": "resp_0a21f75cf3898a96006aa6eec8de0087d2a16fc185bdc9c795",
+      "incomplete_details": null,
+      "model": "gpt-6-astra",
+      "output": [],
+      "service_tier": "default",
+      "status": "failed",
+      "store": true,
+      "usage": null
+    },
+    "terminalAt": "2026-09-13T18:43:27.937Z",
+    "terminalHash": "3760be8e2a4eb24e3d9fa55d9313b19d8a9e6ec0926f277a6b54e02aa8c0fa9d"
+  },
+  "classification": "Known terminal provider failure; no output or usage. Underlying provider error not preserved by frozen terminal sanitizer. Not a build rejection, timeout, or established output-limit failure.",
+  "accounting": {
+    "newInferenceAdmissions": 1,
+    "newCountRequests": 1,
+    "newRetrievalRequests": 2,
+    "newRetainedMinor": 164,
+    "historicalRetainedMinor": 1753,
+    "combinedRetainedMinor": 1917,
+    "remainingHeadroomMinor": 2665,
+    "newProvisionalMinor": null,
+    "historicalKnownProvisionalSubtotalMinor": 574,
+    "authoritativeSettlements": null
+  },
+  "downstreamAdmissions": 0,
+  "frozenImplementationUnchanged": true,
+  "replacementInference": 0,
+  "limitations": [
+    "Terminal sanitizer omitted provider error field.",
+    "MODEL_USAGE_MISSING is the local first failing validation, not the provider root cause.",
+    "Frozen same-ID mechanism returns persisted terminal; repeating run cannot reconstruct missing provider error or authorize replacement."
+  ]
+}
