@@ -13,13 +13,14 @@ import type { ResponsesRoute } from '../model-port.ts';
 import { ModelLedger } from '../experiment/ledger.ts';
 import type { Limits } from '../experiment/ledger.ts';
 import { verified } from '../experiment/config.ts';
-import { countTokens } from '../experiment/token-count.ts';
+import { countTokens,assertCountableRequest } from '../experiment/token-count.ts';
 
 export type OperatingGrant = {
     kind:'operations-model-grant-v1'; mode:'mock'|'live'; root:string; host:string;
     implementationHash:string; projectId:string; credentialFile:string|null;
     expiresAt:string; approvedBy:string; approvalReference:string;
     billingPublicKey?:string|null;
+    countRequestByteCeiling?:196608;
     recovery?:{version:'known-incomplete-v1';maxAdmissions:2};
     learningGate?:'consequential-job-v1';
     accountScope:Scope; route:ResponsesRoute; limits:Limits;
@@ -42,6 +43,7 @@ export class OperatingModels {
         requireThat(g.kind==='operations-model-grant-v1'&&g.root===resolve(options.root)&&g.host===hostname(),'OPERATING_GRANT_LOCATION');
         requireThat(g.mode===options.execution.kind&&g.implementationHash===implementationHash(),'OPERATING_GRANT_IMPLEMENTATION');
         requireThat(g.retries===0&&g.providerConcurrency===1&&g.countDeadlineMs===10000&&g.externalAuthority===false,'OPERATING_GRANT_AUTHORITY');
+        requireThat(g.countRequestByteCeiling===undefined||g.countRequestByteCeiling===196608,'OPERATING_COUNT_BYTE_LIMIT');
         requireThat(g.approvedBy.length>0&&g.approvalReference.length>0&&Number.isFinite(Date.parse(g.expiresAt)),'OPERATING_GRANT_APPROVAL');
         requireThat(g.route.deadlineMs>0&&g.route.deadlineMs<=180000&&g.route.serviceTier==='default'&&g.route.maxCallCost.currency==='USD','OPERATING_ROUTE_LIMIT');
         requireThat(g.limits.concurrency===1&&g.limits.astraCountRequests!==undefined,'OPERATING_AGGREGATE_REQUIRED');
@@ -75,6 +77,7 @@ export class OperatingModels {
         }
         const request={...x.request,scope:g.accountScope,requestId:x.attemptId};
         const bytes=canonical(buildResponsesBody(g.route,request,x.schema)),digest=rawHash(bytes),key=scopeKey(g.accountScope)+'/'+x.attemptId;
+        assertCountableRequest(JSON.parse(bytes),g.countRequestByteCeiling??65536);
         const prior=this.ledger.get(x.attemptId),saved=this.store.get('operating-response',key);
         if(prior){
             requireThat(prior.requestHash===digest&&prior.metadata.businessId===b.id,'OPERATING_REQUEST_CHANGED');
@@ -111,7 +114,7 @@ export class OperatingModels {
             this.store.transaction(()=>{const key=x.attemptId+'-request',old=this.store.get('operating-request',key),record={bytes:raw,requestHash:d,businessId:b.id,grantHash:hash(g),source:g.mode};if(old)requireThat(old.requestHash===d&&old.businessId===b.id&&old.bytes===raw,'OPERATING_REQUEST_CHANGED');else this.store.put('operating-request',key,record,null);});
             await prepare(r,amount,d,raw);
         };
-        const port=responsesModelPort({route:{...g.route,projectId:g.projectId},apiKey:this.credential,budget,transport:this.transport,schemaForTask:()=>x.schema,validateOutput:(_task,out)=>x.validate(out),countInputTokens:(body,r)=>countTokens(body,g.projectId,this.credential(),async(event)=>budget.observed?.(r!,{tokenCount:event}),this.transport)});
+        const port=responsesModelPort({route:{...g.route,projectId:g.projectId},apiKey:this.credential,budget,transport:this.transport,schemaForTask:()=>x.schema,validateOutput:(_task,out)=>x.validate(out),countInputTokens:(body,r)=>countTokens(body,g.projectId,this.credential(),async(event)=>budget.observed?.(r!,{tokenCount:event}),this.transport,g.countRequestByteCeiling??65536)});
         try{
             const result=await port.run(request);
             this.store.transaction(()=>this.store.put('operating-response',key,{result,requestHash:digest,provenance:g.mode==='mock'?'offline_mock':'actual-model'},null));

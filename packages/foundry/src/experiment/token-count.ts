@@ -26,10 +26,16 @@ export async function boundedJSON(response:Response,maxBytes=16384){
  try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>maxBytes){await reader.cancel();return null;}chunks.push(part.value);}return JSON.parse(Buffer.concat(chunks).toString('utf8'));}
  catch{return null;}finally{reader.releaseLock();}
 }
+/** Local byte containment is distinct from provider token admission. The larger
+ * bound must be selected by trusted, signed configuration; defaults stay fixed. */
+export function assertCountableRequest(body:Record<string,unknown>,maxRequestBytes=65536){
+ requireThat([65536,196608].includes(maxRequestBytes),'COUNT_REQUEST_BYTE_LIMIT_INVALID');countPayload(body);
+ requireThat(Buffer.byteLength(canonical(body),'utf8')<=maxRequestBytes,'REQUEST_TOO_LARGE');
+}
 /** Only this endpoint is reachable here. No inference, redirects, retries or raw-body logging. */
-export async function countTokens(body:Record<string,unknown>,projectId:string,credential:string,observe:(event:Record<string,unknown>)=>Promise<void>,transport:typeof fetch=fetch){
+export async function countTokens(body:Record<string,unknown>,projectId:string,credential:string,observe:(event:Record<string,unknown>)=>Promise<void>,transport:typeof fetch=fetch,maxRequestBytes=65536){
  const projected=countPayload(body),bytes=canonical(projected);
- requireThat(Buffer.byteLength(canonical(body),'utf8')<=65536,'REQUEST_TOO_LARGE');
+ assertCountableRequest(body,maxRequestBytes);
  requireThat(/^proj_[A-Za-z0-9_-]+$/.test(projectId),'PROJECT_REQUIRED');
  requireThat(credential.length>0,'MODEL_ACCESS_REQUIRED');
  const started=Date.now();const binding={operation:'token_count',endpoint:TOKEN_COUNT_ENDPOINT,requestHash:rawHash(bytes),inferenceRequestHash:rawHash(canonical(body))};
