@@ -9,6 +9,7 @@ import type { PreviewStateRequest } from './preview.ts';
 import {checkOperatingPacket,renderOperatingPacket} from './operating-profile.ts';
 import {checkProductV2} from './product-check-v2.ts';
 import {productProfile,quoteV2Checks} from './product-profiles.ts';
+import {sourceHandoff} from './source-handoff.ts';
 
 export type Manifest={revision:number;sha256:string;files:Array<{path:string;sha256:string;bytes:number}>;ref:Ref};
 export type Workspace={ventureId:string;taskId:string;kind:WorkKind;files:SourceFile[];inputs:any;provenance:string;manifest:Manifest;checks:Check[];checkedManifest:string|null;published:any|null;_version?:number};
@@ -59,6 +60,8 @@ export class LocalWorkTools{
    else if(call.tool==='workspace.read'){pathCheck(args.path);const file=w.files.find(f=>f.path===args.path);requireThat(file,'WORKSPACE_FILE_NOT_FOUND');output={...file,sha256:rawHash(file.content)};}
    else if(call.tool==='workspace.replace'){
     pathCheck(args.path);requireThat(typeof args.content==='string','WORKSPACE_CONTENT_REQUIRED');const old=w.files.find(f=>f.path===args.path),before=old?rawHash(old.content):null;requireThat(args.expectedHash===before,'WORKSPACE_STALE_FILE');const files=old?w.files.map(f=>f.path===args.path?{path:f.path,content:args.content}:f):[...w.files,{path:args.path,content:args.content}];validateFiles(files);
+    const task=this.store.get('portfolio-task',call.taskId),handoff=sourceHandoff({...w,files},task?.ventureId===call.ventureId&&Boolean(task.inputs?.sourceBindings));
+    if(!handoff.accepted)return finish({ok:false,tool:call.tool,observationId:id,manifest:w.manifest,checks:w.checks,changes:[],error:'WORKSPACE_HANDOFF_TOO_LARGE',output:{effect:'none',path:args.path,currentSourceHash:before,...handoff,sourcePreserved:true,nextAction:'Shorten the proposed content without removing required evidence or changing acceptance. Submit a fresh corrected write using the unchanged current source hash. This failed tool decision does not add model capacity.'}});
     const saved=this.store.transaction(()=>{const latest=this.load(call.ventureId,call.taskId);requireThat(latest._version===w._version,'WORKSPACE_CONCURRENT');const manifest=this.manifest(s,w.taskId,w.kind,files,w.inputs,w.manifest.revision+1,w.manifest.ref);const next=this.store.put('local-workspace',key,{...w,files,manifest,checks:[],checkedManifest:null,published:null},w._version!);saveResult({ok:true,tool:call.tool,observationId:id,manifest:next.manifest,checks:[],changes:[{path:args.path,beforeHash:before,afterHash:rawHash(args.content)}],output:{revision:next.manifest.revision,invalidated:['checks','local-publication']}});return next;});w=saved;changes=[{path:args.path,beforeHash:before,afterHash:rawHash(args.content)}];output={revision:w.manifest.revision,invalidated:['checks','local-publication']};
    }else if(call.tool==='check.run'){
     const checkHash=w.manifest.sha256;
