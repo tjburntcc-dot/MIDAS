@@ -17,6 +17,7 @@ import {productProfile} from './product-profiles.ts';
 import {sourceHandoff} from './source-handoff.ts';
 import {inheritedDraftFeedback} from './continuation.ts';
 import {finalizationEnabled,finishingFeasibility} from './finalization.ts';
+import {stageContractForTask,stageProcedure,stageSchema,stageTools,scopeStageContext,validateStageOutput} from './stage-contracts.ts';
 
 export interface WorkTools {
  execute(input:{ventureId:string;taskId:string;tool:string;args:any;operationId?:string}):Promise<any>;
@@ -50,7 +51,7 @@ export class PortfolioEngine {
  constructor(options:{portfolio:Portfolio;tools:WorkTools;evidence:EvidenceLibrary;model?:WorkerModel;prepareTask?:(task:Task)=>void|Promise<void>;accounting?:()=>any;recoveryAuthority?:(attemptId:string)=>any}){this.portfolio=options.portfolio;this.store=options.portfolio.store;this.tools=options.tools;this.evidence=options.evidence;this.model=options.model??disabledWorker;this.prepareTask=options.prepareTask;this.accounting=options.accounting;this.recoveryAuthority=options.recoveryAuthority;}
  rows(kind:string){return this.store.db.prepare('SELECT body FROM entities WHERE kind=? ORDER BY key').all(kind).map(r=>JSON.parse(String(r.body)));}
  /** Offline preparation of exact initial payload, with no model admission. */
- async previewRequest(taskId:string){const task=this.portfolio.getTask(taskId);requireThat(task.attempts===0,'PREFLIGHT_REQUIRES_UNSTARTED_TASK');if(!['portfolio.plan','portfolio.reassess'].includes(task.capability)){try{this.tools.load(task.ventureId,task.id);}catch{await this.prepareTask?.(task);}}const planning=['portfolio.plan','portfolio.reassess'].includes(task.capability),s=this.state(task);return {request:makeWorkerRequest({ventureId:task.ventureId,taskId:task.id,attemptId:'p031-'+hash(task.id).slice(0,16)+'-0',context:this.requestContext(task,planning),tools:task.allowedTools,procedure:s.procedure}),schema:planning?planningSchema:workerSchema,warning:'Exact initial worker/schema preparation only. Provider access and token count remain unverified; later requests bind actual tool feedback.'};}
+ async previewRequest(taskId:string){const task=this.portfolio.getTask(taskId);requireThat(task.attempts===0,'PREFLIGHT_REQUIRES_UNSTARTED_TASK');if(!['portfolio.plan','portfolio.reassess'].includes(task.capability)){try{this.tools.load(task.ventureId,task.id);}catch{await this.prepareTask?.(task);}}const planning=['portfolio.plan','portfolio.reassess'].includes(task.capability),s=this.state(task);return {request:this.workerRequest(task,'p031-'+hash(task.id).slice(0,16)+'-0',this.requestContext(task,planning)),schema:stageSchema(task)??(planning?planningSchema:workerSchema),warning:'Exact initial worker/schema preparation only. Provider access and token count remain unverified; later requests bind actual tool feedback.'};}
  runTask(taskId:string,workerId?:string){
   if(this.active.has(taskId))return this.active.get(taskId)!;
   requireThat(this.model.kind!=='actual_model'||this.active.size===0,'PROVIDER_WORKER_BUSY');
@@ -74,7 +75,7 @@ export class PortfolioEngine {
    if(!launched.length)break;results.push(...await Promise.all(launched));
   }return results;
  }
- private state(task:Task){let s=this.store.get('portfolio-execution',task.id);if(!s){const input=task.inputs as any,planning=['portfolio.plan','portfolio.reassess'].includes(task.capability);let procedure=planning?EXECUTIVE_PROCEDURE:finalizationEnabled(task)?FINALIZING_WORKER_PROCEDURE:WORKER_PROCEDURE,selection:any={kind:'strong_generic_baseline',adoption:null};if(input?.procedureScope||input?.baselineProcedureId){requireThat(input.procedureScope?.capability===task.capability&&typeof input.procedureScope.population==='string'&&typeof input.baselineProcedureId==='string','TASK_PROCEDURE_SCOPE_REQUIRED');const chosen=new ProcedureRegistry(this.store).selected(input.procedureScope,input.baselineProcedureId);requireThat(chosen.procedure.scope.capability===task.capability,'TASK_PROCEDURE_CAPABILITY_MISMATCH');procedure=chosen.procedure.procedure;selection={kind:'scoped_registry',procedureId:chosen.procedure.id,definitionHash:chosen.procedure.definitionHash,adoption:chosen.adoption,scope:input.procedureScope};}s=this.store.transaction(()=>this.store.put('portfolio-execution',task.id,{taskId:task.id,ventureId:task.ventureId,index:0,observations:[],sourceHash:this.evidence.taskDigest(task),procedure,procedureHash:hash(procedure),procedureSelection:selection,preparedAt:new Date().toISOString(),startedAt:null,modelProvenance:'not_admitted'},null));}return s;}
+ private state(task:Task){let s=this.store.get('portfolio-execution',task.id);if(!s){const input=task.inputs as any,planning=['portfolio.plan','portfolio.reassess'].includes(task.capability);let procedure=stageProcedure(task)??(planning?EXECUTIVE_PROCEDURE:finalizationEnabled(task)?FINALIZING_WORKER_PROCEDURE:WORKER_PROCEDURE),selection:any={kind:'strong_generic_baseline',adoption:null};if(input?.procedureScope||input?.baselineProcedureId){requireThat(!stageContractForTask(task),'STAGE_PROCEDURE_OVERRIDE_DENIED');requireThat(input.procedureScope?.capability===task.capability&&typeof input.procedureScope.population==='string'&&typeof input.baselineProcedureId==='string','TASK_PROCEDURE_SCOPE_REQUIRED');const chosen=new ProcedureRegistry(this.store).selected(input.procedureScope,input.baselineProcedureId);requireThat(chosen.procedure.scope.capability===task.capability,'TASK_PROCEDURE_CAPABILITY_MISMATCH');procedure=chosen.procedure.procedure;selection={kind:'scoped_registry',procedureId:chosen.procedure.id,definitionHash:chosen.procedure.definitionHash,adoption:chosen.adoption,scope:input.procedureScope};}s=this.store.transaction(()=>this.store.put('portfolio-execution',task.id,{taskId:task.id,ventureId:task.ventureId,index:0,observations:[],sourceHash:this.evidence.taskDigest(task),procedure,procedureHash:hash(procedure),procedureSelection:selection,preparedAt:new Date().toISOString(),startedAt:null,modelProvenance:'not_admitted'},null));}return s;}
  private save(task:Task,patch:any){return this.store.transaction(()=>{const old=this.store.get('portfolio-execution',task.id);return this.store.put('portfolio-execution',task.id,{...old,...patch},old._version);});}
  private assertCurrent(task:Task){const t=this.portfolio.getTask(task.id);requireThat(!t.stopRequested&&this.portfolio.getVenture(t.ventureId).status==='active','TASK_STOP_REQUESTED');requireThat(!t.invalidatedAt,'TASK_INPUTS_STALE');if(this.state(t).sourceHash!==this.evidence.taskDigest(t)){this.portfolio.invalidateTask(t.id,'Permitted source evidence changed after the runtime request was pinned');requireThat(false,'TASK_SOURCE_CHANGED');}return t;}
  /** Only declared descendants in the same plan/frozen allowance supply an
@@ -128,12 +129,15 @@ export class PortfolioEngine {
   const dependencies=dependencyInputs.map(parent=>{return {id:parent.id,objective:parent.objective??parent.title,status:parent.status,outputCurrent:parent.outputCurrent,summary:parent.result?.summary?.slice(0,500)??null,artifacts:parent.outputArtifacts.map((binding:any)=>{
    const a=this.store.get('portfolio-artifact',binding.artifactId);requireThat(a&&a.ventureId===task.ventureId&&a.version===binding.version&&a.sha256===binding.sha256,'DEPENDENCY_ARTIFACT_STALE');
    const detail:any={...binding,title:a.title,kind:a.kind,summary:a.summary?.slice(0,500)??null};
-   if(a.kind==='business_proposal'){reportBytes+=Buffer.byteLength(JSON.stringify(a.content));requireThat(reportBytes<=18000,'DEPENDENCY_REPORT_TOO_LARGE_FOR_PLANNING');detail.proposal=a.content;}
+   if(a.kind==='business_proposal'){const bytes=Buffer.byteLength(JSON.stringify(a.content));reportBytes+=bytes;requireThat((stageContractForTask(task)?bytes:reportBytes)<=18000,'DEPENDENCY_REPORT_TOO_LARGE_FOR_PLANNING');detail.proposal=a.content;}
    const sourceTaskId=a.taskId??a.metadata?.preservedSource?.taskId;
    if(sourceTaskId&&a.downloadUrl){const upstream=this.tools.load(task.ventureId,sourceTaskId);if(a.metadata?.preservedSource){requireThat(this.tools.download,'PRESERVED_DELIVERY_READER_REQUIRED');const payload=JSON.parse(this.tools.download(task.ventureId,sourceTaskId).content);requireThat(hash(payload)===a.metadata.preservedSource.payloadHash&&payload.manifest.sha256===a.metadata.manifestHash,'PRESERVED_DELIVERY_CHANGED');detail.historicalProvenance=a.metadata.preservedSource;}if(upstream.kind==='service'){
     requireThat(upstream.published?.manifestHash===upstream.manifest.sha256&&a.metadata?.manifestHash===upstream.manifest.sha256,'DEPENDENCY_REPORT_MANIFEST_CHANGED');
-    const file=upstream.files.find((f:any)=>f.path==='brief.json');requireThat(file,'DEPENDENCY_REPORT_REQUIRED');reportBytes+=Buffer.byteLength(file.content);
-    requireThat(reportBytes<=18000,'DEPENDENCY_REPORT_TOO_LARGE_FOR_PLANNING');detail.report=JSON.parse(file.content);detail.reportCompleteness='full authoritative checked report';
+    const file=upstream.files.find((f:any)=>f.path==='brief.json');requireThat(file,'DEPENDENCY_REPORT_REQUIRED');const bytes=Buffer.byteLength(file.content);reportBytes+=bytes;
+    // R4 carries the accepted report beside a new decision/report. Each source
+    // artifact keeps its original 18KB rule; the explicit 72KB context limit
+    // bounds their aggregate. Historical requests retain the original sum rule.
+    requireThat((stageContractForTask(task)?bytes:reportBytes)<=18000,'DEPENDENCY_REPORT_TOO_LARGE_FOR_PLANNING');detail.report=JSON.parse(file.content);detail.reportCompleteness='full authoritative checked report';
    }else if(upstream.kind==='software'){
     requireThat(this.tools.download,'DEPENDENCY_DELIVERY_READER_REQUIRED');
     const delivery=JSON.parse(this.tools.download(task.ventureId,a.taskId).content);
@@ -166,13 +170,28 @@ export class PortfolioEngine {
     if(size()>contextLimit){delete (target as any).content;target.contentComplete=false;assembled.workspace.currentSource=currentFiles;}
    }
   }
+  if(stageContractForTask(task)){const scoped=scopeStageContext(task,assembled);for(const key of Object.keys(assembled))delete assembled[key];Object.assign(assembled,scoped);}
   if(size()>contextLimit){for(const source of assembled.sources){if(source.interpretation){delete source.interpretation;}}}
   if(size()>contextLimit){for(const o of assembled.observations){if(o.result?.checks&&o.tool!=='check.run')o.result.checks=compactChecks(o.result.checks).map((c:any)=>({id:c.id,passed:c.passed,required:c.required,summary:c.summary}));}}
-  if(size()>contextLimit){for(const d of assembled.dependencies)for(const a of d.artifacts){if(a.software&&workspace?.kind==='software'&&assembled.observations.some((o:any)=>o.tool==='check.run')){a.software.latestBrowserObservation=null;a.software.browserEvidenceLocation='Current manifest-bound check.run observations; upstream full results remain in immutable delivery.';}}}
+  if(size()>contextLimit){for(const d of assembled.dependencies)for(const a of d.artifacts){if(a.software&&(workspace?.kind==='software'&&assembled.observations.some((o:any)=>o.tool==='check.run')||stageContractForTask(task)&&workspace?.kind!=='software')){a.software.latestBrowserObservation=null;a.software.browserEvidenceLocation='Manifest-bound check summaries remain here; the upstream full browser observation remains in the immutable delivery.';}}}
+  if(size()>contextLimit&&stageContractForTask(task)&&workspace?.kind!=='software'){
+   for(const d of assembled.dependencies)for(const a of d.artifacts)if(a.software){
+    a.software.checks=a.software.checks.map((c:any)=>c.passed?{id:c.id,passed:true,required:c.required}:c);
+    a.software.checkDetailsLocation='Passed mechanical verdicts retained by check ID; complete summaries/evidence remain in this artifact’s authenticated delivery. Failed checks retain their explanation. These verdicts do not establish semantic usefulness or customer acceptance.';
+    delete a.software.interpretation;delete a.software.customerAcknowledged;
+    if(a.summary===d.summary)delete a.summary;
+   }
+   // Empty previews contain no source bytes. Keep their IDs, provenance,
+   // timestamps, hashes and explicit truncation marker; research.read already
+   // advertises the source-ID/offset protocol without repeating it per source.
+   for(const source of assembled.sources)if(source.text===''){delete source.textRange;delete source.readMore;}
+  }
   if(size()>contextLimit){const diagnostic={taskId:task.id,totalBytes:size(),fieldBytes:Object.fromEntries(Object.entries(assembled).map(([k,v])=>[k,Buffer.byteLength(JSON.stringify(v))])),providerRequests:0};const old=this.store.get('portfolio-context-diagnostic',task.id);this.store.transaction(()=>this.store.put('portfolio-context-diagnostic',task.id,diagnostic,old?._version??null));}requireThat(size()<=contextLimit,'PORTFOLIO_CONTEXT_TOO_LARGE');
   return boundedContext(assembled,contextLimit);
  }
+ private workerRequest(t:Task,attemptId:string,context:any){const c=stageContractForTask(t),request=makeWorkerRequest({ventureId:t.ventureId,taskId:t.id,attemptId,context,tools:stageTools(t),procedure:this.state(t).procedure,maxMinor:c?.maxCallCost.minorUnits});if(c)request.role.version=c.id;return request;}
  private requestContext(t:Task,planning:boolean):any{
+  if(stageContractForTask(t))return boundedContext(scopeStageContext(t,this.context(t)),72000);
   if(!planning)return this.context(t);
   return boundedContext({...this.context(t) as any,capabilityProfiles:CAPABILITY_PROFILES,observations:this.portfolio.snapshot(t.ventureId).observations.slice(-12).map(o=>({id:o.id,kind:o.kind,summary:o.summary,source:o.source,provenance:o.provenance})),existingUnstartedTaskIds:(this.portfolio.snapshot(t.ventureId).tasks as Task[]).filter(x=>x.id!==t.id&&x.status==='queued'&&x.attempts===0).map(x=>x.id)});
  }
@@ -214,7 +233,7 @@ export class PortfolioEngine {
   requireThat(task.status==='needs_reconciliation'&&!task.lease&&!task.stopRequested&&!task.invalidatedAt&&execution&&execution.sourceHash===this.evidence.taskDigest(task),'RESPONSE_RECOVERY_TASK_CHANGED');
   const stepId='model-'+execution.index,key=taskId+'/'+stepId,intent=this.store.get('portfolio-model-request',key),step=this.store.get('portfolio-step',key);
   requireThat(intent&&step?.kind==='model'&&['uncertain','reserved'].includes(step.status),'RESPONSE_RECOVERY_INTENT_REQUIRED');
-  const validate=['portfolio.plan','portfolio.reassess'].includes(task.capability)?(out:any)=>{validatePlan(out,this.evidence.forTask(task),[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),intent.call.request.context.existingUnstartedTaskIds);for(const t of out.tasks)requireThat(CAPABILITY_PROFILES[t.capability].requiredTools.every(tool=>t.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
+  const validate=stageContractForTask(task)?(out:any)=>validateStageOutput(task,out,intent.call.request.context):['portfolio.plan','portfolio.reassess'].includes(task.capability)?(out:any)=>{validatePlan(out,this.evidence.forTask(task),[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),intent.call.request.context.existingUnstartedTaskIds);for(const t of out.tasks)requireThat(CAPABILITY_PROFILES[t.capability].requiredTools.every(tool=>t.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
   const call={...intent.call,validate};requireThat(requestIdentity(call)===intent.identity,'RESPONSE_RECOVERY_REQUEST_CHANGED');
   const result=await this.model.recover(call);requireThat(result,'RESPONSE_RECOVERY_RESULT_MISSING');
   this.persistResult('portfolio-model-result',task,stepId,intent.identity,result);
@@ -260,10 +279,10 @@ export class PortfolioEngine {
   }
   const attemptId='p031-'+hash(t.id).slice(0,16)+'-'+s.index;
   const context=prior?.call.request.context??s.pendingRecovery?.request.context??this.requestContext(t,planning);
-  const request=prior?.call.request??s.pendingRecovery?.request??makeWorkerRequest({ventureId:t.ventureId,taskId:t.id,attemptId,context,tools:t.allowedTools,procedure:s.procedure});
-  const schema=planning?planningSchema:workerSchema;
-  const validate:(out:any)=>void=planning?(out:any)=>{validatePlan(out,sources,[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),(context as any).existingUnstartedTaskIds);for(const task of out.tasks)requireThat(CAPABILITY_PROFILES[task.capability].requiredTools.every(tool=>task.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
-  const call:WorkerCall={attemptId,ventureId:t.ventureId,goal:v.goal,sourceHosts:[],request,schema,validate,...(s.pendingRecovery?{recoveryOf:s.pendingRecovery.parentAttemptId}:{})};
+  const request=prior?.call.request??s.pendingRecovery?.request??this.workerRequest(t,attemptId,context);
+  const schema=stageSchema(t)??(planning?planningSchema:workerSchema);
+  const validate:(out:any)=>void=stageContractForTask(t)?(out:any)=>validateStageOutput(t,out,context):planning?(out:any)=>{validatePlan(out,sources,[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),(context as any).existingUnstartedTaskIds);for(const task of out.tasks)requireThat(CAPABILITY_PROFILES[task.capability].requiredTools.every(tool=>task.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
+  const call:WorkerCall={...(stageContractForTask(t)?{stageContract:stageContractForTask(t)!.id}:{}),attemptId,ventureId:t.ventureId,goal:v.goal,sourceHosts:[],request,schema,validate,...(s.pendingRecovery?{recoveryOf:s.pendingRecovery.parentAttemptId}:{})};
   const identity=requestIdentity(call);
   if(prior)requireThat(prior.identity===identity,'PERSISTED_REQUEST_CHANGED');
   else {const {validate:omitted,...serializable}=call;this.store.transaction(()=>this.store.put('portfolio-model-request',key,{identity,call:serializable},null));}
@@ -368,7 +387,19 @@ export class PortfolioEngine {
   return this.portfolio.complete(t.id,lease.token,{artifacts:[artifact],checks:[...checked.checks,{id:'delivery.current',passed:true,summary:'Local delivery readback matches the independently checked current manifest.'}],summary:reason,usage:{workerMs},observations:[{kind:'local_deliverable_verified',summary:'Produced and checked '+t.title+'. Customer acceptance and independent correction time remain unobserved.',source:t.id,provenance:this.model.kind,reassess:(t.inputs as any)?.feedbackPolicy!=='defer_to_declared_decision',metadata:{manifestHash:manifest.sha256,toolFailureCount:observations.filter((o:any)=>o.result.ok===false).length}}]});
  }
  private async plan(lease:TaskLease){
-  const t=lease.task,result=await this.call(lease,true),p=structuredClone(result.output) as PlanningProposal;
+  const t=lease.task,result=await this.call(lease,true),stage=stageContractForTask(t);
+  if(stage){
+   this.assertCurrent(t);const p=structuredClone(result.output) as any,cancelTaskIds:string[]=[];
+   if(stage.id==='build-gate-v1'&&p.decision==='stop'){
+    const candidates=(this.rows('portfolio-task') as Task[]).filter(x=>x.planId===t.planId&&x.ventureId===t.ventureId&&x.id!==t.id&&stageContractForTask(x));
+    const reachable=new Set([t.id]);for(let pass=0;pass<candidates.length;pass++)for(const x of candidates)if(x.dependsOn.some(id=>reachable.has(id)))reachable.add(x.id);
+    for(const x of candidates)if(reachable.has(x.id))cancelTaskIds.push(x.id);
+   }
+   requireThat(t.capability==='portfolio.plan','STAGE_PLANNING_CAPABILITY_REQUIRED');
+   this.store.record(workerScope(t.ventureId,t.id),'stage-decision-'+hash(t.id).slice(0,20),'portfolio.stage_decision',{contract:stage.id,proposal:p,cancelTaskIds,provenance:this.model.kind,semanticTruth:'model judgment; reference integrity is deterministic, commercial truth remains unestablished'});
+   return this.portfolio.applyPlanning(t.id,lease.token,{rationale:p.rationale,tasks:[],cancelTaskIds,evidenceIds:[...new Set<string>(p.sourceRefs)],summary:p.decision+': '+p.rationale,checks:[{id:'proposal.reference_checks',passed:true}],artifacts:[{id:'understanding-'+hash(t.id).slice(0,16),title:stage.id==='build-gate-v1'?'Engineering build decision':'Observed execution and next action',kind:'business_proposal',provenance:this.model.kind,content:p,summary:p.rationale}]});
+  }
+  const p=structuredClone(result.output) as PlanningProposal;
   const gate=(t.inputs as any)?.prototypeGate;
   if(gate){const selected=p.alternatives.filter(a=>a.name===gate.alternativeName);requireThat(selected.length===1,'EXPLICIT_PROTOTYPE_DECISION_REQUIRED');if(selected[0].decision!=='prototype')p.cancelTaskIds=[...new Set([...p.cancelTaskIds,...gate.cancelUnlessPrototype])];}
 

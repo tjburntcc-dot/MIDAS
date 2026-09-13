@@ -1,0 +1,41 @@
+{
+  "kind": "retained-incomplete-response-regressions",
+  "copiedAt": "2026-09-13T17:48:34.916Z",
+  "historicalMutation": false,
+  "fixtures": [
+    {
+      "file": "p031-22358da25ae430ca-0-visible-output.txt",
+      "attemptId": "p031-22358da25ae430ca-0",
+      "sha256": "15b15261545b03d467c1aec8d2ec3fa953632737e34780cc20015d01e05dba30",
+      "bytes": 7560,
+      "originalPath": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-031-durable-r3/var/portfolio-031-continuation-r3/reports/p031-22358da25ae430ca-0-visible-output.txt",
+      "sourceTerminalPath": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-031-durable-r3/var/portfolio-031-continuation-r3/reports/p031-22358da25ae430ca-0-terminal.json",
+      "sourceTerminalFileSha256": "fd7d4af6aae90b1fcac7094c3a1ac764981443a529dfb36b9981c999655c1ec5",
+      "terminalHash": "7d7be886f487d15cd2136583d5def9b13a492c44befb952b2e7bfc35113f099c",
+      "responseId": "resp_0753b49c8f412da3006aa6d4f0ff4c87d2baa2364d225df268",
+      "terminalStatus": "incomplete",
+      "incompleteReason": "max_output_tokens",
+      "dispatchAt": "2026-09-13T16:53:06.087Z",
+      "terminalAt": "2026-09-13T16:59:21.395Z",
+      "validJSON": false,
+      "provenance": "Exact retained R3 visible output bytes copied for offline regression only. Provider terminal status was incomplete; this is not an accepted or completed decision. No repair, truncation or partial-output salvage was applied."
+    },
+    {
+      "file": "p031-22358da25ae430ca-1-visible-output.txt",
+      "attemptId": "p031-22358da25ae430ca-1",
+      "sha256": "6768d0803026d387fb53b4db8057069067f1404ccac4b439aee5effa8dd1e970",
+      "bytes": 11530,
+      "originalPath": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-031-durable-r3/var/portfolio-031-continuation-r3/reports/p031-22358da25ae430ca-1-visible-output.txt",
+      "sourceTerminalPath": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-031-durable-r3/var/portfolio-031-continuation-r3/reports/p031-22358da25ae430ca-1-terminal.json",
+      "sourceTerminalFileSha256": "3cdc64b6e4f7965d55644b436bab655b9a98ac464436df30095eadcdf0b62eea",
+      "terminalHash": "6ca0cb569b3f69e5f04ad057e93a05d0779b649ea28201e7573af0077df3c89a",
+      "responseId": "resp_059a4e036a33e18f006aa6d6d7f85487d2ba8d921431a15675",
+      "terminalStatus": "incomplete",
+      "incompleteReason": "max_output_tokens",
+      "dispatchAt": "2026-09-13T17:01:13.149Z",
+      "terminalAt": "2026-09-13T17:07:37.990Z",
+      "validJSON": false,
+      "provenance": "Exact retained R3 visible output bytes copied for offline regression only. Provider terminal status was incomplete; this is not an accepted or completed decision. No repair, truncation or partial-output salvage was applied."
+    }
+  ]
+}

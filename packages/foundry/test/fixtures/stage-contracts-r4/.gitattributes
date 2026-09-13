@@ -1,0 +1,2 @@
+# These retained response fixtures are checked by exact byte hash.
+*.txt -text

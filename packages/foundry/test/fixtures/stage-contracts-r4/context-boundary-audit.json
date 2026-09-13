@@ -1,0 +1,46 @@
+{
+  "kind": "counterfactual-offline-stage-context-boundary-audit-v1",
+  "productionAuthority": false,
+  "providerRequests": 0,
+  "description": "Developer-authored temporary workflow demonstrating serialized R4 context feasibility. It is not a proposal input, model result, customer outcome, or production workspace.",
+  "limits": {
+    "contextBytes": 72000,
+    "acceptedResearchRawBytes": 17908,
+    "acceptedResearchParsedContextBytes": 17557,
+    "softwareSerializedFilesBytes": 23990,
+    "serviceBriefRawBytes": 17900
+  },
+  "requests": [
+    {"sequence": 1, "taskId": "quote-desk/decide-v4-r4", "contextBytes": 26504},
+    {"sequence": 2, "taskId": "quote-desk/build-v4-r4", "contextBytes": 30850},
+    {"sequence": 3, "taskId": "quote-desk/build-v4-r4", "contextBytes": 55561},
+    {"sequence": 4, "taskId": "quote-desk/build-v4-r4", "contextBytes": 64882},
+    {"sequence": 5, "taskId": "quote-desk/review-product-v4-r4", "contextBytes": 64191},
+    {"sequence": 6, "taskId": "quote-desk/review-product-v4-r4", "contextBytes": 68313},
+    {"sequence": 7, "taskId": "quote-desk/operate-v4-r4", "contextBytes": 60468},
+    {"sequence": 8, "taskId": "quote-desk/operate-v4-r4", "contextBytes": 71719},
+    {"sequence": 9, "taskId": "quote-desk/adapt-v4-r4", "contextBytes": 39213}
+  ],
+  "maxContextBytes": 71719,
+  "remainingHeadroomBytes": 281,
+  "largestRequestMetadata": {
+    "taskId": "quote-desk/operate-v4-r4",
+    "acceptedResearchParsedBytes": 17557,
+    "softwareSerializedFilesBytes": 23990,
+    "workingSourceSerializedBytes": 18064,
+    "upstreamSoftwareMetadataBytes": 25939,
+    "upstreamPassedChecksBytes": 951,
+    "browserProjectionBytesAfterCompaction": 4,
+    "immutableBrowserEvidenceLocationBytes": 118,
+    "immutableCheckEvidenceLocationBytes": 246,
+    "workspaceFileContractBytes": 1829,
+    "workspaceInputsBytes": 322,
+    "workspaceManifestBytes": 343
+  },
+  "preservation": {
+    "acceptedResearch": "full parsed content retained; raw source remains exactly 17908 bytes in its authenticated local delivery",
+    "software": "exact 23990-byte serialized file array retained",
+    "serviceBrief": "exact 17900 raw UTF-8 bytes retained",
+    "derivedEvidence": "passed check IDs/verdicts and immutable evidence locations retained; failed-check details are never compacted"
+  }
+}

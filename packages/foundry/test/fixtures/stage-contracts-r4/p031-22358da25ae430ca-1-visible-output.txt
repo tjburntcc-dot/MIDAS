@@ -1,0 +1,124 @@
+{
+  "contradictions": [
+    "Conversion is not an established differentiator: Housecall Pro advertises estimate-to-job conversion without re-entry. Jobber's create-only CSV import also contradicts a blanket no-import premise. These are advertised capabilities, not observed comparative performance.",
+    "An approval/snapshot design would exceed quote-to-job-v2. This experiment changes one record's status; scheduled does not mean an appointment, and conversion does not establish customer consent or freeze agreed scope.",
+    "The historical investigation's execution gap must be qualified by the newer checked development-assistant reference. Conversely, neither that reference nor the offline_mock observation establishes actual-model delivery, independent semantic fitness or customer success."
+  ],
+  "rationale": "Engineering rationale, not commercial validation. The consequential question is whether the grant-bound revision can preserve correct itemized totals, stable record identity and every saved record through editing, job-status handoff and supported persistent retrieval, without false save claims. Performing that narrow local job serves the stated goal. The development-assistant reference reduces basic feasibility uncertainty; it is not a reason to rebuild adequate software or evidence of MIDAS superiority over a competent direct development agent.\n\nNext action is the existing quote-desk/build-v4-r3, only under its exact grant, source bindings and quote-to-job-v2 limits. Keep the frozen downstream scopes unchanged. Check the authoritative source and retain it unchanged if adequate; do not substitute an unbound reference. Preserve the fixed journey: $210.00 to $240.00 on the same ID, preservation of a second quote, status progression, refresh/fresh-session/same-directory restart recovery, invalid-input and save-failure behavior, responsive controls and guarded all-record CSV. Corrections must follow actual feedback, with unchanged checks and local delivery/readback evidence.\n\nStop with preserved defects if integrity or persistence cannot pass within existing repair limits, required authority/bindings are absent, or the useful job requires unsupported features. Do not expand the allowance. If a competent baseline is sufficient, recurring copying friction is absent, or maintenance and switching burdens outweigh observed benefit, stop further custom/commercial investment even if the mechanical prototype passes. No additional vendor search resolves these gaps now. Rank this work by goal fit and reversibility, not invented returns.\n\nNo current tasks are cancelled: the rejected '"
+
+  ,
+  "summary": "Retain the bounded quote-to-job-v2 engineering experiment, preferably checking and keeping adequate authorized source rather than rewriting it. Do not infer demand or a SaaS opportunity; keep direct development, a competent baseline and incumbents as substantive substitutes.",
+  "alternatives": [
+    {
+      "decision": "prototype",
+      "evidenceIds": [
+        "quote-desk/accepted-investigation-v4-r2-source",
+        "quote-desk/developer-preview-v4-checked",
+        "source-ba024fafdac4da5e3441"
+      ],
+      "caseFor": "The declared product can perform a useful narrow local job and answer the revision-specific integrity/persistence question. A same-record workflow might eliminate one copying step, but that benefit remains a hypothesis.",
+      "name": "quote-to-job",
+      "caseAgainst": "Conversion is not novel. A checked reference already exists, so a fresh rewrite needs no presumption of value. The profile cannot satisfy approval snapshots, appointments, integrations or production delivery; passing it would not validate demand or general model competence."
+    },
+    {
+      "decision": "retain",
+      "evidenceIds": [
+        "quote-desk/developer-preview-v4-checked"
+      ],
+      "caseFor": "A competent development agent directly finishing the small product is a credible substitute. The supplied reference supports considering reuse and minimal correction rather than building another implementation.",
+      "name": "Direct development and reference reuse",
+      "caseAgainst": "The summary does not establish that the reference is the authorized current source or satisfies every current requirement. Reuse must respect frozen bindings. Comparative effort, cost and founder attention are unmeasured; no route is proven cheaper or faster."
+    },
+    {
+      "decision": "retain",
+      "evidenceIds": [
+        "source-295e27350114ca0336a7",
+        "source-47e1584191618ccdc43d"
+      ],
+      "caseFor": "A competent spreadsheet with stable IDs, validated formulas and status tracking, alongside calendar/accounting tools, is a serious baseline. Prefer an adequate existing process for real operations rather than assume replacement is necessary.",
+      "name": "Competent spreadsheet and existing stack",
+      "caseAgainst": "This is a designed comparison baseline, not an observed account of this operator. Its editing controls, backup routine, copying steps and errors must be evaluated fairly; neither advertised template savings nor one public stack report proves adequacy."
+    },
+    {
+      "decision": "retain",
+      "evidenceIds": [
+        "source-5e5db74041996a4f7391",
+        "source-78bc53bc6d17f53f1b5d",
+        "source-ab655cc141b46933d0d7"
+      ],
+      "caseFor": "Keep incumbents in the comparison set: Housecall Pro advertises job conversion, Jobber quote creation by CSV, and Square acceptance-triggered invoicing. Square may address the need if billing, rather than operational job tracking, is the endpoint.",
+      "name": "Incumbent substitutes",
+      "caseAgainst": "Prices, complete workflows, actual usability, migration effort and operator fit are not established. An invoice is not necessarily a job record. No accounts, purchases or switching commitments are authorized."
+    },
+    {
+      "decision": "needs_owner_commitment",
+      "evidenceIds": [
+        "source-dd68664e6c2330b75eec",
+        "source-ba024fafdac4da5e3441"
+      ],
+      "caseFor": "If the owner later wants real-workflow investigation, consented observation could test recurring pain, reasons not to switch and fulfillment burden. Owner or trade introductions are possible channel hypotheses, not demonstrated access.",
+      "name": "Consented operator evaluation; commercial expansion held",
+      "caseAgainst": "Access, consent, founder capacity, willingness to pay and economics are unobserved. Public posters are not leads. External observation remains blocked pending separate authority and demonstrated evaluator competence; a commercial launch would additionally require evidence and capabilities beyond this local profile."
+    }
+  ],
+  "tasks": [
+    {
+      "dependsOn": [],
+      "acceptance": [
+        "Explicitly remains backlog-only and outside the six-task grant. Release requires a separate owner decision and applicable controller authority; the packet grants neither.",
+        "Preserves exact permitted quotes and binds actual delivered-revision results when supplied, otherwise marking them unavailable. Defines identical applicable comparison cases against a competent baseline or incumbent without fabricating runs, savings or user acceptance.",
+        "Lists the concrete blockers to real-workflow evaluation: legitimate participant access, consent, permitted observation tools/profile, evaluator competence demonstrated by relevant evidence, and an owner-provided attention limit. Missing prerequisites remain blocked; role titles do not satisfy them.",
+        "Records reachability, switching and fulfillment obligations, backup/support responsibilities, and directly observed willingness-to-pay or economic evidence only. Missing USD cost and revenue remain null. Specifies stopping on absent recurring friction, an adequate baseline or unavailable capacity.",
+        "If separately admitted under commercial.prepare, produces the complete local packet, runs its current profile checks and preserves publication/readback receipts. Sends no messages and makes no accounts, purchases or commitments."
+      ],
+      "id": "operator_evidence_gate",
+      "capability": "commercial.prepare",
+      "title": "Blocked backlog: prepare an owner-reviewed operator-evidence gate",
+      "priority": 15,
+      "objective": "Only if the owner elects investigation beyond synthetic engineering, prepare a local referral packet for the missing access, evaluation capability and commercial evidence. This is not a prerequisite for the current prototype, a new admission, or permission to contact anyone.",
+      "lane": "commit",
+      "requiredCompetencies": [
+        "Source-grounded workflow and substitute comparison",
+        "Consent, authority and capability-gap identification",
+        "Distinguishing observed effort and economics from hypotheses"
+      ],
+      "allowedTools": [
+        "workspace.read",
+        "workspace.replace",
+        "check.run",
+        "artifact.publish_local"
+      ]
+    }
+  ],
+  "unknowns": [
+    "Which current grant-bound application revision, if any, already satisfies the full contract; the reference summary is not its complete source/check receipt set.",
+    "Actual operator access, workflow volume, causes and frequency of re-entry, baseline adequacy, revision practices and switching tolerance.",
+    "Founder available hours, demonstrated implementation/evaluation skills, commercial budget, maintenance capacity and opportunity cost.",
+    "Willingness to pay, acquisition effectiveness, comparative setup/training/migration effort, support burden, retention and margins. USD cost and revenue remain unobserved/null.",
+    "Independent semantic fitness, founder/customer acceptance, independent correction time, long-term durability and device-loss recovery.",
+    "Current proposal-check and local publication/readback receipts are not asserted by this response. Preserve the uncertain R2 outcome without retrying or declaring it completed."
+  ],
+  "cancelTaskIds": [],
+  "priority": 70,
+  "claims": [
+    {
+      "quote": "A successful bounded implementation would perform that local tracking job, not validate a business.",
+      "text": "The accepted investigation distinguishes local engineering accomplishment from business validation; it is not application execution evidence.",
+      "kind": "source_assertion",
+      "sourceId": "quote-desk/accepted-investigation-v4-r2-source"
+    },
+    {
+      "quote": "Development-assistant reference checked in a real isolated browser and delivered locally. No model was invoked. Mechanical checks and DOM observations do not establish semantic fitness, founder acceptance, customer demand or commercial outcomes.",
+      "text": "The supplied observation reports a checked reference with explicitly limited provenance and conclusions.",
+      "kind": "observation",
+      "sourceId": "quote-desk/developer-preview-v4-checked"
+    },
+    {
+      "quote": "Produced and checked Build and verify the quote-to-job product. Customer acceptance and independent correction time remain unobserved.",
+      "text": "This supplied record is labeled offline_mock. Preserve it as history, not evidence of actual-model competence or customer success.",
+      "kind": "observation",
+      "sourceId": "quote-desk/observation-4fdf8e57d6fbe1f5234012f9"
+    },
+    {
+      "quote": "You can quickly convert an estimate into a job in Housecall Pro, carrying over all relevant details without re-entering information.",
+      "

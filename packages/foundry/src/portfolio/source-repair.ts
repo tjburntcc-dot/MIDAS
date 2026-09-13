@@ -7,11 +7,11 @@ export const patchArgumentsSchema={type:'object',additionalProperties:false,requ
 }};
 export function validateSourcePatch(value:unknown):asserts value is SourcePatch{
  const p=value as SourcePatch;object(p,['path','expectedHash','candidateId','serialization','edits']);
- requireThat(typeof p.path==='string'&&p.path.length>0&&p.path.length<=150&&typeof p.expectedHash==='string'&&/^[a-f0-9]{64}$/.test(p.expectedHash),'PATCH_TARGET_INVALID');
+ requireThat(typeof p.path==='string'&&p.path.length>0&&Array.from(p.path).length<=150&&typeof p.expectedHash==='string'&&/^[a-f0-9]{64}$/.test(p.expectedHash),'PATCH_TARGET_INVALID');
  requireThat(p.candidateId===null||typeof p.candidateId==='string'&&/^candidate-[a-f0-9]{32}$/.test(p.candidateId),'PATCH_CANDIDATE_INVALID');
  requireThat(['preserve','compact-json'].includes(p.serialization)&&Array.isArray(p.edits)&&p.edits.length<=12,'PATCH_OPERATIONS_INVALID');
  requireThat(p.edits.length>0||p.serialization==='compact-json','PATCH_EMPTY');
- for(const e of p.edits){object(e,['find','replace']);requireThat(typeof e.find==='string'&&e.find.length>0&&e.find.length<=12000&&typeof e.replace==='string'&&e.replace.length<=12000,'PATCH_EDIT_INVALID');}
+ for(const e of p.edits){object(e,['find','replace']);requireThat(typeof e.find==='string'&&e.find.length>0&&Array.from(e.find).length<=12000&&typeof e.replace==='string'&&Array.from(e.replace).length<=12000,'PATCH_EDIT_INVALID');}
 }
 /** Literal, single-match edits only: no regex, evaluation, filesystem or hidden
  * repair. Optional JSON serialization is an explicit worker-selected operation. */

@@ -24,6 +24,7 @@ export type OperatingGrant = {
     countRequestByteCeiling?:196608;
     recovery?:{version:'known-incomplete-v1';maxAdmissions:2};
     learningGate?:'consequential-job-v1';
+    stageContracts?:Array<{id:string;inputTokenCeiling:number;maxOutputTokens:number;maxCallCost:{currency:'USD';minorUnits:number};ordinaryAdmissions:number}>;
     accountScope:Scope; route:ResponsesRoute; limits:Limits;
     businesses:Array<{id:string; goalHash:string; sourceHosts:string[]; maxCalls:number;draftOnly?:boolean}>;
     retries:0; providerConcurrency:1; countDeadlineMs:10000; externalAuthority:false;
@@ -32,7 +33,7 @@ export function implementationHash() {
     const here=dirname(fileURLToPath(import.meta.url));
     return hash(['model.ts','contracts.ts','manager.ts','research.ts','mail.ts','learning.ts','communication.ts','study.ts','trusted.ts','launch.ts','server.ts','cli.ts','../model-port.ts','../state.ts','../experiment/ledger.ts','../experiment/token-count.ts','../experiment/config.ts'].map(p=>readFileSync(join(here,p),'utf8').replace(/\r\n/g,'\n')));
 }
-export type Invocation = {businessId:string;goalHash:string;sourceHosts:string[];attemptId:string;stage:string;recoveryOf?:string;request:ModelRequest;schema:any;validate:(out:any)=>void};
+export type Invocation = {businessId:string;goalHash:string;sourceHosts:string[];attemptId:string;stage:string;stageContract?:string;recoveryOf?:string;request:ModelRequest;schema:any;validate:(out:any)=>void};
 export const recoveryInstruction='The previous response ended incomplete. Produce a concise but complete answer within the unchanged output limit. Preserve all required evidence, fields, uncertainty and authority constraints. Do not infer the missing completion or invent facts.';
 export class OperatingModels {
     readonly store:StateStore; readonly grant:OperatingGrant; readonly ledger:ModelLedger;
@@ -52,8 +53,15 @@ export class OperatingModels {
         for(const b of g.businesses){identifier(b.id);safeInteger(b.maxCalls);requireThat(/^[a-f0-9]{64}$/.test(b.goalHash),'OPERATING_GOAL_HASH');}
         if(g.recovery)requireThat(g.recovery.version==='known-incomplete-v1'&&g.recovery.maxAdmissions===2&&(g.limits.allocations??[]).some(a=>a.metadataKey==='stage'&&a.value==='recovery'&&a.attempts===2),'OPERATING_RECOVERY_LIMIT');
         const allocations=(g.limits.allocations??[]).filter(a=>a.metadataKey==='businessId');
-        requireThat(allocations.length===g.businesses.length&&(g.limits.allocations??[]).every(a=>['businessId','stage'].includes(a.metadataKey)),'OPERATING_ALLOCATION_REQUIRED');
-        requireThat(new Set(allocations.map(a=>a.value)).size===allocations.length&&allocations.every(a=>{const business=g.businesses.find(b=>b.id===a.value);return Boolean(business)&&a.attempts===business!.maxCalls&&a.minor>=a.attempts*g.route.maxCallCost.minorUnits;}),'OPERATING_ALLOCATION_SCOPE');
+        requireThat(allocations.length===g.businesses.length,'OPERATING_ALLOCATION_REQUIRED');
+        const contracts=g.stageContracts??[],contractAllocations=(g.limits.allocations??[]).filter(a=>a.metadataKey==='stageContract');
+        if(contracts.length){
+            requireThat(g.businesses.length===1&&new Set(contracts.map(c=>c.id)).size===contracts.length&&contracts.every(c=>typeof c.id==='string'&&c.id.length>0&&Number.isSafeInteger(c.inputTokenCeiling)&&c.inputTokenCeiling>0&&c.inputTokenCeiling<=g.route.inputTokenCeiling&&Number.isSafeInteger(c.maxOutputTokens)&&c.maxOutputTokens>0&&c.maxOutputTokens<=g.route.maxOutputTokens&&c.maxCallCost.currency==='USD'&&Number.isSafeInteger(c.maxCallCost.minorUnits)&&c.maxCallCost.minorUnits>0&&c.maxCallCost.minorUnits<=g.route.maxCallCost.minorUnits&&Number.isSafeInteger(c.ordinaryAdmissions)&&c.ordinaryAdmissions>0),'OPERATING_STAGE_CONTRACT_INVALID');
+            requireThat(contractAllocations.length===contracts.length&&contracts.every(c=>contractAllocations.some(a=>a.value===c.id&&a.attempts===c.ordinaryAdmissions&&a.minor===c.ordinaryAdmissions*c.maxCallCost.minorUnits)),'OPERATING_STAGE_CONTRACT_ALLOCATION');
+        }else requireThat(contractAllocations.length===0,'OPERATING_STAGE_CONTRACT_UNBOUND');
+        requireThat((g.limits.allocations??[]).every(a=>['businessId','stage','stageContract'].includes(a.metadataKey)),'OPERATING_ALLOCATION_REQUIRED');
+        const contractMinor=contracts.reduce((n,c)=>n+c.ordinaryAdmissions*c.maxCallCost.minorUnits,0),contractAttempts=contracts.reduce((n,c)=>n+c.ordinaryAdmissions,0);
+        requireThat(new Set(allocations.map(a=>a.value)).size===allocations.length&&allocations.every(a=>{const business=g.businesses.find(b=>b.id===a.value);return Boolean(business)&&a.attempts===business!.maxCalls&&(contracts.length?a.minor===contractMinor&&a.attempts===contractAttempts:a.minor>=a.attempts*g.route.maxCallCost.minorUnits); }),'OPERATING_ALLOCATION_SCOPE');
         const allocationMinor=allocations.reduce((sum,a)=>sum+a.minor,0),allocationAttempts=allocations.reduce((sum,a)=>sum+a.attempts,0);
         requireThat(allocationMinor<=g.limits.stages.development.minor&&allocationMinor<=g.limits.totalMinor&&allocationAttempts<=g.limits.stages.development.attempts&&allocationAttempts<=g.limits.astraCountRequests!,'OPERATING_ALLOCATION_BUDGET');
         requireThat(typeof options.execution.transport==='function','EXPLICIT_TRANSPORT_REQUIRED');
@@ -67,9 +75,11 @@ export class OperatingModels {
     }
     async invoke(principal:Principal,x:Invocation):Promise<ModelResult> {
         assertScope(principal,x.request.scope,'operate');identifier(x.attemptId);
-        const g=this.grant,b=g.businesses.find(b=>b.id===x.businessId);
+        const g=this.grant,b=g.businesses.find(b=>b.id===x.businessId),contract=x.stageContract?g.stageContracts?.find(c=>c.id===x.stageContract):null;
         requireThat(b&&principal.businessId===b.id&&x.goalHash===b.goalHash&&hash([...x.sourceHosts].sort())===hash([...b.sourceHosts].sort()),'OPERATING_BUSINESS_NOT_GRANTED');
         requireThat(x.request.role.model===g.route.model,'OPERATING_MODEL_MISMATCH');
+        requireThat(g.stageContracts?.length?Boolean(contract)&&x.request.role.version===contract!.id&&(x.request.context as any)?.stageContract?.id===contract!.id:!x.stageContract,'OPERATING_STAGE_CONTRACT_MISMATCH');
+        const route:ResponsesRoute=contract?{...g.route,inputTokenCeiling:contract.inputTokenCeiling,maxOutputTokens:contract.maxOutputTokens,maxCallCost:structuredClone(contract.maxCallCost)}:g.route;
         const stages=(g.limits.allocations??[]).filter(a=>a.metadataKey==='stage');
         requireThat(stages.length===0||stages.some(a=>a.value===x.stage),'OPERATING_STAGE_NOT_GRANTED');
         if(g.learningGate&&['procedure-source','procedure-comparison'].includes(x.stage)){
@@ -77,13 +87,13 @@ export class OperatingModels {
             requireThat(gate&&work?.draft&&gate.draftHash===hash(work.draft)&&gate.reviewHash===hash(work.reviews.at(-1)),'CONSEQUENTIAL_IMPROVEMENT_CASE_REQUIRED');
         }
         const request={...x.request,scope:g.accountScope,requestId:x.attemptId};
-        const bytes=canonical(buildResponsesBody(g.route,request,x.schema)),digest=rawHash(bytes),key=scopeKey(g.accountScope)+'/'+x.attemptId;
+        const bytes=canonical(buildResponsesBody(route,request,x.schema)),digest=rawHash(bytes),key=scopeKey(g.accountScope)+'/'+x.attemptId;
         assertCountableRequest(JSON.parse(bytes),g.countRequestByteCeiling??65536);
         const prior=this.ledger.get(x.attemptId),saved=this.store.get('operating-response',key);
         if(prior){
             requireThat(prior.requestHash===digest&&prior.metadata.businessId===b.id,'OPERATING_REQUEST_CHANGED');
             if(saved){x.validate(saved.result.output);if(prior.errorCode)this.ledger.finishRecovered(x.attemptId,saved.result,this.store.get('response-job',key)?.terminalHash);else if(!prior.finishedAt)this.ledger.finish(x.attemptId,saved.result,null);return saved.result;}
-            requireThat(g.route.background,'OPERATING_UNCERTAIN_NO_RETRY');
+            requireThat(route.background,'OPERATING_UNCERTAIN_NO_RETRY');
             const job=this.store.get('response-job',key);requireThat(job?.requestHash===digest&&job.responseId,'BACKGROUND_UNKNOWN_NO_RESUBMIT');
         }
         requireThat(Date.parse(g.expiresAt)>Date.now(),'OPERATING_GRANT_EXPIRED');
@@ -97,10 +107,10 @@ export class OperatingModels {
             const expected=JSON.parse(rawParent.bytes);const priorInput=JSON.parse(expected.input);priorInput.context={...priorInput.context,recoveryInstruction};expected.input=canonical(priorInput);
             requireThat(canonical(expected)===bytes,'OPERATING_RECOVERY_REQUEST_CHANGED');
         }
-        const durable=g.route.background?new DurableResponses({store:this.store,key,requestHash:digest,grantHash:hash(g),policy:g.route.background,expiresAt:g.expiresAt,authorize:()=>{requireThat(Date.parse(g.expiresAt)>Date.now()&&!this.store.get('operating-revocation',hash(g)),'OPERATING_GRANT_EXPIRED_OR_REVOKED');requireThat(g.implementationHash===implementationHash(),'OPERATING_CODE_CHANGED');}}):undefined;
+        const durable=route.background?new DurableResponses({store:this.store,key,requestHash:digest,grantHash:hash(g),policy:route.background,expiresAt:g.expiresAt,authorize:()=>{requireThat(Date.parse(g.expiresAt)>Date.now()&&!this.store.get('operating-revocation',hash(g)),'OPERATING_GRANT_EXPIRED_OR_REVOKED');requireThat(g.implementationHash===implementationHash(),'OPERATING_CODE_CHANGED');}}):undefined;
         durable?.claim();
         try {
-        const budget=this.ledger.port('development',{businessId:b.id,stage:x.stage,recoveryOf:x.recoveryOf??null,source:g.mode==='mock'?'offline_mock':'actual-model',goalHash:b.goalHash},prior?{attemptId:x.attemptId,requestHash:digest}:undefined);
+        const budget=this.ledger.port('development',{businessId:b.id,stage:x.stage,...(x.stageContract?{stageContract:x.stageContract}:{}),recoveryOf:x.recoveryOf??null,source:g.mode==='mock'?'offline_mock':'actual-model',goalHash:b.goalHash},prior?{attemptId:x.attemptId,requestHash:digest}:undefined);
         const prepare=budget.prepare!;
         budget.prepare=async(r,amount,d,raw)=>{
             requireThat(raw===bytes&&d===digest,'OPERATING_BYTES_CHANGED');
@@ -117,7 +127,7 @@ export class OperatingModels {
             this.store.transaction(()=>{const key=x.attemptId+'-request',old=this.store.get('operating-request',key),record={bytes:raw,requestHash:d,businessId:b.id,grantHash:hash(g),source:g.mode};if(old)requireThat(old.requestHash===d&&old.businessId===b.id&&old.bytes===raw,'OPERATING_REQUEST_CHANGED');else this.store.put('operating-request',key,record,null);});
             await prepare(r,amount,d,raw);
         };
-        const port=responsesModelPort({durable,resume:Boolean(prior),route:{...g.route,projectId:g.projectId},apiKey:this.credential,budget,transport:this.transport,schemaForTask:()=>x.schema,validateOutput:(_task,out)=>x.validate(out),countInputTokens:(body,r)=>countTokens(body,g.projectId,this.credential(),async(event)=>budget.observed?.(r!,{tokenCount:event}),this.transport,g.countRequestByteCeiling??65536)});
+        const port=responsesModelPort({durable,resume:Boolean(prior),route:{...route,projectId:g.projectId},apiKey:this.credential,budget,transport:this.transport,schemaForTask:()=>x.schema,validateOutput:(_task,out)=>x.validate(out),countInputTokens:(body,r)=>countTokens(body,g.projectId,this.credential(),async(event)=>budget.observed?.(r!,{tokenCount:event}),this.transport,g.countRequestByteCeiling??65536)});
         try{
             const result=await port.run(request);
             this.store.transaction(()=>this.store.put('operating-response',key,{result,requestHash:digest,provenance:g.mode==='mock'?'offline_mock':'actual-model'},null));

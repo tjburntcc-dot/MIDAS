@@ -25,14 +25,14 @@ export const workerSchema = {
 export type WorkerDecision = {action:'tool'|'complete'|'blocked';reason:string;toolCall:null|{name:typeof TOOL_NAMES[number]|'workspace.candidate_read';arguments:{path:string|null;content:string|null;expectedHash:string|null;query:string|null;url:string|null}}|{name:'workspace.patch';arguments:SourcePatch}};
 export function validateWorker(out:unknown):asserts out is WorkerDecision {
  const x=out as WorkerDecision;object(x,['action','reason','toolCall']);
- requireThat(['tool','complete','blocked'].includes(x.action)&&typeof x.reason==='string'&&x.reason.length>0&&x.reason.length<=2000,'WORKER_ACTION_INVALID');
+ requireThat(['tool','complete','blocked'].includes(x.action)&&typeof x.reason==='string'&&x.reason.length>0&&Array.from(x.reason).length<=2000,'WORKER_ACTION_INVALID');
  if(x.action!=='tool'){requireThat(x.toolCall===null,'WORKER_UNUSED_TOOL');return;}
  requireThat(x.toolCall!==null,'WORKER_TOOL_REQUIRED');object(x.toolCall,['name','arguments']);
  requireThat(ALL_TOOL_NAMES.includes(x.toolCall.name),'WORKER_TOOL_UNSUPPORTED');
  if(x.toolCall.name==='workspace.patch'){validateSourcePatch(x.toolCall.arguments);return;}
  const a=x.toolCall.arguments;object(a,['path','content','expectedHash','query','url']);
  for(const [key,max] of Object.entries({path:150,content:48000,expectedHash:64,query:500,url:2000})){
-  const value=a[key as keyof typeof a];requireThat(value===null||(typeof value==='string'&&value.length<=max),'WORKER_ARGUMENT_INVALID');
+  const value=a[key as keyof typeof a];requireThat(value===null||(typeof value==='string'&&Array.from(value).length<=max),'WORKER_ARGUMENT_INVALID');
  }
  const allowed:Record<string,string[]>={'workspace.list':[],'workspace.read':['path'],'workspace.replace':['path','content','expectedHash'],'check.run':[],'artifact.publish_local':[],'research.search':['query'],'research.fetch':['url'],'research.read':['path','query'],'workspace.candidate_read':['path','query']};
  const fields=allowed[x.toolCall.name];
@@ -42,7 +42,7 @@ export function validateWorker(out:unknown):asserts out is WorkerDecision {
  if(a.expectedHash!==null)requireThat(/^[a-f0-9]{64}$/.test(a.expectedHash),'WORKER_HASH_INVALID');
 }
 
-export type WorkerCall = {attemptId:string;recoveryOf?:string;ventureId:string;goal:string;sourceHosts:string[];request:ModelRequest;schema:any;validate:(out:any)=>void};
+export type WorkerCall = {attemptId:string;recoveryOf?:string;stageContract?:string;ventureId:string;goal:string;sourceHosts:string[];request:ModelRequest;schema:any;validate:(out:any)=>void};
 export interface WorkerModel {kind:'offline_mock'|'actual_model'|'disabled';run(call:WorkerCall):Promise<ModelResult>;recover?(call:WorkerCall):Promise<ModelResult|null>;}
 /** Deliberately no credential or implicit network fallback in this default port. */
 export const disabledWorker:WorkerModel={kind:'disabled',async run(){throw Object.assign(new Error('No signed portfolio execution grant is loaded.'),{code:'PORTFOLIO_MODEL_DISABLED'});}};
@@ -57,9 +57,9 @@ export function makeWorkerRequest(x:{ventureId:string;taskId:string;attemptId:st
 export class BudgetedWorker implements WorkerModel {
  readonly kind='actual_model' as const;readonly models:OperatingModels;
  constructor(models:OperatingModels){requireThat(models.grant.mode==='live','PORTFOLIO_LIVE_GRANT_REQUIRED');this.models=models;}
- async run(call:WorkerCall){return this.models.invoke(workerPrincipal(call.ventureId),{businessId:call.ventureId,goalHash:hash(call.goal),sourceHosts:call.sourceHosts,attemptId:call.attemptId,stage:'portfolio-work',request:call.request,schema:call.schema,validate:call.validate});}
+ async run(call:WorkerCall){return this.models.invoke(workerPrincipal(call.ventureId),{businessId:call.ventureId,goalHash:hash(call.goal),sourceHosts:call.sourceHosts,attemptId:call.attemptId,stage:'portfolio-work',stageContract:call.stageContract,request:call.request,schema:call.schema,validate:call.validate});}
  async recover(call:WorkerCall){const prior=this.models.ledger.get(call.attemptId);if(!prior)return null;return this.run(call);}
 }
-export function requestIdentity(call:WorkerCall){return hash({ventureId:call.ventureId,goal:call.goal,sourceHosts:call.sourceHosts,request:call.request,schema:call.schema,...(call.recoveryOf?{recoveryOf:call.recoveryOf}:{})});}
+export function requestIdentity(call:WorkerCall){return hash({ventureId:call.ventureId,goal:call.goal,sourceHosts:call.sourceHosts,request:call.request,schema:call.schema,...(call.stageContract?{stageContract:call.stageContract}:{}),...(call.recoveryOf?{recoveryOf:call.recoveryOf}:{})});}
 export function mockResult(output:unknown,latencyMs=0):ModelResult{return {output,usage:{inputTokens:null,outputTokens:null,cost:{status:'known',money:{currency:'USD',minorUnits:0},basis:'Explicit offline mock; no provider request. Local compute and engineering labor unmeasured.'}},route:{provider:'offline',model:'deterministic-test-double',kind:'fixture'},metadata:{providerRequestId:null,cachedInputTokens:null,latencyMs}};}
 export function boundedContext(value:unknown,maxBytes=56000){requireThat([56000,72000].includes(maxBytes),'CONTEXT_LIMIT_INVALID');const bytes=canonical(value);requireThat(Buffer.byteLength(bytes)<=maxBytes,'PORTFOLIO_CONTEXT_TOO_LARGE');return JSON.parse(bytes);}

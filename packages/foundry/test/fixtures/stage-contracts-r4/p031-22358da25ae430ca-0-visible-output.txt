@@ -1,0 +1,60 @@
+{
+  "contradictions": [
+    "The investigation's historical absence of application observations must not become a claim that no runtime evidence exists now: a developer reference has since been checked in a real browser and delivered locally. That narrows the remaining question; it does not establish the current grant-bound revision's complete behavior or model execution.",
+    "Conversion is not an established differentiator. Housecall Pro advertises estimate-to-job conversion without re-entry, and Jobber documents quote-to-job behavior. Jobber's create-only CSV import also contradicts a blanket claim that incumbents cannot ingest spreadsheet quotes.",
+    "The inherited approval/snapshot proposal conflicts with quote-to-job-v2. This profile changes one record's status; it does not preserve an independently approved scope, create a job snapshot or schedule an appointment.",
+    "Reported repeated entry is a reason to investigate a narrow handoff hypothesis, not demand. A reported multi-tool stack is not proof of dysfunction, and travel frustration is not evidence that this tracker will eliminate quoting visits.",
+    "Accepted research, local publication, mechanical browser checks and offline mock fulfillment are different evidence classes. None establishes customer acceptance, willingness to pay, independent human review or general model competence."
+  ],
+  "rationale": "Engineering rationale, not commercial. Select one bounded prototype completion/verification attempt. The consequential question is: can the exact controller-bound Quote desk revision correctly preserve itemized quotes, stable identity, same-record job status and saved state through the declared MIDAS persistence boundaries, while visibly rejecting invalid input and failed saves? Answering that determines whether this grant has delivered the stated local tracking product rather than only a recommendation or an unattributed success summary.\n\nThe developer reference is material contrary evidence to treating implementation as wholly unexplored. A competent development agent directly finishing this small product—or retaining an adequate reference—is the strongest product-delivery substitute. The supplied reference summary does not expose its full source, detailed journey results or their equivalence to the current frozen binding. The remaining work is therefore source-bound completion and verification, not a required greenfield rewrite. Keep adequate controller-bound source unchanged. Do not silently substitute the reference into a frozen source binding. Reusing an adequate artifact can satisfy the local product goal, but must not be reported as evidence that the current model authored it. Any claim that orchestration reduces attention or improves delivery remains a hypothesis requiring observed comparison.\n\nAllocation and dependencies: retain the existing quote-desk/build-v4-r3, then quote-desk/review-product-v4-r3, followed by the existing operate/adapt outcome work, solely within their signed frozen scopes and limits. The tasks array is intentionally empty: creating parallel local-ID tasks would duplicate persisted work, and newly proposed tasks cannot execute in this six",
+  "summary": "Select quote-to-job as one engineering-only, source-bound completion and verification attempt under the existing frozen grant. Do not require a rewrite or infer a SaaS opportunity. Retain the checked developer reference/direct-development route and a competent existing process as serious substitutes; stop further development when adequate local behavior is evidenced or the remaining work has no consequential value.",
+  "alternatives": [
+    {
+      "decision": "prototype",
+      "evidenceIds": [
+        "quote-desk/accepted-investigation-v4-r2-source",
+        "quote-desk/developer-preview-v4-checked",
+        "source-ba024fafdac4da5e3441",
+        "source-dd68664e6c2330b75eec"
+      ],
+      "caseFor": "Engineering only: finish or verify the grant-bound local tracker against quote-to-job-v2 and preserve genuine source, check and delivery evidence. Correct editing, same-record handoff and persistent retrieval accomplish the stated bounded product job. Missing buyer interviews do not prohibit this experiment.",
+      "name": "quote-to-job",
+      "caseAgainst": "A real checked developer reference already reduces implementation uncertainty. Another build is wasteful if it merely duplicates an adequate artifact without answering a remaining question. Conversion is not novel; worker capability, operator usefulness and any advantage over direct development remain unproven. Stop at an adequate local artifact or a specific bounded failure, without adding unsupported features."
+    },
+    {
+      "decision": "retain",
+      "evidenceIds": [
+        "quote-desk/developer-preview-v4-checked"
+      ],
+      "caseFor": "Retain the verified developer reference and competent direct-development route as the product-only default comparison and fallback. Using adequate existing software may accomplish the goal without another implementation or an extended orchestration chain.",
+      "name": "Existing developer reference or direct developer completion",
+      "caseAgainst": "The supplied summary is not the full reference source or a matched current-contract benchmark. Lower coordination burden is plausible, not measured. No new agent commission, paid admission or source-binding substitution is authorized by this alternative."
+    },
+    {
+      "decision": "retain",
+      "evidenceIds": [
+        "source-295e27350114ca0336a7",
+        "source-47e1584191618ccdc43d",
+        "source-ba024fafdac4da5e3441"
+      ],
+      "caseFor": "Retain a competent existing operational process while experimenting. A designed comparison baseline can use validated spreadsheet formulas, stable IDs, controlled edits and status tracking, with calendar, accounting and backup functions handled by appropriate existing tools. This avoids assuming an integrated replacement is necessary.",
+      "name": "Competent spreadsheet, calendar and accounting baseline",
+      "caseAgainst": "The actual operator's baseline has not been observed. Setup burden, recurring copying, errors and satisfaction are unknown. Neither vendor claims of template savings nor a public description of a multi-tool stack proves comparative performance. Do not construct an intentionally weak baseline or report an unperformed comparison."
+    },
+    {
+      "decision": "investigate",
+      "evidenceIds": [
+        "source-df4652c66e392f4bc605",
+        "source-a34019a6445b8d37d4c5",
+        "source-5e5db74041996a4f7391",
+        "source-ab655cc141b46933d0d7",
+        "source-78bc53bc6d17f53f1b5d"
+      ],
+      "caseFor": "Existing products are credible substitutes: Jobber advertises approval-related functionality and documents conversion/import behavior; Housecall Pro advertises conversion without re-entry; Square offers accepted-estimate conversion to invoices. Later investigation should compare only capabilities relevant to an observed operator workflow.",
+      "name": "Incumbent service-management or invoicing workflow",
+      "caseAgainst": "The excerpts do not establish prices, complete workflows, usability, portability or operator fit. An invoice is not necessarily a job record. No additional broad vendor search is needed for the current engineering decision, and no account, trial, purchase or migration is authorized."
+    },
+    {
+      "decision": "needs_owner_commitment",
+      "evidenceIds": [
+        "source-dd68664e6c2330
