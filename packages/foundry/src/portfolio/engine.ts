@@ -189,7 +189,7 @@ export class PortfolioEngine {
  }
  /** No inference or tool dispatch: recover only persisted output from the same exact intent. */
  async recover(){
-  const recovered=this.portfolio.recover({ownerAlive:owner=>{if(owner===this.ownerId)return this.active.size>0;const match=/^worker-(\d+)-/.exec(owner);if(!match)return true;try{process.kill(Number(match[1]),0);return true;}catch{return false;}}});
+  const recovered=this.portfolio.recover({ownerAlive:owner=>{if(owner===this.ownerId)return this.active.size>0;const match=/^worker-(\d+)-/.exec(owner);if(!match)return true;try{process.kill(Number(match[1]),0);return true;}catch(e){return (e as any).code!=='ESRCH';}}});
   const reconciled:string[]=[];
   for(const step of this.rows('portfolio-step').filter(s=>['reserved','uncertain'].includes(s.status))){
    const task=this.portfolio.getTask(step.taskId);if(task.lease)continue;
@@ -205,6 +205,27 @@ export class PortfolioEngine {
    this.store.transaction(()=>{const current=this.store.get('portfolio-finalization',f.id);requireThat(current?.phase==='published'&&current.manifestHash===f.manifestHash,'FINALIZATION_RECOVERY_BINDING');this.store.put('portfolio-finalization',f.id,{...current,phase:'closed',taskStatus:t.status,outputArtifacts:t.outputArtifacts,unresolvedObligations:payload.obligations,independentSemanticReview:false,recoveredAfterAtomicTaskClosure:true},current._version);});closedFinalizations.push(f.id);
   }
   return {recovered,reconciled,closedFinalizations,pending:this.portfolio.snapshot().tasks.filter(t=>t.status==='needs_reconciliation').map(t=>t.id)};
+ }
+ /** Retrieve only the same already-admitted response, then settle its original
+  * step. This does not create an attempt, reset a stage cap or waive validation. */
+ async resumeResponse(taskId:string){
+  requireThat(this.model.recover,'RESPONSE_RECOVERY_NOT_SUPPORTED');
+  const task=this.portfolio.getTask(taskId),execution=this.store.get('portfolio-execution',taskId);
+  requireThat(task.status==='needs_reconciliation'&&!task.lease&&!task.stopRequested&&!task.invalidatedAt&&execution&&execution.sourceHash===this.evidence.taskDigest(task),'RESPONSE_RECOVERY_TASK_CHANGED');
+  const stepId='model-'+execution.index,key=taskId+'/'+stepId,intent=this.store.get('portfolio-model-request',key),step=this.store.get('portfolio-step',key);
+  requireThat(intent&&step?.kind==='model'&&['uncertain','reserved'].includes(step.status),'RESPONSE_RECOVERY_INTENT_REQUIRED');
+  const validate=['portfolio.plan','portfolio.reassess'].includes(task.capability)?(out:any)=>{validatePlan(out,this.evidence.forTask(task),[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),intent.call.request.context.existingUnstartedTaskIds);for(const t of out.tasks)requireThat(CAPABILITY_PROFILES[t.capability].requiredTools.every(tool=>t.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
+  const call={...intent.call,validate};requireThat(requestIdentity(call)===intent.identity,'RESPONSE_RECOVERY_REQUEST_CHANGED');
+  const result=await this.model.recover(call);requireThat(result,'RESPONSE_RECOVERY_RESULT_MISSING');
+  this.persistResult('portfolio-model-result',task,stepId,intent.identity,result);
+  this.settleSaved('portfolio-model-result',key,intent.identity);
+  return {taskId,attemptId:call.attemptId,reconciled:true,newInferenceAdmissions:0};
+ }
+ async resumeAdmittedResponses(){
+  const allowed=new Set((this.accounting?.().taskAllocations??[]).map((t:any)=>t.id));
+  const results=[];
+  for(const t of this.rows('portfolio-task').filter(t=>allowed.has(t.id)&&t.status==='needs_reconciliation'))results.push(await this.resumeResponse(t.id));
+  return results;
  }
  /** Explicit bounded recovery preparation; this never dispatches or clears cost. */
  prepareRecovery(taskId:string,parentAttemptId:string){

@@ -21,7 +21,17 @@ const csp="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'sel
 export function portfolioView(engine:PortfolioEngine,tools:LocalWorkTools){
  const p=engine.portfolio,s=p.snapshot(),account=engine.accounting?.(),frozen=account?.taskAllocations,sources=s.ventures.flatMap(v=>engine.evidence.list(v.id)),modelAccounting=readPortfolioAccounting(engine.store,tools.root);
  const needsGrant=(t:Task)=>Boolean((t.inputs as any)?.requiresGrant&&(engine.model.kind!=='actual_model'||frozen&&!frozen.some((a:any)=>a.id===t.id)));
- const tasks=s.tasks.map(t=>({...t,executionMode:(t.inputs as any)?.requiresGrant?'actual_model':engine.model.kind,modelDisabledUntilGrant:needsGrant(t),controls:t.status==='running'?['pause','cancel']:t.status==='paused'?['resume','cancel']:t.status==='queued'?[...(t.runnable&&!needsGrant(t)?['run']:[]),'pause','cancel']:[],worker:t.workerId??'baseline-worker',description:t.objective,lastActivity:t.updatedAt}));
+ const jobs=engine.rows('response-job');
+ const responseProgress=(t:any)=>{
+  const execution=p.store.get('portfolio-execution',t.id);let intent=null;
+  for(let i=execution?.index??-1;i>=0&&!intent;i--)intent=p.store.get('portfolio-model-request',t.id+'/model-'+i);
+  const id=intent?.call?.attemptId;
+  if(!id)return null;
+  const binding=engine.rows('portfolio-work-binding').find(b=>b.attemptId===id),request=p.store.get('operating-request',id+'-request'),job=jobs.find(j=>j.requestHash===(binding?.bodyHash??request?.requestHash)&&(!request||j.grantHash===request.grantHash));
+  if(!job)return null;
+  return {responseId:job.responseId,status:job.status??'unknown',retrievalRequests:job.retrievals,completionDeadlineAt:job.completionDeadlineAt,resumeUntil:job.resumeUntil,terminalPersisted:Boolean(job.terminal)};
+ };
+ const tasks=s.tasks.map(t=>({providerExecution:responseProgress(t),...t,executionMode:(t.inputs as any)?.requiresGrant?'actual_model':engine.model.kind,modelDisabledUntilGrant:needsGrant(t),controls:t.status==='running'?['pause','cancel']:t.status==='paused'?['resume','cancel']:t.status==='queued'?[...(t.runnable&&!needsGrant(t)?['run']:[]),'pause','cancel']:[],worker:t.workerId??'baseline-worker',description:t.objective,lastActivity:t.updatedAt}));
  const artifacts=s.artifacts.map(a=>{
   const task=s.tasks.find(t=>t.id===(a.taskId??a.metadata?.preservedSource?.taskId));let workspace:any=null;
   if(task)try{workspace=tools.load(task.ventureId,task.id);}catch{}

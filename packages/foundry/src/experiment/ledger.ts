@@ -53,8 +53,10 @@ export class ModelLedger {
     get(id: string) { return this.store.get('model-attempt', this.key(id)); }
     totals(stage?: Stage) { const rows = this.rows().filter(r => !stage || r.stage === stage); return { attempts: rows.length, reserved: rows.reduce((n, r) => n + r.reservation, 0), settled: rows.reduce((n, r) => n + (r.invoice?.minorUnits ?? 0), 0), provisional: rows.reduce((n, r) => n + (r.cost?.status === 'provisional' ? r.cost.money.minorUnits : 0), 0), unresolved: rows.filter(r => r.reservation > 0).length }; }
     carryExposure(){return (this.limits.carryIn??[]).reduce((n,r)=>n+r.exposureMinor,0)+(this.limits.overheadReserve?.minor??0);}
-    port(stage: Stage, metadata: Record<string, unknown>): ModelBudgetPort {
-        const lease = randomUUID();
+    port(stage: Stage, metadata: Record<string, unknown>, resume?: {attemptId:string;requestHash:string}): ModelBudgetPort {
+        const existing=resume?this.get(resume.attemptId):null;
+        if(resume)requireThat(existing&&existing.requestHash===resume.requestHash&&existing.stage===stage&&hash(existing.metadata)===hash(metadata),'RESUME_ATTEMPT_BINDING');
+        const lease = existing?.lease??randomUUID();
         const checked = (r: ModelRequest) => { requireThat(scopeKey(r.scope) === scopeKey(this.scope), 'SCOPE_DENIED'); };
         const mutate = (r: ModelRequest, fn: (row: any) => any) => this.store.transaction(() => { checked(r); const old = this.get(r.requestId); requireThat(old && old.lease === lease, 'ATTEMPT_LEASE_MISMATCH'); this.store.put('model-attempt', this.key(r.requestId), fn(old), old._version); });
         return {
@@ -76,7 +78,7 @@ export class ModelLedger {
                             requireThat(group.length<allocation.attempts,'ALLOCATION_ATTEMPT_CAP');
                             requireThat(group.reduce((n,x)=>n+x.reservation+(x.invoice?.minorUnits??0),0)+amount.minorUnits<=allocation.minor,'ALLOCATION_BUDGET_CAP');
                         }
-                        if(this.limits.concurrency!==undefined)requireThat(rows.filter(x=>!x.finishedAt).length<this.limits.concurrency,'CONCURRENCY_CAP');
+                        if(this.limits.concurrency!==undefined)requireThat(rows.filter(x=>{const j=this.store.get('response-job',this.key(x.id));return !x.finishedAt||Boolean(j?.createDispatched&&!j.terminal);}).length<this.limits.concurrency,'CONCURRENCY_CAP');
                         if(stage!=='diagnostic'&&this.limits.astraCountRequests!==undefined)requireThat(rows.filter(x=>x.stage!=='diagnostic').length<this.limits.astraCountRequests,'COUNT_REQUEST_CAP');
                         if(stage==='smoke'&&this.limits.smokePrimary!==undefined){const recovery=!!metadata.recoveryOf;requireThat(rows.filter(x=>x.stage==='smoke'&&!!x.metadata.recoveryOf===recovery).length<(recovery?(this.limits.smokeRecovery??0):this.limits.smokePrimary),'SMOKE_SUBCAP');if(recovery){const parent=this.get(String(metadata.recoveryOf));requireThat(parent?.stage==='smoke'&&parent.finishedAt&&parent.errorCode&&parent.metadata.caseId===metadata.caseId,'RECOVERY_PARENT_REQUIRED');requireThat(typeof metadata.cause==='string'&&metadata.cause.length>20&&typeof metadata.correction==='string'&&metadata.correction.length>20&&typeof metadata.correctionEvidenceHash==='string'&&/^[a-f0-9]{64}$/.test(metadata.correctionEvidenceHash),'RECOVERY_EVIDENCE_REQUIRED');requireThat(!rows.some(x=>x.metadata.recoveryOf===metadata.recoveryOf),'RECOVERY_ALREADY_USED');}}
                         requireThat(part.attempts < cap.attempts, 'ATTEMPT_CAP');
@@ -97,6 +99,9 @@ export class ModelLedger {
         };
     }
     finish(id: string, result: any, errorCode: string | null) { this.store.transaction(() => { const row = this.get(id); requireThat(row, 'ATTEMPT_NOT_ADMITTED'); requireThat(!row.finishedAt, 'ATTEMPT_ALREADY_FINISHED'); this.store.put('model-attempt', this.key(id), { ...row, result, errorCode, observation: { ...(row.observation ?? {}), latencyMs: row.observation?.latencyMs ?? Date.now() - Date.parse(row.admittedAt) }, status: errorCode ? 'failed' : 'output_available', finishedAt: new Date().toISOString() }, row._version); this.store.event(this.scope, 'experiment.attempt_finished', { id, errorCode, acceptedOutput: !errorCode }); }); }
+    /** Append a reconciliation history before replacing an uncertain local outcome.
+     * Caller must supply the same-request durable terminal evidence. No reservation release. */
+    finishRecovered(id:string,result:any,terminalHash:string){this.store.transaction(()=>{const r=this.get(id),job=this.store.get('response-job',this.key(id));requireThat(r&&job?.requestHash===r.requestHash&&job.terminalHash===terminalHash&&hash(job.terminal)===terminalHash&&job.terminal?.status==='completed','RECOVERED_TERMINAL_REQUIRED');requireThat(result&&hash(result.output)===hash(JSON.parse(job.terminal.output.flatMap((x:any)=>x.content??[]).filter((x:any)=>x.type==='output_text').map((x:any)=>x.text).join(''))),'RECOVERED_OUTPUT_MISMATCH');this.store.put('model-attempt',this.key(id),{...r,reconciliations:[...(r.reconciliations??[]),{previousFinishedAt:r.finishedAt??null,previousErrorCode:r.errorCode??null,terminalHash,reconciledAt:new Date().toISOString()}],result,errorCode:null,status:'output_available',finishedAt:new Date().toISOString()},r._version);this.store.event(this.scope,'experiment.output_reconciled',{id,terminalHash,reservationRetained:r.reservation});});}
     /** Abandoning the worker never proves provider absence or releases money. */
     interrupt(id: string) { this.store.transaction(() => { const row = this.get(id); requireThat(row && !row.invoice, 'ATTEMPT_NOT_UNRESOLVED'); this.store.put('model-attempt', this.key(id), { ...row, status: 'interrupted', errorCode: 'PROCESS_INTERRUPTED' }, row._version); this.store.event(this.scope, 'experiment.interrupted', { id, reservationRetained: row.reservation }); }); }
     reconcile(envelope: any, publicKey: string, projectId: string) {

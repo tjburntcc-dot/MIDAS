@@ -1,3 +1,5 @@
+import {validateBackgroundPolicy} from './durable-responses.ts';
+import type {BackgroundPolicy,DurableResponses} from './durable-responses.ts';
 import {boundedJSON,sanitizeCountResponse} from './experiment/token-count.ts';
 import { canonical, hash, identifier, modelResult, money, requireThat, safeInteger, scope, FoundryError, rawHash } from './contracts.ts';
 import type { Cost, ModelPort, ModelRequest, ModelResult, Money } from './contracts.ts';
@@ -15,6 +17,7 @@ export type ResponsesRoute = {
     authorizationId: string;
     model: string;
     projectId?: string;
+    background?: BackgroundPolicy;
     reasoningEffort?: "low" | "medium" | "high";
     serviceTier?: "default";
     maxOutputTokens: number;
@@ -30,7 +33,8 @@ export type ResponsesRoute = {
 };
 /** Same exact provider body for offline contract inspection and actual admission. Contains no credentials. */
 export function buildResponsesBody(route: ResponsesRoute, request: ModelRequest, schema: any) {
-    return { ...(route.reasoningEffort ? {reasoning:{effort:route.reasoningEffort}} : {}), ...(route.serviceTier ? {service_tier:route.serviceTier} : {}), model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: false, text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
+    if(route.background)validateBackgroundPolicy(route.background);
+    return { ...(route.reasoningEffort ? {reasoning:{effort:route.reasoningEffort}} : {}), ...(route.serviceTier ? {service_tier:route.serviceTier} : {}), model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: route.background?.store??false, ...(route.background?{background:true}:{}), text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
 }
 /** Supported OpenAI Responses transport. Not enabled by the laboratory CLI.
  * Tests inject an in-memory transport: no provider calls were made for Mission 027.
@@ -44,10 +48,14 @@ export function responsesModelPort(options: {
     validateOutput: (task: string, output: any) => void;
     countInputTokens: (body: any, request?:ModelRequest) => number | Promise<number>;
     transport?: typeof fetch;
+    durable?: DurableResponses;
+    resume?: boolean;
 }): ModelPort {
     const { apiKey, budget, schemaForTask, validateOutput } = options;
     const route = structuredClone(options.route);
     const transport = options.transport ?? fetch;
+    requireThat(Boolean(route.background)===Boolean(options.durable),'BACKGROUND_DURABILITY_REQUIRED');
+    requireThat(!options.resume||Boolean(options.durable),'BACKGROUND_RESUME_REQUIRED');
     identifier(route.authorizationId);
     identifier(route.model);
     money(route.maxCallCost);
@@ -81,17 +89,24 @@ export function responsesModelPort(options: {
             // they must not leak scenario labels into the worker prompt.
             const body = buildResponsesBody(route, request, schema);
             const bytes=canonical(body), digest=rawHash(bytes);
-            const started=Date.now();let admitted=false,usageRecorded=false;
+            const started=Date.now();let admitted=Boolean(options.resume),usageRecorded=false;
             try {
+                if(!options.resume){
                 if(budget.prepare){await budget.prepare(request,maximum,digest,bytes);admitted=true;}
                 const inputTokens=await options.countInputTokens(structuredClone(body),request);
                 safeInteger(inputTokens);requireThat(inputTokens<=route.inputTokenCeiling,'MODEL_INPUT_EXCEEDS_ADMISSION');
+                }
                 const credential=apiKey();requireThat(typeof credential==='string' && credential.length>0,'MODEL_ACCESS_REQUIRED');
-                await budget.reserve(request,maximum,digest);admitted=true;
+                if(!options.resume)await budget.reserve(request,maximum,digest);admitted=true;
+                let raw:any;
+                if(options.durable){raw=await options.durable.execute({bytes,credential,projectId:route.projectId!,model:route.model,createDeadlineMs:route.deadlineMs,transport,resume:Boolean(options.resume)});}
+                else {
                 const response=await transport('https://api.openai.com/v1/responses',{method:'POST',headers:{authorization:'Bearer '+credential,'content-type':'application/json',...(route.projectId?{'OpenAI-Project':route.projectId}:{})},body:bytes,redirect:'error',signal:AbortSignal.timeout(route.deadlineMs)});
-                const raw=await boundedJSON(response,262144) as any;
+                await budget.observed?.(request,{inferenceHTTP:sanitizeCountResponse(response.status,response.headers.get('x-request-id'),null,credential)});
+                raw=await boundedJSON(response,262144) as any;
                 await budget.observed?.(request,{inferenceHTTP:sanitizeCountResponse(response.status,response.headers.get('x-request-id'),raw,credential)});
                 requireThat(response.ok, 'MODEL_HTTP_ERROR');
+                }
                 requireThat(raw&&typeof raw==='object','MODEL_RESPONSE_INVALID');
                 const requestId = typeof raw.id === 'string' ? raw.id : null;
                 const usage = raw.usage;
@@ -118,12 +133,14 @@ export function responsesModelPort(options: {
                 await budget.observed?.(request,{outputArtifact:diagnosticOutput});
                 requireThat(!text.includes(credential), 'MODEL_SENSITIVE_OUTPUT');
                 validateOutput(request.task, output);
-                return modelResult({ output, usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost: actual }, route: { provider: 'openai-responses', model: raw.model, kind: 'live' }, metadata: { providerRequestId: requestId, cachedInputTokens: Number.isSafeInteger(usage.input_tokens_details?.cached_tokens) ? usage.input_tokens_details.cached_tokens : null, latencyMs: Date.now() - started } });
+                return modelResult({ output, usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost: actual }, route: { provider: 'openai-responses', model: raw.model, kind: 'live' }, metadata: { providerRequestId: requestId, cachedInputTokens: Number.isSafeInteger(usage.input_tokens_details?.cached_tokens) ? usage.input_tokens_details.cached_tokens : null, latencyMs: options.durable?Date.parse(options.durable.state().terminalAt)-Date.parse(options.durable.state().dispatchAt):Date.now() - started } });
             }
             catch (error) {
+                if((error as any)?.simulatedCrash)throw error;
+                const code=typeof (error as any).code==='string'?(error as any).code:(error as any).name==='TimeoutError'?'MODEL_DEADLINE_UNCERTAIN':'MODEL_RESULT_UNCERTAIN';
                 if (admitted && !usageRecorded)
-                    await budget.uncertain(request, (error as any).code ?? 'MODEL_RESULT_UNCERTAIN');
-                throw new FoundryError((error as any).code ?? 'MODEL_RESULT_UNCERTAIN','Model attempt has no accepted output ('+((error as any).code ?? 'MODEL_RESULT_UNCERTAIN')+'). No automatic retry or fixture fallback.');
+                    await budget.uncertain(request, code);
+                throw new FoundryError(code,'Model attempt has no accepted output ('+code+'). No automatic retry or fixture fallback.');
             }
         },
     };

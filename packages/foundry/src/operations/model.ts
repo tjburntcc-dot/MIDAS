@@ -1,3 +1,4 @@
+import {DurableResponses,validateBackgroundPolicy} from '../durable-responses.ts';
 /** Dynamic, bounded operating calls using the established Responses and ledger ports.
  * Authorization freezes the goal/tool envelope; each derived request is frozen by exact
  * bytes before admission. Mock transports never obtain credentials or fall through. */
@@ -81,23 +82,25 @@ export class OperatingModels {
         const prior=this.ledger.get(x.attemptId),saved=this.store.get('operating-response',key);
         if(prior){
             requireThat(prior.requestHash===digest&&prior.metadata.businessId===b.id,'OPERATING_REQUEST_CHANGED');
-            requireThat(saved&&!prior.errorCode,'OPERATING_UNCERTAIN_NO_RETRY');
-            x.validate(saved.result.output);
-            if(!prior.finishedAt)this.ledger.finish(x.attemptId,saved.result,null);
-            return saved.result;
+            if(saved){x.validate(saved.result.output);if(prior.errorCode)this.ledger.finishRecovered(x.attemptId,saved.result,this.store.get('response-job',key)?.terminalHash);else if(!prior.finishedAt)this.ledger.finish(x.attemptId,saved.result,null);return saved.result;}
+            requireThat(g.route.background,'OPERATING_UNCERTAIN_NO_RETRY');
+            const job=this.store.get('response-job',key);requireThat(job?.requestHash===digest&&job.responseId,'BACKGROUND_UNKNOWN_NO_RESUBMIT');
         }
         requireThat(Date.parse(g.expiresAt)>Date.now(),'OPERATING_GRANT_EXPIRED');
         requireThat(!this.store.get('operating-revocation',hash(g)),'OPERATING_GRANT_REVOKED');
-        requireThat(this.ledger.rows().filter(r=>r.metadata.businessId===b.id).length<b.maxCalls,'OPERATING_BUSINESS_CALL_CAP');
+        if(!prior)requireThat(this.ledger.rows().filter(r=>r.metadata.businessId===b.id).length<b.maxCalls,'OPERATING_BUSINESS_CALL_CAP');
         requireThat((x.stage==='recovery')===Boolean(x.recoveryOf),'OPERATING_RECOVERY_LINK_REQUIRED');
-        if(x.recoveryOf){
+        if(x.recoveryOf&&!prior){
             requireThat(this.recoveryEligible(x.recoveryOf),'OPERATING_RECOVERY_INELIGIBLE');
             const parent=this.ledger.get(x.recoveryOf),rawParent=this.store.get('operating-request',x.recoveryOf+'-request');
             requireThat(parent.metadata.businessId===b.id&&rawParent,'OPERATING_RECOVERY_SCOPE');
             const expected=JSON.parse(rawParent.bytes);const priorInput=JSON.parse(expected.input);priorInput.context={...priorInput.context,recoveryInstruction};expected.input=canonical(priorInput);
             requireThat(canonical(expected)===bytes,'OPERATING_RECOVERY_REQUEST_CHANGED');
         }
-        const budget=this.ledger.port('development',{businessId:b.id,stage:x.stage,recoveryOf:x.recoveryOf??null,source:g.mode==='mock'?'offline_mock':'actual-model',goalHash:b.goalHash});
+        const durable=g.route.background?new DurableResponses({store:this.store,key,requestHash:digest,grantHash:hash(g),policy:g.route.background,expiresAt:g.expiresAt,authorize:()=>{requireThat(Date.parse(g.expiresAt)>Date.now()&&!this.store.get('operating-revocation',hash(g)),'OPERATING_GRANT_EXPIRED_OR_REVOKED');requireThat(g.implementationHash===implementationHash(),'OPERATING_CODE_CHANGED');}}):undefined;
+        durable?.claim();
+        try {
+        const budget=this.ledger.port('development',{businessId:b.id,stage:x.stage,recoveryOf:x.recoveryOf??null,source:g.mode==='mock'?'offline_mock':'actual-model',goalHash:b.goalHash},prior?{attemptId:x.attemptId,requestHash:digest}:undefined);
         const prepare=budget.prepare!;
         budget.prepare=async(r,amount,d,raw)=>{
             requireThat(raw===bytes&&d===digest,'OPERATING_BYTES_CHANGED');
@@ -114,17 +117,20 @@ export class OperatingModels {
             this.store.transaction(()=>{const key=x.attemptId+'-request',old=this.store.get('operating-request',key),record={bytes:raw,requestHash:d,businessId:b.id,grantHash:hash(g),source:g.mode};if(old)requireThat(old.requestHash===d&&old.businessId===b.id&&old.bytes===raw,'OPERATING_REQUEST_CHANGED');else this.store.put('operating-request',key,record,null);});
             await prepare(r,amount,d,raw);
         };
-        const port=responsesModelPort({route:{...g.route,projectId:g.projectId},apiKey:this.credential,budget,transport:this.transport,schemaForTask:()=>x.schema,validateOutput:(_task,out)=>x.validate(out),countInputTokens:(body,r)=>countTokens(body,g.projectId,this.credential(),async(event)=>budget.observed?.(r!,{tokenCount:event}),this.transport,g.countRequestByteCeiling??65536)});
+        const port=responsesModelPort({durable,resume:Boolean(prior),route:{...g.route,projectId:g.projectId},apiKey:this.credential,budget,transport:this.transport,schemaForTask:()=>x.schema,validateOutput:(_task,out)=>x.validate(out),countInputTokens:(body,r)=>countTokens(body,g.projectId,this.credential(),async(event)=>budget.observed?.(r!,{tokenCount:event}),this.transport,g.countRequestByteCeiling??65536)});
         try{
             const result=await port.run(request);
             this.store.transaction(()=>this.store.put('operating-response',key,{result,requestHash:digest,provenance:g.mode==='mock'?'offline_mock':'actual-model'},null));
             this.afterResponsePersisted?.();
-            this.ledger.finish(x.attemptId,result,null);return result;
+            if(prior?.finishedAt)this.ledger.finishRecovered(x.attemptId,result,durable!.state().terminalHash);else this.ledger.finish(x.attemptId,result,null);return result;
         }catch(e){
+            if((e as any)?.simulatedCrash)throw e;
             const row=this.ledger.get(x.attemptId);
             if(row&&!row.finishedAt&&!this.store.get('operating-response',key))this.ledger.finish(x.attemptId,null,(e as any).code??'OPERATING_MODEL_FAILED');
+            else if(row?.finishedAt&&prior&&!this.store.get('operating-response',key))this.store.transaction(()=>{const latest=this.ledger.get(x.attemptId),code=typeof (e as any).code==='string'&&/^[A-Z_]{1,80}$/.test((e as any).code)?(e as any).code:'LOCAL_RECOVERY_FAILED';this.store.put('model-attempt',this.ledger.key(x.attemptId),{...latest,recoveryFailures:[...(latest.recoveryFailures??[]),{at:new Date().toISOString(),code,terminalHash:durable?.state()?.terminalHash??null}]},latest._version);});
             throw e;
         }
+        }finally{durable?.release();}
     }
     totals(){const t=this.ledger.totals(),g=this.grant;return {callsUsed:t.attempts,callLimit:g.limits.stages.development.attempts,retainedMinor:t.reserved+this.ledger.carryExposure(),provisionalMinor:t.provisional,settledMinor:t.settled||null,providerRequests:g.mode==='live'?this.ledger.rows().filter(x=>x.inferenceDispatchIntent).length:0,mode:g.mode,remainingMinor:g.limits.totalMinor-t.reserved-t.settled-this.ledger.carryExposure(),countBufferMinor:g.limits.overheadReserve?.minor??0,currency:'USD'};}
 }

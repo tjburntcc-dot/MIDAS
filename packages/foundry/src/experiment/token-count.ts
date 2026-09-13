@@ -1,7 +1,7 @@
 import { canonical, rawHash, requireThat, safeInteger, FoundryError } from '../contracts.ts';
 export const TOKEN_COUNT_ENDPOINT='https://api.openai.com/v1/responses/input_tokens';
 const countFields=new Set(['conversation','input','instructions','model','parallel_tool_calls','personality','previous_response_id','reasoning','text','tool_choice','tools','truncation']);
-const generationOnly=new Set(['max_output_tokens','service_tier','store']);
+const generationOnly=new Set(['max_output_tokens','service_tier','store','background']);
 /** Keep every documented input-bearing field; reject new fields instead of undercounting. */
 export function countPayload(body:Record<string,unknown>){
  const out:Record<string,unknown>={};
