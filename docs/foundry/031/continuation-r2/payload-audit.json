@@ -1,0 +1,33 @@
+{
+  "proposalHash": "3a14c090c51c88c624a7d9649f77cb0a27c6c9a339761ba59464067c086d98cb",
+  "implementationHash": "c40b55793aa5b8f958d3f68bdf60468b2351d2bd2629cb17aece5fb770c0377a",
+  "bodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+  "schemaHash": "c6c647fd71b5aa760906c952eea852ceafb742a321d3bfc56e9848cf58b9cdeb",
+  "contextBytes": 41728,
+  "payloadBytes": 47676,
+  "acceptedBriefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+  "acceptedBriefBytes": 17908,
+  "historical": {
+    "admissions": 8,
+    "counts": 8,
+    "reservedMinor": 984,
+    "provisionalMinor": 384,
+    "settledMinor": 0,
+    "countBufferMinor": 400
+  },
+  "incrementalExposureMinor": 3198,
+  "combinedExposureMinor": 4582,
+  "originalCeilingMinor": 5182,
+  "combinedAdmissions": 34,
+  "originalAdmissionLimit": 36,
+  "inputTokens": "Unknown until authorized full-payload count",
+  "model": "gpt-6-astra",
+  "reasoning": {
+    "effort": "max"
+  },
+  "serviceTier": "default",
+  "providerRequests": 0,
+  "credentialRead": false,
+  "signed": false,
+  "parentRetired": false
+}

@@ -1,0 +1,76 @@
+{
+  "implementationCommit": "b59a99608f25d030b2a4433b2ea6b862cbd47b21",
+  "baseCommit": "ff2e971da6c62d2a7a2a14a4d36acf67114b13d2",
+  "implementationHash": "c40b55793aa5b8f958d3f68bdf60468b2351d2bd2629cb17aece5fb770c0377a",
+  "proposalHash": "3a14c090c51c88c624a7d9649f77cb0a27c6c9a339761ba59464067c086d98cb",
+  "preservation": {
+    "at": "2026-09-13T15:10:35.265Z",
+    "parentTablesMatchStopBackup": true,
+    "tables": {
+      "entities": {
+        "rows": 357,
+        "sha256": "598fd7f8b103d06faefc87a5dfd44a6197d9577ab57f656a80a00b67ed67c61e"
+      },
+      "records": {
+        "rows": 174,
+        "sha256": "d674f5ea1e61b6eeea00be8f0d73dfa9f3d331ab8002ac91eeb55f454fc1332b"
+      },
+      "artifacts": {
+        "rows": 8,
+        "sha256": "4bb861eceee7bcbad7a2d0dd2a6966e8158cc53a6afb568b87be14b4bdf0ca87"
+      },
+      "events": {
+        "rows": 217,
+        "sha256": "ab0efc2ef777303c625bea747cb26479e9d9f5c0801dc8b7179c91b2b4cf2998"
+      }
+    },
+    "parentGrantFileHash": "bce00ccfae5d03253d4b9c4bb97ab24b3a053dddc76f22a6a9c27b2d32353ac4",
+    "parentRetired": false,
+    "historical": {
+      "admissions": 8,
+      "counts": 8,
+      "reservedMinor": 984,
+      "provisionalMinor": 384,
+      "settledMinor": 0,
+      "countBufferMinor": 400
+    },
+    "briefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+    "briefBytes": 17908,
+    "payloadHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+    "modelRequestsDuringPreparation": 0,
+    "tokenCountRequestsDuringPreparation": 0,
+    "credentialAccess": false
+  },
+  "preparedBackupManifestHash": "0664f734fbdba546dfbff3e5ecc1152f68ecd7fc5c200b3f95ce665c743bf751",
+  "tests": {
+    "portfolioRegressionRun": {
+      "tests": 123,
+      "passed": 122,
+      "failed": 1,
+      "failure": "new finalization closure-receipt recovery test found missing database row version; fixed"
+    },
+    "postFixFocusedRun": {
+      "tests": 14,
+      "passed": 14,
+      "failed": 0
+    },
+    "semanticTypecheck": {
+      "compiler": "6.0.3",
+      "strict": true,
+      "errors": 0,
+      "sourceFiles": 40
+    },
+    "browser": [
+      "Authenticated original17908-byte report fits390px",
+      "Owner gallery distinguishes publication from blocked closure",
+      "Image/toolbar save, convert, complete, CSV, refresh and server restart passed on isolated offline copy",
+      "Five-stage positive fixture9decisions; rejecting fixture1decision cancels4stages"
+    ],
+    "notClaimed": "These are offline mechanics, not paid runtime product competence."
+  },
+  "providerRequests": 0,
+  "counts": 0,
+  "credentialAccess": false,
+  "signed": false,
+  "parentRetired": false
+}

@@ -1,0 +1,302 @@
+{
+  "portfolio": {
+    "kind": "portfolio-execution-grant-v1",
+    "approved": false,
+    "id": "portfolio-031-value-build-v4-r2",
+    "mode": "live",
+    "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-finalization-r2\\var\\portfolio-031-continuation-r2",
+    "host": "Mason_Hemmer",
+    "account": "profile-path:C:\\Users\\14844",
+    "implementationHash": "c40b55793aa5b8f958d3f68bdf60468b2351d2bd2629cb17aece5fb770c0377a",
+    "operatingImplementationHash": "8630c28f8f1cf9727eafc0df2f722c008d7282122cbf42e06e10148c62ee6beb",
+    "operatingGrantHash": "3221347a763be4d9718b2c22fdea5bc418782200757d3dbf8d986ceaf44ba7ab",
+    "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+    "credentialFile": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key",
+    "accountScope": {
+      "tenantId": "mason",
+      "businessId": "portfolio-models",
+      "runId": "portfolio-031-value-build-v4-r2",
+      "dataPolicyVersion": "portfolio-live-v1",
+      "mode": "fixture"
+    },
+    "expiresAt": "2026-09-25T22:00:00.000Z",
+    "approvedBy": "",
+    "approvalReference": "",
+    "route": {
+      "authorizationId": "portfolio-031-value-build-v4-r2",
+      "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+      "model": "gpt-6-astra",
+      "reasoningEffort": "max",
+      "serviceTier": "default",
+      "maxOutputTokens": 16384,
+      "deadlineMs": 180000,
+      "inputTokenCeiling": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 123
+      },
+      "pricing": {
+        "inputMinorPerMillion": 1250,
+        "outputMinorPerMillion": 5000,
+        "source": "https://developers.openai.com/api/docs/models/gpt-6-astra ; conservative cache-write input ceiling $12.50/M and output $50/M",
+        "effectiveAt": "2026-09-12T00:00:00.000Z"
+      }
+    },
+    "ventures": [
+      {
+        "id": "quote-desk",
+        "goalHash": "82b625c2018e86458df0bc769f93b67dc2fd59e865070cd73c55361ff8b4ac59",
+        "capabilities": [
+          "research.investigate",
+          "quality.review",
+          "portfolio.plan",
+          "portfolio.reassess",
+          "service.brief",
+          "software.build",
+          "commercial.prepare"
+        ],
+        "tools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "sourceHosts": [],
+        "workCalls": 26,
+        "searchCalls": 0
+      }
+    ],
+    "countUncertaintyMinor": 400,
+    "countPolicy": "separate-unpriced-count-reserve-v1",
+    "providerConcurrency": 1,
+    "automaticRetries": 0,
+    "recovery": {
+      "kind": "known-incomplete-v1",
+      "maxAdmissions": 2
+    },
+    "externalAuthority": false,
+    "historicalAuthorizationTransfer": false,
+    "dataPolicy": "permitted-owner-inputs-and-public-sources-v1",
+    "searchPolicyHash": "20fdefe101639c2ad404953f8eada087b773b7a75247c38ff88d4ee600ee2794",
+    "procedureHashes": [
+      "f2e700a98731ab21049cc4176a9f093083879d0befafe0a3a3f21291038d5015",
+      "4cd7e9530e4d14ca4d87cd8020f88337e8b3e78a7eee5c94db909e8276f0225a"
+    ],
+    "tasks": [
+      {
+        "id": "quote-desk/decide-v4-r2",
+        "definitionHash": "38401b539653009bce19ac5a996d44985cd8146fef3257cab96c34324128e3cd",
+        "workCalls": 1
+      },
+      {
+        "id": "quote-desk/build-v4-r2",
+        "definitionHash": "9ad7b9ab4aad4aab2a68bdc3e7959f697bdcc43f59f2557309776945c22c422b",
+        "workCalls": 10
+      },
+      {
+        "id": "quote-desk/review-product-v4-r2",
+        "definitionHash": "9f59092e8ca2556773e02cffa216bc546e14b147ca5218eb6545bf5d585f003a",
+        "workCalls": 6
+      },
+      {
+        "id": "quote-desk/operate-v4-r2",
+        "definitionHash": "a37f0f142e51aff8fd91fd1b5ce0d898b9a07f2ff71d30dfdc22c385195377b3",
+        "workCalls": 6
+      },
+      {
+        "id": "quote-desk/adapt-v4-r2",
+        "definitionHash": "369aadaf0e8429e1c06d032f5f8602cf5b8e261ebd965d5f2917ef739012145b",
+        "workCalls": 1
+      }
+    ],
+    "initialRequests": [
+      {
+        "taskId": "quote-desk/decide-v4-r2",
+        "bodyHash": "8d2adcbce25ad934b3c64b3c59c98d5d6b50782b18f9379e5d10d3a985999c75",
+        "schemaHash": "c6c647fd71b5aa760906c952eea852ceafb742a321d3bfc56e9848cf58b9cdeb"
+      }
+    ],
+    "continuation": {
+      "kind": "portfolio-v4-artifact-continuation-r2",
+      "parentRoot": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-handoff-r1\\var\\portfolio-031-continuation-r1",
+      "parentGrantFileHash": "bce00ccfae5d03253d4b9c4bb97ab24b3a053dddc76f22a6a9c27b2d32353ac4",
+      "parentGrantHash": "324cbc9b13dd240d9dd09b0d4043d51be57b7b4b9e4907c95b2264caccc2bf57",
+      "parentOperatingHash": "e6b25b9a5b4f51a7e8d849a2c3ee7bfa3169b7ca80497f5cb36e260051dfc080",
+      "parentProposalHash": "872dc6c35184a4366ff4ea70f6e7493d4e3c5c78bb38db3f8d526328959ff682",
+      "backupManifestHash": "d54e2b4ca6f3d43f388df4d438af8a107eb8fa92ee1a78324e756a1faafaaf4a",
+      "attemptsHash": "ddacab4a680a25b1612165f7c1fb256db8e49503530a3163ea4e5315aa965172",
+      "bindingsHash": "229e42b93bcfc0011d59d08f2f04667be72fbeff8eac302b9bcf4848d22b7edd",
+      "accountHash": "61317b7c59c85f8bd2ef9b88c0aafc3920e5795f5e714b90cda2c4da08008b20",
+      "parentTasksHash": "5e2aaaa5213a5b6b958f2ffca988347881d3a4ba5fc96098d7b7ed2ec6e301e9",
+      "parentWorkspaceHash": "b388472aac3863437ececc6d68d379d3c558fe64ea52f24095042b5146787717",
+      "deliveryHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+      "parentTaskId": "quote-desk/investigate-v4-r1",
+      "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+      "artifactHash": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+      "manifestHash": "12977fd9cbfca824f57e0e4111f6063a8ae05894f3729534c736350661ab096c",
+      "payloadHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+      "briefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+      "briefBytes": 17908,
+      "carryId": "portfolio-031-history-through-r1",
+      "historical": {
+        "admissions": 8,
+        "counts": 8,
+        "reservedMinor": 984,
+        "provisionalMinor": 384,
+        "settledMinor": 0,
+        "countBufferMinor": 400
+      },
+      "combinedCeilingMinor": 4582,
+      "combinedAdmissionLimit": 34,
+      "originalCeilingMinor": 5182,
+      "originalAdmissionLimit": 36,
+      "tasks": [
+        {
+          "parentId": "quote-desk/decide-v4-r1",
+          "id": "quote-desk/decide-v4-r2",
+          "workCalls": 1
+        },
+        {
+          "parentId": "quote-desk/build-v4-r1",
+          "id": "quote-desk/build-v4-r2",
+          "workCalls": 10
+        },
+        {
+          "parentId": "quote-desk/review-product-v4-r1",
+          "id": "quote-desk/review-product-v4-r2",
+          "workCalls": 6
+        },
+        {
+          "parentId": "quote-desk/operate-v4-r1",
+          "id": "quote-desk/operate-v4-r2",
+          "workCalls": 6
+        },
+        {
+          "parentId": "quote-desk/adapt-v4-r1",
+          "id": "quote-desk/adapt-v4-r2",
+          "workCalls": 1
+        }
+      ]
+    }
+  },
+  "operating": {
+    "kind": "operations-model-grant-v1",
+    "mode": "live",
+    "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-finalization-r2\\var\\portfolio-031-continuation-r2",
+    "host": "Mason_Hemmer",
+    "implementationHash": "8630c28f8f1cf9727eafc0df2f722c008d7282122cbf42e06e10148c62ee6beb",
+    "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+    "credentialFile": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key",
+    "billingPublicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEArQe+p9bwm+YzBFs/CnXr81BHHGx8uRHAWuGyHENFobw=\n-----END PUBLIC KEY-----\n",
+    "expiresAt": "2026-09-25T22:00:00.000Z",
+    "approvedBy": "",
+    "approvalReference": "",
+    "accountScope": {
+      "tenantId": "mason",
+      "businessId": "portfolio-models",
+      "runId": "portfolio-031-value-build-v4-r2",
+      "dataPolicyVersion": "portfolio-live-v1",
+      "mode": "fixture"
+    },
+    "route": {
+      "authorizationId": "portfolio-031-value-build-v4-r2",
+      "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+      "model": "gpt-6-astra",
+      "reasoningEffort": "max",
+      "serviceTier": "default",
+      "maxOutputTokens": 16384,
+      "deadlineMs": 180000,
+      "inputTokenCeiling": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 123
+      },
+      "pricing": {
+        "inputMinorPerMillion": 1250,
+        "outputMinorPerMillion": 5000,
+        "source": "https://developers.openai.com/api/docs/models/gpt-6-astra ; conservative cache-write input ceiling $12.50/M and output $50/M",
+        "effectiveAt": "2026-09-12T00:00:00.000Z"
+      }
+    },
+    "limits": {
+      "totalMinor": 4582,
+      "concurrency": 1,
+      "astraCountRequests": 26,
+      "overheadReserve": {
+        "minor": 400,
+        "reason": "The SAME historical unpriced token-count uncertainty reserve, carried once; no second count buffer is allocated."
+      },
+      "stages": {
+        "smoke": {
+          "minor": 0,
+          "attempts": 0
+        },
+        "development": {
+          "minor": 3198,
+          "attempts": 26
+        },
+        "validation": {
+          "minor": 0,
+          "attempts": 0
+        },
+        "evaluation": {
+          "minor": 0,
+          "attempts": 0
+        }
+      },
+      "allocations": [
+        {
+          "metadataKey": "businessId",
+          "value": "quote-desk",
+          "attempts": 26,
+          "minor": 3198
+        },
+        {
+          "metadataKey": "stage",
+          "value": "portfolio-work",
+          "attempts": 26,
+          "minor": 3198
+        },
+        {
+          "metadataKey": "stage",
+          "value": "portfolio-search",
+          "attempts": 0,
+          "minor": 0
+        }
+      ],
+      "carryIn": [
+        {
+          "id": "portfolio-031-history-through-r1",
+          "exposureMinor": 984,
+          "evidenceHash": "ddacab4a680a25b1612165f7c1fb256db8e49503530a3163ea4e5315aa965172"
+        }
+      ]
+    },
+    "businesses": [
+      {
+        "id": "quote-desk",
+        "goalHash": "82b625c2018e86458df0bc769f93b67dc2fd59e865070cd73c55361ff8b4ac59",
+        "sourceHosts": [],
+        "maxCalls": 26
+      }
+    ],
+    "retries": 0,
+    "providerConcurrency": 1,
+    "countDeadlineMs": 10000,
+    "externalAuthority": false,
+    "countRequestByteCeiling": 196608
+  },
+  "approved": false,
+  "providerRequests": 0,
+  "inferenceAdmissions": 26,
+  "countAdmissions": 26,
+  "maximumExposureMinor": 4582,
+  "incrementalExposureMinor": 3198,
+  "historicalRetainedMinor": 1384,
+  "currency": "USD",
+  "instructions": "Review exact scope and limits. Both payloads require owner signatures; set matching approvedBy/approvalReference, approve the outer payload, and recompute its operatingGrantHash after finalizing the inner payload. No historical grants transfer. A linked continuation retires parent execution authority before new dispatch and preserves its evidence and exposure."
+}
