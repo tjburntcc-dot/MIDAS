@@ -13,7 +13,9 @@ export const STAGE_CONTRACTS={
  'outcome-review-v1':allocation('outcome-review-v1',24576,164,1)
 };
 export type StageContractId=keyof typeof STAGE_CONTRACTS;
-export function stageContractForTask(task:Task){const id=(task.inputs as any)?.stageContract;if(id===undefined)return null;requireThat(typeof id==='string'&&Object.hasOwn(STAGE_CONTRACTS,id),'STAGE_CONTRACT_UNKNOWN');return STAGE_CONTRACTS[id as keyof typeof STAGE_CONTRACTS];}
+export const CREDIT_CONTINUATION_KIND='portfolio-v4-credit-continuation-r5';
+export function stageContractSet(kind?:string){return Object.values(STAGE_CONTRACTS).map(c=>({...c,ordinaryAdmissions:kind===CREDIT_CONTINUATION_KIND&&c.id==='operating-delivery-v1'?3:c.ordinaryAdmissions}));}
+export function stageContractForTask(task:Task){const id=(task.inputs as any)?.stageContract;if(id===undefined)return null;requireThat(typeof id==='string'&&Object.hasOwn(STAGE_CONTRACTS,id),'STAGE_CONTRACT_UNKNOWN');const c=STAGE_CONTRACTS[id as keyof typeof STAGE_CONTRACTS];return (task.inputs as any)?.continuationVersion==='value-release-v4-credit-continuation-r5'?stageContractSet(CREDIT_CONTINUATION_KIND).find(x=>x.id===id)!:c;}
 const text=(maxLength:number)=>({type:'string',minLength:1,maxLength,pattern:'\\S'});
 const list=(maxItems:number,maxLength:number,minItems=0)=>({type:'array',minItems,maxItems,items:text(maxLength)});
 const shape=(properties:Record<string,any>)=>({type:'object',additionalProperties:false,required:Object.keys(properties),properties});

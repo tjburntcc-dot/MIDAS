@@ -2,6 +2,8 @@ import {validateDurableContinuationR3,durableContinuationCarry} from './continua
 import type {DurableContinuationR3} from './continuation-r3.ts';
 import {validateStageContinuationR4,stageContinuationCarry} from './continuation-r4.ts';
 import type {StageContinuationR4} from './continuation-r4.ts';
+import {validateCreditContinuation,creditCarry} from './continuation-r5.ts';
+import type {CreditContinuationR5} from './continuation-r5.ts';
 /** Explicit Mission 031 draft continuation. Historical authority is retired,
  * never transferred; historical attempts remain immutable, conservatively held. */
 import {DatabaseSync} from 'node:sqlite';
@@ -28,7 +30,7 @@ export type ArtifactContinuation={
  historical:HistoricalExposure;combinedCeilingMinor:number;combinedAdmissionLimit:number;originalCeilingMinor:number;originalAdmissionLimit:number;
  tasks:Array<{parentId:string;id:string;workCalls:number}>;
 };
-export type DraftContinuation=LegacyDraftContinuation|ArtifactContinuation|DurableContinuationR3|StageContinuationR4;
+export type DraftContinuation=LegacyDraftContinuation|ArtifactContinuation|DurableContinuationR3|StageContinuationR4|CreditContinuationR5;
 const rows=(db:DatabaseSync,kind:string)=>db.prepare('SELECT key,body FROM entities WHERE kind=? ORDER BY key').all(kind).map(r=>({key:String(r.key),body:JSON.parse(String(r.body))}));
 const entity=(db:DatabaseSync,kind:string,key:string)=>{const r=db.prepare('SELECT body FROM entities WHERE kind=? AND key=?').get(kind,key);return r?JSON.parse(String(r.body)):null;};
 
@@ -98,12 +100,13 @@ export function inspectFinalizationParent(parentRoot:string,publicKey:string){
    retired:entity(db,'portfolio-revocation',grantHash),operatingRetired:entity(db,'operating-revocation',hash(inner))};
  }finally{db.close();}
 }
-export function continuationCarry(c:DraftContinuation){if(c.kind==='portfolio-v4-stage-continuation-r4')return stageContinuationCarry(c);if(c.kind==='portfolio-v4-durable-continuation-r3')return durableContinuationCarry(c);return [{id:c.kind==='portfolio-v4-artifact-continuation-r2'?c.carryId:c.parentAttemptId,exposureMinor:c.historical.reservedMinor,evidenceHash:c.attemptsHash}];}
+export function continuationCarry(c:DraftContinuation){if(c.kind==='portfolio-v4-credit-continuation-r5')return creditCarry(c);if(c.kind==='portfolio-v4-stage-continuation-r4')return stageContinuationCarry(c);if(c.kind==='portfolio-v4-durable-continuation-r3')return durableContinuationCarry(c);return [{id:c.kind==='portfolio-v4-artifact-continuation-r2'?c.carryId:c.parentAttemptId,exposureMinor:c.historical.reservedMinor,evidenceHash:c.attemptsHash}];}
 
 /** Run before signing and every prospective call. Fail closed on new historical
  * activity, missing evidence, altered scope, or a competing continuation. */
 export function validateContinuation(g:PortfolioGrant,publicKey:string,requireRetired:boolean){
  const c=g.continuation;if(!c)return null;
+ if(c.kind==='portfolio-v4-credit-continuation-r5')return validateCreditContinuation(g,publicKey,requireRetired);
  if(c.kind==='portfolio-v4-stage-continuation-r4')return validateStageContinuationR4(g,publicKey,requireRetired);
  if(c.kind==='portfolio-v4-durable-continuation-r3')return validateDurableContinuationR3(g,publicKey,requireRetired);
  if(c.kind==='portfolio-v4-artifact-continuation-r2')return validateArtifactContinuation(g,c,publicKey,requireRetired);
