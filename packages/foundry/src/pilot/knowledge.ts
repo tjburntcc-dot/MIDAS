@@ -1,9 +1,9 @@
 /** Owner-pilot evidence memory. Local storage and proposal validation only; never opens a provider connection. */
 import { randomUUID } from 'node:crypto';
 import { StateStore } from '../state.ts';
-import { hash, identifier, requireThat } from '../contracts.ts';
+import { hash, identifier, requireThat, scopeKey } from '../contracts.ts';
 import type { ModelPort, Scope } from '../contracts.ts';
-import { buildEvidenceRequest, evidenceAudit, fixtureEvidencePort, prospectiveEvidenceRequest, runEvidenceProposal, validateEvidenceBundle } from '../workbench/evidence.ts';
+import { buildEvidenceRequest, evidenceAudit, fixtureEvidencePort, prospectiveEvidenceRequest, runEvidenceProposal, validateEvidenceBundle, validateUnderstanding } from '../workbench/evidence.ts';
 import type { EvidenceBundle, UnderstandingProposal } from '../workbench/evidence.ts';
 import type { ResponsesRoute } from '../model-port.ts';
 
@@ -92,6 +92,32 @@ export class PilotKnowledge {
         const bundle = this.bundle(id); const attemptId = options.attemptId ?? 'diagnosis-v' + c.version; const port = options.port ?? fixtureEvidencePort(this.fixtureProposal(id, bundle));
         const proposal = await runEvidenceProposal(this.store, { id: 'pilot-fixture-controller', tenantId: 'mason', businessId: id, permissions: ['read', 'operate'] }, pilotKnowledgeScope(id), bundle, port, attemptId);
         const output = proposal.output as UnderstandingProposal; const record = { businessId: id, companyVersion: c.version, status: 'proposal_ready', ...output, hypotheses: output.hypotheses.map((h, index) => ({ ...h, rank: index + 1, rankBasis: index === 0 ? 'Directly linked to the stated owner goal and a supported local workflow; economic benefit remains unmeasured.' : 'Alternative supported workflow; compare owner correction and usefulness before expansion.', workflow: index === 0 ? 'response-packet' : 'business-site' })), provenance: 'offline fixture through ModelPort; development-authored proposal, not measured AI competence', nextAction: 'Review the inquiry-response work proposal; use the local website workflow as a second test when useful.', proposalRef: proposal.attemptId, sourceAudit: evidenceAudit(bundle), createdAt: now() }; this.persistUnderstanding(id, record); return this.snapshot(id).understanding;
+    }
+    /** Called by the signed diagnosis factory only after OperatingModels has retained
+     * the response. This records a proposal, never owner acceptance or causal truth. */
+    acceptAuthorizedDiagnosis(id: string, binding: { companyHash: string; bundleHash: string; accountScope: Scope; grantHash: string; attemptId: string; requestHash: string }) {
+        const company = this.company(id), bundle = this.bundle(id), key = scopeKey(binding.accountScope) + '/' + binding.attemptId;
+        requireThat(hash(company) === binding.companyHash && hash(bundle) === binding.bundleHash, 'PILOT_DIAGNOSIS_CONTEXT_CHANGED');
+        const account = this.store.get('experiment-account', scopeKey(binding.accountScope)), attempt = this.store.get('model-attempt', key), saved = this.store.get('operating-response', key);
+        requireThat(account?.authorizationHash === binding.grantHash && attempt?.metadata?.businessId === id && attempt.metadata.stage === 'pilot-diagnosis' && attempt.requestHash === binding.requestHash && saved?.requestHash === binding.requestHash && !attempt.errorCode && attempt.finishedAt, 'PILOT_DIAGNOSIS_VALIDATED_RECORD_REQUIRED');
+        requireThat(['offline_mock', 'actual-model'].includes(saved.provenance) && saved.provenance === attempt.metadata.source, 'PILOT_DIAGNOSIS_PROVENANCE_REQUIRED');
+        const output = saved.result.output; validateUnderstanding(bundle, output);
+        const resultKey = binding.grantHash + '/' + binding.attemptId, prior = this.store.get('pilot-authorized-understanding', resultKey);
+        if (prior) { requireThat(prior.businessId === id && prior.outputHash === hash(output), 'PILOT_DIAGNOSIS_RESULT_CHANGED'); return prior; }
+        const workflowFor = (hId: string) => { const tasks = output.tasks.filter(t => t.hypothesisId === hId); if (!tasks.length) return null;
+            const competencies = new Set(tasks.flatMap(t => t.competencies));
+            if (['frontend_implementation', 'input_validation', 'browser_verification'].every(c => competencies.has(c))) return 'business-site';
+            if (['evidence_synthesis', 'customer_response', 'policy_review'].every(c => competencies.has(c))) return 'response-packet'; return null; };
+        const value = { businessId: id, companyVersion: company.version, status: 'proposal_ready', ...output,
+            hypotheses: output.hypotheses.map((h, index) => ({ ...h, rank: h.id === output.selectedHypothesisId ? 1 : index + 2, rankBasis: h.id === output.selectedHypothesisId ? output.selectionReason : 'Model-proposed alternative; comparative priority is not established.', workflow: workflowFor(h.id) })),
+            provenance: saved.provenance === 'actual-model' ? 'actual-model sourced proposal through signed OperatingModels; accuracy and causal benefit not independently established' : 'offline mock through signed diagnosis binding; no measured AI competence',
+            proposalRef: binding.attemptId, grantHash: binding.grantHash, requestHash: binding.requestHash, outputHash: hash(output), sourceAudit: evidenceAudit(bundle),
+            recordedRoute: saved.result.route, recordedUsage: saved.result.usage, recordedMetadata: saved.result.metadata ?? null,
+            acceptedByOwner: false, sourceAccuracy: 'unverified', causalConfidence: 'unvalidated hypothesis',
+            nextAction: output.selectedHypothesisId ? 'Review the proposed bottleneck and supported task fit. Selecting an outcome and authorizing work remain separate owner decisions.' : 'Review the stated blocking information and permitted evidence requests before choosing work.', createdAt: now() };
+        this.store.transaction(() => { this.store.record(pilotKnowledgeScope(id), 'authorized-diagnosis-' + hash(resultKey).slice(0, 24), 'PilotAuthorizedDiagnosisProposal', value); this.store.put('pilot-authorized-understanding', resultKey, value, null);
+            const old = this.store.get('pilot-understanding', id), revision = (old?._version ?? 0) + 1; this.store.record(pilotKnowledgeScope(id), 'understanding-v' + revision, 'PilotUnderstandingProposal', value); this.store.put('pilot-understanding', id, value, old?._version ?? null); });
+        return this.store.get('pilot-authorized-understanding', resultKey);
     }
     private persistUnderstanding(id: string, value: any) { this.store.transaction(() => { const old = this.store.get('pilot-understanding', id); const revision = (old?._version ?? 0) + 1; this.store.record(pilotKnowledgeScope(id), 'understanding-v' + revision, 'PilotUnderstandingProposal', value); this.store.put('pilot-understanding', id, value, old?._version ?? null); }); }
     private inventoryUnknowns(id: string) { const c = this.company(id); return [{ question: 'Which customer problem and operating bottleneck most affects this goal?', consequence: 'Needed to rank useful work; documents alone do not establish causation.', claimIds: [] }, { question: 'Which prices, policies, approvals and tools apply to the first task?', consequence: 'Missing authority or policy blocks external effects and unsupported promises.', claimIds: [] }, { question: 'How will the owner judge usefulness and measure correction effort?', consequence: 'Required to learn from the deliverable without equating completion with business benefit.', claimIds: [] }, ...(c.website ? [{ question: 'Has permitted website content been supplied?', consequence: 'The saved URL is a pointer only; MIDAS has not fetched it.', claimIds: [] }] : [])]; }

@@ -25,7 +25,8 @@ if(command==='restore'){requireThat(!args.includes('--live')&&['--backup','--tar
 if(command==='backup')requireThat(!args.includes('--live')&&args.includes('--backup')&&args.includes('--root'),'BACKUP_EXPLICIT_INPUTS_REQUIRED');
 const root=resolve(flag('--root','var/portfolio-031'));mkdirSync(root,{recursive:true});
 requireThat(!(args.includes('--live')&&args.includes('--mock')),'EXPLICIT_MODE_CONFLICT');
-const store=new StateStore(join(root,'portfolio.sqlite')),portfolio=new Portfolio(store),tools=new LocalWorkTools({store,root,scopeFor:portfolioScope});
+const database=flag('--database','portfolio.sqlite');requireThat(['portfolio.sqlite','pilot.sqlite'].includes(database),'DATABASE_FILE_DENIED');
+const store=new StateStore(join(root,database)),portfolio=new Portfolio(store),tools=new LocalWorkTools({store,root,scopeFor:portfolioScope});
 const live=command==='reconcile'?loadLivePortfolio(root,store,{purpose:'billing'}):args.includes('--live')?loadLivePortfolio(root,store):null;
 const evidence=new EvidenceLibrary(store,{publicRead:Boolean(live),search:live?.search});
 const model=live?.worker??(args.includes('--mock')?offlinePortfolioModel(tools):undefined),engine=new PortfolioEngine({portfolio,tools,evidence,model,prepareTask:createTaskPreparer(portfolio,tools,evidence),accounting:live?.totals,recoveryAuthority:live?.recoveryEvidence});

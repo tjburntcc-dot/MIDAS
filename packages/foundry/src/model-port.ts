@@ -19,7 +19,7 @@ export type ResponsesRoute = {
     model: string;
     projectId?: string;
     background?: BackgroundPolicy;
-    reasoningEffort?: "low" | "medium" | "high";
+    reasoningEffort?: "low" | "medium" | "high" | "xhigh" | "max";
     serviceTier?: "default";
     maxOutputTokens: number;
     deadlineMs: number;

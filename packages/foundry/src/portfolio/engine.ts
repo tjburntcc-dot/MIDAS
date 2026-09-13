@@ -1,3 +1,4 @@
+import {taskBusinessContext} from './task-context.ts';
 import { randomUUID } from 'node:crypto';
 import { hash,requireThat,modelResult } from '../contracts.ts';
 import type { ModelResult } from '../contracts.ts';
@@ -93,14 +94,14 @@ export class PortfolioEngine {
   }
   const profiles=new Map<string,{profileId:string;available:boolean;contractHash:string|null;contract:any;tasks:Array<{taskId:string;taskDefinitionHash:string}>;authority:string}>();
   for(const t of descendants.filter(t=>t.capability==='software.build'&&typeof (t.inputs as any)?.executionProfile==='string').sort((a,b)=>a.id.localeCompare(b.id))){
-   const id=(t.inputs as any).executionProfile,contract=id==='quote-to-job-v1'?SOFTWARE_FILE_CONTRACT:id==='quote-to-job-v2'?productProfile(id):null;
+   const id=(t.inputs as any).executionProfile,contract=id==='quote-to-job-v1'?SOFTWARE_FILE_CONTRACT:['quote-to-job-v2','business-site-v1'].includes(id)?productProfile(id):null;
    if(!profiles.has(id))profiles.set(id,{profileId:id,available:Boolean(contract),contractHash:contract?hash(contract):null,contract,tasks:[],authority:'Existing declared execution boundary only. This adds no capability, authority, commercial evidence or build requirement.'});
    profiles.get(id)!.tasks.push({taskId:t.id,taskDefinitionHash:taskDefinitionHash(t)});
   }
   return [...profiles.values()];
  }
  private context(task:Task){
-  const v=this.portfolio.getVenture(task.ventureId),s=this.state(task),planning=['portfolio.plan','portfolio.reassess'].includes(task.capability);let workspace:any=null;try{workspace=this.tools.load(task.ventureId,task.id);}catch{}
+  const v=taskBusinessContext(task,this.portfolio.getVenture(task.ventureId)),s=this.state(task),planning=['portfolio.plan','portfolio.reassess'].includes(task.capability);let workspace:any=null;try{workspace=this.tools.load(task.ventureId,task.id);}catch{}
   const sourceMetadata=(source:any)=>{const {text,...metadata}=source;return {...metadata,textLocation:'context.sources preview; research.read(path=source ID, query=decimal character offset) returns preserved text chunks'};};
   const compactInputs=(inputs:any)=>inputs&&Array.isArray(inputs.sources)?(task.inputs as any)?.release==='value-release-v4'?{...inputs,sources:inputs.sources.map((source:any)=>({id:source.id})),sourceLocation:'Complete source metadata and exact available text are in context.sources; research.read accesses retained text.'}:{...inputs,sources:inputs.sources.map(sourceMetadata)}:inputs;
   // Retain the latest requested file/source bytes. Older reads remain identified
@@ -189,7 +190,7 @@ export class PortfolioEngine {
   if(size()>contextLimit){const diagnostic={taskId:task.id,totalBytes:size(),fieldBytes:Object.fromEntries(Object.entries(assembled).map(([k,v])=>[k,Buffer.byteLength(JSON.stringify(v))])),providerRequests:0};const old=this.store.get('portfolio-context-diagnostic',task.id);this.store.transaction(()=>this.store.put('portfolio-context-diagnostic',task.id,diagnostic,old?._version??null));}requireThat(size()<=contextLimit,'PORTFOLIO_CONTEXT_TOO_LARGE');
   return boundedContext(assembled,contextLimit);
  }
- private workerRequest(t:Task,attemptId:string,context:any){const c=stageContractForTask(t),request=makeWorkerRequest({ventureId:t.ventureId,taskId:t.id,attemptId,context,tools:stageTools(t),procedure:this.state(t).procedure,maxMinor:c?.maxCallCost.minorUnits});if(c)request.role.version=c.id;return request;}
+ private workerRequest(t:Task,attemptId:string,context:any){const c=stageContractForTask(t),request=makeWorkerRequest({ventureId:t.ventureId,taskId:t.id,attemptId,context,tools:stageTools(t),procedure:this.state(t).procedure,maxMinor:c?.maxCallCost.minorUnits??(t.inputs as any)?.modelCallMaxMinor});if(c)request.role.version=c.id;return request;}
  private requestContext(t:Task,planning:boolean):any{
   if(stageContractForTask(t))return boundedContext(scopeStageContext(t,this.context(t)),72000);
   if(!planning)return this.context(t);
@@ -268,7 +269,7 @@ export class PortfolioEngine {
  }
  private async call(lease:TaskLease,planning=false){
   const t=this.assertCurrent(lease.task),s=this.state(t),stepId='model-'+s.index,key=t.id+'/'+stepId;
-  const prior=this.store.get('portfolio-model-request',key),sources=this.evidence.forTask(t),v=this.portfolio.getVenture(t.ventureId);
+  const prior=this.store.get('portfolio-model-request',key),sources=this.evidence.forTask(t),v=taskBusinessContext(t,this.portfolio.getVenture(t.ventureId));
   if(!prior&&!s.pendingRecovery){const a=this.accounting?.().taskAllocations?.find((x:any)=>x.id===t.id);if(this.model.kind==='actual_model'&&this.accounting)requireThat(a,'TASK_NOT_IN_FROZEN_RELEASE');if(a){const used=this.rows('portfolio-model-request').filter(r=>r.call?.request?.scope?.runId===workerScope(t.ventureId,t.id).runId&&!r.call.recoveryOf).length;requireThat(used<a.workCalls,'TASK_ORDINARY_ALLOWANCE_EXHAUSTED');}}
   if(!prior&&!s.pendingRecovery&&!planning&&finalizationEnabled(t)){
    const cap=this.accounting?.().taskAllocations?.find((a:any)=>a.id===t.id)?.workCalls??t.resource.modelCalls;
@@ -383,7 +384,7 @@ export class PortfolioEngine {
   requireThat(checked&&checked.checks?.length>0&&checked.checks.every((c:any)=>c.passed),'CURRENT_INDEPENDENT_CHECKS_REQUIRED');
   const target=(t.inputs as any)?.authoritativeArtifactId;let artifactId='delivery-'+hash(t.id).slice(0,20);
   if(target){requireThat(typeof target==='string'&&(!target.includes('/')||target.startsWith(t.ventureId+'/')),'AUTHORITATIVE_ARTIFACT_SCOPE');const key=target.includes('/')?target:t.ventureId+'/'+target,current=this.store.get('portfolio-artifact',key);requireThat(current&&t.inputArtifacts.some(ref=>(ref.artifactId.includes('/')?ref.artifactId:t.ventureId+'/'+ref.artifactId)===key&&ref.version===current.version&&ref.sha256===current.sha256),'AUTHORITATIVE_ARTIFACT_BINDING_REQUIRED');artifactId=target.includes('/')?target.slice(t.ventureId.length+1):target;}
-  const artifact:ArtifactInput={id:artifactId,title:t.title,kind:(t.inputs as any)?.kind??t.capability,provenance:this.model.kind==='offline_mock'?'offline_mock_with_real_local_tool_effects':'actual_model_with_local_tool_effects',summary:reason,content:{manifest,delivery,sourceHash:s.sourceHash},metadata:{taskId:t.id,manifestHash:manifest.sha256,modelProvenance:this.model.kind,procedureHash:s.procedureHash,sourceAuthorship:(t.inputs as any)?.sourceAuthorship??'runtime',semanticReview:'not_independent_human_validation',customerAcceptance:'unobserved'},checks:checked.checks,previewUrl:'/preview?ventureId='+encodeURIComponent(t.ventureId)+'&taskId='+encodeURIComponent(t.id),downloadUrl:'/api/delivery?ventureId='+encodeURIComponent(t.ventureId)+'&taskId='+encodeURIComponent(t.id)};
+  const artifact:ArtifactInput={id:artifactId,title:t.title,kind:(t.inputs as any)?.kind??t.capability,provenance:this.model.kind==='offline_mock'?'offline_mock_with_real_local_tool_effects':'actual_model_with_local_tool_effects',summary:reason,content:{manifest,delivery,sourceHash:s.sourceHash},metadata:{taskId:t.id,manifestHash:manifest.sha256,modelProvenance:this.model.kind,procedureHash:s.procedureHash,sourceAuthorship:(t.inputs as any)?.sourceAuthorship==='from-execution-provenance'?(this.model.kind==='actual_model'?'actual-model through recorded source/tool actions':'development-authored explicit test double'):(t.inputs as any)?.sourceAuthorship??'runtime',semanticReview:'not_independent_human_validation',customerAcceptance:'unobserved'},checks:checked.checks,previewUrl:'/preview?ventureId='+encodeURIComponent(t.ventureId)+'&taskId='+encodeURIComponent(t.id),downloadUrl:'/api/delivery?ventureId='+encodeURIComponent(t.ventureId)+'&taskId='+encodeURIComponent(t.id)};
   return this.portfolio.complete(t.id,lease.token,{artifacts:[artifact],checks:[...checked.checks,{id:'delivery.current',passed:true,summary:'Local delivery readback matches the independently checked current manifest.'}],summary:reason,usage:{workerMs},observations:[{kind:'local_deliverable_verified',summary:'Produced and checked '+t.title+'. Customer acceptance and independent correction time remain unobserved.',source:t.id,provenance:this.model.kind,reassess:(t.inputs as any)?.feedbackPolicy!=='defer_to_declared_decision',metadata:{manifestHash:manifest.sha256,toolFailureCount:observations.filter((o:any)=>o.result.ok===false).length}}]});
  }
  private async plan(lease:TaskLease){
