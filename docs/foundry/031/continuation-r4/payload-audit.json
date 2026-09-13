@@ -1,0 +1,98 @@
+{
+  "proposalHash": "2d177f6a5bd89e656899eba56823f09066f880f98e526c756be994873e46af69",
+  "implementationHash": "be10dd1038505781070c2dc87415c31aa46d5e8ed7d08603b62e686899817f89",
+  "bodyHash": "5cddf8742690bff9794a73e751dc7f593a6c2cdcaaff9bd22bbd92f4e23afb36",
+  "schemaHash": "26cb41f0ea7255fad16c971f363748169c0c8e8a53642fcf2eac641525631675",
+  "contextBytes": 37524,
+  "payloadBytes": 41104,
+  "acceptedBriefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+  "acceptedBriefBytes": 17908,
+  "historical": {
+    "admissions": 11,
+    "counts": 11,
+    "reservedMinor": 1353,
+    "provisionalMinor": 574,
+    "settledMinor": 0,
+    "countBufferMinor": 400
+  },
+  "stageContracts": [
+    {
+      "id": "build-gate-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 24576,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 164
+      },
+      "ordinaryAdmissions": 1
+    },
+    {
+      "id": "product-build-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 205
+      },
+      "ordinaryAdmissions": 5
+    },
+    {
+      "id": "product-review-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 32768,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 205
+      },
+      "ordinaryAdmissions": 4
+    },
+    {
+      "id": "operating-delivery-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 24576,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 164
+      },
+      "ordinaryAdmissions": 4
+    },
+    {
+      "id": "outcome-review-v1",
+      "inputTokenCeiling": 32768,
+      "maxOutputTokens": 24576,
+      "maxCallCost": {
+        "currency": "USD",
+        "minorUnits": 164
+      },
+      "ordinaryAdmissions": 1
+    }
+  ],
+  "incrementalExposureMinor": 2829,
+  "combinedExposureMinor": 4582,
+  "combinedAdmissions": 26,
+  "inputTokens": "Unknown until authorized full-payload count",
+  "model": "gpt-6-astra",
+  "reasoning": {
+    "effort": "max"
+  },
+  "serviceTier": "default",
+  "background": true,
+  "store": true,
+  "applicationStateRetention": "store:true uses provider application-state retention of at least 30 days per current documentation; the exact deletion time is not guaranteed, and this packet makes no zero-data-retention compatibility claim",
+  "retrievalPolicy": {
+    "onlyAlreadyAdmittedResponseIds": true,
+    "maxPerResponse": 240,
+    "maxAcross15Responses": 3600,
+    "retrievalDeadlineMs": 15000,
+    "completionDeadlineMs": 900000,
+    "resumeWindowMs": 86400000,
+    "maxConsecutiveReadErrors": 3,
+    "pricing": "GET retrieval and count endpoint pricing are unestablished; the same USD 4.00 uncertainty buffer covers both without treating either as free"
+  },
+  "earlyCreateGap": "A POST whose acknowledgement is lost before a response ID is persisted remains unknown. It is never resubmitted, cancelled or deleted by this amendment.",
+  "providerRequests": 0,
+  "credentialRead": false,
+  "privateKeyRead": false,
+  "signed": false,
+  "parentRetired": false
+}

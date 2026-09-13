@@ -1,0 +1,836 @@
+{
+  "tasks": [
+    {
+      "allowance": {
+        "id": "quote-desk/decide-v4-r4",
+        "definitionHash": "33fc2cb9444f9da3cec75ab31e2890f7d8edd86e81a792d8f55a28e9f102dd25",
+        "workCalls": 1,
+        "stageContract": "build-gate-v1"
+      },
+      "contract": {
+        "id": "build-gate-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 24576,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 164
+        },
+        "ordinaryAdmissions": 1
+      },
+      "task": {
+        "acceptance": [
+          "The strict result records exactly one build or stop decision, bounded rationale, strongest alternative, at least one allowed source reference and every unresolved blocking condition.",
+          "A build decision has no unresolved blocking condition; a stop decision gates only the four fresh R4 descendants without rewriting historical tasks or outcomes.",
+          "The decision distinguishes bounded engineering value from commercial validation and makes no unsupported demand, revenue, labor-saving, specialist or customer claim."
+        ],
+        "allowedTools": [],
+        "attempts": 0,
+        "capability": "portfolio.plan",
+        "createdAt": "2026-09-13T18:17:56.330Z",
+        "dependsOn": [],
+        "id": "quote-desk/decide-v4-r4",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationReplacement": {
+            "failedAttemptIds": [
+              "p031-22358da25ae430ca-0",
+              "p031-22358da25ae430ca-1"
+            ],
+            "failedRequestBodyHashes": [
+              "0bc380cafd396718c3bc8e739053f77f14a3b38e1469242e018178e1f7884614",
+              "74a178bc9f455ae3a34bb36da96e406a5f3c38c12dc45ca0e21bb400d1fb6f71"
+            ],
+            "failedTaskId": "quote-desk/decide-v4-r3",
+            "kind": "approved-stage-contract-replacement-of-incomplete-r3-v1",
+            "olderUnknownAttemptId": "p031-e2fd5c331b2304ca-0",
+            "preservesFailedOutcomes": true,
+            "preservesOlderUnknownOutcome": true,
+            "preservesReservations": true,
+            "replacementTaskId": "quote-desk/decide-v4-r4"
+          },
+          "continuationVersion": "value-release-v4-stage-continuation-r4",
+          "enforceHandoff": true,
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "build-gate-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "research",
+        "lease": null,
+        "localId": "decide-v4-r4",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Use the authenticated accepted investigation and supplied current evidence to make one compact build-or-stop decision for the declared quote-to-job-v2 local engineering prototype. Give the bounded engineering or commercial rationale, strongest alternative, exact supporting reference IDs, and any blocking conditions. Do not repeat the investigation, create tasks, treat either partial R3 response as a decision, or infer demand. A stop decision cancels only the four fresh R4 descendants without admitting them.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-stage-continuation-r4",
+        "planRevision": 12,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "proposal.reference_checks"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 4,
+          "modelCalls": 1,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Decide whether this bounded build is worth its next admission",
+        "updatedAt": "2026-09-13T18:17:56.331Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/build-v4-r4",
+        "definitionHash": "fcc619c3ae6635286193a568e52703a08cfee622d6332e9c2a9b44c9563e2515",
+        "workCalls": 5,
+        "stageContract": "product-build-v1"
+      },
+      "contract": {
+        "id": "product-build-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 32768,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 205
+        },
+        "ordinaryAdmissions": 5
+      },
+      "task": {
+        "acceptance": [
+          "The complete worker-visible quote-to-job-v2 journey passes, including invalid-input handling, reopen/edit, multiple saved records, persistence, CSV and narrow layout.",
+          "A first-time owner can understand and use the local product without mission documentation.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "software.build",
+        "createdAt": "2026-09-13T18:17:56.331Z",
+        "dependsOn": [
+          "quote-desk/decide-v4-r4"
+        ],
+        "id": "quote-desk/build-v4-r4",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-stage-continuation-r4",
+          "enforceHandoff": true,
+          "executionProfile": "quote-to-job-v2",
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "product-build-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "build-v4-r4",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Starting from the unseeded authoritative workspace, build the declared quote-to-job-v2 local browser product. It must create itemized USD quotes, preserve stable IDs and all records through save/reload/edit, update the same record through job statuses, report invalid inputs and failed persistence honestly, recover in the supported fresh-session and same-directory-restart cases, remain usable at narrow width, and export guarded all-record CSV. Use actual source and current browser/DOM checks. Keep adequate source, repair consequential defects from observed feedback, and submit complete only after a current passing check. Completion triggers controller-owned checks, publication, authenticated readback and closure; do not repeat research, expand the profile or claim commercial validation. Five ordinary admissions bound the write, check, one repair/check path and completion.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-stage-continuation-r4",
+        "planRevision": 12,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 22,
+          "modelCalls": 5,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Build a useful local quote-to-job product from blank source",
+        "updatedAt": "2026-09-13T18:17:56.331Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/review-product-v4-r4",
+        "definitionHash": "0b1a5662aeacd68e38c7427c8015c9886bb2f2740bc8694b3133f57a54a65fcf",
+        "workCalls": 4,
+        "stageContract": "product-review-v1"
+      },
+      "contract": {
+        "id": "product-review-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 32768,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 205
+        },
+        "ordinaryAdmissions": 4
+      },
+      "task": {
+        "acceptance": [
+          "The actual authoritative product is reviewed against its visible contract; any claimed change is backed by preserved source and observed checks.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "quality.review",
+        "createdAt": "2026-09-13T18:17:56.331Z",
+        "dependsOn": [
+          "quote-desk/build-v4-r4"
+        ],
+        "id": "quote-desk/review-product-v4-r4",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-stage-continuation-r4",
+          "enforceHandoff": true,
+          "executionProfile": "quote-to-job-v2",
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "product-review-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "review-product-v4-r4",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Review the exact authoritative quote-to-job-v2 product, upstream artifact/manifest binding, source revision history and current browser/DOM observations. Check itemized arithmetic and USD parsing, stable identity, preservation of every quote, reopen/edit, same-record status transitions, invalid/error feedback, supported persistence recovery, first-use clarity, narrow layout and guarded CSV. Retain adequate source unchanged; correct only consequential evidenced defects and run a new current check after any correction. Submit complete with the substantive changes or reason the source remained adequate and its unresolved limits. Completion triggers controller-owned publication/readback. Four ordinary admissions bound check, one repair/check path and completion.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-stage-continuation-r4",
+        "planRevision": 12,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "source-review"
+        ],
+        "resource": {
+          "localToolRuns": 14,
+          "modelCalls": 4,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Review the actual product and retain or correct it with evidence",
+        "updatedAt": "2026-09-13T18:17:56.331Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/operate-v4-r4",
+        "definitionHash": "447de502f2473b14cc1c14ed8d93c0537bd5d60d529f64d6f094b378efbd9fe2",
+        "workCalls": 4,
+        "stageContract": "operating-delivery-v1"
+      },
+      "contract": {
+        "id": "operating-delivery-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 24576,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 164
+        },
+        "ordinaryAdmissions": 4
+      },
+      "task": {
+        "acceptance": [
+          "The rendered operating packet contains the actual product-use and next-action assets required by operating-packet-v1, with exact artifact binding and honest economics.",
+          "Preserve source support, actual artifact/check evidence and material uncertainty; do not infer buyer demand, revenue, labor savings or specialist superiority.",
+          "Complete only the current trusted profile checks and local delivery readback, or preserve a specific justified stop."
+        ],
+        "allowedTools": [
+          "workspace.list",
+          "workspace.read",
+          "workspace.replace",
+          "check.run",
+          "artifact.publish_local",
+          "research.read",
+          "workspace.patch",
+          "workspace.candidate_read"
+        ],
+        "attempts": 0,
+        "capability": "service.brief",
+        "createdAt": "2026-09-13T18:17:56.331Z",
+        "dependsOn": [
+          "quote-desk/review-product-v4-r4"
+        ],
+        "id": "quote-desk/operate-v4-r4",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-stage-continuation-r4",
+          "enforceHandoff": true,
+          "executionProtocol": "bounded-finalize-v1",
+          "feedbackPolicy": "defer_to_declared_decision",
+          "operatingProfile": "operating-packet-v1",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "operating-delivery-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "build",
+        "lease": null,
+        "localId": "operate-v4-r4",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Create the operating-packet-v1 brief.json from the exact reviewed product, accepted research, gate/review decisions, artifact identities and actual checks. Include practical try/demo steps, the narrow switching hypothesis and strongest contrary evidence, one explicitly unsent customer test, unknown cost/labor/access, acceptance and stop criteria, and one concrete next owner action. Preserve exact source and artifact references; separate observed behavior from vendor assertions and hypotheses. Write or repair only from actual feedback, then submit complete for controller-owned checks, local publication, authenticated readback and closure. Do not send, transact, infer demand or claim unobserved savings. Four ordinary admissions bound write, one repair path and completion.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-stage-continuation-r4",
+        "planRevision": 12,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "delivery.current"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 14,
+          "modelCalls": 4,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Deliver the reviewed product and a usable next business action",
+        "updatedAt": "2026-09-13T18:17:56.331Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    },
+    {
+      "allowance": {
+        "id": "quote-desk/adapt-v4-r4",
+        "definitionHash": "6105e3a45bf7f8476c790ed3f36bfb509e5fc007891646a8a82e5c37a4c4ab2b",
+        "workCalls": 1,
+        "stageContract": "outcome-review-v1"
+      },
+      "contract": {
+        "id": "outcome-review-v1",
+        "inputTokenCeiling": 32768,
+        "maxOutputTokens": 24576,
+        "maxCallCost": {
+          "currency": "USD",
+          "minorUnits": 164
+        },
+        "ordinaryAdmissions": 1
+      },
+      "task": {
+        "acceptance": [
+          "The strict result records exactly one continue, revise or stop recommendation, actual observed results, allowed reference IDs, limitations, and one bounded next action with dependency and acceptance.",
+          "The recommendation binds the actual R4 artifacts/checks and accepted research, and distinguishes runtime authorship, deterministic evidence, outside intervention and untested commercial claims.",
+          "The result creates no task or authority, reopens no research, certifies no competence and preserves every historical outcome and obligation."
+        ],
+        "allowedTools": [],
+        "attempts": 0,
+        "capability": "portfolio.plan",
+        "createdAt": "2026-09-13T18:17:56.331Z",
+        "dependsOn": [
+          "quote-desk/operate-v4-r4"
+        ],
+        "id": "quote-desk/adapt-v4-r4",
+        "inputArtifacts": [
+          {
+            "artifactId": "quote-desk/accepted-investigation-v4-r2-source",
+            "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+            "version": 1
+          }
+        ],
+        "inputs": {
+          "continuationVersion": "value-release-v4-stage-continuation-r4",
+          "enforceHandoff": true,
+          "feedbackPolicy": "defer_to_declared_decision",
+          "release": "value-release-v4",
+          "requiresGrant": true,
+          "sourceBindings": [
+            {
+              "id": "source-df4652c66e392f4bc605",
+              "sha256": "10c2a0c50d314d88d1f8dc15e7b343d802fe0312ed7953af03c45cd23c869b55"
+            },
+            {
+              "id": "source-a34019a6445b8d37d4c5",
+              "sha256": "a700139650980b4c2339cf3049e0267f607018d2670061b7001144f2e30aeaa0"
+            },
+            {
+              "id": "source-5e5db74041996a4f7391",
+              "sha256": "e6a1da34b78888195d51efd720749d68f8aca55b669959e3ac2d9405e1de0b2f"
+            },
+            {
+              "id": "source-ab655cc141b46933d0d7",
+              "sha256": "8edb2ead5e43e63fab34301eeefb1fa64bda624ecc9406c22dc83cce7a6e477b"
+            },
+            {
+              "id": "source-295e27350114ca0336a7",
+              "sha256": "1768230c41e46f7b8c1326e45cba293113f35b08e6ffbb5673c3f21dba4d2dec"
+            },
+            {
+              "id": "source-78bc53bc6d17f53f1b5d",
+              "sha256": "15c307fe894bdf7b569b3c4c163736b825fbcb111cd1f1abb342852990ad5f67"
+            },
+            {
+              "id": "source-b26049e6539d084471d5",
+              "sha256": "170beec069cda6b43f944b17b190bfb1f3666d3400b0c20e0db99f1e4000f91d"
+            },
+            {
+              "id": "source-47e1584191618ccdc43d",
+              "sha256": "e16f66ba54f9539617467356416b26c915d1e3c7e718866851f322669a674cbd"
+            },
+            {
+              "id": "source-ba024fafdac4da5e3441",
+              "sha256": "ec6a0e2b4b1d12aef08aa86be0fc2ec5ac90470da5e2ec0892df829c03633bfe"
+            },
+            {
+              "id": "source-dd68664e6c2330b75eec",
+              "sha256": "c83c138adf339f2e0619a5cb9d7d6a360a251a88776cb5b7040be8d9af2ab36a"
+            }
+          ],
+          "stageContract": "outcome-review-v1"
+        },
+        "invalidatedAt": null,
+        "invalidationReason": null,
+        "lane": "research",
+        "lease": null,
+        "localId": "adapt-v4-r4",
+        "maxAttempts": 1,
+        "nextAction": "Run when dependencies and resources are ready",
+        "objective": "Assess the completed R4 build, review and operating delivery from their authenticated artifacts, checks, accepted research and preserved obligations. Return one continue, revise or stop recommendation with bounded rationale, observed results, exact reference IDs, limitations, and one next action with a concrete dependency and acceptance condition. Separate runtime authorship, deterministic checks, development-assistant intervention and untested commercial claims. Do not create tasks, rank a portfolio, reopen research, certify competence, or infer demand, revenue, labor savings or independent validation.",
+        "outputArtifacts": [],
+        "outputCurrent": true,
+        "planId": "quote-desk/value-release-v4-stage-continuation-r4",
+        "planRevision": 12,
+        "priority": 45,
+        "reason": "Waiting for dependencies, capability and capacity",
+        "requiredChecks": [
+          "proposal.reference_checks"
+        ],
+        "requiredCompetencies": [
+          "evidence-grounded-work"
+        ],
+        "resource": {
+          "localToolRuns": 4,
+          "modelCalls": 1,
+          "workerSlots": 1
+        },
+        "result": null,
+        "status": "queued",
+        "title": "Use the delivered work to choose the next useful action or stop",
+        "updatedAt": "2026-09-13T18:17:56.331Z",
+        "ventureId": "quote-desk",
+        "workerId": null,
+        "_version": 1
+      }
+    }
+  ],
+  "lineage": {
+    "kind": "portfolio-v4-stage-continuation-r4",
+    "parentRoot": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\foundry-worktree-031-durable-r3\\var\\portfolio-031-continuation-r3",
+    "parentGrantFileHash": "3a9aaef25efb35a77f85892f8f212e2403499afcb4ad27572b7c8c7f2410c4f8",
+    "parentGrantHash": "a93c4f993dbfe84b89e6f907ace77bc60bd9e744d195b061f8ae31e6031c7689",
+    "parentOperatingHash": "d1503f805104b763780f831c3268fbce2ae4380dea5ac3f4d11c89de64bbf718",
+    "parentProposalHash": "af14b710d2b1ed96f10cd4cdef28bdccbe2025254ba8b5d6ea814052b6663bc2",
+    "backupManifestHash": "06b766d947c052725b051a5f0f9d7350268803ae97ba48da5bc5173536f64035",
+    "backupDatabaseHash": "66b6ab573c6975dadc5b54edb173f68ad0733f4f810568652c7217e77e59803e",
+    "restoreHash": "8177bfe15d207817fd04ff907747fd4ffe0a01b1c556dfad77375a3b75bf2c1f",
+    "attemptsHash": "4c002681339e7a86b8a4a01edf28ebe735e272eb7b299b9e16cc37c8928cb13c",
+    "bindingsHash": "e84d264740954a1c9cf11049b2a70090b2638f5fd13e809a4e09654710fd88f9",
+    "accountHash": "cd31bfb2e362f9412be483d4f3f13f9614be110cd1d06d9ab4fa1d85a4d410fb",
+    "parentTasksHash": "e3b8916fc95aa26704741c2fec588369be2449b8ae5fbd5450a4cf1535747b1b",
+    "requestRecordsHash": "55a77e31d1aa11bbe39831823f300a9447d89de9d2983ba7652ae40b46431600",
+    "resultRecordsHash": "e114caadc6a84bf6720e4658610a4fe1229a3100d7cfdc5f6c0324e91b232216",
+    "stepsHash": "4da5fc4e83cd5cf2cefe4a4e5345090eddf466af102c906a9bf02f19a49db666",
+    "responseJobsHash": "bb78b97ff0bfe3cc25824b5a2ead5f2c5875474477c05ef4867eb37cf1f4abc7",
+    "recoveryIntentsHash": "96af77dc3229b2cd7e6e36fa65802d8ccc846a5df073526c1b7fe1c9aced4bdb",
+    "recoveryLinksHash": "0c67749b8d8f67eabeb12aab4193204cd8fa144d1753e35d3b6656119bd3222f",
+    "parentSourceArtifactHash": "478c66db4ebbe9e9060c19cbed853a622244f14f005bd687c3185c90c8bff6da",
+    "parentTaskId": "quote-desk/decide-v4-r3",
+    "parentAttemptIds": [
+      "p031-22358da25ae430ca-0",
+      "p031-22358da25ae430ca-1"
+    ],
+    "parentAttemptHashes": [
+      "74c3d31f12f0c0d638a55cdaef1ce146051c2d59aceb9009115a8bef213f0d79",
+      "1a0bc29d8e098d9c2a8cfad4e8fd48007f1750b21706f6b004e402e988916f65"
+    ],
+    "parentRequestBodyHashes": [
+      "0bc380cafd396718c3bc8e739053f77f14a3b38e1469242e018178e1f7884614",
+      "74a178bc9f455ae3a34bb36da96e406a5f3c38c12dc45ca0e21bb400d1fb6f71"
+    ],
+    "parentResponseIds": [
+      "resp_0753b49c8f412da3006aa6d4f0ff4c87d2baa2364d225df268",
+      "resp_059a4e036a33e18f006aa6d6d7f85487d2ba8d921431a15675"
+    ],
+    "parentTerminalHashes": [
+      "7d7be886f487d15cd2136583d5def9b13a492c44befb952b2e7bfc35113f099c",
+      "6ca0cb569b3f69e5f04ad057e93a05d0779b649ea28201e7573af0077df3c89a"
+    ],
+    "sourceArtifactId": "quote-desk/accepted-investigation-v4-r2-source",
+    "sourceArtifactHash": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+    "sourceManifestHash": "12977fd9cbfca824f57e0e4111f6063a8ae05894f3729534c736350661ab096c",
+    "sourcePayloadHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+    "sourceBriefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+    "sourceBriefBytes": 17908,
+    "carryId": "portfolio-031-history-through-r3-incomplete",
+    "historical": {
+      "admissions": 11,
+      "counts": 11,
+      "reservedMinor": 1353,
+      "provisionalMinor": 574,
+      "settledMinor": 0,
+      "countBufferMinor": 400
+    },
+    "durability": {
+      "policyHash": "3725f1a6158f104143ed778de2914f297a229ab9d19cb6991f5c6cab242db1c1",
+      "requestBody": {
+        "background": true,
+        "store": true
+      },
+      "applicationStateRetention": "store-true-provider-retention-at-least-30-days",
+      "zeroDataRetentionCompatibility": "not-guaranteed",
+      "createAcknowledgementGap": "unknown-no-resubmit",
+      "retrieval": {
+        "method": "GET",
+        "admittedResponseIdsOnly": true,
+        "inferenceAdmissions": false,
+        "countAdmissions": false,
+        "maxPerResponse": 240,
+        "maxAcrossGrantedResponses": 3600
+      },
+      "remoteMutation": {
+        "cancel": false,
+        "delete": false,
+        "retryPost": false
+      }
+    },
+    "combinedCeilingMinor": 4582,
+    "combinedAdmissionLimit": 26,
+    "originalCeilingMinor": 4582,
+    "originalAdmissionLimit": 34,
+    "replacement": {
+      "kind": "approved-stage-contract-replacement-of-incomplete-r3-v1",
+      "failedTaskId": "quote-desk/decide-v4-r3",
+      "failedAttemptIds": [
+        "p031-22358da25ae430ca-0",
+        "p031-22358da25ae430ca-1"
+      ],
+      "failedRequestBodyHashes": [
+        "0bc380cafd396718c3bc8e739053f77f14a3b38e1469242e018178e1f7884614",
+        "74a178bc9f455ae3a34bb36da96e406a5f3c38c12dc45ca0e21bb400d1fb6f71"
+      ],
+      "replacementTaskId": "quote-desk/decide-v4-r4",
+      "preservesFailedOutcomes": true,
+      "preservesReservations": true,
+      "olderUnknownAttemptId": "p031-e2fd5c331b2304ca-0",
+      "preservesOlderUnknownOutcome": true
+    },
+    "tasks": [
+      {
+        "parentId": "quote-desk/decide-v4-r3",
+        "id": "quote-desk/decide-v4-r4",
+        "workCalls": 1,
+        "stageContract": "build-gate-v1"
+      },
+      {
+        "parentId": "quote-desk/build-v4-r3",
+        "id": "quote-desk/build-v4-r4",
+        "workCalls": 5,
+        "stageContract": "product-build-v1"
+      },
+      {
+        "parentId": "quote-desk/review-product-v4-r3",
+        "id": "quote-desk/review-product-v4-r4",
+        "workCalls": 4,
+        "stageContract": "product-review-v1"
+      },
+      {
+        "parentId": "quote-desk/operate-v4-r3",
+        "id": "quote-desk/operate-v4-r4",
+        "workCalls": 4,
+        "stageContract": "operating-delivery-v1"
+      },
+      {
+        "parentId": "quote-desk/adapt-v4-r3",
+        "id": "quote-desk/adapt-v4-r4",
+        "workCalls": 1,
+        "stageContract": "outcome-review-v1"
+      }
+    ]
+  },
+  "preservedArtifact": {
+    "id": "quote-desk/accepted-investigation-v4-r2-source",
+    "version": 1,
+    "sha256": "7c54029ef6cd3d0d250977de2c6afa448692f8123dfde58be67d15bde6641295",
+    "manifestHash": "12977fd9cbfca824f57e0e4111f6063a8ae05894f3729534c736350661ab096c",
+    "payloadHash": "c1b304d924b70cbd3034a2730840a48c71b81909c306464901a0aa67c76a8ee7",
+    "briefHash": "fae4225c8d37b82b2ad8fc10a622988081538da7a794338e6bfac09bd583d34e",
+    "briefBytes": 17908
+  },
+  "historicalOutcomes": {
+    "unknownR2": {
+      "attemptId": "p031-e2fd5c331b2304ca-0",
+      "reservationMinor": 123,
+      "preserved": true
+    },
+    "terminalIncompleteR3": [
+      {
+        "attemptId": "p031-22358da25ae430ca-0",
+        "attemptHash": "74c3d31f12f0c0d638a55cdaef1ce146051c2d59aceb9009115a8bef213f0d79",
+        "requestBodyHash": "0bc380cafd396718c3bc8e739053f77f14a3b38e1469242e018178e1f7884614",
+        "responseId": "resp_0753b49c8f412da3006aa6d4f0ff4c87d2baa2364d225df268",
+        "terminalHash": "7d7be886f487d15cd2136583d5def9b13a492c44befb952b2e7bfc35113f099c",
+        "reservationMinor": 123,
+        "preserved": true,
+        "retryable": false
+      },
+      {
+        "attemptId": "p031-22358da25ae430ca-1",
+        "attemptHash": "1a0bc29d8e098d9c2a8cfad4e8fd48007f1750b21706f6b004e402e988916f65",
+        "requestBodyHash": "74a178bc9f455ae3a34bb36da96e406a5f3c38c12dc45ca0e21bb400d1fb6f71",
+        "responseId": "resp_059a4e036a33e18f006aa6d6d7f85487d2ba8d921431a15675",
+        "terminalHash": "6ca0cb569b3f69e5f04ad057e93a05d0779b649ea28201e7573af0077df3c89a",
+        "reservationMinor": 123,
+        "preserved": true,
+        "retryable": false
+      }
+    ]
+  },
+  "laterRequests": "Each request uses only its task stage contract. Ordinary admissions and reserved minor cannot move between stages. Same-ID durable retrieval is transport continuation and creates no new inference/count admission; no fresh linked recovery is authorized."
+}

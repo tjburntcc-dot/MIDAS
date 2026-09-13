@@ -1,0 +1,52 @@
+{
+  "kind": "actual-unsigned-r4-owner-workspace-browser-check",
+  "at": "2026-09-13T18:21:14.857Z",
+  "url": "http://127.0.0.1:43141",
+  "modelExecution": "disabled",
+  "providerRequests": 0,
+  "credentialAccess": false,
+  "currentTasks": [
+    {
+      "id": "quote-desk/adapt-v4-r4",
+      "status": "queued",
+      "attempts": 0,
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/build-v4-r4",
+      "status": "queued",
+      "attempts": 0,
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/decide-v4-r4",
+      "status": "queued",
+      "attempts": 0,
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/operate-v4-r4",
+      "status": "queued",
+      "attempts": 0,
+      "artifacts": 0
+    },
+    {
+      "id": "quote-desk/review-product-v4-r4",
+      "status": "queued",
+      "attempts": 0,
+      "artifacts": 0
+    }
+  ],
+  "historicalAccounting": {
+    "retainedMinor": 1753,
+    "provisionalSubtotalMinor": 574,
+    "settledMinor": null,
+    "historicalOnly": true,
+    "executionAuthority": false
+  },
+  "desktop": true,
+  "narrow390": true,
+  "refresh": true,
+  "noHorizontalOverflow": true,
+  "pageErrors": []
+}
