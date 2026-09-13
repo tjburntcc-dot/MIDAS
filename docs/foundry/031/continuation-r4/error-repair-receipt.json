@@ -1,0 +1,75 @@
+{
+  "at": "2026-09-13T21:20:14.654Z",
+  "frozenImplementationHash": "be10dd1038505781070c2dc87415c31aa46d5e8ed7d08603b62e686899817f89",
+  "prospectiveImplementationHash": "d33484cb543285af98327705ca98774db6a0b1a00f7da6b07cb03ef886f8ee03",
+  "historicalTablesUnchanged": true,
+  "tableHashes": {
+    "entities": "ccda2504f90453549daf951c25b4642fcc6637357d47d2a817845a761df93a22",
+    "records": "9f2f5336627554ebce0038908d20d54d34220175895f815c7ef3183603634c9c",
+    "events": "4e7cebef39adaef955d8c76148a6e25cf5d51bf9e61205eee8502855519105da",
+    "artifacts": "707f9c479ef1bf955074b271164a6060e8399233c36dfde7388b5738adcf203f"
+  },
+  "diagnostic": {
+    "authorizationHash": "e73b5389abcb1842d04f9247d0a1c681b15d9fd8acacedbfc1f6c71d92a88087",
+    "attemptId": "p031-2c7a9771c07a9c24-0",
+    "responseId": "resp_0a21f75cf3898a96006aa6eec8de0087d2a16fc185bdc9c795",
+    "method": "GET",
+    "url": "https://api.openai.com/v1/responses/resp_0a21f75cf3898a96006aa6eec8de0087d2a16fc185bdc9c795",
+    "requestHeaders": {
+      "OpenAI-Project": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+      "Accept": "application/json"
+    },
+    "deadlineMs": 15000,
+    "at": "2026-09-13T21:13:32.419Z",
+    "getAdmissions": 1,
+    "counts": 0,
+    "inferences": 0,
+    "retries": 0,
+    "finishedAt": "2026-09-13T21:13:33.511Z",
+    "httpStatus": 200,
+    "responseHeaders": {
+      "x-request-id": "req_ca6434e95bcd43c88c8734f64eaab7af",
+      "date": "Sun, 13 Sep 2026 21:13:32 GMT",
+      "content-type": "application/json",
+      "openai-processing-ms": "60",
+      "openai-version": "2020-10-01",
+      "openai-project": "proj_H01ORqdOPQM6vdGwQYsqFL5r"
+    },
+    "bodyHash": "5597a9cfb9515f02fa6a6bf10c11dbe4cfe42e013114e4b7dc6a327fc86d0d59",
+    "bodyBytes": 4561,
+    "responseIdMatches": true,
+    "status": "failed",
+    "error": {
+      "code": "credit_balance_exhausted",
+      "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/."
+    },
+    "incomplete_details": null,
+    "usage": null,
+    "accounting": {
+      "existingRetrievals": 2,
+      "diagnosticRetrievals": 1,
+      "combinedRetrievals": 3,
+      "perResponseCap": 240,
+      "aggregateCap": 3600,
+      "retainedMinor": 1917,
+      "existingUnpricedBufferMinor": 400,
+      "newBufferMinor": 0,
+      "charge": "unknown; no reservation released"
+    },
+    "originalUnchanged": true
+  },
+  "tests": {
+    "focusedSuitePassed": 49,
+    "additionalRecoveredFixtureAndRedactionPassed": 2,
+    "totalUnique": 51,
+    "typecheckErrors": 0,
+    "sourceFiles": 45
+  },
+  "providerActivity": {
+    "GET": 1,
+    "POST": 0,
+    "counts": 0,
+    "retries": 0
+  },
+  "provenance": "Development-assistant repair, offline mocked tests; actual diagnostic GET is separately labeled; no inference competence established."
+}

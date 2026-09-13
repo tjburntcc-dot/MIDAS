@@ -1,0 +1,15 @@
+{
+  "usage": null,
+  "provenance": "Selected fields from the one authorized live R4 diagnostic; no worker inputs or credentials",
+  "httpStatus": 200,
+  "id": "resp_0a21f75cf3898a96006aa6eec8de0087d2a16fc185bdc9c795",
+  "error": {
+    "code": "credit_balance_exhausted",
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/."
+  },
+  "output": [],
+  "status": "failed",
+  "incomplete_details": null,
+  "originalBodyHash": "5597a9cfb9515f02fa6a6bf10c11dbe4cfe42e013114e4b7dc6a327fc86d0d59",
+  "model": "gpt-6-astra"
+}

@@ -5,6 +5,7 @@ import {randomUUID} from 'node:crypto';
 import {StateStore} from './state.ts';
 import {hash,rawHash,requireThat,FoundryError} from './contracts.ts';
 import {boundedJSON,sanitizeCountResponse} from './experiment/token-count.ts';
+import {responseObservation} from './response-observation.ts';
 
 export type BackgroundPolicy={kind:'durable-background-v1';store:true;pollIntervalMs:number;retrievalDeadlineMs:number;completionDeadlineMs:number;resumeWindowMs:number;maxRetrievals:number;maxConsecutiveReadErrors:number};
 export const BACKGROUND_POLICY:BackgroundPolicy={kind:'durable-background-v1',store:true,pollIntervalMs:5000,retrievalDeadlineMs:15000,completionDeadlineMs:900000,resumeWindowMs:86400000,maxRetrievals:240,maxConsecutiveReadErrors:3};
@@ -29,7 +30,8 @@ export class DurableResponses {
  private safeTerminal(raw:any,secret:string){
   const output=(raw.output??[]).map((item:any)=>({type:item.type,content:(item.content??[]).filter((c:any)=>['output_text','refusal'].includes(c.type)).map((c:any)=>c.type==='output_text'?{type:c.type,text:c.text}:{type:c.type,refusal:'Provider refusal'})}));
   const usage=raw.usage?{input_tokens:raw.usage.input_tokens,output_tokens:raw.usage.output_tokens,input_tokens_details:{cached_tokens:raw.usage.input_tokens_details?.cached_tokens??0},output_tokens_details:{reasoning_tokens:raw.usage.output_tokens_details?.reasoning_tokens??null}}:null;
-  const result={id:raw.id,model:raw.model,status:raw.status,service_tier:raw.service_tier,background:raw.background,store:raw.store,usage,output,incomplete_details:raw.incomplete_details?{reason:['max_output_tokens','content_filter'].includes(raw.incomplete_details.reason)?raw.incomplete_details.reason:'withheld'}:null};
+  const observation=responseObservation(raw,secret);
+  const result={id:raw.id,model:raw.model,status:raw.status,service_tier:raw.service_tier,background:raw.background,store:raw.store,usage,output,error:observation.providerError,incomplete_details:observation.incompleteDetails};
   requireThat(!JSON.stringify(result).includes(secret),'MODEL_SENSITIVE_OUTPUT');return result;
  }
  private accept(raw:any,secret:string,model:string){
@@ -37,6 +39,8 @@ export class DurableResponses {
   const old=this.state();requireThat(!old.responseId||old.responseId===raw.id,'BACKGROUND_RESPONSE_ID_MISMATCH');
   // Retain a syntactically valid identity before subsequent contract validation.
   this.change(r=>({...r,responseId:raw.id,status:['queued','in_progress','completed','incomplete','failed','cancelled'].includes(raw.status)?raw.status:null,identityAt:r.identityAt??new Date(this.now()).toISOString()}));this.fault?.('identity_persisted');
+  // Persist failure evidence before route, storage or usage interpretation.
+  this.change(r=>({...r,providerObservation:responseObservation(raw,secret)}));
   requireThat(raw.model===model,'RETURNED_MODEL_MISMATCH');
   requireThat(raw.background===true&&raw.store===true,'BACKGROUND_STORAGE_NOT_CONFIRMED');
   requireThat(['queued','in_progress','completed','incomplete','failed','cancelled'].includes(raw.status),'BACKGROUND_STATUS_INVALID');

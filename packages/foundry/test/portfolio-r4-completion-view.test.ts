@@ -44,3 +44,7 @@ test('owner payload calls only terminal completed responses completed',()=>{
   assert.equal(execution.completionState,'terminal_completed');
  }finally{complete.close();}
 });
+
+test('owner payload keeps terminal failed and cancelled distinct from incomplete and unknown',()=>{
+ for(const status of ['failed','cancelled']){const f=fixture({status});try{assert.equal((f.view() as any).tasks[0].providerExecution.completionState,'terminal_'+status);}finally{f.close();}}
+});

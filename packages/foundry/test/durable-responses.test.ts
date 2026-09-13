@@ -16,6 +16,15 @@ const ENDPOINT='https://api.openai.com/v1/responses',ID='resp_offline_fixture';
 const BYTES=JSON.stringify({model:MODEL,background:true,store:true,input:'Explicit offline transport mechanics fixture'});
 const KEY='offline/background/one',GRANT=hash('ephemeral offline test authority');
 const originalFetch=globalThis.fetch;let forbiddenNetworkAttempts=0;
+
+test('failed error is durably preserved, redacted, and replayed after restart without a GET or POST',async()=>{
+ const f=fixture();try{
+  const job=f.job();job.claim();const result=await job.execute(f.args(f.transport(()=>json(response('failed',{usage:null,error:{code:'credit_balance_exhausted',message:'No credits. '+SECRET+' Bearer private-token',authorization:SECRET},output:[]})))));job.release();
+  assert.equal(result.error.code,'credit_balance_exhausted');assert.equal(result.usage,null);
+  assert.equal(job.state().providerObservation.outcome,'terminal_failed');assert(!JSON.stringify(job.state()).includes(SECRET));assert(!JSON.stringify(job.state()).includes('private-token'));assert.equal(result.error.authorization,undefined);
+  const digest=job.state().terminalHash;f.reopen();const resumed=f.job();resumed.claim();const saved=await resumed.execute(f.args(f.transport(()=>{throw Error('no network allowed');}),true));resumed.release();assert.equal(hash(saved),digest);assert.equal(f.calls.length,1);
+ }finally{f.close();}
+});
 test.before(()=>{globalThis.fetch=async()=>{forbiddenNetworkAttempts++;throw Error('Real network is forbidden in durable Responses tests');};});
 test.after(()=>{globalThis.fetch=originalFetch;assert.equal(forbiddenNetworkAttempts,0,'all transport must use explicit in-memory fakes');});
 const snapshot=(store:StateStore)=>hash(['entities','events','records','artifacts'].map(table=>store.db.prepare('SELECT * FROM '+table).all().map(row=>({...row}))));
@@ -176,13 +185,13 @@ test('changed bytes or grant bindings and tampered terminal content cannot be co
  }finally{f.close();}
 });
 
-test('allowlisted diagnostics and terminal fields exclude raw headers, provider messages and unrelated secret-bearing fields',async()=>{
+test('allowlisted diagnostics and terminal fields exclude raw headers and redact bounded provider error messages',async()=>{
  const f=fixture();try{
   let reads=0;const job=f.job();job.claim();const result=await job.execute(f.args(f.transport(call=>{
    if(call.method==='POST')return json(response('queued',{metadata:{secret:SECRET}}));
    if(++reads===1)return Response.json({error:{type:'server_error',code:'unrecognized-fixture-code',param:SECRET,message:SECRET,extra:SECRET},debug:SECRET},{status:503,headers:{'x-request-id':'req_'+SECRET,'x-debug':SECRET}});
    return json(response('completed',{metadata:{secret:SECRET},error:{message:SECRET},headers:{authorization:SECRET},output:[{type:'reasoning',summary:[{text:SECRET}]},{type:'message',role:SECRET,content:[{type:'output_text',text:'{"decision":"inspect"}',annotations:[{url:SECRET}]},{type:'refusal',refusal:SECRET},{type:'unrecognized',text:SECRET}]}]}));
-  })));job.release();assert(!JSON.stringify(job.state()).includes(SECRET));assert(!JSON.stringify(result).includes(SECRET));assert.equal(result.output[1].content[1].refusal,'Provider refusal');assert.deepEqual(result.output[0],{type:'reasoning',content:[]});assert.equal(result.metadata,undefined);assert.equal(result.error,undefined);assert.equal(result.headers,undefined);
+  })));job.release();assert(!JSON.stringify(job.state()).includes(SECRET));assert(!JSON.stringify(result).includes(SECRET));assert.equal(result.output[1].content[1].refusal,'Provider refusal');assert.deepEqual(result.output[0],{type:'reasoning',content:[]});assert.equal(result.metadata,undefined);assert.equal(result.error.message,'[REDACTED]');assert.equal(result.headers,undefined);
   const diagnostic=job.state().events.find((event:any)=>event.phase==='http_error');assert.equal(diagnostic.messageSource,'local_allowlist');assert.equal(diagnostic.providerRequestId,null);assert.equal(diagnostic.providerErrorCode,null);assert.equal(diagnostic.unrecognizedErrorFieldsWithheld,true);
  }finally{f.close();}
 });

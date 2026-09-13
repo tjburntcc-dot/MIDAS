@@ -1,4 +1,5 @@
 import {validateBackgroundPolicy} from './durable-responses.ts';
+import {responseObservation,terminalFailureCode} from './response-observation.ts';
 import type {BackgroundPolicy,DurableResponses} from './durable-responses.ts';
 import {boundedJSON,sanitizeCountResponse} from './experiment/token-count.ts';
 import { canonical, hash, identifier, modelResult, money, requireThat, safeInteger, scope, FoundryError, rawHash } from './contracts.ts';
@@ -110,9 +111,11 @@ export function responsesModelPort(options: {
                 requireThat(raw&&typeof raw==='object','MODEL_RESPONSE_INVALID');
                 const requestId = typeof raw.id === 'string' ? raw.id : null;
                 const usage = raw.usage;
-                await budget.observed?.(request,{providerRequestId:requestId,model:typeof raw.model==='string'?raw.model:null,status:typeof raw.status==='string'?raw.status:null,inputTokens:Number.isSafeInteger(usage?.input_tokens)?usage.input_tokens:null,outputTokens:Number.isSafeInteger(usage?.output_tokens)?usage.output_tokens:null,cachedInputTokens:Number.isSafeInteger(usage?.input_tokens_details?.cached_tokens)?usage.input_tokens_details.cached_tokens:null,latencyMs:Date.now()-started});
+                await budget.observed?.(request,{...responseObservation(raw,credential),cachedInputTokens:Number.isSafeInteger(usage?.input_tokens_details?.cached_tokens)?usage.input_tokens_details.cached_tokens:null,latencyMs:Date.now()-started});
                 requireThat(raw.model === route.model, 'RETURNED_MODEL_MISMATCH');
                 requireThat(!raw.service_tier||raw.service_tier===route.serviceTier,'RETURNED_TIER_MISMATCH');
+                const failureCode=terminalFailureCode(raw.status);
+                try {
                 requireThat(usage && Number.isSafeInteger(usage.input_tokens) && Number.isSafeInteger(usage.output_tokens), 'MODEL_USAGE_MISSING');
                 safeInteger(usage.input_tokens);
                 safeInteger(usage.output_tokens);
@@ -122,7 +125,12 @@ export function responsesModelPort(options: {
                 const actual: Cost = { status: 'provisional', money: estimated, basis: 'token-based estimate; ' + route.pricing.source + ' effective ' + route.pricing.effectiveAt + '; reconcile invoice and cached-token discounts' };
                 await budget.settle(request, actual, requestId);
                 usageRecorded = true;
-                requireThat(raw.status === 'completed', 'MODEL_RESPONSE_INCOMPLETE');
+                } catch(accountingError) {
+                    if(!failureCode)throw accountingError;
+                    await budget.observed?.(request,{accountingUsage:'unknown',accountingError:typeof (accountingError as any).code==='string'?(accountingError as any).code:'MODEL_ACCOUNTING_UNAVAILABLE'});
+                }
+                if(failureCode)throw new FoundryError(failureCode);
+                requireThat(raw.status === 'completed', 'MODEL_RESULT_UNCERTAIN');
                 requireThat(!(raw.output ?? []).some((item:any)=>(item.content ?? []).some((part:any)=>part.type==='refusal')),'MODEL_REFUSED');
                 const text = (raw.output ?? []).flatMap((item: any) => item.content ?? []).filter((item: any) => item.type === 'output_text').map((item: any) => item.text).join('');
                 requireThat(text.length > 0, 'MODEL_OUTPUT_MISSING');
@@ -133,7 +141,7 @@ export function responsesModelPort(options: {
                 await budget.observed?.(request,{outputArtifact:diagnosticOutput});
                 requireThat(!text.includes(credential), 'MODEL_SENSITIVE_OUTPUT');
                 validateOutput(request.task, output);
-                return modelResult({ output, usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost: actual }, route: { provider: 'openai-responses', model: raw.model, kind: 'live' }, metadata: { providerRequestId: requestId, cachedInputTokens: Number.isSafeInteger(usage.input_tokens_details?.cached_tokens) ? usage.input_tokens_details.cached_tokens : null, latencyMs: options.durable?Date.parse(options.durable.state().terminalAt)-Date.parse(options.durable.state().dispatchAt):Date.now() - started } });
+                return modelResult({ output, usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost: {status:'provisional',money:price(usage.input_tokens,usage.output_tokens),basis:'token-based estimate; '+route.pricing.source+' effective '+route.pricing.effectiveAt+'; reconcile invoice and cached-token discounts'} }, route: { provider: 'openai-responses', model: raw.model, kind: 'live' }, metadata: { providerRequestId: requestId, cachedInputTokens: Number.isSafeInteger(usage.input_tokens_details?.cached_tokens) ? usage.input_tokens_details.cached_tokens : null, latencyMs: options.durable?Date.parse(options.durable.state().terminalAt)-Date.parse(options.durable.state().dispatchAt):Date.now() - started } });
             }
             catch (error) {
                 if((error as any)?.simulatedCrash)throw error;
