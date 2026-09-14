@@ -1,3 +1,5 @@
+import {adaptiveEnabled,adaptiveProcedure,adaptiveWorkerSchema,validateAdaptiveWorker} from '../adaptive/worker-contract.ts';
+import {projectLeanContext} from '../adaptive/lean-worker.ts';
 import {campaignContract} from './campaign-profile.ts';
 import {taskBusinessContext} from './task-context.ts';
 import { randomUUID } from 'node:crypto';
@@ -27,6 +29,9 @@ export interface WorkTools {
  recoverOperation?(operationId:string,ventureId:string,taskId:string):any;
  download?(ventureId:string,taskId:string,path?:string):{content:string};
  toolContract?():any[];
+ contextFor?(task:Task):any;
+ completionBlocker?(task:Task):any;
+ finishingFloor?(task:Task):number;
  repairCandidate?(ventureId:string,taskId:string,id?:string):any;
  updateInputs?(ventureId:string,taskId:string,inputs:any,reason:string):any;
 }
@@ -54,7 +59,7 @@ export class PortfolioEngine {
  constructor(options:{portfolio:Portfolio;tools:WorkTools;evidence:EvidenceLibrary;model?:WorkerModel;prepareTask?:(task:Task)=>void|Promise<void>;accounting?:()=>any;validateTask?:(task:Task)=>void;recoveryAuthority?:(attemptId:string)=>any}){this.portfolio=options.portfolio;this.store=options.portfolio.store;this.tools=options.tools;this.evidence=options.evidence;this.model=options.model??disabledWorker;this.prepareTask=options.prepareTask;this.accounting=options.accounting;this.validateTask=options.validateTask;this.recoveryAuthority=options.recoveryAuthority;}
  rows(kind:string){return this.store.db.prepare('SELECT body FROM entities WHERE kind=? ORDER BY key').all(kind).map(r=>JSON.parse(String(r.body)));}
  /** Offline preparation of exact initial payload, with no model admission. */
- async previewRequest(taskId:string){const task=this.portfolio.getTask(taskId);requireThat(task.attempts===0,'PREFLIGHT_REQUIRES_UNSTARTED_TASK');if(!['portfolio.plan','portfolio.reassess'].includes(task.capability)){try{this.tools.load(task.ventureId,task.id);}catch{await this.prepareTask?.(task);}}const planning=['portfolio.plan','portfolio.reassess'].includes(task.capability),s=this.state(task);return {request:this.workerRequest(task,'p031-'+hash(task.id).slice(0,16)+'-0',this.requestContext(task,planning)),schema:stageSchema(task)??(planning?planningSchema:workerSchema),warning:'Exact initial worker/schema preparation only. Provider access and token count remain unverified; later requests bind actual tool feedback.'};}
+ async previewRequest(taskId:string){const task=this.portfolio.getTask(taskId);requireThat(task.attempts===0,'PREFLIGHT_REQUIRES_UNSTARTED_TASK');if(!['portfolio.plan','portfolio.reassess'].includes(task.capability)){try{this.tools.load(task.ventureId,task.id);}catch{await this.prepareTask?.(task);}}const planning=['portfolio.plan','portfolio.reassess'].includes(task.capability),s=this.state(task);return {request:this.workerRequest(task,'p031-'+hash(task.id).slice(0,16)+'-0',this.requestContext(task,planning)),schema:adaptiveWorkerSchema(task)??stageSchema(task)??(planning?planningSchema:workerSchema),warning:'Exact initial worker/schema preparation only. Provider access and token count remain unverified; later requests bind actual tool feedback.'};}
  runTask(taskId:string,workerId?:string){
   if(this.active.has(taskId))return this.active.get(taskId)!;
   requireThat(this.model.kind!=='actual_model'||this.active.size===0,'PROVIDER_WORKER_BUSY');
@@ -78,7 +83,7 @@ export class PortfolioEngine {
    if(!launched.length)break;results.push(...await Promise.all(launched));
   }return results;
  }
- private state(task:Task){let s=this.store.get('portfolio-execution',task.id);if(!s){const input=task.inputs as any,planning=['portfolio.plan','portfolio.reassess'].includes(task.capability);let procedure=stageProcedure(task)??(planning?EXECUTIVE_PROCEDURE:finalizationEnabled(task)?FINALIZING_WORKER_PROCEDURE:WORKER_PROCEDURE),selection:any={kind:'strong_generic_baseline',adoption:null};if(input?.procedureScope||input?.baselineProcedureId){requireThat(!stageContractForTask(task),'STAGE_PROCEDURE_OVERRIDE_DENIED');requireThat(input.procedureScope?.capability===task.capability&&typeof input.procedureScope.population==='string'&&typeof input.baselineProcedureId==='string','TASK_PROCEDURE_SCOPE_REQUIRED');const chosen=new ProcedureRegistry(this.store).selected(input.procedureScope,input.baselineProcedureId);requireThat(chosen.procedure.scope.capability===task.capability,'TASK_PROCEDURE_CAPABILITY_MISMATCH');procedure=chosen.procedure.procedure;selection={kind:'scoped_registry',procedureId:chosen.procedure.id,definitionHash:chosen.procedure.definitionHash,adoption:chosen.adoption,scope:input.procedureScope};}s=this.store.transaction(()=>this.store.put('portfolio-execution',task.id,{taskId:task.id,ventureId:task.ventureId,index:0,observations:[],sourceHash:this.evidence.taskDigest(task),procedure,procedureHash:hash(procedure),procedureSelection:selection,preparedAt:new Date().toISOString(),startedAt:null,modelProvenance:'not_admitted'},null));}return s;}
+ private state(task:Task){let s=this.store.get('portfolio-execution',task.id);if(!s){const input=task.inputs as any,planning=['portfolio.plan','portfolio.reassess'].includes(task.capability);let procedure=adaptiveProcedure(task)??stageProcedure(task)??(planning?EXECUTIVE_PROCEDURE:finalizationEnabled(task)?FINALIZING_WORKER_PROCEDURE:WORKER_PROCEDURE),selection:any={kind:'strong_generic_baseline',adoption:null};if(input?.procedureScope||input?.baselineProcedureId){requireThat(!stageContractForTask(task)&&!adaptiveEnabled(task),'STAGE_PROCEDURE_OVERRIDE_DENIED');requireThat(input.procedureScope?.capability===task.capability&&typeof input.procedureScope.population==='string'&&typeof input.baselineProcedureId==='string','TASK_PROCEDURE_SCOPE_REQUIRED');const chosen=new ProcedureRegistry(this.store).selected(input.procedureScope,input.baselineProcedureId);requireThat(chosen.procedure.scope.capability===task.capability,'TASK_PROCEDURE_CAPABILITY_MISMATCH');procedure=chosen.procedure.procedure;selection={kind:'scoped_registry',procedureId:chosen.procedure.id,definitionHash:chosen.procedure.definitionHash,adoption:chosen.adoption,scope:input.procedureScope};}s=this.store.transaction(()=>this.store.put('portfolio-execution',task.id,{taskId:task.id,ventureId:task.ventureId,index:0,observations:[],sourceHash:this.evidence.taskDigest(task),procedure,procedureHash:hash(procedure),procedureSelection:selection,preparedAt:new Date().toISOString(),startedAt:null,modelProvenance:'not_admitted'},null));}return s;}
  private save(task:Task,patch:any){return this.store.transaction(()=>{const old=this.store.get('portfolio-execution',task.id);return this.store.put('portfolio-execution',task.id,{...old,...patch},old._version);});}
  private assertCurrent(task:Task){const t=this.portfolio.getTask(task.id);this.validateTask?.(t);requireThat(!t.stopRequested&&this.portfolio.getVenture(t.ventureId).status==='active','TASK_STOP_REQUESTED');requireThat(!t.invalidatedAt,'TASK_INPUTS_STALE');if(this.state(t).sourceHash!==this.evidence.taskDigest(t)){this.portfolio.invalidateTask(t.id,'Permitted source evidence changed after the runtime request was pinned');requireThat(false,'TASK_SOURCE_CHANGED');}return t;}
  /** Only declared descendants in the same plan/frozen allowance supply an
@@ -177,6 +182,13 @@ export class PortfolioEngine {
     }
    }
   }
+  if(adaptiveEnabled(task)){
+   requireThat(this.tools.contextFor,'ADAPTIVE_TOOL_PORT_REQUIRED');
+   assembled.adaptive=this.tools.contextFor!(task);
+   assembled.workspacePathRule+=' The separate adaptive workbench follows its own advertised path and isolated execution contract.';
+   assembled.authority.adaptive={effects:['project-files','isolated-command'],network:'off',commands:(task.inputs as any).adaptiveExecution.allowCommands===true,externalMessages:false,commercialCommitments:false};
+   if(task.allowedTools.includes('research.read')&&!assembled.toolContracts.some((x:any)=>x.id==='research.read'))assembled.toolContracts.push({id:'research.read',description:'Read a permitted retained source by path ID and decimal character offset query; does not fetch the network.'});
+  }
   if(draftCorrection)assembled.draftCorrection=draftCorrection;
   const contextLimit=(task.inputs as any)?.release==='value-release-v4'?72000:56000;const size=()=>Buffer.byteLength(JSON.stringify(assembled));
   if(finalizationEnabled(task)&&workspace){
@@ -213,6 +225,12 @@ export class PortfolioEngine {
    for(const source of assembled.sources)if(source.text===''){delete source.textRange;delete source.readMore;}
   }
   if(size()>contextLimit){const diagnostic={taskId:task.id,totalBytes:size(),fieldBytes:Object.fromEntries(Object.entries(assembled).map(([k,v])=>[k,Buffer.byteLength(JSON.stringify(v))])),providerRequests:0};const old=this.store.get('portfolio-context-diagnostic',task.id);this.store.transaction(()=>this.store.put('portfolio-context-diagnostic',task.id,diagnostic,old?._version??null));}requireThat(size()<=contextLimit,'PORTFOLIO_CONTEXT_TOO_LARGE');
+  if(adaptiveEnabled(task)&&(task.inputs as any).adaptiveExecution.prompt==='lean'){
+   const projection=projectLeanContext(assembled,{approvedTools:task.allowedTools});
+   const key=task.id+'/'+this.state(task).index,old=this.store.get('adaptive-context-projection',key);
+   if(!old)this.store.transaction(()=>this.store.put('adaptive-context-projection',key,{taskId:task.id,...projection.receipt},null));
+   return boundedContext(projection.context,contextLimit);
+  }
   return boundedContext(assembled,contextLimit);
  }
  private workerRequest(t:Task,attemptId:string,context:any){const c=stageContractForTask(t),request=makeWorkerRequest({ventureId:t.ventureId,taskId:t.id,attemptId,context,tools:stageTools(t),procedure:this.state(t).procedure,maxMinor:c?.maxCallCost.minorUnits??(t.inputs as any)?.modelCallMaxMinor});if(c)request.role.version=c.id;return request;}
@@ -259,7 +277,7 @@ export class PortfolioEngine {
   requireThat(task.status==='needs_reconciliation'&&!task.lease&&!task.stopRequested&&!task.invalidatedAt&&execution&&execution.sourceHash===this.evidence.taskDigest(task),'RESPONSE_RECOVERY_TASK_CHANGED');
   const stepId='model-'+execution.index,key=taskId+'/'+stepId,intent=this.store.get('portfolio-model-request',key),step=this.store.get('portfolio-step',key);
   requireThat(intent&&step?.kind==='model'&&['uncertain','reserved'].includes(step.status),'RESPONSE_RECOVERY_INTENT_REQUIRED');
-  const validate=stageContractForTask(task)?(out:any)=>validateStageOutput(task,out,intent.call.request.context):['portfolio.plan','portfolio.reassess'].includes(task.capability)?(out:any)=>{validatePlan(out,this.evidence.forTask(task),[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),intent.call.request.context.existingUnstartedTaskIds);for(const t of out.tasks)requireThat(CAPABILITY_PROFILES[t.capability].requiredTools.every(tool=>t.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
+  const validate=adaptiveEnabled(task)?(out:any)=>validateAdaptiveWorker(task,out):stageContractForTask(task)?(out:any)=>validateStageOutput(task,out,intent.call.request.context):['portfolio.plan','portfolio.reassess'].includes(task.capability)?(out:any)=>{validatePlan(out,this.evidence.forTask(task),[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),intent.call.request.context.existingUnstartedTaskIds);for(const t of out.tasks)requireThat(CAPABILITY_PROFILES[t.capability].requiredTools.every(tool=>t.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
   const call={...intent.call,validate};requireThat(requestIdentity(call)===intent.identity,'RESPONSE_RECOVERY_REQUEST_CHANGED');
   const result=await this.model.recover(call);requireThat(result,'RESPONSE_RECOVERY_RESULT_MISSING');
   this.persistResult('portfolio-model-result',task,stepId,intent.identity,result);
@@ -301,13 +319,15 @@ export class PortfolioEngine {
    const used=this.rows('portfolio-model-request').filter(r=>r.call?.request?.scope?.runId===workerScope(t.ventureId,t.id).runId&&!r.call.recoveryOf).length;
    const local=t.resource.localToolRuns-this.rows('portfolio-step').filter(r=>r.taskId===t.id&&r.kind==='tool').length;
    const w=this.tools.load(t.ventureId,t.id),feasibility=finishingFeasibility(t,w,cap-used,local,this.finishingObservations(t,w));
+   const adaptiveFloor=this.tools.finishingFloor?.(t)??0;
+   if(adaptiveFloor){feasibility.minimumCalls+=adaptiveFloor;feasibility.minimumLocalTools+=adaptiveFloor;feasibility.feasible=cap-used>=feasibility.minimumCalls&&local>=feasibility.minimumLocalTools;(feasibility as any).adaptiveRequiredActions=adaptiveFloor;}
    if(!feasibility.feasible){const old=this.store.get('portfolio-finishing-shortage',t.id);this.store.transaction(()=>this.store.put('portfolio-finishing-shortage',t.id,{taskId:t.id,at:new Date().toISOString(),...feasibility,providerAdmission:false},old?._version??null));requireThat(false,'FINISHING_CAPACITY_INSUFFICIENT');}
   }
   const attemptId='p031-'+hash(t.id).slice(0,16)+'-'+s.index;
   const context=prior?.call.request.context??s.pendingRecovery?.request.context??this.requestContext(t,planning);
   const request=prior?.call.request??s.pendingRecovery?.request??this.workerRequest(t,attemptId,context);
-  const schema=stageSchema(t)??(planning?planningSchema:workerSchema);
-  const validate:(out:any)=>void=stageContractForTask(t)?(out:any)=>validateStageOutput(t,out,context):planning?(out:any)=>{validatePlan(out,sources,[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),(context as any).existingUnstartedTaskIds);for(const task of out.tasks)requireThat(CAPABILITY_PROFILES[task.capability].requiredTools.every(tool=>task.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
+  const schema=adaptiveWorkerSchema(t)??stageSchema(t)??(planning?planningSchema:workerSchema);
+  const validate:(out:any)=>void=adaptiveEnabled(t)?(out:any)=>validateAdaptiveWorker(t,out):stageContractForTask(t)?(out:any)=>validateStageOutput(t,out,context):planning?(out:any)=>{validatePlan(out,sources,[...ALL_TOOL_NAMES],CAPABILITIES.filter(c=>c!=='portfolio.reassess'),(context as any).existingUnstartedTaskIds);for(const task of out.tasks)requireThat(CAPABILITY_PROFILES[task.capability].requiredTools.every(tool=>task.allowedTools.includes(tool)),'PLAN_REQUIRED_DELIVERY_TOOLS');}:validateWorker;
   const call:WorkerCall={...(stageContractForTask(t)?{stageContract:stageContractForTask(t)!.id}:{}),attemptId,ventureId:t.ventureId,goal:v.goal,sourceHosts:[],request,schema,validate,...(s.pendingRecovery?{recoveryOf:s.pendingRecovery.parentAttemptId}:{})};
   const identity=requestIdentity(call);
   if(prior)requireThat(prior.identity===identity,'PERSISTED_REQUEST_CHANGED');
@@ -360,6 +380,8 @@ export class PortfolioEngine {
     const result=await this.call(lease),decision=result.output as WorkerDecision;
     if(decision.action==='blocked')return this.portfolio.fail(t.id,lease.token,{code:'WORKER_BLOCKED',message:decision.reason,retryable:false});
     if(decision.action==='complete'){
+     const blocker=this.tools.completionBlocker?.(this.assertCurrent(t));
+     if(blocker){const current=this.state(t);this.save(t,{index:current.index+1,observations:[...current.observations,{tool:'adaptive.completion',result:{ok:false,...blocker}}]});continue;}
      if(!finalizationEnabled(t))return this.complete(lease,decision.reason,Date.now()-started);
      const outcome=await this.finalize(lease,decision.reason,Date.now()-started);if(outcome.completed)return outcome.task;
      const s=this.state(t);this.save(t,{index:s.index+1,pendingRecovery:null,observations:[...s.observations,{workerReason:decision.reason,tool:'artifact.finalize',result:outcome}]});
