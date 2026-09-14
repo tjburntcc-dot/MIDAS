@@ -1,24 +1,47 @@
-import { constants, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { rawHash, requireThat } from '../contracts.ts';
+/** Local continuity snapshots. V2 carries the owner-facing functional-project
+ * runtime as ordinary private data; it never carries authorization material. */
+import { constants, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { hash, rawHash, requireThat } from '../contracts.ts';
+import { projectPath } from '../portfolio/project-contracts.ts';
 import { StateStore } from '../state.ts';
 
-export function backupPilot(store: StateStore, directory: string) {
-  const target = resolve(directory); requireThat(!existsSync(target), 'BACKUP_TARGET_EXISTS'); mkdirSync(target, {recursive: true});
-  const file = join(target, 'pilot.sqlite');
-  store.db.prepare('VACUUM INTO ?').run(file);
-  const manifest = {version: 'pilot-backup-v1', file: 'pilot.sqlite', sha256: rawHash(readFileSync(file)), createdAt: new Date().toISOString(), contains: 'company data, immutable evidence, tool observations and local preview state; no credentials', privacy: 'private owner data; keep off Git and public storage'};
-  writeFileSync(join(target, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n'); return manifest;
+const runtimeRoot='functional-project-runtime', maxSidecars=128, maxSidecarBytes=1_572_864, maxSidecarTotal=20*1024*1024;
+type Sidecar={path:string;sha256:string;bytes:number};
+type V1={version:'pilot-backup-v1';file:'pilot.sqlite';sha256:string;createdAt:string;contains:string;privacy:string};
+type V2={version:'pilot-backup-v2';file:'pilot.sqlite';sha256:string;database:{path:'pilot.sqlite';sha256:string;bytes:number};sidecars:Sidecar[];createdAt:string;quiescent:true;consistency:string;contains:string;privacy:string};
+type Options={sourceRoot?:string;quiescent?:boolean};
+
+function noLinks(path:string,code:string){const absolute=resolve(path);for(let current=absolute;;current=dirname(current)){if(existsSync(current))requireThat(!lstatSync(current).isSymbolicLink(),code);if(dirname(current)===current)break;}return absolute;}
+function absoluteRoot(path:string,code:string){requireThat(typeof path==='string'&&isAbsolute(path),code);const root=noLinks(path,'PILOT_CONTINUITY_LINK_DENIED');requireThat(existsSync(root)&&lstatSync(root).isDirectory(),code);return root;}
+function boundedFile(path:string,code:string,max=maxSidecarBytes){noLinks(path,'PILOT_CONTINUITY_LINK_DENIED');const stat=statSync(path);requireThat(stat.isFile()&&stat.size>=0&&stat.size<=max,code);const bytes=readFileSync(path);return {sha256:rawHash(bytes),bytes:bytes.length};}
+function sidecarPath(path:string){requireThat(typeof path==='string'&&path.length<=300&&!path.includes('\\')&&!path.startsWith('/')&&!path.split('/').some(part=>part===''||part==='.'||part==='..'),'PILOT_SIDECAR_PATH_DENIED');const parts=path.split('/');requireThat(parts[0]===runtimeRoot&&parts[1]==='projects'&&/^[a-z][a-z0-9-]{0,63}$/.test(parts[2]??''),'PILOT_SIDECAR_PATH_DENIED');if(parts[3]==='runtime')requireThat(parts.length===5&&['metadata.json','state.json'].includes(parts[4]),'PILOT_SIDECAR_PATH_DENIED');else {requireThat(parts[3]==='source'&&parts.length>=5,'PILOT_SIDECAR_PATH_DENIED');projectPath(parts.slice(4).join('/'));}return path;}
+function sameSidecars(left:Sidecar[],right:Sidecar[]){return hash(left)===hash(right);}
+function collectSidecars(sourceRoot:string):Sidecar[]{
+ const root=join(sourceRoot,runtimeRoot);if(!existsSync(root))return [];noLinks(root,'PILOT_SIDECAR_LINK_DENIED');const output:Sidecar[]=[];
+ const walk=(directory:string,relativePath:string)=>{for(const item of readdirSync(directory,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){const full=join(directory,item.name),next=relativePath?relativePath+'/'+item.name:item.name,stat=lstatSync(full);requireThat(!stat.isSymbolicLink(),'PILOT_SIDECAR_LINK_DENIED');if(stat.isDirectory()){if(relativePath==='')requireThat(item.name==='projects','PILOT_SIDECAR_PATH_DENIED');else if(relativePath==='projects')requireThat(/^[a-z][a-z0-9-]{0,63}$/.test(item.name),'PILOT_SIDECAR_PATH_DENIED');else if(/^projects\/[a-z][a-z0-9-]{0,63}$/.test(relativePath))requireThat(['source','runtime'].includes(item.name),'PILOT_SIDECAR_PATH_DENIED');else if(/\/runtime$/.test(relativePath))requireThat(false,'PILOT_SIDECAR_PATH_DENIED');walk(full,next);continue;}requireThat(stat.isFile(),'PILOT_SIDECAR_PATH_DENIED');const path=sidecarPath(runtimeRoot+'/'+next),info=boundedFile(full,'PILOT_SIDECAR_FILE_INVALID');output.push({path,...info});requireThat(output.length<=maxSidecars&&output.reduce((sum,x)=>sum+x.bytes,0)<=maxSidecarTotal,'PILOT_SIDECAR_LIMIT');}};
+ walk(root,'');return output.sort((a,b)=>a.path.localeCompare(b.path));
+}
+function sidecarSource(root:string,path:string){sidecarPath(path);const target=resolve(root,path),rel=relative(root,target);requireThat(!rel.startsWith('..')&&!isAbsolute(rel),'PILOT_SIDECAR_PATH_DENIED');return target;}
+function snapshotHash(database:V2['database'],sidecars:Sidecar[]){return hash({database,sidecars});}
+function writeNew(path:string,bytes:Buffer|string){mkdirSync(dirname(path),{recursive:true});writeFileSync(path,bytes,{flag:'wx'});}
+function verifyV2(source:string,manifest:any,expectedHash:string){
+ requireThat(manifest?.version==='pilot-backup-v2'&&manifest.file==='pilot.sqlite'&&manifest.quiescent===true&&typeof manifest.consistency==='string'&&manifest.database?.path==='pilot.sqlite'&&Array.isArray(manifest.sidecars),'RESTORE_MANIFEST_MISMATCH');requireThat(/^[a-f0-9]{64}$/.test(expectedHash)&&manifest.sha256===expectedHash,'RESTORE_MANIFEST_MISMATCH');
+ requireThat(Number.isSafeInteger(manifest.database.bytes)&&manifest.database.bytes>=0&&/^[a-f0-9]{64}$/.test(manifest.database.sha256),'RESTORE_MANIFEST_MISMATCH');const db=join(source,'pilot.sqlite'),dbInfo=boundedFile(db,'RESTORE_CONTENT_MISMATCH',536_870_912);requireThat(dbInfo.sha256===manifest.database.sha256&&dbInfo.bytes===manifest.database.bytes,'RESTORE_CONTENT_MISMATCH');
+ requireThat(new Set(manifest.sidecars.map((x:any)=>x?.path)).size===manifest.sidecars.length&&manifest.sidecars.length<=maxSidecars,'RESTORE_SIDECAR_MANIFEST_INVALID');let total=0;for(const item of manifest.sidecars as Sidecar[]){sidecarPath(item.path);requireThat(Number.isSafeInteger(item.bytes)&&item.bytes>=0&&item.bytes<=maxSidecarBytes&&/^[a-f0-9]{64}$/.test(item.sha256),'RESTORE_SIDECAR_MANIFEST_INVALID');total+=item.bytes;requireThat(total<=maxSidecarTotal,'RESTORE_SIDECAR_MANIFEST_INVALID');const info=boundedFile(sidecarSource(source,item.path),'RESTORE_SIDECAR_HASH_MISMATCH');requireThat(info.sha256===item.sha256&&info.bytes===item.bytes,'RESTORE_SIDECAR_HASH_MISMATCH');}
+ requireThat(snapshotHash(manifest.database,manifest.sidecars)===expectedHash,'RESTORE_MANIFEST_MISMATCH');return manifest as V2;
+}
+
+export function backupPilot(store: StateStore, directory: string, options:Options={}) {
+ const target = resolve(directory); requireThat(!existsSync(target), 'BACKUP_TARGET_EXISTS');
+ if(!options.sourceRoot){mkdirSync(target,{recursive:true});const file=join(target,'pilot.sqlite');store.db.prepare('VACUUM INTO ?').run(file);const manifest:V1={version:'pilot-backup-v1',file:'pilot.sqlite',sha256:rawHash(readFileSync(file)),createdAt:new Date().toISOString(),contains:'company data, immutable evidence, tool observations and local preview state; no credentials',privacy:'private owner data; keep off Git and public storage'};writeFileSync(join(target,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');return manifest;}
+ requireThat(options.quiescent===true,'BACKUP_QUIESCENCE_REQUIRED');noLinks(dirname(target),'PILOT_CONTINUITY_LINK_DENIED');const sourceRoot=absoluteRoot(options.sourceRoot,'BACKUP_SOURCE_ROOT_REQUIRED'),main=store.db.prepare('PRAGMA database_list').all().find((row:any)=>row.name==='main');requireThat(main&&resolve(String(main.file))===join(sourceRoot,'pilot.sqlite'),'BACKUP_SOURCE_DATABASE_MISMATCH');
+ const before=collectSidecars(sourceRoot);mkdirSync(target,{recursive:true});const file=join(target,'pilot.sqlite');store.db.prepare('VACUUM INTO ?').run(file);const database={path:'pilot.sqlite' as const,...boundedFile(file,'BACKUP_DATABASE_INVALID',536_870_912)};
+ for(const item of before){const source=sidecarSource(sourceRoot,item.path),info=boundedFile(source,'PILOT_SIDECAR_CHANGED');requireThat(info.sha256===item.sha256&&info.bytes===item.bytes,'PILOT_SIDECAR_CHANGED');writeNew(sidecarSource(target,item.path),readFileSync(source));}
+ const after=collectSidecars(sourceRoot);requireThat(sameSidecars(before,after),'PILOT_SIDECAR_CHANGED');const sidecars=before,manifest:V2={version:'pilot-backup-v2',file:'pilot.sqlite',database,sidecars,sha256:snapshotHash(database,sidecars),createdAt:new Date().toISOString(),quiescent:true,consistency:'Caller declared the owner runtime stopped; bounded sidecar hashes matched before and after copying. SQLite and sidecars are separate snapshots, not one atomic multi-file snapshot.',contains:'company data, immutable evidence, functional-project source, metadata and local owner records; no credentials or authorization files',privacy:'private owner data; keep off Git and public storage'};writeFileSync(join(target,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');return manifest;
 }
 export function restorePilot(directory: string, targetRoot: string, expectedHash: string) {
-  const source = resolve(directory), target = resolve(targetRoot);
-  requireThat(!existsSync(target), 'RESTORE_TARGET_EXISTS');
-  requireThat(/^[a-f0-9]{64}$/.test(expectedHash), 'RESTORE_HASH_REQUIRED');
-  const manifest = JSON.parse(readFileSync(join(source, 'manifest.json'), 'utf8'));
-  requireThat(manifest.version === 'pilot-backup-v1' && manifest.file === 'pilot.sqlite' && manifest.sha256 === expectedHash, 'RESTORE_MANIFEST_MISMATCH');
-  const file = join(source, 'pilot.sqlite'); requireThat(rawHash(readFileSync(file)) === expectedHash, 'RESTORE_CONTENT_MISMATCH');
-  mkdirSync(target, {recursive: true}); copyFileSync(file, join(target, 'pilot.sqlite'), constants.COPYFILE_EXCL);
-  const db = new StateStore(join(target, 'pilot.sqlite'));
-  try { requireThat(db.db.prepare('PRAGMA integrity_check').get()?.integrity_check === 'ok', 'RESTORE_DATABASE_INVALID'); } finally { db.close(); }
-  return {restored: true, target, sha256: expectedHash, automaticExecution: false};
+ const source = resolve(directory), target = resolve(targetRoot);requireThat(!existsSync(target),'RESTORE_TARGET_EXISTS');requireThat(/^[a-f0-9]{64}$/.test(expectedHash),'RESTORE_HASH_REQUIRED');noLinks(source,'PILOT_CONTINUITY_LINK_DENIED');noLinks(dirname(target),'PILOT_CONTINUITY_LINK_DENIED');const manifest=JSON.parse(readFileSync(join(source,'manifest.json'),'utf8'));
+ if(manifest.version==='pilot-backup-v1'){requireThat(manifest.file==='pilot.sqlite'&&manifest.sha256===expectedHash,'RESTORE_MANIFEST_MISMATCH');const file=join(source,'pilot.sqlite'),info=boundedFile(file,'RESTORE_CONTENT_MISMATCH',536_870_912);requireThat(info.sha256===expectedHash,'RESTORE_CONTENT_MISMATCH');mkdirSync(target,{recursive:true});copyFileSync(file,join(target,'pilot.sqlite'),constants.COPYFILE_EXCL);const db=new StateStore(join(target,'pilot.sqlite'));try{requireThat(db.db.prepare('PRAGMA integrity_check').get()?.integrity_check==='ok','RESTORE_DATABASE_INVALID');}finally{db.close();}return {restored:true,target,sha256:expectedHash,automaticExecution:false};}
+ const v2=verifyV2(source,manifest,expectedHash);mkdirSync(target,{recursive:true});copyFileSync(join(source,'pilot.sqlite'),join(target,'pilot.sqlite'),constants.COPYFILE_EXCL);for(const item of v2.sidecars)writeNew(sidecarSource(target,item.path),readFileSync(sidecarSource(source,item.path)));const db=new StateStore(join(target,'pilot.sqlite'));try{requireThat(db.db.prepare('PRAGMA integrity_check').get()?.integrity_check==='ok','RESTORE_DATABASE_INVALID');}finally{db.close();}for(const item of v2.sidecars){const info=boundedFile(sidecarSource(target,item.path),'RESTORE_SIDECAR_READBACK_FAILED');requireThat(info.sha256===item.sha256&&info.bytes===item.bytes,'RESTORE_SIDECAR_READBACK_FAILED');}return {restored:true,target,sha256:expectedHash,sidecars:v2.sidecars.length,automaticExecution:false,consistency:v2.consistency};
 }

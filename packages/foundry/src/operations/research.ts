@@ -99,6 +99,9 @@ function cleanText(value: string): string {
     return value.replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#39;/gi, "'").replace(/\s+/g, ' ').trim();
 }
 function stripMarkup(value: string,partial=false): string {
+    // A bounded prefix may end inside an HTML attribute. Preserve that prefix as
+    // source evidence, but do not present the unfinished tag as page wording.
+    if(partial)value=value.replace(/<[A-Za-z!/?][^>]*$/g,' ');
     if(partial)value=value.replace(/<(script|style|template|noscript|svg|canvas|iframe|object|embed|form|nav|footer|header|aside)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,' ').replace(/<(script|style|template|noscript|svg|canvas|iframe|object|embed|form|nav|footer|header|aside)\b[^>]*>[\s\S]*$/gi,' ');
     return cleanText(value
         .replace(/<(script|style|template|noscript|svg|canvas|iframe|object|embed|form|nav|footer|header|aside)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ')

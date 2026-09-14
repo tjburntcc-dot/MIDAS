@@ -9,7 +9,7 @@ import { PilotExecution } from './execution.ts';
 import { PilotLearning } from './learning.ts';
 import { portfolioRoute } from '../portfolio/live.ts';
 import { buildResponsesBody } from '../model-port.ts';
-import { readPortfolioAccounting } from '../portfolio/accounting-view.ts';
+import { readPortfolioAccounting, type PortfolioAccountingView } from '../portfolio/accounting-view.ts';
 import { readPilotDiagnosisAccounting } from './diagnosis-authorized.ts';
 import { fixtureIntakeFields } from './fixtures-execution.ts';
 import {PilotDiscovery,canonicalDiscoveryUrl} from './discovery.ts';
@@ -17,6 +17,13 @@ import {PilotIntelligence} from './intelligence.ts';
 import {commercialCases,commercialFixturePort} from './intelligence-fixtures.ts';
 import {CommercialReview} from './commercial-review.ts';
 import {readIntelligenceAccounting,readIntelligenceAuthority,loadAuthorizedIntelligence} from './intelligence-authorized.ts';
+import {ConnectionRegistry,ConnectionService,maintainedReadAdapters} from './connections/index.ts';
+import {WorkerDevelopmentService} from './worker-development-service.ts';
+import {PilotOutcomes} from './outcomes.ts';
+import {PilotDevelopmentBridge} from './development-bridge.ts';
+import {createOperatingDemo} from './overnight-demo.ts';
+import {inspectOutcomeJourney,loadAuthorizedOutcomeJourney as loadOutcomeJourney,prepareOutcomeJourneyAuthorization} from './outcome-journey-authorized.ts';
+import {inspectConnectionReadAuthorization,loadAuthorizedConnectionRead} from './connections/host.ts';
 
 /** Owner-facing composition only; work execution and inference admission remain in Foundry. */
 export class PilotService {
@@ -26,9 +33,13 @@ export class PilotService {
   readonly execution: PilotExecution;
   readonly discovery: PilotDiscovery;
   readonly intelligence: PilotIntelligence;
+  readonly connectedAccounts:ConnectionService;
+  readonly operatingOutcomes:PilotOutcomes;
+  readonly workerDevelopment:PilotDevelopmentBridge;
   readonly pending = new Map<string, Promise<unknown>>();
   readonly investigations = new Map<string,Promise<unknown>>();
   private authorizedRunner:ReturnType<typeof loadAuthorizedIntelligence>|null=null;
+  private authorizedJourney:ReturnType<typeof loadOutcomeJourney>|null=null;
   constructor(root: string, options: {store?: StateStore; browserLauncher?: () => Promise<any>;publicReader?:any;renderer?:any} = {}) {
     this.root = root; mkdirSync(root, { recursive: true });
     this.store = options.store ?? new StateStore(join(root, 'pilot.sqlite'));
@@ -36,9 +47,41 @@ export class PilotService {
     this.execution = new PilotExecution(this.store, { root, browserLauncher: options.browserLauncher } as any);
     this.discovery=new PilotDiscovery(this.store,{root,knowledge:this.knowledge,publicReader:options.publicReader,renderer:options.renderer});
     this.intelligence=new PilotIntelligence(this.store,this.execution);
+    this.connectedAccounts=new ConnectionService(this.store,this.knowledge,new ConnectionRegistry(maintainedReadAdapters()));
+    this.operatingOutcomes=new PilotOutcomes(this.store,this.execution);
+    this.workerDevelopment=new PilotDevelopmentBridge(this.operatingOutcomes);
   }
   approvedRunner(){return this.authorizedRunner??(this.authorizedRunner=loadAuthorizedIntelligence({intelligence:this.intelligence,discovery:this.discovery},this.root));}
   authority(){return readIntelligenceAuthority({intelligence:this.intelligence,discovery:this.discovery},this.root);}
+  journeyServices(){return {outcomes:this.operatingOutcomes,intelligence:this.intelligence,discovery:this.discovery};}
+  journeyAuthority(){return inspectOutcomeJourney(this.journeyServices(),this.root);}
+  connectionAuthority(connectionId:string){return inspectConnectionReadAuthorization({connectedAccounts:this.connectedAccounts},this.root,connectionId);}
+  async syncApprovedConnection(businessId:string,connectionId:string){
+    requireThat(this.connectedAccounts.get(connectionId).businessId===businessId,'CONNECTION_BUSINESS_SCOPE');
+    return loadAuthorizedConnectionRead({connectedAccounts:this.connectedAccounts},this.root,{connectionId}).sync();
+  }
+  journeyRunner(){return this.authorizedJourney??(this.authorizedJourney=loadOutcomeJourney(this.journeyServices(),this.root));}
+  prepareJourney(businessId:string,outcomeId:string){
+    const company=this.knowledge.company(businessId),outcome=this.operatingOutcomes.get(outcomeId);
+    requireThat(company.mode!=='fixture'&&outcome.businessId===businessId,'JOURNEY_REAL_BUSINESS_SCOPE');
+    const old=this.store.get('pilot-prepared-journey',outcomeId);
+    if(old){requireThat(hash(old.proposal)===old.proposalHash,'JOURNEY_PREPARED_INTEGRITY');return old;}
+    const id='journey-034-'+randomUUID().replaceAll('-',''),directory=join(this.root,'preparations',businessId,id);
+    const prepared=prepareOutcomeJourneyAuthorization(this.journeyServices(),{root:this.root,directory,id,outcomeId,projectId:'proj_H01ORqdOPQM6vdGwQYsqFL5r',credentialFile:'C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key',expiresAt:'2026-09-25T22:00:00.000Z',countUncertaintyMinor:435,mode:'live'});
+    const value={...prepared,businessId,outcomeId,directory,providerRequests:0,credentialRead:false,preparedAt:new Date().toISOString(),pricingCheckedAt:'2026-09-14',priceSource:'https://developers.openai.com/api/docs/models/gpt-6-astra',accountAccessVerified:false,externalEffects:false};
+    this.store.transaction(()=>this.store.put('pilot-prepared-journey',outcomeId,value,null));return value;
+  }
+  async runApprovedOutcome(businessId:string,outcomeId:string){
+    const runner=this.journeyRunner();
+    requireThat(runner.authorization.journey.businessId===businessId&&runner.authorization.journey.outcomeId===outcomeId,'JOURNEY_OWNER_SCOPE');
+    return runner.resume();
+  }
+  correctOutcome(businessId:string,outcomeId:string,input:{nodeId:string;artifactHash:string;instruction:string;repairCalls:number;assisted:boolean}){
+    requireThat(this.operatingOutcomes.get(outcomeId).businessId===businessId,'OUTCOME_BUSINESS_SCOPE');
+    if(this.knowledge.company(businessId).mode==='fixture')return this.operatingOutcomes.correct(outcomeId,input);
+    const runner=this.journeyRunner();requireThat(runner.authorization.journey.businessId===businessId&&runner.authorization.journey.outcomeId===outcomeId,'JOURNEY_OWNER_SCOPE');
+    return runner.correct(input);
+  }
   async runApprovedAnalysis(id:string){
     const runner=this.approvedRunner();requireThat(runner.authorization.intelligence.businessId===id,'INTELLIGENCE_BUSINESS_SCOPE');
     await runner.runInvestigation();if(this.store.get('pilot-discovery',id)?.state==='ready_for_analysis')return runner.runAnalysis();
@@ -61,7 +104,7 @@ export class PilotService {
     if(website)[website,...socialUrls].forEach(canonicalDiscoveryUrl);
     const company=this.knowledge.createCompany({name,website,goal:input.goal,notes:input.notes});
     this.store.transaction(()=>this.store.put('pilot-business-intake',company.id,{businessId:company.id,socialUrls,identityStatus:suppliedName?'owner_supplied':'website host label; company identity unverified'},null));
-    if(website){this.discovery.start(company.id,{website,socialLinks:socialUrls});this.launchInvestigation(company.id,()=>this.discovery.seed(company.id));}
+    if(website){this.discovery.start(company.id,{website,socialLinks:socialUrls,limits:{maxDecisions:6}});this.launchInvestigation(company.id,()=>this.discovery.seed(company.id));}
     return this.knowledge.company(company.id);
   }
   updateBusiness(id:string,input:any){
@@ -90,6 +133,7 @@ export class PilotService {
     const p=Promise.resolve().then(action).catch(error=>{const code=String(error?.code??error?.message??'INVESTIGATION_FAILED').slice(0,240);this.store.transaction(()=>{const old=this.store.get('pilot-investigation-error',id);this.store.put('pilot-investigation-error',id,{businessId:id,code,at:new Date().toISOString()},old?._version??null);});return {error:code};}).finally(()=>this.investigations.delete(id));
     this.investigations.set(id,p);
   }
+  async createOperatingDemo(which:'service'|'retail'){return createOperatingDemo(this,which);}
   async createCommercialDemo(which:'service'|'retail'){
     requireThat(['service','retail'].includes(which),'DEMO_CASE_REQUIRED');const c=commercialCases[which];
     const company=this.knowledge.createCompany({name:c.name,website:c.website,goal:c.goal,notes:c.notes,mode:'fixture'});
@@ -191,6 +235,7 @@ export class PilotService {
   }
   view(businessId?: string) {
     const authority=this.authority();
+    const journeyAuthority=this.journeyAuthority();
     const businesses = this.knowledge.listCompanies();
     const rawBusiness = businessId ? this.knowledge.company(businessId) : null;
     const business = rawBusiness?{...rawBusiness,...this.store.get('pilot-business-intake',rawBusiness.id)}:null;
@@ -218,43 +263,52 @@ export class PilotService {
     const ledger = readPortfolioAccounting(this.store,this.root);
     const diagnosisLedger = readPilotDiagnosisAccounting(this.store,this.root);
     const intelligenceLedger=readIntelligenceAccounting(this.store,this.root),intelligenceSimulated=intelligenceLedger.mode==='mock',intelligenceInference=intelligenceSimulated?0:intelligenceLedger.inferenceDispatches;
+    const journeyLedger:PortfolioAccountingView=journeyAuthority.accounting,journeySimulated=journeyLedger.mode==='mock',journeyInference=journeySimulated?0:journeyLedger.inferenceDispatches;
     const simulated = ledger.mode === 'mock';
     const sumKnown = (...values: Array<number | null | undefined>) => values.every(v=>typeof v==='number') ? (values as number[]).reduce((a,b)=>a+b,0) : null;
     const diagnosisInference = diagnosisLedger.mode === 'mock' ? 0 : diagnosisLedger.inferenceDispatches;
-    const inferenceCalls = sumKnown(ledger.inferenceDispatches,diagnosisInference,intelligenceInference);
-    const countRequests = sumKnown(ledger.countRequests,diagnosisLedger.countRequests,intelligenceLedger.countRequests);
+    const inferenceCalls = sumKnown(simulated?0:ledger.inferenceDispatches,diagnosisInference,intelligenceInference,journeyInference);
+    const countRequests = sumKnown(simulated?0:ledger.countRequests,diagnosisLedger.mode==='mock'?0:diagnosisLedger.countRequests,intelligenceSimulated?0:intelligenceLedger.countRequests,journeySimulated?0:journeyLedger.countRequests);
     const providerCalls = sumKnown(inferenceCalls,countRequests);
     const diagnosisSimulated = diagnosisLedger.mode === 'mock';
-    const provisionalCostMinor = sumKnown(simulated ? 0 : ledger.provisionalMinor,diagnosisSimulated ? 0 : diagnosisLedger.provisionalMinor,intelligenceSimulated?0:intelligenceLedger.provisionalMinor);
+    const provisionalCostMinor = sumKnown(simulated ? 0 : ledger.provisionalMinor,diagnosisSimulated ? 0 : diagnosisLedger.provisionalMinor,intelligenceSimulated?0:intelligenceLedger.provisionalMinor,journeySimulated?0:journeyLedger.provisionalMinor);
     const settledDeliverables = ledger.inferenceDispatches === 0 ? 0 : ledger.settledBillingStatus === 'recorded' ? ledger.settledMinor : null;
     const settledDiagnosis = diagnosisInference === 0 ? 0 : diagnosisLedger.settledMinor;
     const settledIntelligence=intelligenceInference===0?0:intelligenceLedger.settledMinor;
+    const settledJourney=journeyInference===0?0:journeyLedger.settledMinor;
     if (business && !this.knowledge.sources(business.id).length) inbox.push({ id: 'sources', title: 'Add the information that should guide this work', reason: 'The company has no permitted evidence yet.', action: 'Add evidence' });
-    if (business && business.mode !== 'fixture'&&!(authority.liveEnabled&&authority.businessId===business.id)) inbox.push({ id: 'model-authority', title: 'Real worker execution needs current scoped authority', reason: authority.reason+' Prior experiment budgets do not transfer.', action: 'Review prepared execution requirements' });
+    if (business && business.mode !== 'fixture'&&!(authority.liveEnabled&&authority.businessId===business.id)&&!(journeyAuthority.liveEnabled&&journeyAuthority.businessId===business.id)) inbox.push({ id: 'model-authority', title: 'Real worker execution needs current scoped authority', reason: journeyAuthority.reason+' Prior experiment budgets do not transfer.', action: 'Review prepared execution requirements' });
     for (const task of tasks) if (task.status === 'completed' && task.artifact?.current && task.contextCurrent && task.artifact.taskId === task.id && !task.acceptance?.current) inbox.push({ id: 'review-' + task.id, taskId: task.id, title: 'Inspect ' + task.title, reason: 'Local checks are recorded; usefulness and owner acceptance are separate.', action: 'Review deliverable' });
     let investigation:any=null;if(business){try{investigation=this.discoveryView(business.id);}catch{}}
     if(investigation&&this.investigations.has(business!.id))investigation={...investigation,status:'running'};
     return { businesses, business, sources: business ? this.knowledge.sources(business.id).map(s=>{const d=investigation?.sources.find((r:any)=>r.knowledgeSourceId===s.id&&r.imageUrl)??investigation?.sources.find((r:any)=>r.knowledgeSourceId===s.id);return {...s,...(d?.imageUrl?{imageUrl:d.imageUrl}:{}),...(d?{discoveryRecordId:d.id,retrievalStatus:d.status}:{} )};}) : [],
+      intake:business?this.store.get('pilot-business-intake',business.id):null,
+      evidenceSelection:knowledge.evidenceSelection??null,
       investigation,intelligence:business?this.intelligence.view(business.id):null,
       coordinatedWork:business?this.rows('pilot-commercial-work').filter(w=>w.businessId===business.id):[],
       understanding: knowledge.understanding ?? knowledge, tasks,
       workers: this.workerView(business?.id), learning, outcomes, inbox,
       connections: this.connections(),
+      connectedAccounts:{definitions:this.connectedAccounts.registry.list(),items:business?this.connectedAccounts.list(business.id).map(connection=>({...connection,readAuthority:this.connectionAuthority(connection.id)})):[]},
+      operatingOutcomes:business?this.operatingOutcomes.list(business.id).map(outcome=>{const p=this.store.get('pilot-prepared-journey',outcome.id);return {...outcome,executionRunning:this.investigations.has(business.id),prepared:p?{proposalHash:p.proposalHash,maximumMinor:p.proposal.limits.totalMinor,expiresAt:p.proposal.expiresAt,summary:p.summary}:null,authority:journeyAuthority.businessId===business.id&&journeyAuthority.outcomeId===outcome.id?journeyAuthority:{approved:false,liveEnabled:false,reason:'No exact signed authority for this outcome.'}};}):[],
+      development:business?this.developmentView(business.id):{workers:[],observations:[],candidates:[],comparisons:[]},
       accounting: { providerCalls, inferenceCalls, countRequests,
         requestCountScope:'Inference creations and supporting token counts. Diagnosis same-ID reads are separately recorded; task response reads remain in durable response observations.',
         diagnosisRetrievals: diagnosisLedger.retrievals,intelligenceRetrievals:intelligenceLedger.retrievals,
-        providerCostMinor: providerCalls === 0 ? 0 : sumKnown(settledDeliverables,settledDiagnosis,settledIntelligence), provisionalCostMinor,
-        retainedExposureMinor: sumKnown(simulated ? 0 : ledger.retainedMinor,diagnosisSimulated ? 0 : diagnosisLedger.retainedMinor,intelligenceSimulated?0:intelligenceLedger.retainedMinor),
-        simulatedRetainedMinor: sumKnown(simulated ? ledger.retainedMinor : 0,diagnosisSimulated ? diagnosisLedger.retainedMinor : 0,intelligenceSimulated?intelligenceLedger.retainedMinor:0),
+        providerCostMinor: providerCalls === 0 ? 0 : sumKnown(settledDeliverables,settledDiagnosis,settledIntelligence,settledJourney), provisionalCostMinor,
+        retainedExposureMinor: sumKnown(simulated ? 0 : ledger.retainedMinor,diagnosisSimulated ? 0 : diagnosisLedger.retainedMinor,intelligenceSimulated?0:intelligenceLedger.retainedMinor,journeySimulated?0:journeyLedger.retainedMinor),
+        simulatedRetainedMinor: sumKnown(simulated ? ledger.retainedMinor : 0,diagnosisSimulated ? diagnosisLedger.retainedMinor : 0,intelligenceSimulated?intelligenceLedger.retainedMinor:0,journeySimulated?journeyLedger.retainedMinor:0),
         currency: 'USD', humanSeconds: null, ledgerStatus:ledger.status==='unavailable'||diagnosisLedger.status==='unavailable'?'unavailable':ledger.status,
-        scope:'Distinct diagnosis, task and intelligence accounts summed once; prior missions and development subscriptions excluded', billingStatus:providerCalls===0?'not_applicable':sumKnown(settledDeliverables,settledDiagnosis,settledIntelligence)===null?'unsettled_or_unknown':'recorded', ledger, diagnosisLedger,intelligenceLedger,
+        scope:'Distinct diagnosis, task, intelligence and outcome-journey accounts summed once; prior missions and development subscriptions excluded', billingStatus:providerCalls===0?'not_applicable':sumKnown(settledDeliverables,settledDiagnosis,settledIntelligence,settledJourney)===null?'unsettled_or_unknown':'recorded', ledger, diagnosisLedger,intelligenceLedger,journeyLedger,
         recordedOwnerInteractionSeconds: business ? this.rows('pilot-review').filter(r => r.businessId === business.id && r.endedAt).reduce((sum, r) => sum + (r.durationSeconds ?? 0), 0) : 0,
         independentCorrectionSeconds: null, localComputeCostMinor: null, subscriptionUsageCostMinor: null },
       history: business ? this.store.records({ id: 'pilot-owner', tenantId: 'mason', businessId: business.id, permissions: ['read'] }, portfolioScope(business.id)).filter(r => r.kind === 'PilotOwnerAction').slice(-20).map(r => ({ id: r.id, ...r.value })) : [],
       archive: [{ title: 'Mission 031 R5', status: 'unsigned; preserved', retainedExposureMinor: 1917, settledCostMinor: null, note: 'Historical Mission 031 exposure, not this pilot spending. Quote Desk remains an incomplete live engineering experiment.', url: 'http://127.0.0.1:43142/' }],
       authority: { ...authority, externalEffects: false, connectionAccess: false },
-      release: { version: '033', historicalR5: 'unsigned; preserved', qualification: 'Business-intelligence and coordinated execution mechanics; actual-model commercial competence and customer acceptance not established' } };
+      journeyAuthority,
+      release: { version: '034', historicalR5: 'unsigned; preserved', qualification: 'Connected evidence, outcome execution, functional applications and worker-development mechanics; actual-model commercial competence and customer acceptance not established' } };
   }
+  developmentView(businessId:string){const r=new WorkerDevelopmentService(this.store).report(businessId);return {...r,workers:r.definitions,observations:this.rows('pilot-worker-development-observation').filter(x=>x.businessId===businessId)};}
   workerView(businessId?: string) {
     if (businessId) return new PilotLearning(this.store).workers(businessId).map(({selectedProcedure, ...worker}) => worker);
     return [{ id: 'pilot-strong-baseline', name: 'Business delivery worker', job: 'Ground a response packet or contained website in permitted company evidence, inspect checks and correct the actual artifact.', procedureVersion: 'pilot-strong-generalist-v1', tools: ['workspace.read', 'workspace.patch', 'workspace.replace', 'check.run', 'artifact.publish_local'],
@@ -275,6 +329,10 @@ export class PilotService {
   async prepareLive(businessId: string) {
     const company = this.knowledge.company(businessId);
     requireThat(company.mode !== 'fixture', 'LIVE_PREPARATION_REQUIRES_REAL_COMPANY');
+    const currentJourney=this.rows('pilot-prepared-journey').filter(p=>p.businessId===businessId).at(-1);
+    if(currentJourney){requireThat(hash(currentJourney.proposal)===currentJourney.proposalHash,'JOURNEY_PREPARED_INTEGRITY');return {...currentJourney,authority:this.journeyAuthority(),preparationOnly:true,providerRequests:0};}
+    const mandates=this.operatingOutcomes.list(businessId);
+    if(mandates.length)return {version:'outcome-journey-preparation-034',businessId,authority:'Unsigned; no provider execution.',outcomes:mandates.map(o=>({id:o.id,objective:o.objective,maxCalls:o.maxCalls,repairReserve:o.repairReserve,preparationReserve:7,plannerReserve:1,primaryMaximum:o.maxCalls-o.repairReserve-8})),nextAction:'Use Prepare exact execution request on the selected outcome. This reserves named preparation capacity and creates a versioned unsigned packet.',requirements:['The owner must approve the exact hash, data and numerical envelope before protected signing.','Account access and credits are not verified by preparation.','No customer effects, account reads or deployments are included.'],providerRequests:0};
     const saved=this.store.get('pilot-prepared-intelligence',businessId);
     if(saved){requireThat(hash(saved.proposal)===saved.proposalHash,'PREPARED_INTELLIGENCE_INTEGRITY');return {...saved,authority:this.authority(),preparationOnly:true,providerRequests:0};}
     if(this.store.get('pilot-discovery',businessId)){

@@ -1,5 +1,5 @@
 import { resolve, join } from 'node:path';
-import { writeFileSync, readFileSync } from 'node:fs';
+import { writeFileSync, readFileSync,existsSync,unlinkSync } from 'node:fs';
 import { requireThat } from '../contracts.ts';
 import { PilotService } from './service.ts';
 import { servePilot } from './server.ts';
@@ -7,20 +7,29 @@ import { backupPilot, restorePilot } from './continuity.ts';
 import { preparePilotAuthorization, loadAuthorizedPilot } from './authorized.ts';
 import { preparePilotDiagnosisAuthorization, signPilotDiagnosisProposal, loadAuthorizedPilotDiagnosis } from './diagnosis-authorized.ts';
 import { prepareIntelligenceAuthorization, signIntelligenceProposal, loadAuthorizedIntelligence } from './intelligence-authorized.ts';
+import {runOutcomeJourneyCli} from './outcome-journey-cli.ts';
+import {runConnectionHostCli} from './connections/cli.ts';
 
 const args = process.argv.slice(2), command = args[0] ?? 'serve';
 const option = (key: string, fallback = '') => { const index = args.indexOf(key); return index < 0 ? fallback : args[index + 1]; };
+const processAlive=(pid:number)=>{try{process.kill(pid,0);return true;}catch{return false;}};
 requireThat(!args.includes('--live') && !args.includes('--credential') && !args.includes('--grant'), 'PILOT_CLI_HAS_NO_LIVE_AUTHORITY');
-if (command === 'restore') {
+if(command==='connection'){
+  await runConnectionHostCli(args.slice(1));
+}else if(command==='journey'){
+  await runOutcomeJourneyCli(args.slice(1));
+} else if (command === 'restore') {
   requireThat(['--backup','--target','--hash'].every(x => args.includes(x)), 'RESTORE_EXPLICIT_INPUTS_REQUIRED');
   console.log(JSON.stringify(restorePilot(option('--backup'), option('--target'), option('--hash')), null, 2));
 } else {
-  const root = resolve(option('--root', 'var/business-intelligence-033')), service = new PilotService(root,{publicReader:{kind:'public'}});
+  const root = resolve(option('--root', 'var/overnight-product-034')), service = new PilotService(root,{publicReader:{kind:'public'}});
   if (command === 'serve') {
     await service.execution.recover();
-    const app = servePilot({service, port: Number(option('--port','43144'))});
-    console.log(JSON.stringify({url: await app.ready, root, release: '033', providerCallsAuthorized: false, credentialAccess: false, externalEffects: false, dataMode: 'website-first public retrieval; fixtures only through explicit archive action'}));
-    const close = async () => { await app.close(); service.store.close(); process.exit(0); };
+    const app = servePilot({service, port: Number(option('--port','43145'))});
+    const url=await app.ready,lease=join(root,'owner-service.json');
+    writeFileSync(lease,JSON.stringify({pid:process.pid,root,url,startedAt:new Date().toISOString()})+'\n');
+    console.log(JSON.stringify({url, root, release: '034', providerCallsAuthorized: service.authority().liveEnabled || service.journeyAuthority().liveEnabled, credentialAccessOnStartup: false, externalEffects: false, dataMode: 'website-first public retrieval; exact signed scope required for inference; fixtures only through explicit archive action'}));
+    const close = async () => { await app.close();if(existsSync(lease)&&JSON.parse(readFileSync(lease,'utf8')).pid===process.pid)unlinkSync(lease);service.store.close(); process.exit(0); };
     process.once('SIGINT', close); process.once('SIGTERM', close);
   } else {
     try {
@@ -91,7 +100,11 @@ if (command === 'restore') {
         const result=args.includes('--task')?await live.run(option('--task')):await live.runAll();
         console.log(JSON.stringify({result,accounting:live.totals()},null,2));
       }
-      else if (command === 'backup') { requireThat(args.includes('--output'), 'BACKUP_OUTPUT_REQUIRED'); console.log(JSON.stringify(backupPilot(service.store, option('--output')), null, 2)); }
+      else if (command === 'backup') {
+        requireThat(args.includes('--output')&&args.includes('--confirm-stopped'), 'BACKUP_STOP_OWNER_SERVICE_AND_CONFIRM');
+        const lease=join(root,'owner-service.json');requireThat(!existsSync(lease)||!processAlive(JSON.parse(readFileSync(lease,'utf8')).pid),'BACKUP_OWNER_SERVICE_STILL_RUNNING');
+        console.log(JSON.stringify(backupPilot(service.store, option('--output'),{sourceRoot:root,quiescent:true}),null,2));
+      }
       else if (command === 'demo') {
         const company = service.knowledge.createDemo(); await service.knowledge.diagnose(company.id);
         for (const workflow of ['response-packet','business-site'] as const) { const task = service.plan(company.id,workflow); await service.execution.run(company.id,task.id); }

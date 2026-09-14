@@ -7,7 +7,7 @@ export function finalizationEnabled(task:any){return task.inputs?.executionProto
 export function finishingFeasibility(task:any,w:any,remaining:number,localRemaining:number,observed:{checkSeen:boolean;publicationSeen:boolean}={checkSeen:false,publicationSeen:false}){
  const currentChecks=w?.checkedManifest===w?.manifest?.sha256&&Array.isArray(w?.checks)&&w.checks.length>0;
  const passed=currentChecks&&w.checks.every((c:any)=>c.passed);
- const blank=w?.files?.length===1&&(w.files[0].content.trim()==='{}'||w.provenance?.startsWith('Controller-created blank')&&w.manifest.revision===1);
+ const blank=Boolean(w&&(w.provenance?.startsWith('Controller-created blank')&&w.manifest.revision===1||w.files?.length===1&&w.files[0].content.trim()==='{}'));
  const writeRequired=Boolean(w&&(!sourceHandoff(w,Boolean(task.inputs?.sourceBindings)).accepted||blank||currentChecks&&!passed));
  const software=w?.kind==='software',checkRequired=!passed||!observed.checkSeen;
  const minimumCalls=writeRequired?(software?3:2):software&&checkRequired?2:1;

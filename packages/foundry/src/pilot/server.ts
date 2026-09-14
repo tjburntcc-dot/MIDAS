@@ -9,13 +9,14 @@ import { PilotLearning } from './learning.ts';
 import { InteractivePreviewSessions, renderRemotePreview } from '../portfolio/preview.ts';
 import {commercialFixturePort} from './intelligence-fixtures.ts';
 import {CommercialReview} from './commercial-review.ts';
+import {fixtureOutcomePlanner} from './fixtures-outcome.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const csp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 export function servePilot(options: { service: PilotService; port?: number }) {
   const service = options.service, sessions = new Map<string, { csrf: string; at: number }>();
   const previews = new InteractivePreviewSessions();
-  const previewOwners = new Map<string, {owner: string; businessId: string; taskId: string}>();
+  const previewOwners = new Map<string, {owner: string; businessId: string; taskId: string;project?:boolean;manifestHash?:string}>();
   const opening = new Set<string>();
   let origin = '';
   const server = createServer(async (req, res) => {
@@ -26,7 +27,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
     try {
       requireThat(req.headers.host === new URL(origin).host, 'HOST_DENIED');
       const url = new URL(req.url ?? '/', origin);
-      if (req.method === 'GET' && url.pathname === '/health') { send(200, {status: 'ok', version: '033', providerEnabled: service.authority().liveEnabled}); return; }
+      if (req.method === 'GET' && url.pathname === '/health') { send(200, {status: 'ok', version: '034', providerEnabled: service.authority().liveEnabled || service.journeyAuthority().liveEnabled}); return; }
       if (req.method === 'GET' && url.pathname === '/favicon.ico') { res.writeHead(204).end(); return; }
       if (req.method === 'GET' && ['/', '/app.js', '/style.css', '/pilot.js', '/pilot.css'].includes(url.pathname)) {
         const file = url.pathname === '/' ? 'index.html' : url.pathname === '/pilot.js' ? 'app.js' : url.pathname === '/pilot.css' ? 'style.css' : url.pathname.slice(1);
@@ -39,7 +40,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           sessionId = randomBytes(24).toString('hex'); session = {csrf: randomBytes(24).toString('hex'), at: Date.now()}; sessions.set(sessionId, session);
           res.setHeader('set-cookie', 'midas032=' + sessionId + '; HttpOnly; SameSite=Strict; Path=/');
         }
-        send(200, {csrf: session.csrf, mode: 'local_owner', providerEnabled: service.authority().liveEnabled, externalEffects: false}); return;
+        send(200, {csrf: session.csrf, mode: 'local_owner', providerEnabled: service.authority().liveEnabled || service.journeyAuthority().liveEnabled, externalEffects: false}); return;
       }
       requireThat(session && Date.now() - session.at < 12 * 3600000, 'OWNER_SESSION_REQUIRED');
       const businessId = url.searchParams.get('businessId') ?? undefined;
@@ -66,7 +67,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           send(200, item.content, { 'content-type': item.mimeType ?? 'application/json; charset=utf-8', 'content-disposition': 'attachment; filename="' + String(item.fileName ?? 'deliverable.json').replace(/[^a-zA-Z0-9._-]/g, '_') + '"', 'content-security-policy': "sandbox; default-src 'none'" }); return;
         }
         const preview = (service.execution as any).preview(businessId, taskId);
-        const html = preview.kind === 'service' ? preview.html : renderRemotePreview({...preview.binding, openEndpoint: '/api/preview/open', actionEndpoint: '/api/preview/action', csrf: session!.csrf, exportFormat: 'json'});
+        const html = preview.kind === 'service' ? preview.html : renderRemotePreview({...preview.binding, openEndpoint: '/api/preview/open', actionEndpoint: '/api/preview/action', closeEndpoint:'/api/preview/close', csrf: session!.csrf, exportFormat: 'json'});
         send(200, html, { 'content-type': 'text/html; charset=utf-8', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; frame-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'" }); return;
       }
       requireThat(req.method === 'POST' && req.headers.origin === origin && req.headers['x-csrf-token'] === session!.csrf, 'CSRF_INVALID');
@@ -75,20 +76,30 @@ export function servePilot(options: { service: PilotService; port?: number }) {
       for await (const chunk of req) { length += chunk.length; requireThat(length <= (url.pathname==='/api/source/screenshot'?3000000:300000), 'REQUEST_TOO_LARGE'); chunks.push(Buffer.from(chunk)); }
       const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       requireThat(body && typeof body === 'object' && !Array.isArray(body), 'OBJECT_REQUIRED');
+      if(url.pathname==='/api/preview/close'){
+        const owner=previewOwners.get(body.sessionId);requireThat(owner?.owner===sessionId,'PREVIEW_OWNER_SCOPE');
+        if(owner.project)await service.execution.tools.closeManagedProjectPreview(body.sessionId);else await previews.close(body.sessionId);
+        previewOwners.delete(body.sessionId);send(200,{closed:true});return;
+      }
       if (url.pathname === '/api/preview/open') {
         service.task(body.ventureId, body.taskId);
         const preview = service.execution.preview(body.ventureId, body.taskId);
         requireThat(preview.binding.manifestHash === body.manifestHash, 'PREVIEW_MANIFEST_STALE');
         const key = sessionId + '/' + body.taskId; requireThat(!opening.has(key), 'PREVIEW_OPEN_PENDING'); opening.add(key);
         try {
-          for (const [id, old] of previewOwners) if (old.owner === sessionId && old.taskId === body.taskId) { await previews.close(id); previewOwners.delete(id); }
+          for (const [id, old] of previewOwners) if (old.owner === sessionId && old.taskId === body.taskId) { if(old.project)await service.execution.tools.closeManagedProjectPreview(id);else await previews.close(id); previewOwners.delete(id); }
           requireThat(previewOwners.size < 6, 'PREVIEW_CAPACITY');
+          if(preview.executionProfile==='functional-project-v1'){
+            const result=await service.execution.tools.openManagedProjectPreview(body.ventureId,preview.binding.taskId,body.viewportWidth??1100);
+            previewOwners.set(result.sessionId,{owner:sessionId,businessId:body.ventureId,taskId:body.taskId,project:true,manifestHash:preview.binding.manifestHash});send(200,result);return;
+          }
           const result = await previews.open({...preview.binding, files: preview.files, executionProfile: preview.executionProfile, viewportWidth: body.viewportWidth, stateHandler: input => service.execution.previewState(body.ventureId, preview.binding.taskId, input)});
           previewOwners.set(result.sessionId, {owner: sessionId, businessId: body.ventureId, taskId: body.taskId}); send(200, result);
         } finally { opening.delete(key); } return;
       }
       if (url.pathname === '/api/preview/action') {
         const owner = previewOwners.get(body.sessionId); requireThat(owner?.owner === sessionId, 'PREVIEW_SESSION_SCOPE');
+        if(owner!.project){const preview=service.execution.preview(owner!.businessId,owner!.taskId);requireThat(preview.binding.manifestHash===owner!.manifestHash,'PREVIEW_MANIFEST_STALE');const result=await service.execution.tools.actManagedProjectPreview(body.sessionId,body);send(200,{...result,...(result.exportJson?{exportCsv:JSON.stringify(result.exportJson,null,2)}:{})});return;}
         const binding = previews.binding(body.sessionId), preview = service.execution.preview(owner!.businessId, owner!.taskId);
         requireThat(preview.binding.manifestHash === binding.manifestHash, 'PREVIEW_MANIFEST_STALE');
         send(200, await previews.act(body.sessionId, body)); return;
@@ -97,10 +108,31 @@ export function servePilot(options: { service: PilotService; port?: number }) {
       if (url.pathname === '/api/business') {
         // Browser input cannot set fixture mode or grant authority.
         result = service.createBusiness(body); selected = result.id;
+      } else if(url.pathname==='/api/operating-demo'){result=await service.createOperatingDemo(body.fixture);selected=result.id;
       } else if (url.pathname === '/api/demo') { result = body.fixture?await service.createCommercialDemo(body.fixture):service.knowledge.createDemo(); selected = result.id ?? result.company?.id; }
       else {
         requireThat(typeof selected === 'string', 'BUSINESS_REQUIRED'); service.knowledge.company(selected);
-        if (url.pathname === '/api/investigation/retrieve'||url.pathname==='/api/investigation/continue') {
+        if(url.pathname==='/api/development/prepare')result=service.workerDevelopment.prepare(selected,body);
+        else if(url.pathname==='/api/development/fixture')result=await service.workerDevelopment.fixture(selected,body.candidateId);
+        else if(url.pathname==='/api/connection/sync')result=await service.syncApprovedConnection(selected,body.connectionId);
+        else if(url.pathname==='/api/connection/configure')result=service.connectedAccounts.beginConfiguration({businessId:selected,provider:body.provider,credentialReference:body.credentialReference,capabilityIds:body.capabilityIds,configuration:body.configuration});
+        else if(['/api/connection/consent','/api/connection/revoke'].includes(url.pathname)){
+          requireThat(service.connectedAccounts.get(body.connectionId).businessId===selected,'CONNECTION_BUSINESS_SCOPE');
+          result=url.pathname.endsWith('/consent')?service.connectedAccounts.grantConsent(body.connectionId,{grantedAt:new Date().toISOString(),grantedBy:'local-owner-session',purpose:body.purpose,scopes:body.scopes,expiresAt:body.expiresAt??null}):service.connectedAccounts.revoke(body.connectionId,body.reason);
+        }
+        else if(url.pathname==='/api/outcome/create')result=service.operatingOutcomes.create(selected,{objective:body.objective,autonomy:body.autonomy,allowedFamilies:body.allowedFamilies,maxCalls:body.maxCalls,repairReserve:body.repairReserve});
+        else if(url.pathname.startsWith('/api/outcome/')){
+          requireThat(service.operatingOutcomes.get(body.outcomeId).businessId===selected,'OUTCOME_BUSINESS_SCOPE');
+          if(url.pathname.endsWith('/control')){result=service.operatingOutcomes.control(body.outcomeId,body.action);const authority=service.journeyAuthority();if(body.action==='resume'&&authority.liveEnabled&&authority.businessId===selected&&authority.outcomeId===body.outcomeId){service.launchInvestigation(selected,()=>service.runApprovedOutcome(selected,body.outcomeId));status=202;}}
+          else if(url.pathname.endsWith('/allow'))result=service.operatingOutcomes.allowPreparation(body.outcomeId);
+          else if(url.pathname.endsWith('/prepare'))result=service.prepareJourney(selected,body.outcomeId);
+          else if(url.pathname.endsWith('/plan-fixture')){requireThat(service.knowledge.company(selected).mode==='fixture','OUTCOME_FIXTURE_ONLY');result=await service.operatingOutcomes.propose(body.outcomeId,fixtureOutcomePlanner);}
+          else if(url.pathname.endsWith('/correct')){result=service.correctOutcome(selected,body.outcomeId,{nodeId:body.nodeId,artifactHash:body.artifactHash,instruction:body.instruction,repairCalls:body.repairCalls,assisted:body.assisted});if(service.knowledge.company(selected).mode!=='fixture'){service.launchInvestigation(selected,()=>service.runApprovedOutcome(selected,body.outcomeId));status=202;}}
+          else if(url.pathname.endsWith('/run-approved')){const authority=service.journeyAuthority();requireThat(authority.approved&&authority.businessId===selected&&authority.outcomeId===body.outcomeId,'JOURNEY_OWNER_SCOPE');service.launchInvestigation(selected,()=>service.runApprovedOutcome(selected,body.outcomeId));status=202;}
+          else if(url.pathname.endsWith('/run-fixture')){requireThat(service.knowledge.company(selected).mode==='fixture','OUTCOME_LIVE_GRANT_REQUIRED');service.launchInvestigation(selected,()=>service.operatingOutcomes.runOffline(body.outcomeId));status=202;}
+          else throw Error('OUTCOME_ACTION_UNAVAILABLE');
+        }
+        else if (url.pathname === '/api/investigation/retrieve'||url.pathname==='/api/investigation/continue') {
           if(url.pathname.endsWith('continue'))service.discovery.resume(selected);
           service.launchInvestigation(selected,()=>service.discovery.seed(selected));status=202;
         }
@@ -117,6 +149,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
         else if (url.pathname === '/api/business/update') result = service.updateBusiness(selected,body);
         else if (url.pathname === '/api/source') result = service.knowledge.addSource(selected, {title: body.title, text: body.text, kind: body.kind, rights: body.rights, observedAt: body.observedAt, validUntil: body.validUntil ?? null});
         else if (url.pathname === '/api/evidence/select') result = service.knowledge.selectEvidence(selected, body.sourceIds);
+        else if (url.pathname === '/api/evidence/include-new') result = service.knowledge.includeNewPermittedEvidence(selected);
         else if (url.pathname === '/api/diagnose') {
           const fixture=service.store.get('pilot-commercial-fixture',selected);
           if(fixture)result=await service.intelligence.analyze(selected,commercialFixturePort(fixture.case,service.intelligence.sources(selected)));
@@ -174,5 +207,5 @@ export function servePilot(options: { service: PilotService; port?: number }) {
   });
   server.requestTimeout = 30000; server.headersTimeout = 15000;
   const ready = new Promise<string>(resolve => { server.listen(options.port ?? 43144, '127.0.0.1', () => { origin = 'http://127.0.0.1:' + (server.address() as any).port; resolve(origin); }); });
-  return { server, ready, close: async () => { await service.settle(); await previews.closeAll(); await new Promise<void>((resolve,reject) => server.close(e => e ? reject(e) : resolve())); } };
+  return { server, ready, close: async () => { await service.settle(); for(const [id,owner] of previewOwners) if(owner.project)await service.execution.tools.closeManagedProjectPreview(id); previewOwners.clear(); await previews.closeAll(); await new Promise<void>((resolve,reject) => server.close(e => e ? reject(e) : resolve())); } };
 }

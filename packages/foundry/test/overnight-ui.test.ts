@@ -1,0 +1,45 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { PilotService } from '../src/pilot/service.ts';
+import { servePilot } from '../src/pilot/server.ts';
+import { launchCheckBrowser } from '../src/portfolio/preview.ts';
+
+test('owner connection setup uses only an opaque vault reference and unsigned outcomes never claim a live run', async () => {
+  const root=mkdtempSync(join(tmpdir(),'pilot-overnight-ui-')),service=new PilotService(root),server=servePilot({service,port:0}),origin=await server.ready,browser=await launchCheckBrowser(),context=await browser.newContext({viewport:{width:1280,height:900},reducedMotion:'reduce'}),page=await context.newPage();
+  const external:string[]=[],errors:string[]=[];page.on('pageerror',(error:Error)=>errors.push(error.message));await context.route('**/*',(route:any)=>new URL(route.request().url()).origin===origin?route.continue():(external.push(route.request().url()),route.abort()));
+  try {
+    const company=service.createBusiness({name:'Owner UI route fixture',website:'',goal:'Verify declared local connection and outcome controls.',notes:'Development-only browser fixture.'}),base=service.view(company.id);
+    const definition={provider:'google_workspace',title:'Google Drive, Docs and Sheets',readiness:'implemented',documentation:['https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list'],capabilities:[{id:'drive_documents_read',title:'Read Drive documents',requiredScopes:['https://www.googleapis.com/auth/drive.readonly'],effects:'read',incremental:true,sensitivity:'business_documents'}]};
+    const view=()=>({...base,connectedAccounts:{definitions:[definition],items:[]},operatingOutcomes:[{id:'outcome-ui-1',objective:'Prepare a traceable local offer clarification.',autonomy:'prepare_supported_work',allowedFamilies:['content'],maxCalls:0,repairReserve:0,status:'waiting_authorization',nextAction:'Unsigned outcome mandate: a current exact model grant is required before a live step.',graph:[{id:'draft',title:'Draft the local clarification',status:'blocked',current:true,assignment:{worker:'Business delivery worker'}}],artifacts:[{nodeId:'draft',artifactId:'artifact-ui',hash:'artifact-ui-hash',title:'Current local clarification',current:true}],calls:{admitted:0,remaining:0,repairAllocated:0},history:[]}],development:{workers:[],observations:[],candidates:[],comparisons:[]}});
+    let configurationBody:any=null,correctionBody:any=null;
+    await page.route(origin+'/api/**',async(route:any)=>{const request=route.request(),url=new URL(request.url());if(url.pathname==='/api/session')return route.fulfill({json:{csrf:'browser-fixture-csrf'}});if(url.pathname==='/api/state')return route.fulfill({json:view()});if(url.pathname==='/api/connection/configure'){configurationBody=request.postDataJSON();return route.fulfill({json:view()});}if(url.pathname==='/api/outcome/correct'){correctionBody=request.postDataJSON();return route.fulfill({json:view()});}return route.fulfill({status:404,json:{error:'UNEXPECTED_ROUTE'}});});
+    await page.goto(origin+'/#connections');await page.evaluate(id=>localStorage.setItem('midas-pilot-business',id),company.id);await page.reload();
+    await page.getByRole('heading',{name:'Connect evidence with clear permission.'}).waitFor();assert.equal(await page.getByText('Setup required',{exact:true}).count(),1);assert.equal(await page.getByText('Connected',{exact:true}).count(),0);
+    await page.getByRole('button',{name:'Set up read access'}).click();await page.getByLabel('Vault reference ID').fill('owner-vault-google');await page.getByRole('button',{name:'Save connection setup'}).click();
+    await page.waitForFunction(()=>document.querySelector('#toast')?.textContent?.includes('Connection setup saved'));assert.deepEqual(configurationBody,{businessId:company.id,provider:'google_workspace',credentialReference:{kind:'owner_vault',id:'owner-vault-google'},configuration:{}});assert.doesNotMatch(JSON.stringify(configurationBody),/token|secret|password|api[_-]?key/i);
+    await page.goto(origin+'/#outcomes');await page.getByRole('heading',{name:'Choose substantial work with a visible mandate.'}).waitFor();await page.getByText('Live work is not available.',{exact:true}).waitFor();const unavailable=page.getByRole('button',{name:'Live run unavailable'});assert.equal(await unavailable.isDisabled(),true);await page.getByRole('button',{name:'Request correction'}).click();await page.getByLabel('What needs to change?').fill('Clarify the owner approval checkpoint.');await page.getByLabel('Assistance informed this correction').check();await page.getByRole('button',{name:'Request bounded correction'}).click();await page.waitForFunction(()=>document.querySelector('#toast')?.textContent?.includes('Bounded correction request recorded'));assert.equal(correctionBody.assisted,true);assert.equal(correctionBody.repairCalls,3);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+  } finally { await browser.close();await server.close();service.store.close(); }
+});
+
+test('actual saved state keeps an owner-friendly mandate after restart and labels a fixture plan before any fixture run', async () => {
+  const root=mkdtempSync(join(tmpdir(),'pilot-overnight-ui-actual-')),service=new PilotService(root),company=service.createBusiness({name:'Actual owner journey',website:'',goal:'Prepare one clear local offer response.',notes:'Browser-backed state fixture.'});
+  let server=servePilot({service,port:0}),origin=await server.ready,browser=await launchCheckBrowser(),context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'}),page=await context.newPage(),external:string[]=[],errors:string[]=[],apiFailures:any[]=[];
+  page.on('pageerror',(error:Error)=>errors.push(error.message));page.on('response',async response=>{if(new URL(response.url()).origin===origin&&response.url().includes('/api/')&&response.status()>=400)apiFailures.push({url:response.url(),status:response.status(),body:(await response.text()).slice(0,1000)});});await context.route('**/*',(route:any)=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():(external.push(route.request().url()),route.abort()));
+  try {
+    await page.addInitScript(id=>{if(!localStorage.getItem('midas-pilot-business'))localStorage.setItem('midas-pilot-business',id);},company.id);await page.goto(origin+'/#outcomes');
+    const createMandate=page.getByRole('button',{name:'Create outcome mandate'}).first();await createMandate.waitFor({timeout:5000});await createMandate.click();await page.getByLabel('What outcome do you need?').fill('Prepare a concise local response packet for the owner to review.');
+    assert.equal(await page.getByText('Advanced resource limits',{exact:false}).count(),1);assert.equal(await page.getByLabel('Evidence-backed response or offer packet').isChecked(),true);assert.equal(await page.getByLabel('Contained business website').isChecked(),true);assert.equal(await page.locator('#outcome-families').count(),0);
+    await page.locator('details.advanced-limits').evaluate((details:any)=>{details.open=true;});await page.getByLabel('Maximum planned calls').fill('33');await page.getByLabel('Repair reserve').fill('12');
+    await page.getByRole('button',{name:'Create outcome mandate'}).last().click();await page.getByText('Plan pending model authorization',{exact:true}).waitFor();assert.equal(await page.getByText('No plan has been created.',{exact:true}).count(),1);assert.equal(await page.getByRole('button',{name:'Live run unavailable'}).isDisabled(),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await page.reload();await page.getByText('Plan pending model authorization',{exact:true}).waitFor();assert.equal(await page.getByText('Prepare a concise local response packet for the owner to review.',{exact:true}).count(),1);
+    const fixture=service.knowledge.createDemo();service.operatingOutcomes.create(fixture.id,{objective:'Prepare a fixture-only local response packet.',autonomy:'propose_only',allowedFamilies:['response-packet'],maxCalls:8,repairReserve:3});await page.evaluate(id=>localStorage.setItem('midas-pilot-business',id),fixture.id);await page.reload();await page.getByRole('button',{name:'Prepare fixture plan'}).waitFor();assert.equal(await page.getByRole('button',{name:'Run labeled fixture'}).count(),0,'the fixture cannot run before its explicit fixture plan exists');
+    assert.deepEqual(errors,[]);assert.deepEqual(apiFailures,[]);assert.deepEqual(external,[]);
+  } catch (error:any) {
+    const rendered=await page.locator('body').innerText().catch(()=>''),diagnostic={apiFailures,errors,rendered:rendered.slice(0,4000),url:page.url()};
+    error.message+='\nUI diagnostic: '+JSON.stringify(diagnostic);throw error;
+  } finally { await browser.close();await server.close();service.store.close(); }
+});

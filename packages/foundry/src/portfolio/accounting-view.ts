@@ -71,3 +71,6 @@ export function readPortfolioAccounting(store:StateStore,root:string):PortfolioA
   return {...base,status:'unavailable',reason:'The retained grant, public signature or ledger binding could not be verified. Accounting is unavailable, not zero; no authority or counters were changed.'};
  }
 }
+
+/** Read-only projection for a verified single OperatingModels grant. Never creates an account. */
+export function readOperatingLedgerAccounting(store:StateStore,grant:any):PortfolioAccountingView{return ledgerView(store,grant,grant,false);}

@@ -112,6 +112,10 @@ export class Portfolio {
         return this.store.transaction(() => { const t = this.leased(taskId, token), id = taskId + '/' + stepId, old = this.store.get(kinds.step, id); if (old) { requireThat(old.kind === kind, 'STEP_ID_CONFLICT'); return old; }
             const field = kind === 'model' ? 'modelCalls' : 'localToolRuns', rows = this.rows(kinds.step), cap = this.store.get(kinds.config, 'default').resources[field];
             requireThat(rows.filter(s => s.kind === kind).length < cap, 'PORTFOLIO_RESOURCE_CAP'); requireThat(rows.filter(s => s.taskId === taskId && s.kind === kind).length < t.resource[field], 'TASK_RESOURCE_CAP');
+            // Prospective outcome mandates share one admission ceiling across original,
+            // correction and regenerated dependent tasks. Failed/unknown steps still count.
+            const outcomeId=(t.inputs as any)?.outcomeId;
+            if(outcomeId){const outcome=this.store.get('pilot-outcome-mandate',outcomeId);requireThat(outcome&&outcome.businessId===t.ventureId&&outcome.taskIds.includes(t.id),'OUTCOME_TASK_BINDING');requireThat(!['paused','cancelled','rejected'].includes(outcome.state),'OUTCOME_STOPPED');if(kind==='model')requireThat((outcome.preparationAdmissions??0)+outcome.plannerAdmissions+rows.filter(s=>s.kind==='model'&&outcome.taskIds.includes(s.taskId)).length<outcome.maxCalls,'OUTCOME_AGGREGATE_CALL_CAP');}
             const step = this.put(kinds.step, { id, stepId, taskId, ventureId: t.ventureId, generation: t.lease!.generation, kind, status: 'reserved', createdAt: this.at(), usage: null }); this.event(t.ventureId, 'step_reserved', { taskId, stepId, kind }); return step;
         });
     }

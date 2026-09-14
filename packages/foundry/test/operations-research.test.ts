@@ -9,6 +9,16 @@ const text = (body: string, contentType = 'text/html'): FetchResult => ({
 const redirect = (location: string): FetchResult => ({ status: 302, headers: { get: name => name.toLowerCase() === 'location' ? location : null } });
 const publicDns = async () => [{ address: '93.184.216.34' }];
 
+test('bounded HTML prefix retains raw bytes but excludes an unfinished tag from publisher wording', async () => {
+    const prefix='<main><p>Visible offer evidence.</p><img alt="unfinished ',raw=prefix+'attribute content that is outside the cap">';
+    const app=new BoundedResearchAdapter({seedUrls:['https://safe.example.org/'],maxBytes:Buffer.byteLength(prefix),retainBody:true,partialBodyAtLimit:true},{dnsLookup:publicDns,fetch:async()=>text(raw)});
+    const result=await app.retrieve('https://safe.example.org/');
+    assert.equal(result.code,'PARTIAL_BODY_RETAINED');
+    assert.equal(Buffer.from(result.source!.retainedBody!.base64,'base64').toString(),prefix);
+    assert.equal(result.source!.text,'Visible offer evidence.');
+    assert.equal(result.source!.retainedBody!.bodyComplete,false);
+});
+
 test('retrieval is chosen explicitly, extracts useful markup and allows local corpus query plus evidence', async () => {
     const pages = new Map([
         ['https://docs.example.com/start', text('<html><head><title>Useful docs</title><script>ignore secret()</script></head><body><main><h1>Research guide</h1><p>Evidence comes from public documentation.</p><a href="/detail">Detailed evidence</a></main></body></html>')],

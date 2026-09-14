@@ -6,11 +6,13 @@ import type { ModelPort, Scope } from '../contracts.ts';
 import { buildEvidenceRequest, evidenceAudit, fixtureEvidencePort, prospectiveEvidenceRequest, runEvidenceProposal, validateEvidenceBundle, validateUnderstanding } from '../workbench/evidence.ts';
 import type { EvidenceBundle, UnderstandingProposal } from '../workbench/evidence.ts';
 import type { ResponsesRoute } from '../model-port.ts';
+import {ConnectionRegistry} from './connections/registry.ts';
+import {maintainedReadAdapters} from './connections/adapters.ts';
 
 export type PilotMode = 'owner' | 'fixture';
 export type PilotCompany = { id: string; name: string; website: string; goal: string; notes: string; mode: PilotMode; version: number; createdAt: string; updatedAt: string; _version: number };
 export type SourceInput = { title: string; text: string; kind: 'notes' | 'text' | 'markdown' | 'csv' | 'json' | 'website'; rights: string; observedAt: string; validUntil?: string | null; permission?: 'worker' | 'excluded' };
-export type ObservedSourceOrigin = { kind: 'public-retrieval' | 'owner-image'; url: string | null; recordId: string; contentHash: string; extraction: string; provenance: string };
+export type ObservedSourceOrigin = { kind: 'public-retrieval' | 'owner-image' | 'connection-read'; connectionId?: string; url: string | null; recordId: string; contentHash: string; extraction: string; provenance: string };
 export type PilotSource = SourceInput & { id: string; businessId: string; version: number; permission: 'worker' | 'excluded'; originalPermission?: 'worker' | 'excluded'; selected?: boolean; validUntil: string | null; sha256: string; bytes: number; createdAt: string; provenance: string; origin?: ObservedSourceOrigin; parsed: { format: string; rows?: number; columns?: number } };
 export type CorrectionInput = { taskId: string; artifactHash: string; instruction: string; assisted: boolean; reviewSessionId?: string; id?: string };
 export type OutcomeInput = { taskId: string; artifactHash: string; kind: 'accepted' | 'needs-change' | 'not-useful'; notes: string; assisted: boolean; id?: string };
@@ -49,13 +51,29 @@ export class PilotKnowledge {
     private originalSources(id: string): PilotSource[] { this.company(id); return this.rows('pilot-source').filter(s => s.businessId === id); }
     /** Effective worker permission reflects the owner's current selection. Original bytes,
      * rights and permission remain in immutable source records and originalPermission. */
-    sources(id: string): PilotSource[] { const selection = this.store.get('pilot-evidence-selection', id); return this.originalSources(id).map(source => { const selected = source.permission === 'worker' && (!selection || selection.sourceIds.includes(source.id)); return { ...source, originalPermission: source.permission, selected, permission: selected ? 'worker' : 'excluded' }; }); }
+    sources(id: string): PilotSource[] {
+        const selection = this.store.get('pilot-evidence-selection', id), registry=new ConnectionRegistry(maintainedReadAdapters());
+        const connections=new Map(this.rows('pilot-connection').filter(c=>c.businessId===id).map(c=>[c.id,c]));
+        const excluded=new Set<string>(),linkedIds=new Set(this.rows('pilot-connection-source').filter(s=>s.businessId===id).map(s=>s.knowledgeSourceId));
+        for(const s of this.rows('pilot-connection-source').filter(s=>s.businessId===id)){
+            const c=connections.get(s.connectionId),consent=c?.consent;
+            const required=c?registry.get(c.provider).definition.capabilities.filter(x=>c.capabilityIds.includes(x.id)).flatMap(x=>x.requiredScopes):[];
+            if(!c||c.revokedAt||s.revokedAt||s.supersededAt||!consent||(consent.expiresAt&&Date.parse(consent.expiresAt)<=Date.now())||required.some(x=>!consent.scopes.includes(x)))excluded.add(s.knowledgeSourceId);
+        }
+        return this.originalSources(id).map(source => { const selected = source.permission === 'worker' && !(source.origin?.kind==='connection-read'&&!linkedIds.has(source.id)) && !excluded.has(source.id)&&(!selection || selection.mode==='all_permitted' || selection.sourceIds.includes(source.id)); return { ...source, originalPermission: source.permission, selected, permission: selected ? 'worker' : 'excluded' }; });
+    }
     selectedSources(id: string): PilotSource[] { return this.sources(id).filter(s => s.selected); }
+    includeNewPermittedEvidence(id:string){
+        this.company(id);return this.store.transaction(()=>{const prior=this.store.get('pilot-evidence-selection',id);if(prior?.mode==='all_permitted')return prior;
+            const value={businessId:id,mode:'all_permitted',sourceIds:[],revision:(prior?.revision??0)+1,createdAt:now(),provenance:'Explicit selection of current and future permitted company evidence. Original exclusions, connection consent and signed execution scope remain authoritative.'};
+            this.store.record(pilotKnowledgeScope(id),'evidence-selection-v'+value.revision,'PilotEvidenceSelection',value);const saved=this.store.put('pilot-evidence-selection',id,value,prior?._version??null);this.revise(this.company(id),{},'Allowed current and new permitted sources; existing frozen execution is not extended');return saved;
+        });
+    }
     selectEvidence(id: string, sourceIds: string[]) {
         this.company(id); requireThat(Array.isArray(sourceIds) && sourceIds.length <= 32 && sourceIds.every(x => typeof x === 'string'), 'PILOT_EVIDENCE_SELECTION_INVALID'); requireThat(new Set(sourceIds).size === sourceIds.length, 'PILOT_EVIDENCE_SELECTION_DUPLICATE');
         const originals = this.originalSources(id); for (const sourceId of sourceIds) { const source = originals.find(s => s.id === sourceId); requireThat(source, 'PILOT_EVIDENCE_SELECTION_SCOPE'); requireThat(source.permission === 'worker', 'PILOT_EXCLUDED_SOURCE_PERMISSION'); }
         const selectedIds = [...sourceIds].sort();
-        return this.store.transaction(() => { const prior = this.store.get('pilot-evidence-selection', id); if (prior && hash(prior.sourceIds) === hash(selectedIds)) return prior;
+        return this.store.transaction(() => { const prior = this.store.get('pilot-evidence-selection', id); if (prior && prior.mode !== 'all_permitted' && hash(prior.sourceIds) === hash(selectedIds)) return prior;
             const value = { businessId: id, sourceIds: selectedIds, revision: (prior?.revision ?? 0) + 1, createdAt: now(), provenance: 'owner-selected worker evidence; original source bytes and permissions remain preserved', sourceBindings: selectedIds.map(sourceId => { const source = originals.find(s => s.id === sourceId)!; return { id: source.id, sha256: source.sha256, version: source.version }; }) };
             this.store.record(pilotKnowledgeScope(id), 'evidence-selection-v' + value.revision, 'PilotEvidenceSelection', value); const saved = this.store.put('pilot-evidence-selection', id, value, prior?._version ?? null); this.revise(this.company(id), {}, 'Owner changed the bounded evidence selected for future work'); return saved;
         });
@@ -79,7 +97,7 @@ export class PilotKnowledge {
         this.company(id); text(input.title, 240); text(input.text, 200000); text(input.rights, 1000); timestamp(input.observedAt); requireThat(Buffer.byteLength(input.text, 'utf8') <= 200000, 'PILOT_SOURCE_BYTE_LIMIT'); requireThat(['notes', 'text', 'markdown', 'csv', 'json', 'website'].includes(input.kind), 'PILOT_SOURCE_KIND');
         const validUntil = input.validUntil ?? null; if (validUntil !== null) timestamp(validUntil); const permission = input.permission ?? 'worker'; requireThat(['worker', 'excluded'].includes(permission), 'PILOT_SOURCE_PERMISSION');
         let parsed: PilotSource['parsed'] = { format: input.kind }; if (input.kind === 'json') { let value; try { value = JSON.parse(input.text); } catch { throw new Error('PILOT_JSON_INVALID'); } requireThat(value !== null && typeof value === 'object', 'PILOT_JSON_STRUCTURE'); validateJson(value); parsed = { format: 'json', ...(Array.isArray(value) ? { rows: value.length } : {}) }; } if (input.kind === 'csv') parsed = inspectCsv(input.text);
-        if (observedOrigin) { requireThat(['public-retrieval', 'owner-image'].includes(observedOrigin.kind) && /^[a-f0-9]{64}$/.test(observedOrigin.contentHash), 'PILOT_OBSERVED_SOURCE_ORIGIN'); identifier(observedOrigin.recordId); text(observedOrigin.extraction, 1000); text(observedOrigin.provenance, 1000); if (observedOrigin.url !== null) website(observedOrigin.url); }
+        if (observedOrigin) { requireThat(['public-retrieval', 'owner-image', 'connection-read'].includes(observedOrigin.kind) && /^[a-f0-9]{64}$/.test(observedOrigin.contentHash), 'PILOT_OBSERVED_SOURCE_ORIGIN'); identifier(observedOrigin.recordId); text(observedOrigin.extraction, 1000); text(observedOrigin.provenance, 1000); if (observedOrigin.url !== null) website(observedOrigin.url); }
         const source: PilotSource = { ...input, id: uid('source'), businessId: id, version: 1, permission, validUntil, sha256: hash(input.text), bytes: Buffer.byteLength(input.text, 'utf8'), createdAt: now(), provenance: observedOrigin?.provenance ?? (this.company(id).mode === 'fixture' ? 'development-authored synthetic fixture' : 'owner-supplied content; publisher and accuracy not independently verified'), ...(observedOrigin ? { origin: structuredClone(observedOrigin) } : {}), parsed };
         return this.store.transaction(() => { const c = this.company(id); this.store.record(pilotKnowledgeScope(id), source.id, 'PilotEvidenceSource', source); const saved = this.store.put('pilot-source', source.id, source, null); this.revise(c, {}, 'Evidence added: ' + source.title); return saved; });
     }

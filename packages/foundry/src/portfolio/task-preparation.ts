@@ -6,6 +6,7 @@ import { Portfolio } from './core.ts';
 import type { Task } from './contracts.ts';
 import { EvidenceLibrary } from './evidence.ts';
 import { LocalWorkTools } from './tools.ts';
+import { blankProjectFiles } from './project-contracts.ts';
 
 export const REPORT_HANDOFF_RULE='Keep the complete brief.json at or below 18000 UTF-8 bytes when a downstream planning task must read it in full. Use concise exact supporting excerpts. Larger reports require an explicit revised handoff rather than silent truncation.';
 
@@ -15,7 +16,7 @@ export function createTaskPreparer(portfolio:Portfolio,tools:LocalWorkTools,evid
  const venture=taskBusinessContext(task,portfolio.getVenture(task.ventureId)),sources=evidence.forTask(task);
  requireThat(sources.length>0,'PERMITTED_JOB_EVIDENCE_REQUIRED');
  if(task.capability==='software.build'){
-  tools.seed(task.ventureId,task.id,{kind:'software',files:[{path:'app.html',content:'<!doctype html><html lang="en"><title>Unimplemented product</title><body><h1>Product implementation pending</h1></body></html>'}],inputs:{profile:(task.inputs as any)?.executionProfile??'quote-to-job-v1'},provenance:'Controller-created blank workspace; subsequent source authorship is recorded per actual runtime attempt.'});return;
+  const profile=(task.inputs as any)?.executionProfile??(task.inputs as any)?.profile??'quote-to-job-v1',files=profile==='functional-project-v1'?blankProjectFiles():[{path:'app.html',content:'<!doctype html><html lang="en"><title>Unimplemented product</title><body><h1>Product implementation pending</h1></body></html>'}];tools.seed(task.ventureId,task.id,{kind:'software',files,inputs:{profile},provenance:'Controller-created blank workspace; subsequent source authorship is recorded per actual runtime attempt.'});return;
  }
  requireThat(['service.brief','research.investigate','quality.review','commercial.prepare'].includes(task.capability),'EXECUTABLE_CAPABILITY_UNAVAILABLE');
  if(task.capability==='quality.review'||(task.inputs as any)?.authoritativeArtifactId){
