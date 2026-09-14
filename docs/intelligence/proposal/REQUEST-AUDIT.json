@@ -1,0 +1,43 @@
+{
+  "proposalHash": "846b6c5652d810f245382f48fe9776d4b71fc6d327201612f1b5803ad602a4a7",
+  "initialRequestId": "discovery-e6130d6ad3664fb5b792-decision-1",
+  "requestBodyHash": "fe590846977ba9272eabdc8f89665537f4d46bf3b50b26437186bf5c4f418a27",
+  "serializedBytes": 14364,
+  "providerSchemaHash": "442c1bd7556237b64bda8312cd9f55f17b09222af2f72d226ba86333fed71418",
+  "model": "gpt-6-astra",
+  "reasoning": "max",
+  "sourceRecords": [
+    {
+      "id": "source-5f2f255002ef48e0a3b6",
+      "sha256": "9e50f8b82054e4fb4466b362e7f818c9febdadbf4686c4242526b40606728fde"
+    },
+    {
+      "id": "source-3e28bfad9a054717bc04",
+      "sha256": "8097bd1be6aecc3bfb5f006c753136a0a7930a2cf077eda2d5ab787b55ef96e2"
+    }
+  ],
+  "discovery": {
+    "id": "discovery-e6130d6ad3664fb5b792",
+    "version": "business-public-discovery-033-v1",
+    "seeds": [
+      "https://fitkitty.com/"
+    ],
+    "limits": {
+      "deadlineMs": 7500,
+      "maxBytes": 350000,
+      "maxDecisions": 6,
+      "maxFrontier": 80,
+      "maxHosts": 5,
+      "maxPages": 8,
+      "maxRenders": 2,
+      "maxRequests": 24,
+      "maxTextChars": 16000
+    },
+    "includeImages": true
+  },
+  "providerRequests": 0,
+  "credentialReads": 0,
+  "baselineReferenceReportInWorkerInput": false,
+  "baselineLabelsInWorkerInput": false,
+  "transmittedImages": 0
+}

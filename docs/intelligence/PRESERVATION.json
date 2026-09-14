@@ -1,0 +1,89 @@
+{
+  "at": "2026-09-14T01:09:36.718Z",
+  "identities": {
+    "canonical": {
+      "path": "C:/Users/14844/Downloads/MIDAS",
+      "head": "8d2c6b3db3fe5d1c63493e2774844eda0af013af",
+      "branch": "feature/opportunity-qualification-sealed-grouping-authority-v1",
+      "tree": "9d4f9df67fb4f9829fedd10ab24ed61d686538f4",
+      "trackedStatus": ""
+    },
+    "pilot032": {
+      "path": "C:/Users/14844/Downloads/MIDAS/var/owner-pilot-worktree-032",
+      "head": "1a823d519a70c55b907e0a7c8d35dedf59f707b7",
+      "branch": "codex/first-owner-pilot-v0-032",
+      "tree": "278f44859fe2478143d0166b23405f90b3031708",
+      "trackedStatus": ""
+    },
+    "R5": {
+      "path": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-031-credit-r5",
+      "head": "0ae5c335b11f6f6fe288662cada4df0a3dc18a15",
+      "branch": "codex/portfolio-credit-continuation-v4-031",
+      "tree": "9391ff2e273e47a29a2512a44c49685018c5de58",
+      "trackedStatus": ""
+    },
+    "release033": {
+      "path": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\business-intelligence-worktree-033",
+      "head": "317287854d4675d4d047715935a4e2fa7b33a5e6",
+      "branch": "codex/business-intelligence-v0-033",
+      "tree": "9cad532b048d3163e064305d813a54a8dc45ff36",
+      "trackedStatus": ""
+    }
+  },
+  "base": "1a823d519a70c55b907e0a7c8d35dedf59f707b7",
+  "origin": "https://github.com/tjburntcc-dot/MIDAS.git",
+  "unsignedProposalHash": "846b6c5652d810f245382f48fe9776d4b71fc6d327201612f1b5803ad602a4a7",
+  "newAuthorizationExists": false,
+  "r5AuthorizationExists": false,
+  "mission033": {
+    "inferenceCalls": 0,
+    "countRequests": 0,
+    "retainedExposureMinor": 0,
+    "providerCostMinor": 0,
+    "independentHumanSeconds": null,
+    "sourceRecords": [
+      {
+        "id": "discovery-e6130d6ad3664fb5b792-page-d463bb39b0e237d4",
+        "status": "retrieved",
+        "rawContentHash": "cc3bc77c3d18bdf5eb6dd10a8b025ec02811f1b2a144327123146ebe0bbe3691"
+      }
+    ],
+    "savedDemoRuns": [
+      {
+        "case": "retail",
+        "businessId": "company-f2b4c78a86464b9f9dee",
+        "artifactHash": "3592115add14f4b8517d52283232a1890d7adfbe185fc44d5cc51b6c39b26588",
+        "providerRequests": 0
+      },
+      {
+        "case": "service",
+        "businessId": "company-c5d62260efab4dce8c70",
+        "artifactHash": "aa30c96da578962357a5e92bbe9af9131ae42ae510a90c33fbd0a4945e1a28b8",
+        "providerRequests": 0
+      }
+    ]
+  },
+  "preservation": {
+    "historicalRecordsNotRewritten": true,
+    "canonicalCampaignEvidenceNotReadOrChanged": true,
+    "missingFindingSetNotReconstructed": true,
+    "credentialsNotReadOrCopied": true,
+    "olderPublicFailuresRetained": [
+      {
+        "id": "discovery-1afb8b209f5a460090d1-page-d463bb39b0e237d4",
+        "status": "failed"
+      },
+      {
+        "id": "discovery-b6dc93c489fc481e8e3b-page-d463bb39b0e237d4",
+        "error": "ROBOTS_UNAVAILABLE",
+        "status": "blocked"
+      },
+      {
+        "id": "discovery-b6dc93c489fc481e8e3b-robots-af1524d057f4",
+        "status": "failed"
+      }
+    ],
+    "priorMission031RetainedExposureMinor": 1917,
+    "priorBilling": null
+  }
+}

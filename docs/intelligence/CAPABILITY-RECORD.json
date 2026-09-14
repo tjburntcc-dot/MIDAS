@@ -1,0 +1,20 @@
+{
+  "version": "business-intelligence-release-033-v1",
+  "status": "experimental_non_production",
+  "integrationOwner": "development assistant",
+  "taskScope": ["bounded public business investigation", "source-linked commercial opportunity proposals", "coordinated campaign assets", "local marketing-page implementation and correction"],
+  "contextRequirements": ["website and owner objective", "permitted current company sources", "explicit unknowns and source limitations", "human selection of a supported opportunity", "exact model authority before inference"],
+  "tools": ["pinned public HTTP and robots retrieval", "retained-page render and bounded image input", "current/rejected source reading", "targeted source edits", "contained browser checks", "deterministic local finalization", "persistent artifact/version/observation stores"],
+  "authority": {"externalEffects": false, "modelCallsWithoutNewGrant": false, "productionQualification": false},
+  "assignment": {"choice": "strong_generalist", "reason": "Declared competencies and working tools match the bounded job; no evidence demonstrates an additional specialist advantage.", "commercialPriorityOwner": "model-proposed, then human selection", "additionalWorkerEvidence": "unavailable"},
+  "observations": [
+    {"kind": "actual_public_retrieval", "business": "FitKitty public reference", "result": "Homepage prefix retained with exact identity, partial-coverage disclosure and 44 discovered links", "commercialConclusion": "none", "evidence": "var/business-intelligence-033/fitkitty-public-retrieval-v2.json"},
+    {"kind": "offline_integration", "population": "Signal Bench service and Moss & Kettle retail synthetic cases", "result": "Campaign, dependent page, exact correction, stale artifact invalidation and fresh checked replacement completed", "modelQuality": "not measured", "evidence": "var/business-intelligence-033/reports/offline-demonstration.json"},
+    {"kind": "signed_mock_transport", "result": "Ten mock admissions completed investigation, analysis, selected campaign, page and correction with scoped accounting", "providerRequests": 0, "liveCompatibility": "unproven for this release"},
+    {"kind": "actual_local_browser", "result": "Desktop and phone controls, previews, persisted state, correction and access limits inspected", "semanticAcceptance": "not established", "evidence": "var/business-intelligence-033/reports/browser/inspection.json"}
+  ],
+  "learning": {"observedInputs": "disclosed fixture corrections and source-linked reported omissions", "candidate": "trace consequential requirements across evidence, source, preview and renewed checks", "alternatives": ["ambiguous shared policy", "missing evidence", "changed owner preference", "retrieval limitation"], "comparisonMechanics": "existing procedure registry and separate disclosed evaluation fixtures", "selection": "retain strong baseline", "measuredSpecialistImprovement": false},
+  "knownLimits": ["No actual model commercial investigation or image reasoning in Mission 033", "No independent Claude comparison: original prompt, exact route, connectors and cost/timing unavailable", "Synthetic transfer case is developer-visible, not a protected holdout", "Sanitized retained rendering omits external assets and JavaScript", "Large public pages may be partial; robots/authentication/host limits remain enforced", "No open-web search engine or authenticated social connector in this packet", "Semantic usefulness and private economics need actual review/evidence", "No customer outcomes or independent correction timing", "Paid dependent-page regeneration after campaign correction is outside the prepared packet"],
+  "costs": {"newProviderRequests": 0, "newProviderCostMinor": 0, "newRetainedExposureMinor": 0, "currency": "USD", "localComputeCostMinor": null, "developmentSubscriptionCostMinor": null, "humanCorrectionSeconds": null},
+  "nextDecision": "Authorize the exact public-only outcome packet, then evaluate whether the actual sourced analysis and coordinated deliverables warrant a real owner-selected use case."
+}

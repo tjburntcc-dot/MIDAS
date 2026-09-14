@@ -1,0 +1,11 @@
+{
+  "id": "intelligence-033-public-outcome-v1",
+  "businessId": "company-cb653fd4af0d4b81b679",
+  "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+  "credentialFile": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key",
+  "expiresAt": "2026-09-25T22:00:00.000Z",
+  "countUncertaintyMinor": 275,
+  "includeCorrection": true,
+  "includeImages": true,
+  "mode": "live"
+}

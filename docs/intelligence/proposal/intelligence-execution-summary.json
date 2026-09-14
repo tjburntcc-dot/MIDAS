@@ -1,0 +1,55 @@
+{
+  "proposalHash": "846b6c5652d810f245382f48fe9776d4b71fc6d327201612f1b5803ad602a4a7",
+  "approved": false,
+  "providerRequests": 0,
+  "maximumExposureMinor": 5400,
+  "stageCaps": {
+    "investigation": 6,
+    "analysis": 1,
+    "campaign": 6,
+    "page": 8,
+    "correction": 4
+  },
+  "currency": "USD",
+  "route": {
+    "background": {
+      "kind": "durable-background-v1",
+      "store": true,
+      "pollIntervalMs": 5000,
+      "retrievalDeadlineMs": 15000,
+      "completionDeadlineMs": 900000,
+      "resumeWindowMs": 86400000,
+      "maxRetrievals": 240,
+      "maxConsecutiveReadErrors": 3
+    },
+    "authorizationId": "intelligence-033-public-outcome-v1",
+    "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "max",
+    "serviceTier": "default",
+    "maxOutputTokens": 32768,
+    "deadlineMs": 60000,
+    "inputTokenCeiling": 32768,
+    "maxCallCost": {
+      "currency": "USD",
+      "minorUnits": 205
+    },
+    "pricing": {
+      "inputMinorPerMillion": 1250,
+      "outputMinorPerMillion": 5000,
+      "source": "https://developers.openai.com/api/docs/models/gpt-6-astra ; conservative cache-write input ceiling $12.50/M and output $50/M",
+      "effectiveAt": "2026-09-12T00:00:00.000Z"
+    }
+  },
+  "firstUsefulRequest": "discovery-e6130d6ad3664fb5b792-decision-1",
+  "privacy": "Approved company data and this discovery session’s retained public evidence are transmitted. store:true background execution requires acceptance of provider retention at least 30 days.",
+  "pricing": "Official September 13 pricing basis: 205 USD cents per 32768-input/32768-total-output Astra Max admission. Reconfirm project access and pricing freshness before owner approval; no probe or spending occurs during preparation.",
+  "dynamicWork": "One owner-selected opportunity from this grant’s validated analysis may produce campaign and page work. Each generated task and exact request is durably bound before admission. Optional correction requires the exact existing artifact and owner instruction.",
+  "continuation": "The discovery session must be configured with maxDecisions:6 before preparation, including its finish decision. Same-ID response retrieval only. No replacement inference, fallback, stage transfer, hidden judge or new opportunity execution.",
+  "exclusions": [
+    "No sending, customer contact, accounts, purchases, deployment or real transactions",
+    "No protected evaluation or specialist certification",
+    "No prior mission grants or exposure transfer"
+  ],
+  "capacity": "The ceilings allow useful reads, source authorship, browser checks and targeted repair. They do not guarantee response completion or economic value."
+}
