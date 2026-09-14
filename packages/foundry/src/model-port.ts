@@ -35,7 +35,17 @@ export type ResponsesRoute = {
 /** Same exact provider body for offline contract inspection and actual admission. Contains no credentials. */
 export function buildResponsesBody(route: ResponsesRoute, request: ModelRequest, schema: any) {
     if(route.background)validateBackgroundPolicy(route.background);
-    return { ...(route.reasoningEffort ? {reasoning:{effort:route.reasoningEffort}} : {}), ...(route.serviceTier ? {service_tier:route.serviceTier} : {}), model: route.model, input: canonical({ task: request.task, context: request.context, tools: request.tools }), instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: route.background?.store??false, ...(route.background?{background:true}:{}), text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
+    let input:any=canonical({ task: request.task, context: request.context, tools: request.tools });
+    if(request.images?.length){
+        requireThat(request.images.length===1,'MODEL_IMAGE_COUNT_LIMIT');
+        for(const image of request.images){
+            identifier(image.sourceId);requireThat(['image/png','image/jpeg'].includes(image.mimeType)&&image.detail==='auto'&&typeof image.base64==='string'&&image.base64.length<=86668&&typeof image.provenance==='string'&&image.provenance.length>0&&image.provenance.length<=2000,'MODEL_IMAGE_CONTRACT');
+            const bytes=Buffer.from(image.base64,'base64');requireThat(bytes.length>8&&bytes.length<=65000&&bytes.toString('base64')===image.base64&&rawHash(bytes)===image.sha256,'MODEL_IMAGE_BYTES_OR_HASH');
+            requireThat(image.mimeType==='image/png'?bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])):bytes[0]===255&&bytes[1]===216&&bytes[2]===255,'MODEL_IMAGE_TYPE');
+        }
+        input=[{role:'user',content:[{type:'input_text',text:canonical({task:request.task,context:request.context,tools:request.tools,images:request.images.map(({base64,...metadata})=>metadata)})},...request.images.map(image=>({type:'input_image',image_url:'data:'+image.mimeType+';base64,'+image.base64,detail:image.detail}))]}];
+    }
+    return { ...(route.reasoningEffort ? {reasoning:{effort:route.reasoningEffort}} : {}), ...(route.serviceTier ? {service_tier:route.serviceTier} : {}), model: route.model, input, instructions: request.role.procedure, max_output_tokens: route.maxOutputTokens, store: route.background?.store??false, ...(route.background?{background:true}:{}), text: { format: { type: 'json_schema', name: 'foundry_' + request.task, strict: true, schema } } };
 }
 /** Supported OpenAI Responses transport. Not enabled by the laboratory CLI.
  * Tests inject an in-memory transport: no provider calls were made for Mission 027.

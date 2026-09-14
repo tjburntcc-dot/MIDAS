@@ -42,6 +42,8 @@ export type ModelRequest = {
     role: Role;
     task: 'investigate' | 'decide' | 'operate' | 'verify';
     context: unknown;
+    /** Explicit retained pixel evidence. Absence preserves the historical text-only request exactly. */
+    images?: Array<{sourceId:string;mimeType:'image/png'|'image/jpeg';base64:string;sha256:string;detail:'auto';provenance:string}>;
     limits: {
         maxCost: Money;
         maxAttempts: number;
