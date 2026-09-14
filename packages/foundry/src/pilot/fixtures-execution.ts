@@ -1,3 +1,4 @@
+import {fixtureCampaign,fixtureMarketingSections} from './fixtures-commercial.ts';
 import {mockResult} from '../portfolio/worker.ts';
 import type {WorkerModel,WorkerCall} from '../portfolio/worker.ts';
 import {requireThat,rawHash} from '../contracts.ts';
@@ -22,19 +23,19 @@ function fixtureBrief(context:any,instruction:string|null){
 /** No transport reference or fallback exists. Decisions and source are explicitly test-double output. */
 export function fixturePilotWorker():WorkerModel{return {kind:'offline_mock',async run(call:WorkerCall){
  const c=call.request.context as any;requireThat(c.task.inputs?.pilotMode==='fixture','PILOT_FIXTURE_SCOPE_REQUIRED');
- const w=c.workspace,correction=c.task.inputs?.ownerCorrection??null,source=w.currentSource.find((f:any)=>f.path===(w.inputs.profile==='business-site-v1'?'app.html':'brief.json'));
+ const w=c.workspace,correction=c.task.inputs?.ownerCorrection??null,software=['business-site-v1','marketing-page-v1'].includes(w.inputs.profile),source=w.currentSource.find((f:any)=>f.path===(software?'app.html':'brief.json'));
  const written=w.manifest.revision>1;
  const checked=(c.observations??[]).some((o:any)=>o.tool==='check.run'&&o.result?.ok&&o.result.manifest?.sha256===w.manifest.sha256);
  const tool=(name:string,args:any)=>mockResult({action:'tool',reason:'Explicit development-authored test double exercising the shared worker/tool contract; not model reasoning.',toolCall:{name,arguments:{path:null,content:null,expectedHash:null,query:null,url:null,...args}}});
  if(!written){
   if(correction){
-   const edits=w.inputs.profile==='business-site-v1'?[{find:source.content.match(/<h1>[^]*?<\/h1><p>([^]*?)<\/p>/)?.[1]??'',replace:e('Owner-requested revision: '+correction)}]:(()=>{const prior=JSON.parse(source.content);return [{find:JSON.stringify(prior.recommendation.title),replace:JSON.stringify('Owner-requested revision: '+correction)},{find:JSON.stringify(prior.recommendation.steps[0].action),replace:JSON.stringify(correction)}];})();
+   const edits=w.inputs.profile==='commercial-campaign-v1'?(()=>{const prior=JSON.parse(source.content);return [{find:JSON.stringify(prior.campaign.foundation.offer.value),replace:JSON.stringify(correction)}];})():software?[{find:(w.inputs.profile==='marketing-page-v1'?source.content.match(/<p data-owner-introduction>([^]*?)<\/p>/):source.content.match(/<h1>[^]*?<\/h1><p>([^]*?)<\/p>/))?.[1]??'',replace:e('Owner-requested revision: '+correction)}]:(()=>{const prior=JSON.parse(source.content);return [{find:JSON.stringify(prior.recommendation.title),replace:JSON.stringify('Owner-requested revision: '+correction)},{find:JSON.stringify(prior.recommendation.steps[0].action),replace:JSON.stringify(correction)}];})();
    requireThat(edits.every((x:any)=>x.find.length>0),'FIXTURE_CORRECTION_TARGET_UNSUPPORTED');
    return mockResult({action:'tool',reason:'Explicit fixture applies the owner text literally to the declared recommendation/introduction field. This is targeted correction mechanics, not general semantic rewriting.',toolCall:{name:'workspace.patch',arguments:{path:source.path,expectedHash:rawHash(source.content),candidateId:null,serialization:'preserve',edits}}});
   }
-  const content=w.inputs.profile==='business-site-v1'?fixtureBusinessSite(w.inputs):JSON.stringify(fixtureBrief(c,null),null,2);return tool('workspace.replace',{path:source.path,content,expectedHash:rawHash(source.content)});
+  const content=w.inputs.profile==='marketing-page-v1'?fixtureBusinessSite(w.inputs).replace(/<header>[^]*?<\/header>/,fixtureMarketingSections(w.inputs)).replace('<div class="grid">','<div class="grid" id="next-step">').replace('Prepare an inquiry','Prepare a local next step').replace('<script>',`<script>document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',event=>{event.preventDefault();document.querySelector(a.getAttribute('href'))?.scrollIntoView({block:'start'});}));`):software?fixtureBusinessSite(w.inputs):JSON.stringify(w.inputs.profile==='commercial-campaign-v1'?fixtureCampaign(c,fixtureBrief(c,null)):fixtureBrief(c,null),null,2);return tool('workspace.replace',{path:source.path,content,expectedHash:rawHash(source.content)});
  }
  const failed=(c.observations??[]).findLast((o:any)=>o.tool==='check.run'&&!o.result.ok);if(failed&&!checked)return mockResult({action:'blocked',reason:'The explicit fixture failed an actual check. Preserve its tool observation; no API fallback or invented repair occurs.',toolCall:null});
- if(w.inputs.profile==='business-site-v1'&&!checked)return tool('check.run',{});
+ if(software&&!checked)return tool('check.run',{});
  return mockResult({action:'complete',reason:'Offline fixture submission of the current source. Actual checks and authenticated local delivery are controller-owned. Independent semantic usefulness, customer outcomes and worker competence remain unknown.',toolCall:null});
 }};}

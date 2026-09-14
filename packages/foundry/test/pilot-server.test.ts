@@ -22,7 +22,7 @@ test('owner HTTP journey preserves real empty onboarding, scoped fixture executi
     const create=await c.post('/api/business',{name:'Owner company awaiting facts',website:'https://example.test',goal:'Identify the most useful first assignment',notes:'No customers, prices or domain expertise supplied.'}); assert.equal(create.status,200);
     const ownerId=create.body.view.business.id; assert.equal(create.body.view.business.mode,'owner');
     assert.equal((await c.post('/api/business/update',{businessId:ownerId,name:'Owner company, renamed'})).status,200);
-    const diagnose=await c.post('/api/diagnose',{businessId:ownerId}); assert.equal(diagnose.status,200); assert.equal(diagnose.body.view.understanding.status,'needs_model_authorization');
+    const diagnose=await c.post('/api/diagnose',{businessId:ownerId}); assert.equal(diagnose.status,200); assert.equal(diagnose.body.result.status,'exact_model_grant_required'); assert.equal(diagnose.body.result.actualModelCalls,0);
     assert.equal(diagnose.body.view.understanding.claims.length,0);
     const demo=await c.post('/api/demo',{}); assert.equal(demo.status,200); const businessId=demo.body.view.business.id; assert.notEqual(ownerId,businessId);
     const understanding=await c.post('/api/diagnose',{businessId}); assert.equal(understanding.status,200); assert.equal(understanding.body.view.understanding.completeness,'partial'); assert.equal(understanding.body.view.understanding.hypotheses.length,2);
@@ -78,4 +78,22 @@ test('orphaned diagnosis accounting is unavailable in owner view, never zero spe
     assert.equal(accounting.providerCalls,null);assert.equal(accounting.providerCostMinor,null);
     assert.equal(accounting.retainedExposureMinor,null);assert.equal(accounting.ledgerStatus,'unavailable');
   }finally{service.store.close();}
+});
+
+test('approved resume clears the persisted pause before its scoped runner and new commercial artifacts become stale after evidence change',async()=>{
+ const root=mkdtempSync(join(tmpdir(),'pilot-resume-contract-')),service=new PilotService(root),app=servePilot({service,port:0}),origin=await app.ready;
+ try{
+  const c=await client(origin),company=service.knowledge.createCompany({name:'Local routing fixture',goal:'Verify resume routing only',notes:'Development fixture; no provider permission or transport.'}),task=service.plan(company.id,'response-packet');
+  service.execution.pause(company.id,task.id);let routed=0;
+  // Metadata/control seam only: signed binding is separately exercised by the mock transport suite.
+  service.authority=()=>({approved:true,current:true,liveEnabled:true,mode:'live',businessId:company.id,expiresAt:new Date(Date.now()+60000).toISOString(),reason:'Explicit local routing test',sameIdRecoveryAvailable:false,credentialRead:false,providerRequests:0});
+  service.runApprovedWork=async(id,taskId)=>{assert.equal(id,company.id);assert.equal(taskId,task.id);assert.notEqual(service.task(id,taskId).status,'paused');routed++;return service.task(id,taskId);};
+  assert.equal((await c.post('/api/resume',{businessId:company.id,taskId:task.id})).status,202);await service.settle();assert.equal(routed,1);
+  const demo=await service.createCommercialDemo('service'),selected=service.intelligence.select(demo.id,'clarify-first-step');await service.execution.run(demo.id,selected.task.id);
+  const artifact=service.currentArtifact(demo.id,selected.task.id);assert.equal(service.view(demo.id).tasks.find((t:any)=>t.id===selected.task.id).contextCurrent,true);
+  service.knowledge.updateCompany(demo.id,{notes:'Changed operating constraint after the old deliverable was checked.'});
+  assert.equal(service.view(demo.id).tasks.find((t:any)=>t.id===selected.task.id).contextCurrent,false);
+  assert.throws(()=>service.bindArtifact(demo.id,selected.task.id,artifact.hash),/OWNER_CONTEXT_CHANGED/);
+  assert.equal(service.store.db.prepare("SELECT count(*) AS n FROM entities WHERE kind='model-attempt'").get()!.n,0);
+ }finally{await app.close();service.store.close();}
 });

@@ -6,6 +6,7 @@ import { servePilot } from './server.ts';
 import { backupPilot, restorePilot } from './continuity.ts';
 import { preparePilotAuthorization, loadAuthorizedPilot } from './authorized.ts';
 import { preparePilotDiagnosisAuthorization, signPilotDiagnosisProposal, loadAuthorizedPilotDiagnosis } from './diagnosis-authorized.ts';
+import { prepareIntelligenceAuthorization, signIntelligenceProposal, loadAuthorizedIntelligence } from './intelligence-authorized.ts';
 
 const args = process.argv.slice(2), command = args[0] ?? 'serve';
 const option = (key: string, fallback = '') => { const index = args.indexOf(key); return index < 0 ? fallback : args[index + 1]; };
@@ -14,11 +15,11 @@ if (command === 'restore') {
   requireThat(['--backup','--target','--hash'].every(x => args.includes(x)), 'RESTORE_EXPLICIT_INPUTS_REQUIRED');
   console.log(JSON.stringify(restorePilot(option('--backup'), option('--target'), option('--hash')), null, 2));
 } else {
-  const root = resolve(option('--root', 'var/owner-pilot-032')), service = new PilotService(root);
+  const root = resolve(option('--root', 'var/business-intelligence-033')), service = new PilotService(root,{publicReader:{kind:'public'}});
   if (command === 'serve') {
     await service.execution.recover();
-    const app = servePilot({service, port: Number(option('--port','43143'))});
-    console.log(JSON.stringify({url: await app.ready, root, release: '032', providerCallsAuthorized: false, credentialAccess: false, externalEffects: false, dataMode: 'real company onboarding; fixtures only through explicit demo action'}));
+    const app = servePilot({service, port: Number(option('--port','43144'))});
+    console.log(JSON.stringify({url: await app.ready, root, release: '033', providerCallsAuthorized: false, credentialAccess: false, externalEffects: false, dataMode: 'website-first public retrieval; fixtures only through explicit archive action'}));
     const close = async () => { await app.close(); service.store.close(); process.exit(0); };
     process.once('SIGINT', close); process.once('SIGTERM', close);
   } else {
@@ -30,6 +31,41 @@ if (command === 'restore') {
         const config=JSON.parse(readFileSync(resolve(option('--config')),'utf8'));
         const result=await preparePilotAuthorization(service.execution,{...config,root,directory:resolve(option('--output'))});
         console.log(JSON.stringify(result.summary,null,2));
+      }
+      else if(command==='propose-intelligence'){
+        requireThat(args.includes('--config')&&args.includes('--output'),'EXACT_INTELLIGENCE_CONFIGURATION_REQUIRED');
+        const config=JSON.parse(readFileSync(resolve(option('--config')),'utf8'));
+        const result=prepareIntelligenceAuthorization({intelligence:service.intelligence,discovery:service.discovery},{...config,root,directory:resolve(option('--output'))});
+        console.log(JSON.stringify(result.summary,null,2));
+      }
+      else if(command==='sign-intelligence'){
+        requireThat(['--proposal','--approve-proposal-hash','--approval-reference','--owner-public-key','--owner-private-key','--principal'].every(x=>args.includes(x)),'EXACT_OWNER_APPROVAL_AND_PROTECTED_SIGNER_REQUIRED');
+        const proposal=JSON.parse(readFileSync(resolve(option('--proposal')),'utf8'));
+        const result=signIntelligenceProposal({intelligence:service.intelligence,discovery:service.discovery},root,{proposal,expectedHash:option('--approve-proposal-hash'),approvalReference:option('--approval-reference'),principal:option('--principal'),publicKey:readFileSync(resolve(option('--owner-public-key')),'utf8'),privateKey:readFileSync(resolve(option('--owner-private-key')),'utf8')});
+        console.log(JSON.stringify({proposalHash:result.proposalHash,credentialRead:result.credentialRead,providerRequests:result.providerRequests},null,2));
+      }
+      else if(command==='run-intelligence-approved'){
+        const live=loadAuthorizedIntelligence({intelligence:service.intelligence,discovery:service.discovery},root),businessId=live.authorization.intelligence.businessId;
+        if(args.includes('--task')){
+          const result=await live.runTask(option('--task'));
+          console.log(JSON.stringify({result,accounting:live.totals()},null,2));
+        }else{
+          const discovery=await live.runInvestigation();
+          if(discovery.state!=='ready_for_analysis')console.log(JSON.stringify({status:discovery.state,reason:discovery.reason,discovery,accounting:live.totals()},null,2));
+          else{
+            const analysis=await live.runAnalysis(),work:any[]=[];
+            const selected=service.intelligence.rows('pilot-commercial-work').filter(w=>w.businessId===businessId&&w.analysisAttemptId===analysis.attemptId);
+            requireThat(selected.length<=1,'INTELLIGENCE_SELECT_ONE_OPPORTUNITY_FOR_THIS_ENVELOPE');
+            for(const item of selected){
+              const campaign=await live.runTask(item.campaignTaskId);work.push(campaign);
+              if((campaign as any)?.status!=='completed')break;
+              service.intelligence.materialize(businessId);
+              const current=service.store.get('pilot-commercial-work',item.campaignTaskId);
+              if(current?.pageTaskId){const page=await live.runTask(current.pageTaskId);work.push(page);}
+            }
+            console.log(JSON.stringify({businessId,status:!selected.length?'waiting_for_owner_opportunity_selection':work.every(t=>t?.status==='completed')?'selected_work_completed':'execution_stopped',analysis:{status:analysis.status,executiveSummary:analysis.executiveSummary,opportunities:analysis.opportunities},work,accounting:live.totals(),nextAction:!selected.length?'Review the analysis in the owner workspace and select one supported opportunity; rerun this same command to execute its campaign and page.':'Inspect the actual artifacts and current checks in the owner workspace. No external effect or independent semantic acceptance is implied.'},null,2));
+          }
+        }
       }
       else if (command === 'propose-diagnosis') {
         requireThat(args.includes('--config') && args.includes('--output'), 'EXACT_PILOT_CONFIGURATION_REQUIRED');
@@ -61,7 +97,7 @@ if (command === 'restore') {
         for (const workflow of ['response-packet','business-site'] as const) { const task = service.plan(company.id,workflow); await service.execution.run(company.id,task.id); }
         const report = service.exportBusiness(company.id); writeFileSync(join(root, 'offline-demonstration.json'), JSON.stringify(report, null, 2));
         console.log(JSON.stringify({businessId:company.id, report:join(root,'offline-demonstration.json'), providerCalls:0, provenance:'explicit offline fixtures; no owner acceptance fabricated'},null,2));
-      } else throw Error('Unknown command. Use serve, status, demo, prepare-live, propose-diagnosis, sign-diagnosis, run-diagnosis-approved, propose-execution, run-approved, backup or restore.');
+      } else throw Error('Unknown command. Use serve, status, demo, prepare-live, propose-intelligence, sign-intelligence, run-intelligence-approved, propose-diagnosis, sign-diagnosis, run-diagnosis-approved, propose-execution, run-approved, backup or restore.');
     } finally { service.store.close(); }
   }
 }

@@ -7,6 +7,8 @@ import { requireThat, hash } from '../contracts.ts';
 import { PilotService } from './service.ts';
 import { PilotLearning } from './learning.ts';
 import { InteractivePreviewSessions, renderRemotePreview } from '../portfolio/preview.ts';
+import {commercialFixturePort} from './intelligence-fixtures.ts';
+import {CommercialReview} from './commercial-review.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const csp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
@@ -24,7 +26,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
     try {
       requireThat(req.headers.host === new URL(origin).host, 'HOST_DENIED');
       const url = new URL(req.url ?? '/', origin);
-      if (req.method === 'GET' && url.pathname === '/health') { send(200, {status: 'ok', version: '032', providerEnabled: false}); return; }
+      if (req.method === 'GET' && url.pathname === '/health') { send(200, {status: 'ok', version: '033', providerEnabled: service.authority().liveEnabled}); return; }
       if (req.method === 'GET' && url.pathname === '/favicon.ico') { res.writeHead(204).end(); return; }
       if (req.method === 'GET' && ['/', '/app.js', '/style.css', '/pilot.js', '/pilot.css'].includes(url.pathname)) {
         const file = url.pathname === '/' ? 'index.html' : url.pathname === '/pilot.js' ? 'app.js' : url.pathname === '/pilot.css' ? 'style.css' : url.pathname.slice(1);
@@ -37,11 +39,19 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           sessionId = randomBytes(24).toString('hex'); session = {csrf: randomBytes(24).toString('hex'), at: Date.now()}; sessions.set(sessionId, session);
           res.setHeader('set-cookie', 'midas032=' + sessionId + '; HttpOnly; SameSite=Strict; Path=/');
         }
-        send(200, {csrf: session.csrf, mode: 'local_owner', providerEnabled: false, externalEffects: false}); return;
+        send(200, {csrf: session.csrf, mode: 'local_owner', providerEnabled: service.authority().liveEnabled, externalEffects: false}); return;
       }
       requireThat(session && Date.now() - session.at < 12 * 3600000, 'OWNER_SESSION_REQUIRED');
       const businessId = url.searchParams.get('businessId') ?? undefined;
       if (req.method === 'GET' && url.pathname === '/api/state') { send(200, service.view(businessId)); return; }
+      if (req.method === 'GET' && url.pathname === '/api/investigation/source') {
+        requireThat(businessId,'BUSINESS_REQUIRED');send(200,service.discovery.source(businessId,url.searchParams.get('sourceId')??''));return;
+      }
+      if(req.method==='GET'&&url.pathname==='/api/source/image'){
+        requireThat(businessId,'BUSINESS_REQUIRED');const source=service.discovery.source(businessId,url.searchParams.get('imageId')??''),image=source.kind==='image'?source:source.render?.screenshot;
+        requireThat(image?.base64&&['image/png','image/jpeg'].includes(image.mimeType),'RETAINED_IMAGE_REQUIRED');
+        res.writeHead(200,{'content-type':image.mimeType,'cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'",'referrer-policy':'no-referrer'});res.end(Buffer.from(image.base64,'base64'));return;
+      }
       if (req.method === 'GET' && url.pathname === '/api/export') {
         requireThat(businessId, 'BUSINESS_REQUIRED'); send(200, service.exportBusiness(businessId), { 'content-disposition': 'attachment; filename="midas-business-evidence.json"' }); return;
       }
@@ -62,7 +72,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
       requireThat(req.method === 'POST' && req.headers.origin === origin && req.headers['x-csrf-token'] === session!.csrf, 'CSRF_INVALID');
       requireThat(req.headers['content-type']?.split(';')[0] === 'application/json', 'JSON_REQUIRED');
       const chunks: Buffer[] = []; let length = 0;
-      for await (const chunk of req) { length += chunk.length; requireThat(length <= 300000, 'REQUEST_TOO_LARGE'); chunks.push(Buffer.from(chunk)); }
+      for await (const chunk of req) { length += chunk.length; requireThat(length <= (url.pathname==='/api/source/screenshot'?3000000:300000), 'REQUEST_TOO_LARGE'); chunks.push(Buffer.from(chunk)); }
       const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       requireThat(body && typeof body === 'object' && !Array.isArray(body), 'OBJECT_REQUIRED');
       if (url.pathname === '/api/preview/open') {
@@ -86,20 +96,40 @@ export function servePilot(options: { service: PilotService; port?: number }) {
       let selected = body.businessId, result: any = null, status = 200;
       if (url.pathname === '/api/business') {
         // Browser input cannot set fixture mode or grant authority.
-        result = service.knowledge.createCompany({name: body.name, website: body.website, goal: body.goal, notes: body.notes}); selected = result.id;
-      } else if (url.pathname === '/api/demo') { result = service.knowledge.createDemo(); selected = result.id ?? result.company?.id; }
+        result = service.createBusiness(body); selected = result.id;
+      } else if (url.pathname === '/api/demo') { result = body.fixture?await service.createCommercialDemo(body.fixture):service.knowledge.createDemo(); selected = result.id ?? result.company?.id; }
       else {
         requireThat(typeof selected === 'string', 'BUSINESS_REQUIRED'); service.knowledge.company(selected);
-        if (url.pathname === '/api/business/update') result = service.knowledge.updateCompany(selected, Object.fromEntries(['name','website','goal','notes'].filter(key => body[key] !== undefined).map(key => [key,body[key]])), body.expectedVersion);
+        if (url.pathname === '/api/investigation/retrieve'||url.pathname==='/api/investigation/continue') {
+          if(url.pathname.endsWith('continue'))service.discovery.resume(selected);
+          service.launchInvestigation(selected,()=>service.discovery.seed(selected));status=202;
+        }
+        else if(url.pathname==='/api/investigation/pause')result=service.discovery.pause(selected);
+        else if(url.pathname==='/api/investigation/render'){
+          const original=service.knowledge.sources(selected).find(s=>s.id===body.sourceId);
+          result=await service.discovery.render(selected,original?.origin?.recordId??body.sourceId);
+        }
+        else if(url.pathname==='/api/source/screenshot')result=service.discovery.attachImage(selected,{title:body.title,base64:body.dataBase64,mimeType:body.mimeType,sourceUrl:body.sourceUrl,observedAt:new Date().toISOString(),caption:body.caption,rights:body.rights});
+        else if(url.pathname==='/api/opportunity/select')result=service.intelligence.select(selected,body.opportunityId);
+        else if(url.pathname==='/api/opportunity/reject')result=service.intelligence.reject(selected,body.opportunityId,body.reason);
+        else if(url.pathname==='/api/intelligence/review')result=new CommercialReview(service.store).record(selected,body);
+        else if(url.pathname==='/api/work/replan')result=service.execution.replanDependent({businessId:selected,taskId:body.taskId,campaignTaskId:body.campaignTaskId});
+        else if (url.pathname === '/api/business/update') result = service.updateBusiness(selected,body);
         else if (url.pathname === '/api/source') result = service.knowledge.addSource(selected, {title: body.title, text: body.text, kind: body.kind, rights: body.rights, observedAt: body.observedAt, validUntil: body.validUntil ?? null});
         else if (url.pathname === '/api/evidence/select') result = service.knowledge.selectEvidence(selected, body.sourceIds);
-        else if (url.pathname === '/api/diagnose') result = await service.knowledge.diagnose(selected);
+        else if (url.pathname === '/api/diagnose') {
+          const fixture=service.store.get('pilot-commercial-fixture',selected);
+          if(fixture)result=await service.intelligence.analyze(selected,commercialFixturePort(fixture.case,service.intelligence.sources(selected)));
+          else if(service.knowledge.company(selected).mode==='fixture')result=await service.knowledge.diagnose(selected);
+          else if(service.authority().liveEnabled&&service.authority().businessId===selected){service.launchInvestigation(selected,()=>service.runApprovedAnalysis(selected));status=202;}
+          else {const p=service.intelligence.prepare(selected,service.discovery.context(selected));result={status:'exact_model_grant_required',requestHash:hash(p.request),actualModelCalls:0};}
+        }
         else if (url.pathname === '/api/plan') {
           result = service.plan(selected, body.workflow);
         } else if (url.pathname === '/api/run' || url.pathname === '/api/resume') {
           service.task(selected, body.taskId);
-          requireThat(service.knowledge.company(selected).mode === 'fixture', 'PILOT_LIVE_GRANT_REQUIRED');
-          service.launch(selected, body.taskId, () => url.pathname === '/api/resume' ? service.execution.resume(selected, body.taskId) : service.execution.run(selected, body.taskId)); status = 202;
+          if(service.knowledge.company(selected).mode === 'fixture')service.launch(selected, body.taskId, () => url.pathname === '/api/resume' ? service.execution.resume(selected, body.taskId) : service.execution.run(selected, body.taskId));
+          else {const authority=service.authority();requireThat(authority.approved&&authority.businessId===selected&&(authority.liveEnabled||authority.sameIdRecoveryAvailable),'PILOT_LIVE_GRANT_REQUIRED');if(url.pathname==='/api/resume'&&service.task(selected,body.taskId).status==='paused')service.execution.portfolio.controlTask(body.taskId,'resume');service.launch(selected,body.taskId,()=>service.runApprovedWork(selected,body.taskId));} status = 202;
         } else if (url.pathname === '/api/pause') { service.task(selected, body.taskId); result = (service.execution as any).pause(selected, body.taskId); }
         else if (url.pathname === '/api/review/start') { result = {reviewSessionId: service.reviewStart(selected, body.taskId, sessionId)}; }
         else if (url.pathname === '/api/approve') {
@@ -120,7 +150,9 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           result = await (service.execution as any).correct({...body, businessId: selected, observation});
           const newTaskId = result.id ?? result.taskId ?? result.task?.id;
           service.store.transaction(() => service.store.put('pilot-correction-link', 'correction-' + randomBytes(12).toString('hex'), {businessId: selected, taskId: body.taskId, newTaskId, artifactHash: body.artifactHash, instruction: body.instruction, observationId: observation?.id, timing, at: new Date().toISOString()}, null));
+          if(newTaskId)for(const w of service.rows('pilot-commercial-work').filter(w=>w.businessId===selected&&w.campaignTaskId===body.taskId))service.store.transaction(()=>{const current=service.store.get('pilot-commercial-work',w.campaignTaskId);service.store.put('pilot-commercial-work',w.campaignTaskId,{...current,correctedCampaignTaskId:newTaskId,dependentStatus:'previous page requires replacement after corrected campaign completes'},current._version);});
           if (newTaskId && service.knowledge.company(selected).mode === 'fixture') { service.launch(selected, newTaskId, () => service.execution.run(selected, newTaskId)); status = 202; }
+          else if(newTaskId&&service.authority().liveEnabled&&service.authority().businessId===selected){service.launch(selected,newTaskId,()=>service.runApprovedTask(selected,newTaskId));status=202;}
         } else if (url.pathname === '/api/outcome') {
           service.bindArtifact(selected, body.taskId, body.artifactHash);
           requireThat(['accepted','needs-change','not-useful'].includes(body.kind) && typeof body.notes === 'string' && body.notes.trim().length > 0 && body.notes.length <= 4000 && typeof body.assisted === 'boolean', 'OUTCOME_EVIDENCE_REQUIRED');
@@ -132,7 +164,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           result = new PilotLearning(service.store).run(selected, body.taskId, (task.inputs as any)?.pilotWorkflow ?? 'response-packet');
         } else { send(404, {error: 'ROUTE_NOT_FOUND'}); return; }
       }
-      service.audit(selected, url.pathname, { taskId: body.taskId ?? null, artifactHash: body.artifactHash ?? null, resultHash: hash(result), providerRequests: 0 });
+      service.audit(selected, url.pathname, { taskId: body.taskId ?? null, artifactHash: body.artifactHash ?? null, resultHash: hash(result), providerRequests: status===202?null:0, accountingSource: status===202?'durable scoped model ledger; UI acknowledgement is not a dispatch receipt':'local owner operation' });
       send(status, {view: service.view(selected), result, ...(result?.reviewSessionId ? {reviewSessionId: result.reviewSessionId} : {})});
     } catch (error: any) {
       const code = String(error?.code ?? error?.message ?? 'REQUEST_FAILED').slice(0, 240);
@@ -141,6 +173,6 @@ export function servePilot(options: { service: PilotService; port?: number }) {
     }
   });
   server.requestTimeout = 30000; server.headersTimeout = 15000;
-  const ready = new Promise<string>(resolve => { server.listen(options.port ?? 43143, '127.0.0.1', () => { origin = 'http://127.0.0.1:' + (server.address() as any).port; resolve(origin); }); });
+  const ready = new Promise<string>(resolve => { server.listen(options.port ?? 43144, '127.0.0.1', () => { origin = 'http://127.0.0.1:' + (server.address() as any).port; resolve(origin); }); });
   return { server, ready, close: async () => { await service.settle(); await previews.closeAll(); await new Promise<void>((resolve,reject) => server.close(e => e ? reject(e) : resolve())); } };
 }

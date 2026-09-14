@@ -12,6 +12,11 @@ import { buildResponsesBody } from '../model-port.ts';
 import { readPortfolioAccounting } from '../portfolio/accounting-view.ts';
 import { readPilotDiagnosisAccounting } from './diagnosis-authorized.ts';
 import { fixtureIntakeFields } from './fixtures-execution.ts';
+import {PilotDiscovery,canonicalDiscoveryUrl} from './discovery.ts';
+import {PilotIntelligence} from './intelligence.ts';
+import {commercialCases,commercialFixturePort} from './intelligence-fixtures.ts';
+import {CommercialReview} from './commercial-review.ts';
+import {readIntelligenceAccounting,readIntelligenceAuthority,loadAuthorizedIntelligence} from './intelligence-authorized.ts';
 
 /** Owner-facing composition only; work execution and inference admission remain in Foundry. */
 export class PilotService {
@@ -19,12 +24,79 @@ export class PilotService {
   readonly root: string;
   readonly knowledge: PilotKnowledge;
   readonly execution: PilotExecution;
+  readonly discovery: PilotDiscovery;
+  readonly intelligence: PilotIntelligence;
   readonly pending = new Map<string, Promise<unknown>>();
-  constructor(root: string, options: {store?: StateStore; browserLauncher?: () => Promise<any>} = {}) {
+  readonly investigations = new Map<string,Promise<unknown>>();
+  private authorizedRunner:ReturnType<typeof loadAuthorizedIntelligence>|null=null;
+  constructor(root: string, options: {store?: StateStore; browserLauncher?: () => Promise<any>;publicReader?:any;renderer?:any} = {}) {
     this.root = root; mkdirSync(root, { recursive: true });
     this.store = options.store ?? new StateStore(join(root, 'pilot.sqlite'));
     this.knowledge = new PilotKnowledge(this.store);
     this.execution = new PilotExecution(this.store, { root, browserLauncher: options.browserLauncher } as any);
+    this.discovery=new PilotDiscovery(this.store,{root,knowledge:this.knowledge,publicReader:options.publicReader,renderer:options.renderer});
+    this.intelligence=new PilotIntelligence(this.store,this.execution);
+  }
+  approvedRunner(){return this.authorizedRunner??(this.authorizedRunner=loadAuthorizedIntelligence({intelligence:this.intelligence,discovery:this.discovery},this.root));}
+  authority(){return readIntelligenceAuthority({intelligence:this.intelligence,discovery:this.discovery},this.root);}
+  async runApprovedAnalysis(id:string){
+    const runner=this.approvedRunner();requireThat(runner.authorization.intelligence.businessId===id,'INTELLIGENCE_BUSINESS_SCOPE');
+    await runner.runInvestigation();if(this.store.get('pilot-discovery',id)?.state==='ready_for_analysis')return runner.runAnalysis();
+    return this.discoveryView(id);
+  }
+  async runApprovedTask(id:string,taskId:string){const runner=this.approvedRunner();requireThat(runner.authorization.intelligence.businessId===id,'INTELLIGENCE_BUSINESS_SCOPE');return runner.runTask(taskId);}
+  async runApprovedWork(id:string,taskId:string){
+    const result=await this.runApprovedTask(id,taskId);
+    if(result.status!=='completed')return result;
+    this.intelligence.materialize(id);
+    const dependent=this.rows('pilot-commercial-work').find(w=>w.businessId===id&&w.campaignTaskId===taskId)?.pageTaskId;
+    if(dependent&&this.task(id,dependent).status!=='completed')return this.runApprovedTask(id,dependent);
+    return result;
+  }
+  createBusiness(input:any){
+    const website=String(input.website??'').trim(), suppliedName=String(input.name??'').trim();
+    const name=suppliedName||(website?new URL(website).hostname.replace(/^www\./,''):'');
+    const socialUrls=Array.isArray(input.socialUrls)?input.socialUrls:[];
+    requireThat(socialUrls.length<=2&&socialUrls.every((u:any)=>typeof u==='string'&&u.length<=2048),'BUSINESS_SOCIAL_LIMIT');
+    if(website)[website,...socialUrls].forEach(canonicalDiscoveryUrl);
+    const company=this.knowledge.createCompany({name,website,goal:input.goal,notes:input.notes});
+    this.store.transaction(()=>this.store.put('pilot-business-intake',company.id,{businessId:company.id,socialUrls,identityStatus:suppliedName?'owner_supplied':'website host label; company identity unverified'},null));
+    if(website){this.discovery.start(company.id,{website,socialLinks:socialUrls});this.launchInvestigation(company.id,()=>this.discovery.seed(company.id));}
+    return this.knowledge.company(company.id);
+  }
+  updateBusiness(id:string,input:any){
+    const previous=this.knowledge.company(id),prior=this.store.get('pilot-business-intake',id),socialUrls=input.socialUrls??prior?.socialUrls??[];
+    requireThat(Array.isArray(socialUrls)&&socialUrls.length<=2,'BUSINESS_SOCIAL_LIMIT');socialUrls.forEach(canonicalDiscoveryUrl);
+    const website=input.website??previous.website;if(website)canonicalDiscoveryUrl(website);
+    const changed=website!==previous.website||hash(socialUrls)!==hash(prior?.socialUrls??[]);
+    if(changed){const s=this.store.get('pilot-discovery',id);requireThat(!s?.pending&&!this.investigations.has(id),'INVESTIGATION_RUNNING_FINISH_BEFORE_SOURCE_CHANGE');}
+    const result=this.knowledge.updateCompany(id,Object.fromEntries(['name','website','goal','notes'].filter(k=>input[k]!==undefined).map(k=>[k,input[k]])),input.expectedVersion);
+    this.store.transaction(()=>this.store.put('pilot-business-intake',id,{...prior,businessId:id,socialUrls,identityStatus:input.name?'owner_supplied':prior?.identityStatus??'owner_supplied'},prior?._version??null));
+    if(changed&&website){const s=this.store.get('pilot-discovery',id);if(s)this.discovery.restart(id,{website,socialLinks:socialUrls});else this.discovery.start(id,{website,socialLinks:socialUrls});this.launchInvestigation(id,()=>this.discovery.seed(id));}
+    else if(changed&&this.store.get('pilot-discovery',id))this.discovery.pause(id);
+    return result;
+  }
+  discoveryView(id:string){
+    const raw=this.discovery.view(id) as any,analysis=this.intelligence.view(id),error=this.store.get('pilot-investigation-error',id);
+    const rawSources=raw.sources.map((s:any)=>{const knowledgeSourceId=s.knowledgeSourceId??raw.sources.find((parent:any)=>parent.id===s.sourceId)?.knowledgeSourceId;return {...s,knowledgeSourceId,sourceId:knowledgeSourceId??s.id,...(s.imageAvailable?{imageUrl:'/api/source/image?businessId='+encodeURIComponent(id)+'&imageId='+encodeURIComponent(s.id)}:{})};});
+    const frontier=raw.frontier.map((f:any)=>{const s=rawSources.find((s:any)=>s.id===f.recordId);return {...f,sourceId:s?.knowledgeSourceId??f.recordId,reason:s?.error??f.linkText};});
+    return {...raw,status:raw.state,checkpoint:raw.pending?raw.pending.kind+' intent persisted':raw.state==='ready_for_analysis'?'discovery decision completed':raw.used.pages+' page admissions; '+raw.used.decisions+' model decisions',
+      publicRetrievalEnabled:raw.publicReaderEnabled,pagesRetrieved:rawSources.filter((s:any)=>s.kind==='page'&&s.status==='retrieved').length,frontier,sources:rawSources,
+      accessLimits:[...raw.limitations,...rawSources.filter((s:any)=>['blocked','failed','unknown'].includes(s.status)).map((s:any)=>(s.url??s.title??s.id)+': '+(s.error??s.status)),...(error?[error.code]:[])],
+      modelAnalysis:{status:analysis.status,reason:analysis.status==='proposal_ready'?'A persisted proposal is available; inspect its actual provenance.':'Commercial analysis and model-directed follow-ups require an exact new signed grant. Public retrieval and owner review can continue.'}};
+  }
+  launchInvestigation(id:string,action:()=>Promise<unknown>){
+    this.knowledge.company(id);requireThat(!this.investigations.has(id),'INVESTIGATION_ALREADY_RUNNING');
+    const p=Promise.resolve().then(action).catch(error=>{const code=String(error?.code??error?.message??'INVESTIGATION_FAILED').slice(0,240);this.store.transaction(()=>{const old=this.store.get('pilot-investigation-error',id);this.store.put('pilot-investigation-error',id,{businessId:id,code,at:new Date().toISOString()},old?._version??null);});return {error:code};}).finally(()=>this.investigations.delete(id));
+    this.investigations.set(id,p);
+  }
+  async createCommercialDemo(which:'service'|'retail'){
+    requireThat(['service','retail'].includes(which),'DEMO_CASE_REQUIRED');const c=commercialCases[which];
+    const company=this.knowledge.createCompany({name:c.name,website:c.website,goal:c.goal,notes:c.notes,mode:'fixture'});
+    for(const p of c.pages)this.knowledge.addSource(company.id,{title:p.title,text:p.text,kind:'website',rights:'Developer-authored synthetic case; no customer data or independent holdout',observedAt:new Date().toISOString()});
+    this.store.transaction(()=>this.store.put('pilot-commercial-fixture',company.id,{businessId:company.id,case:which,sourceExposure:which==='retail'?'developer-visible transfer fixture; not a confidential holdout':'development fixture',createdAt:new Date().toISOString()},null));
+    await this.intelligence.analyze(company.id,commercialFixturePort(which,this.intelligence.sources(company.id)),{provenance:'Preloaded synthetic source fixtures; this demonstration does not claim public retrieval or model-directed discovery.'});
+    return company;
   }
   rows(kind: string) { return this.store.db.prepare('SELECT body FROM entities WHERE kind=? ORDER BY key').all(kind).map(r => JSON.parse(String(r.body))); }
   audit(businessId: string, action: string, details: any) {
@@ -57,6 +129,7 @@ export class PilotService {
   }
   bindArtifact(businessId: string, taskId: string, expected: string) {
     requireThat(this.task(businessId, taskId).status === 'completed', 'TASK_COMPLETION_REQUIRED_FOR_OWNER_RESULT');
+    this.execution.assertContextCurrent(taskId,true);
     const artifact = this.currentArtifact(businessId, taskId);
     requireThat(artifact.taskId === taskId, 'TASK_OWN_DELIVERABLE_REQUIRED');
     requireThat(artifact.current === true, 'ARTIFACT_NOT_CURRENT');
@@ -89,14 +162,14 @@ export class PilotService {
       const code = String(error?.code ?? error?.message ?? 'PILOT_EXECUTION_FAILED').slice(0, 240);
       this.store.transaction(() => {
         const old = this.store.get('pilot-operation-error', taskId);
-        this.store.put('pilot-operation-error', taskId, { businessId, taskId, code, at: new Date().toISOString(), providerRequests: 0 }, old?._version ?? null);
+        this.store.put('pilot-operation-error', taskId, { businessId, taskId, code, at: new Date().toISOString(), providerRequests: null, accountingSource: 'durable scoped model ledger; this UI error is not a billing observation' }, old?._version ?? null);
       });
       this.audit(businessId, 'operation_failed', { taskId, code });
       return { error: code };
-    }).finally(() => this.pending.delete(taskId));
+    }).finally(() => { this.pending.delete(taskId); try{this.intelligence.materialize(businessId);}catch(error){this.audit(businessId,'dependent_work_wait',{code:String((error as Error).message)});} });
     this.pending.set(taskId, promise);
   }
-  async settle() { await Promise.allSettled([...this.pending.values()]); }
+  async settle() { await Promise.allSettled([...this.pending.values(),...this.investigations.values()]); }
   plan(businessId: string, workflow: 'response-packet' | 'business-site') {
     requireThat(['response-packet','business-site'].includes(workflow),'WORKFLOW_UNSUPPORTED');
     const assignment=new PilotLearning(this.store).assignment(businessId,workflow),company=this.knowledge.company(businessId);
@@ -117,8 +190,10 @@ export class PilotService {
     return { ...artifact, hash: artifact.hash ?? artifact.manifestHash ?? artifact.manifest?.sha256, previewUrl: '/preview' + query, downloadUrl: '/download' + query };
   }
   view(businessId?: string) {
+    const authority=this.authority();
     const businesses = this.knowledge.listCompanies();
-    const business = businessId ? this.knowledge.company(businessId) : null;
+    const rawBusiness = businessId ? this.knowledge.company(businessId) : null;
+    const business = rawBusiness?{...rawBusiness,...this.store.get('pilot-business-intake',rawBusiness.id)}:null;
     const knowledge = business ? this.knowledge.snapshot(business.id) as any : {};
     const tasks = business ? this.execution.tasks(business.id).map((t: any) => {
       let artifact: any = null;
@@ -126,7 +201,8 @@ export class PilotService {
       const error = this.store.get('pilot-operation-error', t.id);
       const acceptance = this.store.get('pilot-acceptance', t.id);
       const decision = this.decisionFor(t.id);
-      const contextCurrent = !decision || hash(decision.contextBinding) === hash(this.contextBinding(business.id));
+      let contextCurrent = !decision || hash(decision.contextBinding) === hash(this.contextBinding(business.id));
+      try{this.execution.assertContextCurrent(t.id,true);}catch{contextCurrent=false;}
       const acceptanceCurrent = Boolean(acceptance && artifact?.current && contextCurrent && acceptance.artifactHash === artifact.hash);
       return { ...t, status: this.pending.has(t.id) ? 'running' : t.status, artifact,
         acceptance: acceptance ? { ...acceptance, current: acceptanceCurrent } : null, decision, contextCurrent,
@@ -137,41 +213,47 @@ export class PilotService {
         nextAction: t.nextAction ?? (artifact ? 'Inspect the deliverable and record an outcome.' : 'Start the prepared work.') };
     }) : [];
     const outcomes = business ? this.rows('pilot-owner-outcome').filter(o => o.businessId === business.id) : [];
-    const learning = business ? new PilotLearning(this.store).list(business.id) : [];
+    const learning = business ? [...new PilotLearning(this.store).list(business.id),...new CommercialReview(this.store).list(business.id)] : [];
     const inbox: any[] = [];
     const ledger = readPortfolioAccounting(this.store,this.root);
     const diagnosisLedger = readPilotDiagnosisAccounting(this.store,this.root);
+    const intelligenceLedger=readIntelligenceAccounting(this.store,this.root),intelligenceSimulated=intelligenceLedger.mode==='mock',intelligenceInference=intelligenceSimulated?0:intelligenceLedger.inferenceDispatches;
     const simulated = ledger.mode === 'mock';
     const sumKnown = (...values: Array<number | null | undefined>) => values.every(v=>typeof v==='number') ? (values as number[]).reduce((a,b)=>a+b,0) : null;
     const diagnosisInference = diagnosisLedger.mode === 'mock' ? 0 : diagnosisLedger.inferenceDispatches;
-    const inferenceCalls = sumKnown(ledger.inferenceDispatches,diagnosisInference);
-    const countRequests = sumKnown(ledger.countRequests,diagnosisLedger.countRequests);
+    const inferenceCalls = sumKnown(ledger.inferenceDispatches,diagnosisInference,intelligenceInference);
+    const countRequests = sumKnown(ledger.countRequests,diagnosisLedger.countRequests,intelligenceLedger.countRequests);
     const providerCalls = sumKnown(inferenceCalls,countRequests);
     const diagnosisSimulated = diagnosisLedger.mode === 'mock';
-    const provisionalCostMinor = sumKnown(simulated ? 0 : ledger.provisionalMinor,diagnosisSimulated ? 0 : diagnosisLedger.provisionalMinor);
+    const provisionalCostMinor = sumKnown(simulated ? 0 : ledger.provisionalMinor,diagnosisSimulated ? 0 : diagnosisLedger.provisionalMinor,intelligenceSimulated?0:intelligenceLedger.provisionalMinor);
     const settledDeliverables = ledger.inferenceDispatches === 0 ? 0 : ledger.settledBillingStatus === 'recorded' ? ledger.settledMinor : null;
     const settledDiagnosis = diagnosisInference === 0 ? 0 : diagnosisLedger.settledMinor;
+    const settledIntelligence=intelligenceInference===0?0:intelligenceLedger.settledMinor;
     if (business && !this.knowledge.sources(business.id).length) inbox.push({ id: 'sources', title: 'Add the information that should guide this work', reason: 'The company has no permitted evidence yet.', action: 'Add evidence' });
-    if (business && business.mode !== 'fixture') inbox.push({ id: 'model-authority', title: 'Real worker execution needs a pilot grant', reason: 'Business inputs and work can be prepared now. Prior experiment budgets do not transfer.', action: 'Review prepared execution requirements' });
+    if (business && business.mode !== 'fixture'&&!(authority.liveEnabled&&authority.businessId===business.id)) inbox.push({ id: 'model-authority', title: 'Real worker execution needs current scoped authority', reason: authority.reason+' Prior experiment budgets do not transfer.', action: 'Review prepared execution requirements' });
     for (const task of tasks) if (task.status === 'completed' && task.artifact?.current && task.contextCurrent && task.artifact.taskId === task.id && !task.acceptance?.current) inbox.push({ id: 'review-' + task.id, taskId: task.id, title: 'Inspect ' + task.title, reason: 'Local checks are recorded; usefulness and owner acceptance are separate.', action: 'Review deliverable' });
-    return { businesses, business, sources: business ? this.knowledge.sources(business.id) : [],
+    let investigation:any=null;if(business){try{investigation=this.discoveryView(business.id);}catch{}}
+    if(investigation&&this.investigations.has(business!.id))investigation={...investigation,status:'running'};
+    return { businesses, business, sources: business ? this.knowledge.sources(business.id).map(s=>{const d=investigation?.sources.find((r:any)=>r.knowledgeSourceId===s.id&&r.imageUrl)??investigation?.sources.find((r:any)=>r.knowledgeSourceId===s.id);return {...s,...(d?.imageUrl?{imageUrl:d.imageUrl}:{}),...(d?{discoveryRecordId:d.id,retrievalStatus:d.status}:{} )};}) : [],
+      investigation,intelligence:business?this.intelligence.view(business.id):null,
+      coordinatedWork:business?this.rows('pilot-commercial-work').filter(w=>w.businessId===business.id):[],
       understanding: knowledge.understanding ?? knowledge, tasks,
       workers: this.workerView(business?.id), learning, outcomes, inbox,
       connections: this.connections(),
       accounting: { providerCalls, inferenceCalls, countRequests,
         requestCountScope:'Inference creations and supporting token counts. Diagnosis same-ID reads are separately recorded; task response reads remain in durable response observations.',
-        diagnosisRetrievals: diagnosisLedger.retrievals,
-        providerCostMinor: providerCalls === 0 ? 0 : sumKnown(settledDeliverables,settledDiagnosis), provisionalCostMinor,
-        retainedExposureMinor: sumKnown(simulated ? 0 : ledger.retainedMinor,diagnosisSimulated ? 0 : diagnosisLedger.retainedMinor),
-        simulatedRetainedMinor: sumKnown(simulated ? ledger.retainedMinor : 0,diagnosisSimulated ? diagnosisLedger.retainedMinor : 0),
+        diagnosisRetrievals: diagnosisLedger.retrievals,intelligenceRetrievals:intelligenceLedger.retrievals,
+        providerCostMinor: providerCalls === 0 ? 0 : sumKnown(settledDeliverables,settledDiagnosis,settledIntelligence), provisionalCostMinor,
+        retainedExposureMinor: sumKnown(simulated ? 0 : ledger.retainedMinor,diagnosisSimulated ? 0 : diagnosisLedger.retainedMinor,intelligenceSimulated?0:intelligenceLedger.retainedMinor),
+        simulatedRetainedMinor: sumKnown(simulated ? ledger.retainedMinor : 0,diagnosisSimulated ? diagnosisLedger.retainedMinor : 0,intelligenceSimulated?intelligenceLedger.retainedMinor:0),
         currency: 'USD', humanSeconds: null, ledgerStatus:ledger.status==='unavailable'||diagnosisLedger.status==='unavailable'?'unavailable':ledger.status,
-        scope:'Distinct diagnosis and task accounts summed once; prior missions and development subscriptions excluded', billingStatus:providerCalls===0?'not_applicable':sumKnown(settledDeliverables,settledDiagnosis)===null?'unsettled_or_unknown':'recorded', ledger, diagnosisLedger,
+        scope:'Distinct diagnosis, task and intelligence accounts summed once; prior missions and development subscriptions excluded', billingStatus:providerCalls===0?'not_applicable':sumKnown(settledDeliverables,settledDiagnosis,settledIntelligence)===null?'unsettled_or_unknown':'recorded', ledger, diagnosisLedger,intelligenceLedger,
         recordedOwnerInteractionSeconds: business ? this.rows('pilot-review').filter(r => r.businessId === business.id && r.endedAt).reduce((sum, r) => sum + (r.durationSeconds ?? 0), 0) : 0,
         independentCorrectionSeconds: null, localComputeCostMinor: null, subscriptionUsageCostMinor: null },
       history: business ? this.store.records({ id: 'pilot-owner', tenantId: 'mason', businessId: business.id, permissions: ['read'] }, portfolioScope(business.id)).filter(r => r.kind === 'PilotOwnerAction').slice(-20).map(r => ({ id: r.id, ...r.value })) : [],
       archive: [{ title: 'Mission 031 R5', status: 'unsigned; preserved', retainedExposureMinor: 1917, settledCostMinor: null, note: 'Historical Mission 031 exposure, not this pilot spending. Quote Desk remains an incomplete live engineering experiment.', url: 'http://127.0.0.1:43142/' }],
-      authority: { liveEnabled: false, externalEffects: false, connectionAccess: false },
-      release: { version: '032', historicalR5: 'unsigned; preserved', qualification: 'offline pilot mechanics; real-model and customer acceptance not established' } };
+      authority: { ...authority, externalEffects: false, connectionAccess: false },
+      release: { version: '033', historicalR5: 'unsigned; preserved', qualification: 'Business-intelligence and coordinated execution mechanics; actual-model commercial competence and customer acceptance not established' } };
   }
   workerView(businessId?: string) {
     if (businessId) return new PilotLearning(this.store).workers(businessId).map(({selectedProcedure, ...worker}) => worker);
@@ -180,7 +262,8 @@ export class PilotService {
   }
   connections() { return [
     { id: 'files', name: 'Owner documents and exports', status: 'available_local', action: 'Import text, Markdown, CSV or JSON you have permission to use. Original text and source dates are retained.' },
-    { id: 'website', name: 'Business website', status: 'reference_only', action: 'Add the URL and paste relevant page text with its source. No website crawl or account access is performed.' },
+    { id: 'website', name: 'Public business evidence', status: 'bounded_public_retrieval', action: 'A supplied website starts bounded public retrieval. Model-selected follow-up investigation needs an exact grant. No authenticated pages, accounts or paywall bypass.' },
+    { id: 'social', name: 'Social profiles and visual evidence', status: 'public_access_or_owner_export', action: 'Accessible public profile links can be retained. Supply a permitted screenshot/export when access is unavailable. Retained-page screenshots are isolated browser observations; text-only workers have no visual-analysis claim.' },
     { id: 'model', name: 'Model execution', status: 'requires_exact_grant', action: 'Select the company evidence and first outcome, then review the exact new execution packet. No prior budget transfers.' },
     { id: 'customer-actions', name: 'Customer communication and website publishing', status: 'not_connected', action: 'Deliverables remain local drafts. Sending or deployment needs separate account access, exact destination and approval.' },
     { id: 'hosted', name: 'Hosted pilot', status: 'prepared_not_deployed', action: 'A prepared single-owner deployment path requires host access, TLS and authentication, a protected data volume and an approved deployment.' }
@@ -192,6 +275,18 @@ export class PilotService {
   async prepareLive(businessId: string) {
     const company = this.knowledge.company(businessId);
     requireThat(company.mode !== 'fixture', 'LIVE_PREPARATION_REQUIRES_REAL_COMPANY');
+    const saved=this.store.get('pilot-prepared-intelligence',businessId);
+    if(saved){requireThat(hash(saved.proposal)===saved.proposalHash,'PREPARED_INTELLIGENCE_INTEGRITY');return {...saved,authority:this.authority(),preparationOnly:true,providerRequests:0};}
+    if(this.store.get('pilot-discovery',businessId)){
+      const route=portfolioRoute('intelligence-033-prospective','proj_H01ORqdOPQM6vdGwQYsqFL5r',true,true),discovery=this.discovery.request(businessId,undefined,{includeImages:true}),analysis=this.intelligence.prepare(businessId,this.discovery.context(businessId));
+      const body=buildResponsesBody(route,discovery.request,discovery.schema),bytes=canonical(body);
+      return {version:'intelligence-outcome-preparation-033-v1',businessId,authority:'unsigned; no provider execution authorized',route,discovery:{...discovery,body,serializedBytes:bytes,utf8Bytes:Buffer.byteLength(bytes),requestBytesHash:rawHash(bytes)},analysis:{request:analysis.request,sources:analysis.sources,contextHash:analysis.contextHash},
+        capacity:{investigation:6,analysis:1,campaign:6,page:8,optionalExactCorrection:4,maxInferences:25,maxSupportingCounts:25,perAdmissionMinor:205,inferenceReserveMinor:5125,unpricedCountAndRetrievalAllowanceMinor:275,totalMinor:5400,currency:'USD'},
+        requirements:['Finalize the existing bounded discovery session at six model decisions, including finish.','Freeze this company, source permissions, tools, contracts and implementation into an exact unsigned packet.','Approve the exact packet, project, protected credential location, numerical ceiling and provider storage before signing.','After analysis, select one supported opportunity; the same authorized controller can complete its campaign and dependent page.'],
+        status:'Signed model binding and owner-workspace execution are implemented and mock-verified; live access and commercial quality are not tested.',
+        sourceScope:'Only this company’s selected sources and public sources discovered in its bound session; optional bounded screenshot pixels must be explicitly approved.',
+        exclusions:['No sending, deployment, customer actions, purchases or account access','No prior-grant borrowing, replacement inference, automatic fallback or protected evaluation'],providerRequests:0};
+    }
     const route = portfolioRoute('pilot-prospective-032', 'proj_H01ORqdOPQM6vdGwQYsqFL5r', true, true);
     // This assembles bytes only. Historical pricing fields cannot authorize or quote a new run.
     const knowledge = this.knowledge.prepareLiveDiagnosis(businessId, route);
