@@ -10,11 +10,25 @@ import { InteractivePreviewSessions, renderRemotePreview } from '../portfolio/pr
 import {commercialFixturePort} from './intelligence-fixtures.ts';
 import {CommercialReview} from './commercial-review.ts';
 import {fixtureOutcomePlanner} from './fixtures-outcome.ts';
+import { adaptiveOwnerView } from '../adaptive/owner-view.ts';
+import { taskDefinitionHash } from '../portfolio/live.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const csp = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 export function servePilot(options: { service: PilotService; port?: number }) {
   const service = options.service, sessions = new Map<string, { csrf: string; at: number }>();
+  const ownerView = (businessId?: string) => {
+    const view = service.view(businessId);
+    const tasks = view.tasks.map(task => {
+      let adaptiveContextHash: string | undefined;
+      try {
+        const actual = service.execution.portfolio.getTask(task.id);
+        adaptiveContextHash = hash({task:taskDefinitionHash(actual),evidence:service.execution.evidence.taskDigest(actual)});
+      } catch { /* A historical binding that cannot be reconstructed stays unverified. */ }
+      return {...task,adaptiveContextHash};
+    });
+    return {...view,adaptive:adaptiveOwnerView(service.store,view.business?.id??null,tasks)};
+  };
   const previews = new InteractivePreviewSessions();
   const previewOwners = new Map<string, {owner: string; businessId: string; taskId: string;project?:boolean;manifestHash?:string}>();
   const opening = new Set<string>();
@@ -44,7 +58,8 @@ export function servePilot(options: { service: PilotService; port?: number }) {
       }
       requireThat(session && Date.now() - session.at < 12 * 3600000, 'OWNER_SESSION_REQUIRED');
       const businessId = url.searchParams.get('businessId') ?? undefined;
-      if (req.method === 'GET' && url.pathname === '/api/state') { send(200, service.view(businessId)); return; }
+      if (req.method === 'GET' && url.pathname === '/api/state') { send(200, ownerView(businessId)); return; }
+      if (req.method === 'GET' && url.pathname === '/api/adaptive') { requireThat(businessId,'BUSINESS_REQUIRED');send(200,ownerView(businessId).adaptive);return; }
       if (req.method === 'GET' && url.pathname === '/api/investigation/source') {
         requireThat(businessId,'BUSINESS_REQUIRED');send(200,service.discovery.source(businessId,url.searchParams.get('sourceId')??''));return;
       }
@@ -112,7 +127,13 @@ export function servePilot(options: { service: PilotService; port?: number }) {
       } else if (url.pathname === '/api/demo') { result = body.fixture?await service.createCommercialDemo(body.fixture):service.knowledge.createDemo(); selected = result.id ?? result.company?.id; }
       else {
         requireThat(typeof selected === 'string', 'BUSINESS_REQUIRED'); service.knowledge.company(selected);
-        if(url.pathname==='/api/development/prepare')result=service.workerDevelopment.prepare(selected,body);
+        if(url.pathname==='/api/adaptive/plan') {
+          requireThat(['response-packet','functional-project','campaign-packet'].includes(body.workflow),'ADAPTIVE_WORKFLOW_UNSUPPORTED');
+          requireThat(body.job&&typeof body.job.title==='string'&&body.job.title.trim().length>=4&&body.job.title.length<=160&&typeof body.job.outcome==='string'&&body.job.outcome.trim().length>=8&&body.job.outcome.length<=2000&&typeof body.job.details==='string'&&body.job.details.length<=4000,'ADAPTIVE_OBJECTIVE_REQUIRED');
+          requireThat(body.adaptive&&typeof body.adaptive==='object'&&!Array.isArray(body.adaptive),'ADAPTIVE_ALLOCATION_INVALID');
+          result=service.execution.plan({business:service.knowledge.company(selected),sources:service.knowledge.sources(selected),workflow:body.workflow,job:{title:body.job.title.trim(),outcome:body.job.outcome.trim(),details:body.job.details.trim()},adaptive:{prompt:body.adaptive.prompt,allowCommands:body.adaptive.allowCommands,modelCalls:body.adaptive.modelCalls,localToolRuns:body.adaptive.localToolRuns}});
+        }
+        else if(url.pathname==='/api/development/prepare')result=service.workerDevelopment.prepare(selected,body);
         else if(url.pathname==='/api/development/fixture')result=await service.workerDevelopment.fixture(selected,body.candidateId);
         else if(url.pathname==='/api/connection/sync')result=await service.syncApprovedConnection(selected,body.connectionId);
         else if(url.pathname==='/api/connection/configure')result=service.connectedAccounts.beginConfiguration({businessId:selected,provider:body.provider,credentialReference:body.credentialReference,capabilityIds:body.capabilityIds,configuration:body.configuration});
@@ -198,7 +219,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
         } else { send(404, {error: 'ROUTE_NOT_FOUND'}); return; }
       }
       service.audit(selected, url.pathname, { taskId: body.taskId ?? null, artifactHash: body.artifactHash ?? null, resultHash: hash(result), providerRequests: status===202?null:0, accountingSource: status===202?'durable scoped model ledger; UI acknowledgement is not a dispatch receipt':'local owner operation' });
-      send(status, {view: service.view(selected), result, ...(result?.reviewSessionId ? {reviewSessionId: result.reviewSessionId} : {})});
+      send(status, {view: ownerView(selected), result, ...(result?.reviewSessionId ? {reviewSessionId: result.reviewSessionId} : {})});
     } catch (error: any) {
       const code = String(error?.code ?? error?.message ?? 'REQUEST_FAILED').slice(0, 240);
       const denial = /CSRF|SCOPE|HOST|SESSION|GRANT/.test(code);

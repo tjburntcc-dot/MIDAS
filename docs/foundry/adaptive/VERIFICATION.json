@@ -1,0 +1,241 @@
+{
+  "kind": "adaptive-operator-offline-verification",
+  "baseCommit": "15cb7731803e03344deee97f8608a14426f7d4dd",
+  "branch": "codex/adaptive-operator-integration",
+  "focusedAndAdjacent": {
+    "tests": 49,
+    "passed": 49,
+    "failed": 0,
+    "skipped": 0,
+    "command": "node --test --test-reporter=tap packages/foundry/test/adaptive-*.test.ts packages/foundry/test/pilot-continuity-runtime.test.ts packages/foundry/test/pilot-diagnosis-authorized.test.ts",
+    "tapSha256": "2357f95f9fbb147b9e9a4f75685700214d3bb2f2cb303d72cf1f10d3fea549f8"
+  },
+  "earlierBroaderRun": {
+    "tests": 55,
+    "passed": 54,
+    "failed": 1,
+    "failure": "Historical signed business-site test: absent Chromium executable; actual browser journey stopped at startup"
+  },
+  "typecheck": {
+    "version": "6.0.3",
+    "strict": true,
+    "semanticDiagnostics": 0
+  },
+  "ownerDOM": {
+    "kind": "jsdom-ui-integration",
+    "realBrowser": false,
+    "layoutVerified": false,
+    "localHTTP": true,
+    "fixtureEvidence": true,
+    "checks": [
+      "owner state rendered from SQLite",
+      "acquisition and later reuse visible",
+      "preparation dialog opens",
+      "form persists new assignment through CSRF API",
+      "returns to work with prepared assignment"
+    ],
+    "errors": [],
+    "at": "2026-09-14T20:02:48.969Z"
+  },
+  "backupRestore": {
+    "version": "pilot-backup-v3",
+    "sha256": "b4d1908c8b15b38a6fa4f745afaf2cdf09417082ae4874ef071a9d71aec88fb7",
+    "sidecars": 16,
+    "automaticExecution": false,
+    "allSidecarsEqual": true,
+    "provenance": "scripted_fixture",
+    "providerRequests": 0
+  },
+  "demo": {
+    "id": "adaptive-import-lab-fixture-v1",
+    "businessId": "adaptive-import-lab-fixture",
+    "taskIds": [
+      "adaptive-import-lab-fixture/acquire-normalizer",
+      "adaptive-import-lab-fixture/reuse-normalizer"
+    ],
+    "candidateId": "skill-candidate-capability-1dd61128413db68175dae90b",
+    "provenance": "scripted_fixture",
+    "unfamiliarObstacle": false,
+    "modelCalls": 0,
+    "credentialReads": 0,
+    "networkRequests": 0,
+    "actualWork": "Injected data normalization, project file changes, durable acquisition/reuse records, checked and locally published service briefs.",
+    "root": "/workspace/scratch/77995c9ab2f0/midas-adaptive-access/var/adaptive-release",
+    "_version": 1
+  },
+  "actualIsolatedCommandVerified": false,
+  "actualBrowserRenderingVerified": false,
+  "liveUnfamiliarObstacleDemonstrated": false,
+  "liveTransferDemonstrated": false,
+  "threeArmComparisonExecuted": false,
+  "providerInferenceRequests": 0,
+  "providerCountRequests": 0,
+  "providerRetrievalRequests": 0,
+  "providerCredentialReads": 0,
+  "newProviderExposureMinor": 0,
+  "historicalRetainedExposureMinor": 1917,
+  "historicalSettlement": "unavailable",
+  "developmentSubscriptionAndLabor": "unmeasured",
+  "changedFilesBeforeThisReceipt": [
+    {
+      "path": "docs/foundry/adaptive/COMPLETION.md",
+      "bytes": 6937,
+      "sha256": "12abd81425d7eda02f1ac81ccdbcfe6022619af8e60d1c2b5b08b93dedfbd969"
+    },
+    {
+      "path": "docs/foundry/adaptive/EXECUTOR-CHOICE.md",
+      "bytes": 5179,
+      "sha256": "99f84b70d41538f9ae79b2311bea9767adebaebc00390dd31f8ac628af332827"
+    },
+    {
+      "path": "docs/foundry/adaptive/RUNBOOK.md",
+      "bytes": 4718,
+      "sha256": "7210d2baa29c993777317cf0d1d9eacc2b282000403ca5af1f11da1c4d1cadf2"
+    },
+    {
+      "path": "docs/foundry/adaptive/WORKER-AUDIT.md",
+      "bytes": 6503,
+      "sha256": "6cbf1aa5221d275c49ea49f2ff9dde47ec1406c46d39af0de42ce67514f591e3"
+    },
+    {
+      "path": "packages/foundry/src/adaptive/capabilities.ts",
+      "bytes": 15527,
+      "sha256": "60a4acfa89d229ed8fbf9831c7d1205ea1e6d66d7e712145580e98e16b7a2f70"
+    },
+    {
+      "path": "packages/foundry/src/adaptive/demo.ts",
+      "bytes": 13469,
+      "sha256": "fdaea6bca8567590cbfb336541321cf6346fcc64cbd5406b2b79883e8ada1b9b"
+    },
+    {
+      "path": "packages/foundry/src/adaptive/executor.ts",
+      "bytes": 15174,
+      "sha256": "7d37e5aa31041980ede05b55a8c3406364ae15dd47bc389f9fc0666233dd7570"
+    },
+    {
+      "path": "packages/foundry/src/adaptive/lean-worker.ts",
+      "bytes": 10027,
+      "sha256": "95939e21dc84975bb95739ede6207d4657cc8ac61c082202a13b85100ea921bc"
+    },
+    {
+      "path": "packages/foundry/src/adaptive/owner-view.ts",
+      "bytes": 9297,
+      "sha256": "7b97a601b318ef87ce9c64ea23e83b552fb90e15cc11b7ed34cc9de02af13a54"
+    },
+    {
+      "path": "packages/foundry/src/adaptive/tools.ts",
+      "bytes": 19506,
+      "sha256": "51cb9a152ec4ce8424590989c94a6e58ed715a9175ee9340b7de06874dc4531d"
+    },
+    {
+      "path": "packages/foundry/src/adaptive/worker-contract.ts",
+      "bytes": 3623,
+      "sha256": "e82fefafdc307edf16765939596eb6024e65210c40fd118ff6124f1e00393f98"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-authorized.test.ts",
+      "bytes": 6638,
+      "sha256": "56d9f2d3dd3ff12f19347b6d6765ba439702688a9ac3af36fa4eee3fd7847dec"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-capabilities.test.ts",
+      "bytes": 7992,
+      "sha256": "a7370609fee4779e82d651abd8d1e1045d01e9deca05ae990065d6a7ce3d09d1"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-continuity.test.ts",
+      "bytes": 5164,
+      "sha256": "5c6343d8dcd9cb4cac956557c2aca5bcc92ab5c4d16cbef1bcb64d64473b414b"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-engine.test.ts",
+      "bytes": 11005,
+      "sha256": "f4b11b3bdddf272deaa02e7a87a1ddfbfd47e5b5cdff575b1f19c9d911f15acc"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-executor.test.ts",
+      "bytes": 9400,
+      "sha256": "e60a0eacdb2379f373334730fed9b45c0dd9f425499805b37f66e61d84dc71fd"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-lean-worker.test.ts",
+      "bytes": 6563,
+      "sha256": "0f319971934b72b3fdcdef11f50afe52180885e2a15b5b192840d6a6d3a843ab"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-owner-view.test.ts",
+      "bytes": 7649,
+      "sha256": "55abed695811f21241402eef8ce036962ef59cda429dfdca27d9b218ee9584f3"
+    },
+    {
+      "path": "packages/foundry/test/adaptive-tools.test.ts",
+      "bytes": 15461,
+      "sha256": "fe7b4ab24d6958280e9f41ec26f47272d94838ea63e8bad6fa7cf917c40ab079"
+    },
+    {
+      "path": "docs/intelligence/EXECUTION.md",
+      "bytes": 13489,
+      "sha256": "cebfbb3ee1c2c0f5e8e0ff27f8ce4a482209c6483f52417deda8ee90f377faa9"
+    },
+    {
+      "path": "packages/foundry/src/pilot/app.js",
+      "bytes": 140541,
+      "sha256": "f2b7be4b1f8098ae1dc0b5147ad16853de8e9a2a62c0f7c2b9c6170d0ccb0921"
+    },
+    {
+      "path": "packages/foundry/src/pilot/authorized.ts",
+      "bytes": 8016,
+      "sha256": "15ebc659c6ace9f8df9d02c2d38814bee161d13ca9b4799af6885d2f5fcb37df"
+    },
+    {
+      "path": "packages/foundry/src/pilot/binding.ts",
+      "bytes": 2286,
+      "sha256": "cb7382a54c234e662cc212c30ad36e80727be5665a9fd6483e2018f8415fce0d"
+    },
+    {
+      "path": "packages/foundry/src/pilot/continuity.ts",
+      "bytes": 14047,
+      "sha256": "71ef20911abdc21cc200adda720f084ff591c3971b00a68e46ddb96a90646085"
+    },
+    {
+      "path": "packages/foundry/src/pilot/execution.ts",
+      "bytes": 31508,
+      "sha256": "47e2befaa50ce0700983e79a9e1ebaeca4c5d29aca326c45cb1c8572be7b532c"
+    },
+    {
+      "path": "packages/foundry/src/pilot/intelligence-authorized.ts",
+      "bytes": 37163,
+      "sha256": "59b788f7f0b850c5070c94ffafcfb90cdc66475db907d7a035c50c3c3989558a"
+    },
+    {
+      "path": "packages/foundry/src/pilot/outcome-authorized.ts",
+      "bytes": 31783,
+      "sha256": "2c59a1a72afb8ee8027844fbc409892ca5ec1ed33a2c6a649388487a9f3ebac5"
+    },
+    {
+      "path": "packages/foundry/src/pilot/outcome-journey-authorized.ts",
+      "bytes": 35326,
+      "sha256": "d4444dbb62b41c542abcc858c525f658bd29422ee567208a526c9fb48164f9d0"
+    },
+    {
+      "path": "packages/foundry/src/pilot/server.ts",
+      "bytes": 26220,
+      "sha256": "4f7aefe220ec8c184e9765c7f2420ee42f574f833148e0af887eb7327eb62e47"
+    },
+    {
+      "path": "packages/foundry/src/portfolio/engine.ts",
+      "bytes": 69641,
+      "sha256": "73585293c2f2cd11da812e6493063664cecf314d6bf10dbd209bf2f292379c94"
+    },
+    {
+      "path": "packages/foundry/src/portfolio/live.ts",
+      "bytes": 39034,
+      "sha256": "506484c811b879c4ac38047814ca1684badc60d6e6e7aae9c3808af0dbf8c444"
+    },
+    {
+      "path": "packages/foundry/src/portfolio/preview.ts",
+      "bytes": 31629,
+      "sha256": "11934dbce55e5e5b2eb9d062afedf00663e7a59b1a36e5e9b446cc0183255e76"
+    }
+  ]
+}

@@ -1,4 +1,26 @@
-# MIDAS operating execution ledger — overnight continuation 034
+# MIDAS operating execution ledger — Adaptive Operator continuation
+
+## Current implementation checkpoint (14 September 2026)
+
+Governing attachments: `02_Start_Here_Execution_Brief(1).md` and `01_Implementation_Addendum(1).md`, plus the owner's explicit Adaptive Operator mission. Repository independently fetched from `tjburntcc-dot/MIDAS`; verified latest completed Mission034 base `15cb7731803e03344deee97f8608a14426f7d4dd`. Active isolated branch: `codex/adaptive-operator-integration`. No reset to033, historical signing, provider call or credential access.
+
+Completed code: shared PortfolioEngine opt-in adaptive action, scoped multi-file workbench, durable command/effect receipts, targeted repair, capability episodes, current-file verification, parent resumption, candidate retention and second-task applicability/results. Baseline remains available; lean procedure is unqualified. Existing owner interface now includes Adaptive evidence and new-assignment preparation. New assignment ceilings cover worker-chosen intermediate methods; historical stage allowances remain unchanged and unborrowable.
+
+Integrated offline acquisition and later reuse completed and published checked service artifacts in `var/adaptive-release`. All choices are explicitly scripted fixtures; no unfamiliar-obstacle model claim. Exact signed mock execution, command/scope/restart/capacity checks, owner HTTP/DOM interaction and V3 backup/restore are verified. Real browser rendering and isolated-command execution remain blocked by the recorded environment limits. Completion and exact verification receipts: `docs/foundry/adaptive/COMPLETION.md`.
+
+Observed environment limits: nested Bubblewrap namespaces are unavailable. Official Codex app-server documentation was inspected, but installed stable0.154.0 lacks the documented restricted-read policy; it was not substituted with weaker host access. The cloud browser blocks localhost and the browser-binary download endpoint is outside the current network allowance. These block their affected verification/execution paths, not independent development. No paid runtime or genuine unknown-obstacle evaluation has run.
+
+## Next three executable actions (current)
+
+1. Review the integrated changes and run the reproducible owner walkthrough in `docs/foundry/adaptive/RUNBOOK.md`; no provider access is needed.
+2. Verify real isolated commands and browser rendering on a compatible host; connect bounded documentation/package acquisition before claiming that broader resource capability. Do not weaken task isolation.
+3. On a compatible isolated executor and under a fresh exact runtime scope, run a developer-unseen obstacle and later transfer case, then compare strong direct/current/lean-adaptive workflows with matched resources. No current unsigned034 or R5 grant is authorization for changed code.
+
+The original Fable master prompt is now supplied in this conversation; its exact historical connector activity, tool exposure and route configuration remain unverified. It is a baseline-quality reference, not a worker answer key.
+
+## Preserved Mission034 ledger (historical statements below)
+
+### Mission034 checkpoint
 
 ## Governing state
 

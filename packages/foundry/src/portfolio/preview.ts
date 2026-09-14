@@ -57,6 +57,7 @@ function renderClosableRemotePreview(options:PreviewBinding&{openEndpoint:string
 
 export async function browserModule():Promise<any>{
  const req=createRequire(import.meta.url);try{return req('playwright');}catch{}
+ const runtime=process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES;if(runtime){const installed=join(runtime,'playwright');if(existsSync(installed))return req(installed);}
  const candidate=join(homedir(),'.cache','codex-runtimes','codex-primary-runtime','dependencies','node','node_modules','playwright');
  requireThat(existsSync(candidate),'PLAYWRIGHT_DEPENDENCY_UNAVAILABLE');return req(candidate);
 }
