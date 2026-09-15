@@ -1,21 +1,44 @@
 import { StateStore } from '../state.ts';
-import { hash, identifier, requireThat } from '../contracts.ts';
+import { verify } from 'node:crypto';
+import { canonical, hash, identifier, requireThat } from '../contracts.ts';
 import { portfolioScope, text, unique } from './contracts.ts';
 
 export type ProcedureScope = { capability: string; population: string };
 export type EvaluationCase = { id: string; fresh: boolean; regression: boolean; baselinePassed: boolean; candidatePassed: boolean; criticalError: boolean; baselineCorrectionSeconds: number | null; candidateCorrectionSeconds: number | null };
+export type ProcedureAssessmentTrust = { assessorId: string; publicKey: string; authorityReference: string };
+export type ProcedureAssessmentReceipt = { payload: { kind: 'procedure-independent-assessment-v1'; assessorId: string; authorityReference: string; bindingHash: string; accepted: boolean; independent: boolean; expiresAt: string }; signature: string };
 export type ProcedureEvaluation = {
     id: string; scope: ProcedureScope; cases: EvaluationCase[]; provenance: 'fixture' | 'runtime' | 'independent';
     baseline: { model: string; instructionsHash: string; toolsHash: string; evidenceHash: string; resourcesHash: string };
     candidate: { model: string; instructionsHash: string; toolsHash: string; evidenceHash: string; resourcesHash: string };
     strongBaselineReference: string; resultEvidence: string; semanticReview: { accepted: boolean; reviewer: string; independent: boolean } | null;
+    observedOutputs?: Array<{ caseId: string; baseline: { sha256: string; producerId: string }; candidate: { sha256: string; producerId: string } }>;
+    assessment?: ProcedureAssessmentReceipt;
 };
 export type ProcedureRollback = { id: string; expectedVersion: number; reason: string; observationId: string; target: { kind: 'baseline'; baselineId: string } | { kind: 'adoption'; version: number } };
 /** Applies only demonstrated, explicit job-fit evidence; fixtures never qualify adoption. */
 export class ProcedureRegistry {
     readonly store: StateStore;
-    constructor(store: StateStore) { this.store = store; }
+    readonly assessmentTrust?: ProcedureAssessmentTrust;
+    constructor(store: StateStore, assessmentTrust?: ProcedureAssessmentTrust) { this.store = store; this.assessmentTrust = assessmentTrust ? structuredClone(assessmentTrust) : undefined; }
     private get(id: string) { const p = this.store.get('portfolio-procedure', id); requireThat(p, 'PROCEDURE_NOT_FOUND'); return p; }
+    /** Build a receipt binding for an independently controlled assessor. This
+     * method reads no key, grants no trust, and performs no assessment itself. */
+    assessmentBinding(candidateId: string, input: ProcedureEvaluation) {
+        const candidate = this.get(candidateId), baseline = this.get(candidate.baselineId);
+        return { kind: 'procedure-assessment-binding-v1', candidateId, candidateHash: candidate.definitionHash, baselineHash: baseline.definitionHash, scope: input.scope, cases: input.cases, conditions: { baseline: input.baseline, candidate: input.candidate }, observedOutputs: input.observedOutputs ?? [], resultEvidence: input.resultEvidence, provenance: input.provenance };
+    }
+    private assessment(candidateId: string, input: ProcedureEvaluation) {
+        if (!input.assessment) return { verified: false, reason: 'independent assessment receipt missing' };
+        const trust = this.assessmentTrust;
+        requireThat(trust && trust.assessorId && trust.publicKey && trust.authorityReference, 'PROCEDURE_TRUSTED_ASSESSOR_REQUIRED');
+        const outputs = input.observedOutputs;
+        requireThat(Array.isArray(outputs) && outputs.length === input.cases.length && new Set(outputs.map(o => o.caseId)).size === outputs.length && outputs.every(o => input.cases.some(c => c.id === o.caseId) && [o.baseline, o.candidate].every(a => /^[a-f0-9]{64}$/.test(a.sha256) && typeof a.producerId === 'string' && a.producerId.length > 0 && a.producerId !== trust.assessorId)), 'PROCEDURE_ASSESSMENT_OUTPUT_BINDING');
+        const receipt = input.assessment, payload = receipt.payload;
+        requireThat(payload?.kind === 'procedure-independent-assessment-v1' && payload.assessorId === trust.assessorId && payload.authorityReference === trust.authorityReference && payload.bindingHash === hash(this.assessmentBinding(candidateId, input)) && payload.independent === true && typeof payload.accepted === 'boolean' && Date.parse(payload.expiresAt) > Date.now(), 'PROCEDURE_ASSESSMENT_BINDING');
+        requireThat(typeof receipt.signature === 'string' && verify(null, Buffer.from(canonical(payload)), trust.publicKey, Buffer.from(receipt.signature, 'base64')), 'PROCEDURE_ASSESSMENT_SIGNATURE');
+        return { verified: true, accepted: payload.accepted, assessorId: trust.assessorId, authorityReference: trust.authorityReference, publicKeyHash: hash(trust.publicKey), receiptHash: hash(receipt), bindingHash: payload.bindingHash };
+    }
     baseline(input: { id: string; scope: ProcedureScope; procedure: string; strongBaselineReference: string }) { identifier(input.id); text(input.scope.capability); text(input.scope.population); text(input.procedure); text(input.strongBaselineReference); return this.store.transaction(() => { const old = this.store.get('portfolio-procedure', input.id); if (old) { requireThat(old.definitionHash === hash(input), 'PROCEDURE_IMMUTABLE'); return old; } const value = { ...input, definitionHash: hash(input), kind: 'baseline', version: 1, status: 'baseline', createdAt: new Date().toISOString() }; this.store.record(portfolioScope(), 'procedure-' + input.id, 'PortfolioProcedure', value); return this.store.put('portfolio-procedure', input.id, value, null); }); }
     propose(input: { id: string; baselineId: string; scope: ProcedureScope; procedure: string; mechanism: string; observationId: string; alternativeExplanation: string; regressionRisk: string; rights: 'reusable' }) {
         identifier(input.id); for (const x of [input.procedure, input.mechanism, input.observationId, input.alternativeExplanation, input.regressionRisk, input.scope.capability, input.scope.population]) text(x); requireThat(input.rights === 'reusable', 'PROCEDURE_REUSE_RIGHTS_REQUIRED');
@@ -34,12 +57,18 @@ export class ProcedureRegistry {
         const gain = input.cases.filter(c => c.candidatePassed && !c.baselinePassed).length - input.cases.filter(c => c.baselinePassed && !c.candidatePassed).length;
         const regression = input.cases.some(c => c.baselinePassed && !c.candidatePassed), critical = input.cases.some(c => c.criticalError), fresh = input.cases.some(c => c.fresh), regressionCases = input.cases.some(c => c.regression);
         const correctionKnown = input.cases.every(c => c.baselineCorrectionSeconds !== null && c.candidateCorrectionSeconds !== null), correctionWorse = correctionKnown && input.cases.reduce((n, c) => n + c.candidateCorrectionSeconds! - c.baselineCorrectionSeconds!, 0) > 0;
-        const supported = input.provenance !== 'fixture' && matched && gain >= 2 && !regression && !critical && fresh && regressionCases && !correctionWorse && input.semanticReview?.accepted === true;
-        const analysis = { matched, netAdditionalAccepted: gain, regression, criticalError: critical, freshCases: fresh, regressionCases, correctionKnown, correctionWorse, eligible: supported, decision: supported ? 'eligible_for_scoped_experimental_adoption' : 'retain_baseline', qualification: 'Only this capability and population; no general superiority claim', missingEvidence: [!matched && 'fair common conditions', !fresh && 'fresh cases', !regressionCases && 'regression cases', !input.semanticReview?.accepted && 'semantic job-fit review', input.provenance === 'fixture' && 'non-fixture observed work'].filter(Boolean) };
+        const comparisonSupportsCandidate = input.provenance !== 'fixture' && matched && gain >= 2 && !regression && !critical && fresh && regressionCases && !correctionWorse;
+        // A caller-written reviewer name/independence boolean cannot confer trust.
+        const assessment = this.assessment(candidateId, input), eligible = comparisonSupportsCandidate && assessment.verified && assessment.accepted === true;
+        const analysis = { policyVersion: 'independent-assessment-required-v2', matched, netAdditionalAccepted: gain, regression, criticalError: critical, freshCases: fresh, regressionCases, correctionKnown, correctionWorse, comparisonSupportsCandidate, assessment, eligible, decision: eligible ? 'eligible_for_scoped_experimental_adoption' : 'retain_baseline', qualification: eligible ? 'Only this capability and evaluated population; no general superiority claim' : 'Unqualified; stronger baseline retained', missingEvidence: [!matched && 'fair common conditions', !fresh && 'fresh cases', !regressionCases && 'regression cases', input.provenance === 'fixture' && 'non-fixture observed work', !assessment.verified && 'trusted independent assessor receipt bound to exact candidate, cases, conditions and observed outputs', assessment.verified && !assessment.accepted && 'independent assessment acceptance'].filter(Boolean) };
         return this.store.transaction(() => { const key = candidateId + '/' + input.id, value = { ...input, id: key, candidateId, candidateHash: candidate.definitionHash, baselineHash: baseline.definitionHash, analysis, definitionHash: hash(input), createdAt: new Date().toISOString() }, old = this.store.get('portfolio-procedure-evaluation', key); if (old) { requireThat(old.definitionHash === value.definitionHash, 'EVALUATION_IMMUTABLE'); return old; } this.store.record(portfolioScope(), 'evaluation-' + hash(key).slice(0, 24), 'PortfolioProcedureEvaluation', value); return this.store.put('portfolio-procedure-evaluation', key, value, null); });
     }
     adopt(candidateId: string, evaluationId: string, scope: ProcedureScope, reason: string) {
         text(reason); const candidate = this.get(candidateId), evaluation = this.store.get('portfolio-procedure-evaluation', evaluationId.includes('/') ? evaluationId : candidateId + '/' + evaluationId); requireThat(evaluation?.candidateId === candidateId && evaluation.candidateHash === candidate.definitionHash, 'ADOPTION_EVALUATION_REQUIRED'); requireThat(evaluation.analysis.eligible, 'PROCEDURE_ADVANTAGE_NOT_DEMONSTRATED'); requireThat(hash(scope) === hash(evaluation.scope), 'PROCEDURE_TRANSFER_REQUIRES_FRESH_FIT_EVALUATION');
+        // Preserved legacy eligible flags cannot authorize a new adoption. Existing
+        // selection history and rollback remain available without rewriting receipts.
+        const assessment = this.assessment(candidateId, evaluation);
+        requireThat(evaluation.analysis.policyVersion === 'independent-assessment-required-v2' && evaluation.provenance !== 'fixture' && assessment.verified && assessment.accepted === true, 'PROCEDURE_VERIFIED_INDEPENDENT_ASSESSOR_REQUIRED');
         return this.store.transaction(() => { const id = hash(scope), prior = this.store.get('portfolio-procedure-adoption', id), value = { id, scope, candidateId, procedureHash: hash(candidate.procedure), evaluationId: evaluation.id, reason, qualification: 'experimental within evaluated scope', version: (prior?.version ?? 0) + 1, createdAt: new Date().toISOString() }; if (prior?.candidateId === candidateId && prior.evaluationId === evaluation.id) return prior; this.store.record(portfolioScope(), 'adoption-' + id.slice(0, 20) + '-' + value.version, 'PortfolioProcedureAdoption', value); return this.store.put('portfolio-procedure-adoption', id, value, prior?._version ?? null); });
     }
     /** Changes future selection only. Existing executions retain their pinned procedure. */

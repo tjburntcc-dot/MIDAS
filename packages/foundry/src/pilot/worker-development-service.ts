@@ -12,6 +12,7 @@ import type { ComparisonMode, CustodyGate, ExternalGrade, ImprovementObservation
 import { prepareWorkerDevelopmentComparisonGrant, loadAuthorizedWorkerDevelopmentComparison } from './worker-development-authorized.ts';
 import type { OperatingModels, Invocation } from '../operations/model.ts';
 import type { Principal, ModelRequest } from '../contracts.ts';
+import type { ProcedureAssessmentTrust, ProcedureAssessmentReceipt } from '../portfolio/learning.ts';
 
 const candidateKind = 'pilot-worker-development-candidate';
 const comparisonKind = 'pilot-worker-development-comparison';
@@ -36,7 +37,7 @@ export class WorkerDevelopmentService {
     readonly store: StateStore;
     readonly knowledge: PilotKnowledge;
     readonly development: WorkerDevelopment;
-    constructor(store: StateStore) { this.store = store; this.knowledge = new PilotKnowledge(store); this.development = new WorkerDevelopment(store); }
+    constructor(store: StateStore, assessmentTrust?: ProcedureAssessmentTrust) { this.store = store; this.knowledge = new PilotKnowledge(store); this.development = new WorkerDevelopment(store, assessmentTrust); }
     define(businessId: string, jobId: string, input: Parameters<WorkerDevelopment['definition']>[2]) { return this.development.definition(businessId, jobId, input); }
     observe(businessId: string, jobId: string, input: ImprovementObservation) { return this.development.observe(businessId, jobId, input); }
     /** Retains permitted local material; it never retrieves a URL or connector. */
@@ -74,7 +75,11 @@ export class WorkerDevelopmentService {
      * marker or caller-written authorization object as a runtime substitute. */
     loadComparisonRuntime(input: { operating: OperatingModels; principal: Principal; invocationFor(request: ModelRequest): Invocation }) { return loadAuthorizedWorkerDevelopmentComparison(input); }
     async evaluate(candidateId: string, input: { mode: ComparisonMode; modelPort: ModelPort; resources: { maxCostMinor: number; maxCalls: number; maxAttempts: number; maxHumanMinutes: number }; custody: CustodyGate; authorization?: any; runtime?: any }) { return this.development.runComparison(candidateId, input); }
-    grade(comparisonId: string, grades: ExternalGrade[]) { return this.development.gradeComparison(comparisonId, grades); }
+    assessmentRequest(comparisonId: string, grades: ExternalGrade[]) { return this.development.assessmentRequest(comparisonId, grades); }
+    grade(comparisonId: string, grades: ExternalGrade[], assessment?: ProcedureAssessmentReceipt) { return this.development.gradeComparison(comparisonId, grades, assessment); }
+    applicabilityPolicy(candidateId: string, input: Parameters<WorkerDevelopment['applicabilityPolicy']>[1]) { return this.development.applicabilityPolicy(candidateId, input); }
+    assessApplicability(candidateId: string, input: Parameters<WorkerDevelopment['assessApplicability']>[1]) { return this.development.assessApplicability(candidateId, input); }
+    monitorOutcome(candidateId: string, observationId: string) { return this.development.monitorOutcome(candidateId, observationId); }
     assignment(businessId: string, jobId: string, workflow: 'response-packet' | 'business-site' | 'campaign-packet' | 'marketing-page' | 'functional-project') {
         const worker = this.development.getDefinition(businessId, jobId), sourceIds = new Set(this.knowledge.selectedSources(businessId).filter(s => !s.validUntil || Date.parse(s.validUntil) > Date.now()).map(s => s.id));
         const sourceCurrent = worker.evidenceAccess.sourceIds.every(id => sourceIds.has(id));
@@ -85,7 +90,9 @@ export class WorkerDevelopmentService {
         const definitions = this.store.db.prepare("SELECT body FROM entities WHERE kind='pilot-worker-development-definition' ORDER BY key").all().map((r: any) => JSON.parse(String(r.body))).filter((x: any) => x.businessId === businessId && (!jobId || x.jobId === jobId));
         const candidates = this.store.db.prepare("SELECT body FROM entities WHERE kind='pilot-worker-development-candidate' ORDER BY key").all().map((r: any) => JSON.parse(String(r.body))).filter((x: any) => x.businessId === businessId && (!jobId || x.jobId === jobId));
         const comparisons = this.store.db.prepare("SELECT body FROM entities WHERE kind='pilot-worker-development-comparison' ORDER BY key").all().map((r: any) => JSON.parse(String(r.body))).filter((x: any) => x.businessId === businessId && (!jobId || x.jobId === jobId));
+        const readLearning = (kind: string) => this.store.db.prepare('SELECT body FROM entities WHERE kind=? ORDER BY key').all(kind).map((r: any) => JSON.parse(String(r.body))).filter((x: any) => x.businessId === businessId && (!jobId || x.jobId === jobId));
+        const applicability = readLearning('worker-development-applicability'), monitoring = readLearning('worker-development-monitor');
         const stages = comparisons.map((c: any) => ({ id: c.id, status: c.status, mode: c.mode, slots: { pending: (c.slots ?? []).filter((s: any) => s.status === 'pending').length, admitted: (c.slots ?? []).filter((s: any) => s.status === 'admitted').length, result: (c.slots ?? []).filter((s: any) => s.status === 'result').length }, evaluationCases: c.evaluationCaseIds?.length ?? 0, gradeCount: c.grades?.length ?? 0 }));
-        return { businessId, jobId: jobId ?? null, definitions, candidates, comparisons: comparisons.map((c: any) => ({ ...c, outputsVisibleToOwner: true, gradeBoundary: 'Opaque external grade receipts are recorded; this service does not compute semantic grades.' })), stages, runtime: { status: 'requires_signed_operating_models_factory', reason: 'No plain signature or caller-supplied grant can dispatch. prepareComparison produces the exact unsigned packet binding; only the private OperatingModels factory can load and execute its signed replacement packet.' }, actions: ['define', 'observe', 'prepareDiagnosis', 'prepareComparison', 'intake', 'propose', 'practice', 'evaluate', 'grade', 'assignment'] };
+        return { businessId, jobId: jobId ?? null, definitions, candidates, applicability, monitoring, comparisons: comparisons.map((c: any) => ({ ...c, outputsVisibleToOwner: true, gradeBoundary: 'Opaque external grade receipts are recorded; an unverified independence claim cannot adopt a candidate.' })), stages, runtime: { status: 'requires_signed_operating_models_factory', reason: 'No plain signature or caller-supplied grant can dispatch. prepareComparison produces the exact unsigned packet binding; only the private OperatingModels factory can load and execute its signed replacement packet.' }, actions: ['define', 'observe', 'prepareDiagnosis', 'prepareComparison', 'intake', 'propose', 'practice', 'evaluate', 'grade', 'applicabilityPolicy', 'assessApplicability', 'monitorOutcome', 'assignment'] };
     }
 }

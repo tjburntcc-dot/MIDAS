@@ -1,0 +1,283 @@
+{
+  "kind": "commercial-release-trial-preparation-v1",
+  "authoredBy": "development_assistant",
+  "preparedAt": "2026-09-15T02:16:15.624Z",
+  "sourceCommit": "8379986bcb94ae7b11d800ae8ac0c17cd2797b6c",
+  "implementationHash": "6d981ee25d8c834aa0fd30a069e74d96895bb99782b71f98d1724e1fc473444a",
+  "manifestPath": "docs/commercial-release/trial-manifest.v1.json",
+  "manifestHash": "8cee10a3b18d8933ad2e05e3c0537b8c69cdc05fad306011ea564b3b296d019c",
+  "coordinatorRoot": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-coordinator-v1",
+  "status": "structurally_valid_prospective_manifest_initial_signed_binding_pending",
+  "approved": false,
+  "providerRequests": 0,
+  "credentialRead": false,
+  "coordinatorStateCreated": false,
+  "casePayloadsCreated": false,
+  "protectedCustody": false,
+  "structure": {
+    "valid": true,
+    "stages": 11,
+    "calls": 138,
+    "minor": 28980,
+    "allStageBindingsDeferred": true,
+    "aggregateFullyAllocated": true,
+    "codeHashMatches": true,
+    "commonControls": true
+  },
+  "documents": {
+    "population": {
+      "path": "docs/commercial-release/trial-population.v1.json",
+      "hash": "b8b0b731abf36b32ad5dd1ca05d8fac9f9ebe195a129f20a53dc43ff58d6b64a"
+    },
+    "selection": {
+      "path": "docs/commercial-release/trial-selection.v1.json",
+      "hash": "4bb2b1faa5ced33b979617995511e2e6d53a7674fc842ba239f1e5d325c980a8"
+    },
+    "rubric": {
+      "path": "docs/commercial-release/trial-rubric.v1.json",
+      "hash": "654c7dcd7d3f1691b178a3efca08d76f75774f9d513d5002ed3c5a7847814f80"
+    },
+    "order": {
+      "path": "docs/commercial-release/trial-order.v1.json",
+      "hash": "5dd81271f73676db0d775297b2e39b29e6e6aaf0fed8a7b96a8215c9a3a0ff32"
+    }
+  },
+  "development": {
+    "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-live-development-v4",
+    "proposalPath": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-live-development-v4\\proposal\\pilot.outcome.journey.authorization.request.json",
+    "proposalHash": "91b072bc466fb198d6de7c60abbcb4aa30f0ddd98283ad5d6829daf866b19f28",
+    "approved": false,
+    "maximumCalls": 28,
+    "maximumMinor": 5880,
+    "expiry": "2026-09-22T22:00:00.000Z",
+    "initialRequestHash": "c9b9ad84861bd344e79fab592407493bc0a54bc6104fc3989873a9ba64f7736d",
+    "initialSources": [
+      {
+        "id": "source-a951734f04d24ab1a16b",
+        "sha256": "f3e5bd20c968fe91da8e221e158e54de3935a92557eec38ed4e793ca380071f9",
+        "permission": "worker",
+        "origin": null
+      },
+      {
+        "id": "source-46bedeff029d4d148587",
+        "sha256": "fdf099bfbc507a5d1b2eaf731a9324a6fca38886620394a2b7629ce9cdbc6ab3",
+        "permission": "worker",
+        "origin": null
+      },
+      {
+        "id": "source-dd32e49791d64738a268",
+        "sha256": "00281347e8f9168de9047717e801fec1eb683eef9efbabbe130bc357add6536e",
+        "permission": "worker",
+        "origin": null
+      },
+      {
+        "id": "source-d7fd1a99f52744ec8d7e",
+        "sha256": "f84d24f9ed243c5ce5e8760f1605a0b036e5ab4b53690c5ff40f24b4f14bf0a8",
+        "permission": "worker",
+        "origin": null
+      }
+    ],
+    "bindingStatus": "No invented signed authority hash. After approval/signing, inspect the actual loader and bind the one-stage development chunk; predecessor set is empty.",
+    "adaptiveOptions": {
+      "acquisition": {
+        "allowedHosts": [
+          "docs.python.org",
+          "developer.mozilla.org",
+          "registry.npmjs.org"
+        ],
+        "dataScope": "public-or-synthetic",
+        "deadlineMs": 15000,
+        "maxBytes": 16777216,
+        "maxRequests": 8
+      },
+      "allowCommands": true,
+      "allowServices": true,
+      "prompt": "lean"
+    },
+    "mandateHash": "84a8a2ee5001ba17d740ea8bcb3a66e769b0c8041657887f01b45e6a69612a92",
+    "discovery": {
+      "id": "discovery-0adaf4e035ec4732b768",
+      "version": "business-public-discovery-033-v1",
+      "seeds": [
+        "https://fitkitty.com/policies/refund-policy"
+      ],
+      "limits": {
+        "deadlineMs": 7500,
+        "maxBytes": 350000,
+        "maxDecisions": 6,
+        "maxFrontier": 80,
+        "maxHosts": 5,
+        "maxPages": 8,
+        "maxRenders": 2,
+        "maxRequests": 24,
+        "maxTextChars": 16000
+      },
+      "publicReaderPolicy": "signed-session-only"
+    },
+    "localToolRunRule": "Math.min(128,Math.max(32,node.calls*4)), then at least node.calls+8; derived by existing outcome materialization. For proposed12/5 calls this gives48/32."
+  },
+  "futureJobs": [
+    {
+      "id": "development-successor",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-development-successor-v1",
+      "caseId": "development-observed-successor-v1",
+      "arm": "adaptive-midas",
+      "prompt": "lean",
+      "maximumCalls": 4,
+      "maximumMinor": 840,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": true,
+      "requiresIndependentCase": false,
+      "requiresLineage": true
+    },
+    {
+      "id": "flagship-direct",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-flagship-direct-v1",
+      "caseId": "independent-flagship-001",
+      "arm": "strong-direct",
+      "prompt": "direct",
+      "maximumCalls": 20,
+      "maximumMinor": 4200,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": false
+    },
+    {
+      "id": "flagship-prior",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-flagship-prior-v1",
+      "caseId": "independent-flagship-001",
+      "arm": "preserved-midas-procedure",
+      "prompt": "baseline",
+      "maximumCalls": 20,
+      "maximumMinor": 4200,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": false
+    },
+    {
+      "id": "flagship-adaptive",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-flagship-adaptive-v1",
+      "caseId": "independent-flagship-001",
+      "arm": "adaptive-midas",
+      "prompt": "lean",
+      "maximumCalls": 20,
+      "maximumMinor": 4200,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": false
+    },
+    {
+      "id": "transfer-direct",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-transfer-direct-v1",
+      "caseId": "independent-transfer-001",
+      "arm": "strong-direct",
+      "prompt": "direct",
+      "maximumCalls": 8,
+      "maximumMinor": 1680,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": true
+    },
+    {
+      "id": "transfer-prior",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-transfer-prior-v1",
+      "caseId": "independent-transfer-001",
+      "arm": "preserved-midas-procedure",
+      "prompt": "baseline",
+      "maximumCalls": 8,
+      "maximumMinor": 1680,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": true
+    },
+    {
+      "id": "transfer-adaptive",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-transfer-adaptive-v1",
+      "caseId": "independent-transfer-001",
+      "arm": "adaptive-midas",
+      "prompt": "lean",
+      "maximumCalls": 8,
+      "maximumMinor": 1680,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": true
+    },
+    {
+      "id": "nonreuse",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-nonreuse-v1",
+      "caseId": "independent-nonreuse-001",
+      "arm": "adaptive-midas",
+      "prompt": "lean",
+      "maximumCalls": 6,
+      "maximumMinor": 1260,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": true
+    },
+    {
+      "id": "ablation-candidate",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-ablation-candidate-v1",
+      "caseId": "independent-memory-ablation-001",
+      "arm": "adaptive-midas",
+      "prompt": "lean",
+      "maximumCalls": 8,
+      "maximumMinor": 1680,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": true
+    },
+    {
+      "id": "ablation-masked",
+      "root": "C:\\Users\\14844\\Downloads\\MIDAS\\var\\commercial-operator-release-worktree\\var\\commercial-release-trial-ablation-masked-v1",
+      "caseId": "independent-memory-ablation-001",
+      "arm": "adaptive-midas",
+      "prompt": "lean",
+      "maximumCalls": 8,
+      "maximumMinor": 1680,
+      "bindingStatus": "deferred; no task facts, signed grant, candidate IDs or expected answer created",
+      "requiresActualObservation": false,
+      "requiresIndependentCase": true,
+      "requiresLineage": true
+    }
+  ],
+  "requiredBeforeDevelopment": [
+    "Explicit approval and signing of exact current development proposal",
+    "Observe actual signed loader through inspect-stage and supply its bindingHash/configurationHash/workerFactsHash plus lineageHash:null for initial fresh root",
+    "Create coordinator from this immutable manifest and bind the development chunk; no standalone runner workaround",
+    "Preflight the actual bound first stage before run"
+  ],
+  "requiredBeforeIndependentChunks": [
+    "Independent custodian selection and exposure record under sealed population/selection rules",
+    "Identical paired job facts/evidence/tool/model/resource controls and fresh exact signed grants",
+    "Bind the complete three-arm flagship chunk atomically; no partial arm binding",
+    "Actual eligible same-arm history and exact V4 lineage receipts for transfer/nonreuse/ablation",
+    "Independent human assessor identity/trust and output-bound records before semantic assessment"
+  ],
+  "unknowns": [
+    "Current account/model availability",
+    "Actual model business judgment/acquisition/transfer performance",
+    "Current customer demand or economic value",
+    "Human availability and fee",
+    "Invoice settlement and count/retrieval pricing"
+  ],
+  "verification": {
+    "trialTestLog": "var/release-verification/final-trial.txt",
+    "testsPassed": 15,
+    "skipped": 0,
+    "independentRerunPassed": true,
+    "strictTypecheck": {
+      "compiler": "6.0.3",
+      "sourceFiles": 101,
+      "errors": 0
+    },
+    "providerRequests": 0
+  }
+}

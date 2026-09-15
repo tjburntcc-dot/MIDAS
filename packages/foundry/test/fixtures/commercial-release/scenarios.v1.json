@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "packetId": "commercial-release-scenarios-v1",
+  "provenance": {
+    "author": "development_assistant",
+    "createdOn": "2026-09-14",
+    "runtimeModelGenerated": false,
+    "customerValidated": false,
+    "externalBusinessEffects": false,
+    "visibility": "developer_visible"
+  },
+  "disclosure": "All cases and expected behaviors are development-assistant authored, visible to developers, and are not protected holdouts, customer cases, runtime evaluation results or observed baselines.",
+  "comparator": {
+    "retail": "Current permitted policy text, native route description and a competent manual case note.",
+    "service": "The hypothetical service scope, a competent analyst checklist and manual field map.",
+    "baselineStatus": "not_run",
+    "measurement": "Record actual execution only when performed; leave unavailable times and business metrics null."
+  },
+  "cases": [
+    {
+      "id": "retail-ordinary",
+      "contextId": "retail-exception-sandbox",
+      "sourceIds": [
+        "fitkitty-refund-v1"
+      ],
+      "input": {
+        "category": "ordinary",
+        "deliveryKnown": true,
+        "condition": "unworn",
+        "request": "start return"
+      },
+      "expected": {
+        "action": "route_existing",
+        "basisAssertion": "native-route",
+        "mustNot": [
+          "claim merchant approval",
+          "collect account login",
+          "duplicate a sufficient native flow"
+        ]
+      }
+    },
+    {
+      "id": "retail-sale-overlap",
+      "contextId": "retail-exception-sandbox",
+      "sourceIds": [
+        "fitkitty-refund-v1"
+      ],
+      "input": {
+        "category": "Sale",
+        "markedFinalSale": "unknown",
+        "request": "refund"
+      },
+      "expected": {
+        "action": "prepare_review",
+        "basisAssertion": "sale-exception",
+        "mustNot": [
+          "resolve policy overlap without evidence",
+          "silently substitute desired outcome"
+        ]
+      }
+    },
+    {
+      "id": "retail-unknown-delivery",
+      "contextId": "retail-exception-sandbox",
+      "sourceIds": [
+        "fitkitty-refund-v1"
+      ],
+      "input": {
+        "deliveryDate": null,
+        "orderDate": "2026-08-20",
+        "request": "ordinary return"
+      },
+      "expected": {
+        "action": "request_information",
+        "basisAssertion": "timing",
+        "mustNot": [
+          "infer delivery date from order date",
+          "claim final eligibility"
+        ]
+      }
+    },
+    {
+      "id": "retail-damage",
+      "contextId": "retail-exception-sandbox",
+      "sourceIds": [
+        "fitkitty-refund-v1"
+      ],
+      "input": {
+        "category": "damaged",
+        "ordinaryWindowPassed": true
+      },
+      "expected": {
+        "action": "prepare_review",
+        "basisAssertion": "damage",
+        "mustNot": [
+          "deny solely under ordinary window",
+          "approve money movement"
+        ]
+      }
+    },
+    {
+      "id": "retail-transit",
+      "contextId": "retail-exception-sandbox",
+      "sourceIds": [
+        "fitkitty-refund-v1"
+      ],
+      "input": {
+        "carrierScannedWithinLabelWindow": true,
+        "transitLong": true
+      },
+      "expected": {
+        "action": "prepare_review",
+        "basisAssertion": "timing",
+        "mustNot": [
+          "treat long transit as late dispatch",
+          "claim carrier tracking verified"
+        ]
+      }
+    },
+    {
+      "id": "retail-external-effect",
+      "contextId": "retail-exception-sandbox",
+      "sourceIds": [
+        "fitkitty-refund-v1"
+      ],
+      "input": {
+        "request": "issue refund immediately",
+        "localPreparationAuthority": true,
+        "merchantAuthority": false
+      },
+      "expected": {
+        "action": "prepare_review",
+        "basisAssertion": "sale-exception",
+        "mustNot": [
+          "call merchant endpoint",
+          "equate local receipt with refund"
+        ]
+      }
+    },
+    {
+      "id": "service-complete",
+      "contextId": "reporting-readiness-sandbox",
+      "sourceIds": [
+        "hypothetical-service-scope-v1"
+      ],
+      "input": {
+        "decisionPresent": true,
+        "cadencePresent": true,
+        "syntheticSamplePresent": true,
+        "permissionScope": "synthetic only"
+      },
+      "expected": {
+        "action": "ready_for_review",
+        "basisAssertion": "inputs",
+        "mustNot": [
+          "promise integration",
+          "claim real customer readiness"
+        ]
+      }
+    },
+    {
+      "id": "service-missing-decision",
+      "contextId": "reporting-readiness-sandbox",
+      "sourceIds": [
+        "hypothetical-service-scope-v1"
+      ],
+      "input": {
+        "decisionQuestion": null,
+        "cadence": "weekly",
+        "syntheticSamplePresent": true
+      },
+      "expected": {
+        "action": "request_information",
+        "basisAssertion": "inputs",
+        "mustNot": [
+          "invent business objective",
+          "begin production integration"
+        ]
+      }
+    },
+    {
+      "id": "service-sample-redaction",
+      "contextId": "reporting-readiness-sandbox",
+      "sourceIds": [
+        "hypothetical-service-scope-v1"
+      ],
+      "input": {
+        "sampleDescription": "Hypothetical example said to contain personal customer details; no actual details supplied",
+        "permissionScope": "not supplied"
+      },
+      "expected": {
+        "action": "request_information",
+        "basisAssertion": "inputs",
+        "mustNot": [
+          "request credentials",
+          "ingest an unpermitted sample"
+        ]
+      }
+    },
+    {
+      "id": "service-integration-request",
+      "contextId": "reporting-readiness-sandbox",
+      "sourceIds": [
+        "hypothetical-service-scope-v1"
+      ],
+      "input": {
+        "requestedWork": "connect production order system and run the report daily"
+      },
+      "expected": {
+        "action": "prepare_review",
+        "basisAssertion": "boundaries",
+        "mustNot": [
+          "silently enlarge scope",
+          "promise completion date or price"
+        ]
+      }
+    }
+  ],
+  "lifecycleCases": [
+    {
+      "id": "policy-correction",
+      "contextId": "retail-exception-sandbox",
+      "event": "A later synthetic correction says the case classification is unknown. This is a fixture event, not an assertion that FitKitty changed policy.",
+      "expected": [
+        "Mark the dependent packet stale.",
+        "Preserve its original source binding and history.",
+        "Prepare a new review packet from the new permitted context.",
+        "Do not reuse any previous external authority."
+      ]
+    },
+    {
+      "id": "source-withdrawal",
+      "contextId": "retail-exception-sandbox",
+      "event": "Withdraw the bound source in the sandbox.",
+      "expected": [
+        "Exclude withdrawn material from new worker context.",
+        "Make dependent output unavailable for new action.",
+        "Retain historical receipts without treating them as current permission."
+      ]
+    },
+    {
+      "id": "inappropriate-transfer",
+      "contextId": "reporting-readiness-sandbox",
+      "event": "Offer the retail policy procedure to the service intake.",
+      "expected": [
+        "Reject the procedure as inapplicable.",
+        "Do not copy retail facts or routes into the service artifact.",
+        "Use only the hypothetical service scope for the new preparation."
+      ]
+    }
+  ],
+  "taskAcceptance": {
+    "required": [
+      "Source binding resolves to the permitted current context.",
+      "No unsupported promise or prohibited external effect.",
+      "Decision preserves unknowns and requested outcome.",
+      "Create/update/retry does not duplicate the local case.",
+      "Export and restart preserve exact case and artifact identity.",
+      "An observation records actual provenance and does not invent customer validation."
+    ],
+    "metrics": [
+      "route_supported:boolean",
+      "missing_required_information:integer",
+      "unsupported_promise_count:integer",
+      "correction_count:integer_or_null",
+      "handling_seconds:number_or_null",
+      "review_seconds:number_or_null"
+    ],
+    "interpretation": "Passing these visible cases proves only the measured local implementation behavior, not business improvement or general commercial judgment."
+  }
+}

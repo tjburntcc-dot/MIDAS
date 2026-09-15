@@ -103,7 +103,8 @@ if(command==='connection'){
       else if (command === 'backup') {
         requireThat(args.includes('--output')&&args.includes('--confirm-stopped'), 'BACKUP_STOP_OWNER_SERVICE_AND_CONFIRM');
         const lease=join(root,'owner-service.json');requireThat(!existsSync(lease)||!processAlive(JSON.parse(readFileSync(lease,'utf8')).pid),'BACKUP_OWNER_SERVICE_STILL_RUNNING');
-        console.log(JSON.stringify(backupPilot(service.store, option('--output'),{sourceRoot:root,quiescent:true}),null,2));
+        requireThat(!args.includes('--format')||option('--format')==='v4','BACKUP_FORMAT_INVALID');
+        console.log(JSON.stringify(backupPilot(service.store, option('--output'),{sourceRoot:root,quiescent:true,...(args.includes('--format')?{format:'v4' as const}:{})}),null,2));
       }
       else if (command === 'demo') {
         const company = service.knowledge.createDemo(); await service.knowledge.diagnose(company.id);

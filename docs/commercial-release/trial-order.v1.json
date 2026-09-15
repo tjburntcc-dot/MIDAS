@@ -1,0 +1,12 @@
+{
+  "kind": "commercial-release-trial-order-v1",
+  "authoredBy": "development_assistant",
+  "status": "prospective_fixed_order_not_executed",
+  "randomized": false,
+  "counterbalancedDesign": false,
+  "rationale": "Fix the sequence before any trial outcome. Rotate the three-arm order across flagship and transfer to avoid using the same position every time, without claiming a counterbalanced experiment. Run the masked ablation first and never share outputs between its roots.",
+  "order": ["development-journey", "development-successor", "flagship-direct", "flagship-prior", "flagship-adaptive", "transfer-prior", "transfer-adaptive", "transfer-direct", "nonreuse", "ablation-masked", "ablation-candidate"],
+  "chunkOrder": ["development", "observed-successor", "flagship", "transfer", "nonreuse", "ablation"],
+  "rules": ["No outcome-conditioned reorder or case replacement", "Bind each complete deferred chunk only after all prior stages complete", "Unknown effects retain the coordinator lease", "Missing candidate or independent material leaves later work unbound; unused allowance is not borrowed", "A revised order requires new manifest preparation and authority before execution"],
+  "modelOrProviderRequests": 0
+}

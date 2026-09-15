@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "packetId": "commercial-release-evidence-v1",
+  "version": 1,
+  "createdOn": "2026-09-14",
+  "provenance": {
+    "author": "development_assistant",
+    "createdOn": "2026-09-14",
+    "runtimeModelGenerated": false,
+    "customerValidated": false,
+    "externalBusinessEffects": false,
+    "visibility": "developer_visible"
+  },
+  "scope": "Public evidence supports a bounded diagnosis. All execution examples are local sandboxes; merchant ownership, account access, customer consent and demand are unestablished.",
+  "contexts": [
+    {
+      "id": "retail-exception-sandbox",
+      "name": "Retail exception desk — public-reference sandbox",
+      "mode": "public_reference_sandbox",
+      "referenceBusiness": "FitKitty Culture",
+      "relationship": "No ownership, engagement or permission to operate merchant accounts is claimed.",
+      "objective": "Prepare accurate return/exchange exception handoffs without replacing a sufficient native route.",
+      "sourceIds": [
+        "fitkitty-refund-v1",
+        "fitkitty-product-v1",
+        "fitkitty-homepage-v1"
+      ]
+    },
+    {
+      "id": "reporting-readiness-sandbox",
+      "name": "Reporting-readiness service — hypothetical sandbox",
+      "mode": "hypothetical_sandbox",
+      "referenceBusiness": null,
+      "relationship": "A development-assistant-authored service situation. No actual service business, buyer or customer fact is asserted.",
+      "objective": "Prepare one recurring-report readiness review from an anonymized sample and a stated decision.",
+      "sourceIds": [
+        "hypothetical-service-scope-v1"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "fitkitty-refund-v1",
+      "version": 1,
+      "type": "public_web",
+      "title": "FitKitty refund policy",
+      "url": "https://fitkitty.com/policies/refund-policy",
+      "observedOn": "2026-09-14",
+      "publicationDate": null,
+      "publicationDateStatus": "not_displayed",
+      "publisher": "FitKitty Culture",
+      "capture": "Bounded extracted public text inspected through web reader; complete original page bytes and content hash are not retained in this packet.",
+      "excerpt": "Items from the Closet Clear-Out and Sale collections, which can be exchanged but not refunded",
+      "assertions": [
+        {
+          "id": "native-route",
+          "text": "Ordinary returns already have an account self-service route."
+        },
+        {
+          "id": "sale-exception",
+          "text": "Sale-collection items and Final Sale exclusions require care; overlap is not resolved here."
+        },
+        {
+          "id": "timing",
+          "text": "Ordinary eligibility uses delivery timing. Label dispatch and transit are treated separately."
+        },
+        {
+          "id": "damage",
+          "text": "Damage handling has separate guidance beyond the ordinary window."
+        }
+      ],
+      "limitations": [
+        "Publisher policy assertions, not verified fulfillment or legal advice.",
+        "No account login or portal submission was performed.",
+        "No support-volume, handling-time or financial evidence is available."
+      ]
+    },
+    {
+      "id": "fitkitty-product-v1",
+      "version": 1,
+      "type": "public_web",
+      "title": "Lunar Essence Fleece Crew product page",
+      "url": "https://fitkitty.com/products/lunar-essence-fleece-crew-moon-tribe-edition",
+      "observedOn": "2026-09-14",
+      "publicationDate": null,
+      "publicationDateStatus": "not_displayed",
+      "publisher": "FitKitty Culture",
+      "capture": "Bounded extracted public text inspected through web reader; no product image inference.",
+      "excerpt": "Relaxed, true-to-size fit with a soft drape.",
+      "assertions": [
+        {
+          "id": "existing-fit-content",
+          "text": "The inspected product already includes fit, fabric/care and FAQ content."
+        }
+      ],
+      "limitations": [
+        "This single product does not establish catalog-wide coverage.",
+        "Fit claims and popularity claims were not independently verified.",
+        "No exact garment measurements are established here."
+      ]
+    },
+    {
+      "id": "fitkitty-homepage-v1",
+      "version": 1,
+      "type": "public_web",
+      "title": "FitKitty homepage",
+      "url": "https://fitkitty.com/",
+      "observedOn": "2026-09-14",
+      "publicationDate": null,
+      "publicationDateStatus": "not_displayed",
+      "publisher": "FitKitty Culture",
+      "capture": "Bounded extracted public text inspected through web reader.",
+      "excerpt": "FREE exchanges, FREE returns.",
+      "assertions": [
+        {
+          "id": "broad-promise",
+          "text": "The homepage presents broad return messaging and a Return Center link."
+        }
+      ],
+      "limitations": [
+        "Compare route and promise details with current policy before any merchant use.",
+        "Contact/size-page reader failures do not prove customer-facing broken links.",
+        "No sales, traffic, customer or stock data was accessed."
+      ]
+    },
+    {
+      "id": "jobber-conversion-v1",
+      "version": 1,
+      "type": "public_web",
+      "title": "Converting a Quote to a Job",
+      "url": "https://help.getjobber.com/en/articles/converting-a-quote-to-a-job/",
+      "observedOn": "2026-09-14",
+      "publicationDate": null,
+      "updatedOn": "2024-03-26",
+      "publicationDateStatus": "update_date_displayed",
+      "publisher": "Jobber",
+      "capture": "Bounded extracted public text inspected through web reader.",
+      "excerpt": "any updates made to the quote do not appear on the job",
+      "assertions": [
+        {
+          "id": "incumbent-conversion",
+          "text": "Native conversion transfers quoted items; later quote changes do not update the resulting job."
+        }
+      ],
+      "limitations": [
+        "Documented behavior is not proof of a business defect.",
+        "No Jobber account was inspected; generic quote tracking has substantial incumbent alternatives."
+      ]
+    },
+    {
+      "id": "hypothetical-service-scope-v1",
+      "version": 1,
+      "type": "synthetic_specification",
+      "title": "Hypothetical reporting-readiness scope",
+      "url": null,
+      "observedOn": null,
+      "publicationDate": null,
+      "publicationDateStatus": "not_applicable",
+      "publisher": "MIDAS development assistant",
+      "capture": "Original development-assistant-authored case specification.",
+      "excerpt": null,
+      "assertions": [
+        {
+          "id": "scope",
+          "text": "The hypothetical offer reviews one recurring report: its intended decision, cadence, source fields and an anonymized example."
+        },
+        {
+          "id": "inputs",
+          "text": "A review needs the decision question, report cadence, sample description and permission to use the anonymized material."
+        },
+        {
+          "id": "boundaries",
+          "text": "System integration, production credentials, promised completion dates and recurring operations are outside this sample offer."
+        }
+      ],
+      "limitations": [
+        "These are fictional test conditions, not observations about a real company.",
+        "Customer usefulness, demand and economic value remain unmeasured."
+      ]
+    }
+  ],
+  "comparison": [
+    {
+      "job": "Product fit/conversion guide",
+      "decision": "defer",
+      "basis": "Existing inspected fit/FAQ content weakens an absence claim. No conversion or return-reason baseline is available.",
+      "alternative": "Existing product page and merchant support.",
+      "timeToProof": "Public content review is immediate; commercial proof needs merchant participation and traffic.",
+      "founderBurden": "Product fact-checking and permitted analytics access would be needed."
+    },
+    {
+      "job": "Return/exchange exception handoff",
+      "decision": "prepare_flagship_sandbox",
+      "basis": "Multiple policy paths allow a concrete routing test. Need frequency and avoidable handling effort remain unknown.",
+      "alternative": "Native account return flow plus existing support.",
+      "timeToProof": "Local task correctness and persistence are testable now; customer benefit is awaiting evidence.",
+      "founderBurden": "Proposed one policy review and one sample review before any pilot."
+    },
+    {
+      "job": "Reporting-readiness intake",
+      "decision": "prepare_different_context",
+      "basis": "Different B2B job, inputs, output and scope; no retail rule is applicable.",
+      "alternative": "A competent analyst's checklist, spreadsheet and conversation.",
+      "timeToProof": "Disclosed local reuse cases now; independent buyer learning later.",
+      "founderBurden": "Real adoption needs an eligible consenting operator and permitted anonymized example."
+    }
+  ],
+  "proposedIntervention": {
+    "status": "hypothesis",
+    "statement": "A source-versioned exception handoff may reduce repeated clarification and mistaken expectations while directing ordinary cases to the existing route.",
+    "counterevidence": [
+      "Native self-service already exists.",
+      "Existing product guidance already answers several buyer questions.",
+      "Extra intake may add effort to a sufficient workflow.",
+      "The service context is hypothetical; it supplies no demand evidence."
+    ],
+    "unknowns": [
+      "Eligible exception volume",
+      "Current handling and owner-review minutes",
+      "Customer task completion",
+      "Implementation and correction cost",
+      "Willingness to pay",
+      "Contribution margin and retention effects"
+    ],
+    "changeMindIf": "Retain the incumbent workflow if added steps do not save useful effort, material errors appear, or an operator reports no worthwhile unmet need."
+  }
+}

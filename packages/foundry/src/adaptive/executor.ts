@@ -1,24 +1,28 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { mkdirSync, existsSync, lstatSync, readdirSync, readFileSync, writeFileSync, renameSync, realpathSync } from 'node:fs';
+import { mkdirSync, existsSync, lstatSync, readdirSync, readFileSync, writeFileSync, renameSync, realpathSync, unlinkSync } from 'node:fs';
 import { resolve, dirname, join, isAbsolute, relative, sep } from 'node:path';
+import { WslBubblewrapBackend } from './wsl-backend.ts';
 
 export const contentHash = (value: string | Buffer): string => createHash('sha256').update(value).digest('hex');
 export interface ExecutorPolicy {
   network?: 'off' | 'on';
   allowCommands?: boolean;
   maxFileBytes?: number;
+  maxBinaryBytes?: number;
   maxOutputBytes?: number;
   maxTimeoutMs?: number;
 }
 export interface CommandRequest { argv: string[]; cwd?: string; timeoutMs?: number; operationId: string }
 export interface BackendCommand {
   argv: string[]; cwd: string; workspace: string; timeoutMs: number; maxOutputBytes: number; network: 'off' | 'on';
+  signal?: AbortSignal;
+  completion?: {path:string;binding:{operationId:string;inputHash:string;businessId:string;taskId:string}};
 }
 export interface BackendResult {
   status: 'completed' | 'failed' | 'blocked' | 'timed_out';
   exitCode: number | null; stdout: string; stderr: string; truncated: boolean;
-  isolation: 'bubblewrap' | 'injected'; reason?: string;
+  isolation: 'bubblewrap' | 'wsl-bubblewrap' | 'injected'; reason?: string;
 }
 export interface ExecutorBackend { execute(command: BackendCommand): Promise<BackendResult> }
 export interface CommandReceipt extends BackendResult {
@@ -108,10 +112,11 @@ export class AdaptiveWorkspace {
     mkdirSync(this.workspacePath, { recursive: true, mode: 0o700 }); mkdirSync(this.evidencePath, { recursive: true, mode: 0o700 });
     this.policy = { network: options.policy.network ?? 'off', allowCommands: options.policy.allowCommands ?? false,
       maxFileBytes: options.policy.maxFileBytes ?? 1_048_576, maxOutputBytes: options.policy.maxOutputBytes ?? 65_536,
+      maxBinaryBytes: options.policy.maxBinaryBytes ?? options.policy.maxFileBytes ?? 1_048_576,
       maxTimeoutMs: options.policy.maxTimeoutMs ?? 60_000 };
-    for (const value of [this.policy.maxFileBytes, this.policy.maxOutputBytes, this.policy.maxTimeoutMs]) if (!Number.isSafeInteger(value) || value <= 0) fail('EXECUTOR_INVALID_LIMIT');
+    for (const value of [this.policy.maxFileBytes, this.policy.maxBinaryBytes, this.policy.maxOutputBytes, this.policy.maxTimeoutMs]) if (!Number.isSafeInteger(value) || value <= 0) fail('EXECUTOR_INVALID_LIMIT');
     if (!['off', 'on'].includes(this.policy.network)) fail('EXECUTOR_INVALID_NETWORK_POLICY');
-    this.backend = options.backend ?? new BubblewrapBackend();
+    this.backend = options.backend ?? (process.platform === 'win32' ? new WslBubblewrapBackend() : new BubblewrapBackend());
   }
   private path(name: string): string {
     if (name.includes('\0') || isAbsolute(name) || name.includes('\\')) fail('EXECUTOR_PATH_DENIED');
@@ -127,10 +132,12 @@ export class AdaptiveWorkspace {
     return readdirSync(this.path(name), { withFileTypes: true }).map(entry => ({ name: entry.name,
       kind: entry.isSymbolicLink() ? 'symlink' : entry.isDirectory() ? 'directory' : 'file' }));
   }
-  write(name: string, content: string, expectedHash: string | null): { path: string; sha256: string; bytes: number } {
-    const path = this.path(name); const bytes = Buffer.from(content, 'utf8');
-    if (bytes.length > this.policy.maxFileBytes) fail('EXECUTOR_FILE_LIMIT');
-    const previous = existsSync(path) ? this.read(name).sha256 : null;
+  write(name: string, content: string | Buffer, expectedHash: string | null): { path: string; sha256: string; bytes: number } {
+    const path = this.path(name); const bytes = typeof content==='string'?Buffer.from(content, 'utf8'):Buffer.from(content);
+    const limit=Buffer.isBuffer(content)?this.policy.maxBinaryBytes:this.policy.maxFileBytes;
+    if (bytes.length > limit) fail('EXECUTOR_FILE_LIMIT');
+    let previous:string|null=null;
+    if(existsSync(path)){const stat=lstatSync(path);if(!stat.isFile())fail('EXECUTOR_NOT_FILE');if(stat.size>limit)fail('EXECUTOR_FILE_LIMIT');previous=contentHash(readFileSync(path));}
     if (previous !== expectedHash) fail('EXECUTOR_STALE_SOURCE');
     mkdirSync(dirname(path), { recursive: true }); noSymlinks(dirname(path));
     const temp = join(dirname(path), `.adaptive-${randomUUID()}.tmp`);
@@ -173,32 +180,51 @@ export class AdaptiveWorkspace {
     if (!existsSync(path)) return null;
     const receipt = JSON.parse(readFileSync(path, 'utf8'));
     if (receipt.operationId !== operationId || receipt.businessId !== this.businessId || receipt.taskId !== this.taskId) fail('EXECUTOR_RECEIPT_IDENTITY_MISMATCH');
-    if (receipt.status === 'dispatching') fail('EXECUTOR_OUTCOME_UNCERTAIN');
+    if (receipt.status === 'dispatching') {
+      const terminal=join(this.evidencePath,`command-result-${contentHash(operationId)}.json`);
+      if(!existsSync(terminal))fail('EXECUTOR_OUTCOME_UNCERTAIN');noSymlinks(terminal);
+      const observed=JSON.parse(readFileSync(terminal,'utf8'));
+      const binding={operationId,inputHash:receipt.inputHash,businessId:this.businessId,taskId:this.taskId};
+      if(contentHash(JSON.stringify(observed.binding))!==contentHash(JSON.stringify(binding))||observed.version!=='wsl-command-completion-v1'||observed.result?.isolation!=='wsl-bubblewrap'||!['completed','failed','blocked','timed_out'].includes(observed.result?.status)||!Number.isFinite(Date.parse(observed.finishedAt)))fail('EXECUTOR_COMPLETION_MISMATCH');
+      const recovered={...receipt,...observed.result,after:this.snapshot(),finishedAt:observed.finishedAt,recoveredFrom:'trusted-supervisor'};
+      atomicJson(path,recovered);
+      const lease=join(this.evidencePath,'command-active.json');if(existsSync(lease)){const owner=JSON.parse(readFileSync(lease,'utf8'));if(owner.operationId===operationId&&owner.inputHash===receipt.inputHash)unlinkSync(lease);}
+      return recovered;
+    }
+    const lease=join(this.evidencePath,'command-active.json');if(existsSync(lease)){const owner=JSON.parse(readFileSync(lease,'utf8'));if(owner.operationId===operationId&&owner.inputHash===receipt.inputHash)unlinkSync(lease);}
     return receipt as CommandReceipt;
   }
-  async command(request: CommandRequest): Promise<CommandReceipt> {
+  async command(request: CommandRequest, options:{signal?:AbortSignal}={}): Promise<CommandReceipt> {
     if (!this.policy.allowCommands) fail('EXECUTOR_COMMAND_NOT_AUTHORIZED');
+    if(options.signal?.aborted)fail('EXECUTOR_CANCELLED');
     if (!request.operationId || !Array.isArray(request.argv) || !request.argv.length || request.argv.some(v => typeof v !== 'string' || v.includes('\0'))) fail('EXECUTOR_INVALID_COMMAND');
     const cwd = this.path(request.cwd ?? '.');
     if (!lstatSync(cwd).isDirectory()) fail('EXECUTOR_CWD_NOT_DIRECTORY');
     const timeoutMs = request.timeoutMs ?? this.policy.maxTimeoutMs;
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > this.policy.maxTimeoutMs) fail('EXECUTOR_TIMEOUT_LIMIT');
     const relativeCwd = relative(this.workspacePath, cwd).split(sep).join('/') || '.';
+    // Binary ingestion is a separate tool policy; keep command receipts compatible with the original command-only policy.
+    const {maxBinaryBytes: _binaryLimit, ...commandPolicy}=this.policy;
     const identityVersion = 'task-relative-v1' as const;
-    const inputHash = contentHash(JSON.stringify({ identityVersion, argv: request.argv, cwd: relativeCwd, timeoutMs, policy: this.policy, businessId: this.businessId, taskId: this.taskId }));
+    const inputHash = contentHash(JSON.stringify({ identityVersion, argv: request.argv, cwd: relativeCwd, timeoutMs, policy: commandPolicy, businessId: this.businessId, taskId: this.taskId }));
     const path = join(this.evidencePath, `command-${contentHash(request.operationId)}.json`);
     if (existsSync(path)) {
       const existing = JSON.parse(readFileSync(path, 'utf8'));
       // Legacy receipts retain their exact absolute-root binding. Read-only recovery
       // remains available after relocation, but never silently rewrites legacy identity.
       const expected = existing.identityVersion === undefined
-        ? contentHash(JSON.stringify({ argv: request.argv, cwd, timeoutMs, policy: this.policy, businessId: this.businessId, taskId: this.taskId }))
+        ? contentHash(JSON.stringify({ argv: request.argv, cwd, timeoutMs, policy: commandPolicy, businessId: this.businessId, taskId: this.taskId }))
         : existing.identityVersion === identityVersion ? inputHash : fail('EXECUTOR_IDENTITY_VERSION_UNSUPPORTED');
       if (existing.inputHash !== expected) fail('EXECUTOR_OPERATION_ID_CONFLICT');
-      if (existing.status === 'dispatching') fail('EXECUTOR_OUTCOME_UNCERTAIN');
-      return existing as CommandReceipt;
+      if (existing.status === 'dispatching') return this.recoverCommand(request.operationId)!;
+      return this.recoverCommand(request.operationId)!;
     }
-    const pending = readdirSync(this.evidencePath).filter(name => name.startsWith('command-') && name.endsWith('.json'))
+    const lease=join(this.evidencePath,'command-active.json');
+    try{writeFileSync(lease,JSON.stringify({operationId:request.operationId,inputHash}),{flag:'wx',mode:0o600,flush:true});}
+    catch(error){if((error as NodeJS.ErrnoException).code==='EEXIST')fail('EXECUTOR_OUTCOME_UNCERTAIN');throw error;}
+    let dispatched=false,recorded=false;
+    try{
+    const pending = readdirSync(this.evidencePath).filter(name => name.startsWith('command-') && name!=='command-active.json' && name.endsWith('.json'))
       .some(name => JSON.parse(readFileSync(join(this.evidencePath, name), 'utf8')).status === 'dispatching');
     if (pending) fail('EXECUTOR_OUTCOME_UNCERTAIN');
     const startedAt = new Date().toISOString(); const before = this.snapshot();
@@ -206,9 +232,12 @@ export class AdaptiveWorkspace {
     const start = { operationId: request.operationId, inputHash, identityVersion, businessId: this.businessId, taskId: this.taskId,
       startedAt, argv: request.argv, cwd: relativeCwd, network: this.policy.network, before, status: 'dispatching' };
     writeFileSync(path, JSON.stringify(start), { flag: 'wx', mode: 0o600, flush: true });
+    dispatched=true;
     const result = await this.backend.execute({ argv: request.argv, cwd, workspace: this.workspacePath, timeoutMs,
-      maxOutputBytes: this.policy.maxOutputBytes, network: this.policy.network });
+      maxOutputBytes: this.policy.maxOutputBytes, network: this.policy.network,signal:options.signal,
+      completion:{path:join(this.evidencePath,`command-result-${contentHash(request.operationId)}.json`),binding:{operationId:request.operationId,inputHash,businessId:this.businessId,taskId:this.taskId}} });
     const receipt: CommandReceipt = { ...start, ...result, after: this.snapshot(), finishedAt: new Date().toISOString() };
-    atomicJson(path, receipt); return receipt;
+    atomicJson(path, receipt);recorded=true;return receipt;
+    }finally{if(!dispatched||recorded)unlinkSync(lease);}
   }
 }
