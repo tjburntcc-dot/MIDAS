@@ -235,3 +235,16 @@ test('actual direct, baseline and lean signed pilots share semantic facts while 
   stores[3].transaction(()=>{const task=stores[3].get('portfolio-task',business.id+'/matched-task');stores[3].put('portfolio-task',task.id,{...task,objective:task.objective+' Changed commercial fact.'},task._version);});assert.equal(trial.preflight().ready,false);assert.equal(calls,0);
  }finally{trial?.close();for(const a of adapters)a.close();for(const s of stores)s.close();f.cleanup();}
 });
+
+test('whole eleven-stage common-controls envelope permits only its strictly matched candidate-memory ablation difference',()=>{
+ const f=fixture();let trial:ReleaseTrial|undefined;
+ try{
+  const make=(id:string,chunk:string,phase:TrialStage['phase'],calls:number,arm=arms[2]):TrialStage=>({...f.manifest.stages[arms.indexOf(arm)],id,chunk,phase,arm,root:join(f.base,id),caseId:'visible-'+chunk,bindingHash:hash({authorityHash:hash('signed-fixture-'+id),taskDefinitionHash:hash('task-'+id)}),maximumCalls:calls,maximumMinor:calls*210});
+  const stages=[make('development','development','development',28),make('successor','successor','development',4),...arms.map((a,i)=>make('flagship-'+i,'flagship','flagship',20,a)),...arms.map((a,i)=>make('transfer-'+i,'transfer','transfer',8,a)),make('nonreuse','nonreuse','nonreuse',6),make('memory-with','ablation','ablation',8),make('memory-without','ablation','ablation',8)];
+  f.manifest.stages=stages;f.manifest.order=stages.map(s=>s.id);f.manifest.maximumCalls=138;f.manifest.maximumMinor=28980;f.manifest.comparison={kind:'common-controls',allowedDifferences:[]};
+  let changed:string|null=null;const factory:FixtureTrialFactory={kind:'fixture-only',open(stage){const adapter=f.factory.open(stage);return {...adapter,snapshot(){const s=adapter.snapshot(),ablation=stage.phase==='ablation';return {...s,conditions:{...s.conditions,workerFacts:hash(ablation?'memory-policy-'+stage.id:changed===stage.id?'changed facts':'same facts for '+stage.chunk)},...(ablation?{ablation:{factsHash:hash(changed===stage.id?'different normalized job':'same normalized job'),backupHash:hash('same frozen backup'),candidateIds:stage.id==='memory-with'?['visible fixture candidate']:[]}}:{})};}};}};
+  trial=new ReleaseTrial(f.root,f.manifest,{testing:factory});assert.equal(trial.preflight().ready,true);assert.equal(trial.inspect().stages.length,11);assert.equal(trial.manifest.maximumCalls,138);assert.equal(trial.manifest.maximumMinor,28980);
+  for(const stageId of ['flagship-2','transfer-2']){changed=stageId;const result=trial.preflight();assert.equal(result.ready,false);assert(result.failures.some((r:any)=>r.code==='TRIAL_UNDECLARED_CONTROL_DIFFERENCE'&&r.field==='workerFacts'));}
+  changed='memory-without';assert(trial.preflight().failures.some((r:any)=>r.code==='TRIAL_ABLATION_MATCHING_REQUIRED'));assert.deepEqual(f.callLog,[]);
+ }finally{trial?.close();f.cleanup();}
+});
