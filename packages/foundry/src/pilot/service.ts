@@ -24,6 +24,7 @@ import {PilotDevelopmentBridge} from './development-bridge.ts';
 import {createOperatingDemo} from './overnight-demo.ts';
 import {inspectOutcomeJourney,loadAuthorizedOutcomeJourney as loadOutcomeJourney,prepareOutcomeJourneyAuthorization} from './outcome-journey-authorized.ts';
 import {inspectConnectionReadAuthorization,loadAuthorizedConnectionRead} from './connections/host.ts';
+import {PilotObservationLoop,type BusinessObservationInput} from './observation-loop.ts';
 
 /** Owner-facing composition only; work execution and inference admission remain in Foundry. */
 export class PilotService {
@@ -35,6 +36,7 @@ export class PilotService {
   readonly intelligence: PilotIntelligence;
   readonly connectedAccounts:ConnectionService;
   readonly operatingOutcomes:PilotOutcomes;
+  readonly observationLoop:PilotObservationLoop;
   readonly workerDevelopment:PilotDevelopmentBridge;
   readonly pending = new Map<string, Promise<unknown>>();
   readonly investigations = new Map<string,Promise<unknown>>();
@@ -49,6 +51,7 @@ export class PilotService {
     this.intelligence=new PilotIntelligence(this.store,this.execution);
     this.connectedAccounts=new ConnectionService(this.store,this.knowledge,new ConnectionRegistry(maintainedReadAdapters()));
     this.operatingOutcomes=new PilotOutcomes(this.store,this.execution);
+    this.observationLoop=new PilotObservationLoop(this.store,this.operatingOutcomes);
     this.workerDevelopment=new PilotDevelopmentBridge(this.operatingOutcomes);
   }
   approvedRunner(){return this.authorizedRunner??(this.authorizedRunner=loadAuthorizedIntelligence({intelligence:this.intelligence,discovery:this.discovery},this.root));}
@@ -97,24 +100,27 @@ export class PilotService {
     return result;
   }
   createBusiness(input:any){
+    const operatingMode=input.operatingMode??'operate';requireThat(['operate','found'].includes(operatingMode),'BUSINESS_OPERATING_MODE');
     const website=String(input.website??'').trim(), suppliedName=String(input.name??'').trim();
+    requireThat(Boolean(website||suppliedName),'BUSINESS_NAME_OR_WEBSITE_REQUIRED');
     const name=suppliedName||(website?new URL(website).hostname.replace(/^www\./,''):'');
     const socialUrls=Array.isArray(input.socialUrls)?input.socialUrls:[];
     requireThat(socialUrls.length<=2&&socialUrls.every((u:any)=>typeof u==='string'&&u.length<=2048),'BUSINESS_SOCIAL_LIMIT');
     if(website)[website,...socialUrls].forEach(canonicalDiscoveryUrl);
     const company=this.knowledge.createCompany({name,website,goal:input.goal,notes:input.notes});
-    this.store.transaction(()=>this.store.put('pilot-business-intake',company.id,{businessId:company.id,socialUrls,identityStatus:suppliedName?'owner_supplied':'website host label; company identity unverified'},null));
+    this.store.transaction(()=>this.store.put('pilot-business-intake',company.id,{businessId:company.id,socialUrls,operatingMode,identityStatus:suppliedName?'owner_supplied':'website host label; company identity unverified'},null));
     if(website){this.discovery.start(company.id,{website,socialLinks:socialUrls,limits:{maxDecisions:6}});this.launchInvestigation(company.id,()=>this.discovery.seed(company.id));}
     return this.knowledge.company(company.id);
   }
   updateBusiness(id:string,input:any){
     const previous=this.knowledge.company(id),prior=this.store.get('pilot-business-intake',id),socialUrls=input.socialUrls??prior?.socialUrls??[];
+    const operatingMode=input.operatingMode??prior?.operatingMode??'operate';requireThat(['operate','found'].includes(operatingMode),'BUSINESS_OPERATING_MODE');
     requireThat(Array.isArray(socialUrls)&&socialUrls.length<=2,'BUSINESS_SOCIAL_LIMIT');socialUrls.forEach(canonicalDiscoveryUrl);
     const website=input.website??previous.website;if(website)canonicalDiscoveryUrl(website);
     const changed=website!==previous.website||hash(socialUrls)!==hash(prior?.socialUrls??[]);
     if(changed){const s=this.store.get('pilot-discovery',id);requireThat(!s?.pending&&!this.investigations.has(id),'INVESTIGATION_RUNNING_FINISH_BEFORE_SOURCE_CHANGE');}
     const result=this.knowledge.updateCompany(id,Object.fromEntries(['name','website','goal','notes'].filter(k=>input[k]!==undefined).map(k=>[k,input[k]])),input.expectedVersion);
-    this.store.transaction(()=>this.store.put('pilot-business-intake',id,{...prior,businessId:id,socialUrls,identityStatus:input.name?'owner_supplied':prior?.identityStatus??'owner_supplied'},prior?._version??null));
+    this.store.transaction(()=>this.store.put('pilot-business-intake',id,{...prior,businessId:id,socialUrls,operatingMode,identityStatus:input.name?'owner_supplied':prior?.identityStatus??'owner_supplied'},prior?._version??null));
     if(changed&&website){const s=this.store.get('pilot-discovery',id);if(s)this.discovery.restart(id,{website,socialLinks:socialUrls});else this.discovery.start(id,{website,socialLinks:socialUrls});this.launchInvestigation(id,()=>this.discovery.seed(id));}
     else if(changed&&this.store.get('pilot-discovery',id))this.discovery.pause(id);
     return result;
@@ -214,6 +220,7 @@ export class PilotService {
     this.pending.set(taskId, promise);
   }
   async settle() { await Promise.allSettled([...this.pending.values(),...this.investigations.values()]); }
+  recordBusinessObservation(businessId:string,input:BusinessObservationInput){return this.observationLoop.record(businessId,input);}
   plan(businessId: string, workflow: 'response-packet' | 'business-site') {
     requireThat(['response-packet','business-site'].includes(workflow),'WORKFLOW_UNSUPPORTED');
     const assignment=new PilotLearning(this.store).assignment(businessId,workflow),company=this.knowledge.company(businessId);
@@ -288,6 +295,7 @@ export class PilotService {
       coordinatedWork:business?this.rows('pilot-commercial-work').filter(w=>w.businessId===business.id):[],
       understanding: knowledge.understanding ?? knowledge, tasks,
       workers: this.workerView(business?.id), learning, outcomes, inbox,
+      observationLoop:business?this.observationLoop.view(business.id,journeyAuthority):{observations:[],decisions:[]},
       connections: this.connections(),
       connectedAccounts:{definitions:this.connectedAccounts.registry.list(),items:business?this.connectedAccounts.list(business.id).map(connection=>({...connection,readAuthority:this.connectionAuthority(connection.id)})):[]},
       operatingOutcomes:business?this.operatingOutcomes.list(business.id).map(outcome=>{const p=this.store.get('pilot-prepared-journey',outcome.id);return {...outcome,executionRunning:this.investigations.has(business.id),prepared:p?{proposalHash:p.proposalHash,maximumMinor:p.proposal.limits.totalMinor,expiresAt:p.proposal.expiresAt,summary:p.summary}:null,authority:journeyAuthority.businessId===business.id&&journeyAuthority.outcomeId===outcome.id?journeyAuthority:{approved:false,liveEnabled:false,reason:'No exact signed authority for this outcome.'}};}):[],

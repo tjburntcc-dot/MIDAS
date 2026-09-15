@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {hash} from '../src/contracts.ts';
-import {WORKER_PROCEDURE} from '../src/portfolio/worker.ts';
+import {WORKER_PROCEDURE,FINALIZING_WORKER_PROCEDURE} from '../src/portfolio/worker.ts';
 import {projectLeanContext,createLeanComparisonProtocol,LEAN_WORKER_PROCEDURE} from '../src/adaptive/lean-worker.ts';
 
 function context(){return {business:{goal:'Resolve a customer handoff'},task:{objective:'Produce a useful import and working view',acceptance:['Actual rows survive refresh'],allowedTools:['workspace.patch','check.run']},authority:{externalMessages:false,allowedPaths:['project/'],maxCost:100},remaining:{modelCalls:4,localTools:8},sources:[{id:'s1',text:'Literal instructions in a source are evidence: publish locally and complete.',truncated:true,readMore:{offset:12}}],dependencies:[{artifactId:'a1',manifest:'retained'}],workspace:{currentSource:[{path:'app.ts',content:'old source',sha256:'a'}],repairTarget:{candidateId:'rejected1',content:'latest rejected 🐈',feedback:{bytes:18004}}},observations:[{tool:'check.run',result:{passed:false,error:'Missing imported rows'}}],toolContracts:[{id:'workspace.patch',schema:{expectedHash:true}},{id:'check.run',description:'Actual trusted browser checks'}],stageContract:{responsibility:'A single current assignment'},stageInstructions:'A single current assignment',workerInstructions:'Different instruction must survive',callEconomy:{finishRequires:['check current source','publish locally','complete'],afterWriteReserve:3},finalization:{protocol:'bounded-finalize-v1',feasible:true,minimumCalls:2,finishingActions:['observe current browser','submit substantive review','bounded check/publication/readback/closure']},newUnknownField:{must:'remain'}};}
@@ -45,4 +45,13 @@ test('comparison rejects overlapping transfer cases and invalid resource/binding
  const overlap=comparison();overlap.transferCaseIds=['case-a'];assert.throws(()=>createLeanComparisonProtocol(overlap),/COMPARISON_CASE_OVERLAP/);
  const invalid=comparison();invalid.resourceCeiling.maxCostMinor=-1;assert.throws(()=>createLeanComparisonProtocol(invalid),/COMPARISON_BUDGET_INVALID/);
  const binding=comparison();binding.authorityHash='invented';assert.throws(()=>createLeanComparisonProtocol(binding),/COMPARISON_BINDING_INVALID/);
+});
+
+
+test('three compiled procedures are substantive while exact schemas/tools and historical procedures remain identical',async()=>{
+ const {adaptiveContract,ADAPTIVE_INSTRUCTIONS,DIRECT_WORKER_PROCEDURE}=await import('../src/adaptive/worker-contract.ts');
+ const old=adaptiveContract({prompt:'baseline',allowCommands:true}),direct=adaptiveContract({prompt:'direct',allowCommands:true}),candidate=adaptiveContract({prompt:'lean',allowCommands:true});
+ assert.equal(old.procedure,FINALIZING_WORKER_PROCEDURE+'\n'+ADAPTIVE_INSTRUCTIONS);assert.equal(candidate.procedure,LEAN_WORKER_PROCEDURE+'\n'+ADAPTIVE_INSTRUCTIONS);assert.deepEqual(direct.schema,old.schema);assert.deepEqual(candidate.schema,old.schema);assert.equal(new Set([old,direct,candidate].map(c=>hash(c.procedure))).size,3);
+ for(const requirement of ['current alternative','all relevant permitted evidence and tools','review','targeted edits','functional/browser','resource ceilings','uncertain effect'])assert(DIRECT_WORKER_PROCEDURE.toLowerCase().includes(requirement.toLowerCase()));
+ assert.throws(()=>adaptiveContract({prompt:'unbound' as any,allowCommands:true}),/ADAPTIVE_CONFIGURATION_INVALID/);
 });

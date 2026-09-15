@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {hash,requireThat} from '../contracts.ts';
 import type {StateStore} from '../state.ts';
 export type PilotBinding={kind:'first-owner-pilot-032-v1';implementationHash:string;taskProcedures:Array<{taskId:string;procedureHash:string}>};
-export function pilotImplementationFiles(){const here=dirname(fileURLToPath(import.meta.url));return [here,join(here,'../adaptive')].flatMap(directory=>readdirSync(directory).filter(path=>/\.(ts|js|css|html)$/.test(path)).sort().map(path=>({path:(directory===here?'pilot/':'adaptive/')+path,text:readFileSync(join(directory,path),'utf8').replace(/\r\n/g,'\n')}))).sort((a,b)=>a.path.localeCompare(b.path));}
+export function pilotImplementationFiles(){const here=dirname(fileURLToPath(import.meta.url));return [here,join(here,'../adaptive')].flatMap(directory=>readdirSync(directory).filter(path=>/\.(ts|js|css|html|py)$/.test(path)).sort().map(path=>({path:(directory===here?'pilot/':'adaptive/')+path,text:readFileSync(join(directory,path),'utf8').replace(/\r\n/g,'\n')}))).sort((a,b)=>a.path.localeCompare(b.path));}
 export function pilotImplementationHash(){return hash(pilotImplementationFiles());}
 export function validatePilotBinding(binding:PilotBinding,tasks:Array<{id:string}>|undefined,store?:StateStore){
  requireThat(binding&&Object.keys(binding).sort().join(',')==='implementationHash,kind,taskProcedures'&&binding.kind==='first-owner-pilot-032-v1'&&binding.implementationHash===pilotImplementationHash(),'PILOT_AUTHORIZED_CODE_CHANGED');

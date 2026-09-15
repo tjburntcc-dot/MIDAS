@@ -4,6 +4,8 @@ import { StateStore } from '../src/state.ts';
 import { hash } from '../src/contracts.ts';
 import type { ModelPort } from '../src/contracts.ts';
 import { PilotKnowledge } from '../src/pilot/knowledge.ts';
+import { Portfolio } from '../src/portfolio/core.ts';
+import { seedHistoricalProcedureSelection } from './procedure-history-fixture.ts';
 import { WorkerDevelopment, comparisonGrantRequirements } from '../src/pilot/worker-development.ts';
 
 function setup() { const store = new StateStore(':memory:'), knowledge = new PilotKnowledge(store), company = knowledge.createDemo(), development = new WorkerDevelopment(store); const source = knowledge.selectedSources(company.id)[0]; const worker = development.definition(company.id, 'commercial-intelligence', { responsibilities: ['Find source-supported consequential omissions', 'Prepare an owner-useful commercial recommendation'], model: 'strict-mock-model-v1', tools: ['workspace.read', 'research.read'], sourceIds: [source.id], outputContract: { id: 'commercial-review', version: 'v1', description: 'A source-grounded commercial recommendation with unknowns and next evidence.' } }); return { store, knowledge, company, source, worker, development, close: () => store.close() }; }
@@ -26,7 +28,7 @@ test('withdrawn evidence rolls an already adopted procedure back for future assi
     // This direct in-memory registry setup is only a structural rollback test. It is
     // not a comparison run, does not execute a model, and creates no qualification claim.
     const evaluation = f.development.registry.evaluate(c.procedureId, { id: 'unit-rollback-mechanics', scope: d.procedureScope, provenance: 'independent', baseline: { ...shared, instructionsHash: hash(baseline.procedure) }, candidate: { ...shared, instructionsHash: hash(procedure.procedure) }, strongBaselineReference: baseline.strongBaselineReference, resultEvidence: 'in-memory unit mechanism only; not an external grade or worker result', semanticReview: { accepted: true, reviewer: 'unit-test-boundary', independent: true }, cases: [ { id: 'unit-fresh', fresh: true, regression: false, baselinePassed: false, candidatePassed: true, criticalError: false, baselineCorrectionSeconds: 10, candidateCorrectionSeconds: 5 }, { id: 'unit-regression', fresh: true, regression: true, baselinePassed: false, candidatePassed: true, criticalError: false, baselineCorrectionSeconds: 10, candidateCorrectionSeconds: 5 } ] });
-    f.development.registry.adopt(c.procedureId, evaluation.id, d.procedureScope, 'In-memory rollback plumbing fixture only.'); const stale = f.development.staleEvidence(c.id, { materialId: 'public-commercial-method-v1', reason: 'A permitted material was withdrawn after a prior scoped selection.' }); assert.equal(stale.status, 'rolled_back'); assert.equal(stale.rollback.action, 'rollback'); assert.equal(stale.futureProcedureId, d.baselineProcedureId);
+    seedHistoricalProcedureSelection(f.store, c.procedureId, d.procedureScope); const stale = f.development.staleEvidence(c.id, { materialId: 'public-commercial-method-v1', reason: 'A permitted material was withdrawn after a prior scoped selection.' }); assert.equal(stale.status, 'rolled_back'); assert.equal(stale.rollback.action, 'rollback'); assert.equal(stale.futureProcedureId, d.baselineProcedureId);
 } finally { f.close(); } });
 
 test('an interrupted admitted comparison slot is retained as uncertain and is never dispatched a second time', async () => { const f = setup(); try { const c = candidate(f); let calls = 0; const port: ModelPort = { kind: 'fixture', async run(request) { calls++; assert.equal((request.context as any).comparison, undefined, 'worker context must not reveal an arm or candidate label'); assert.equal((request.context as any).evidence[0].text, f.source.text, 'worker receives the permitted source text, not only source IDs'); throw Error('simulated interruption after admission'); } };
@@ -35,3 +37,59 @@ test('an interrupted admitted comparison slot is retained as uncertain and is ne
   const row = f.store.db.prepare("SELECT body FROM entities WHERE kind='pilot-worker-development-comparison'").get() as any, comparison = JSON.parse(String(row.body)); assert.equal(comparison.status, 'running'); assert.equal(comparison.slots.filter((slot: any) => slot.status === 'admitted').length, 1);
   await assert.rejects(() => f.development.runComparison(c.id, input), /WORKER_DEVELOPMENT_UNCERTAIN_NO_RESUBMIT/); assert.equal(calls, 1, 'uncertain provider state cannot become a duplicate call');
 } finally { f.close(); } });
+
+test('legacy authorized route can be graded without rewriting provenance or treating unknown execution as a live result', async () => {
+ const f=setup();try{
+  const c=candidate(f),run=await f.development.runComparison(c.id,{mode:'offline_fixture',modelPort:fixturePort(),resources:{maxCostMinor:0,maxCalls:4,maxAttempts:1,maxHumanMinutes:0},custody:{claimedProtected:false,custody:'not_claimed',manifestHash:null,custodianId:null}});
+  // Reproduce the old persisted record shape; this is not an actual model run.
+  const old=f.store.get('pilot-worker-development-comparison',run.id);delete old.executionProvenance;f.store.transaction(()=>f.store.put('pilot-worker-development-comparison',run.id,{...old,provenance:'operating_models_authorized'},old._version));
+  const grades=run.evaluationCaseIds.map((caseId:string)=>({caseId,baselineAccepted:false,candidateAccepted:true,criticalCommercialOmission:false,baselineCorrectionSeconds:null,candidateCorrectionSeconds:null,assessor:'caller asserted reviewer',independent:true,opaqueGradeHash:hash(caseId)}));
+  const graded=f.development.gradeComparison(run.id,grades);assert.equal(graded.executionProvenance,'unknown');assert.equal(graded.provenance,'operating_models_authorized');assert.equal(graded.decision,'retain_baseline');assert.equal(graded.verifiedAssessor,null);
+  assert.deepEqual(f.development.gradeComparison(run.id,grades).grades,grades);assert.throws(()=>f.development.gradeComparison(run.id,grades.map((g:any)=>({...g,candidateAccepted:false}))),/GRADE_CONFLICT/);
+ }finally{f.close();}
+});
+
+test('applicability retains positive, counterexample, other-job and revoked-source decisions without selecting an unqualified candidate', () => {
+ const f=setup();try{
+  const c=candidate(f),portfolio=new Portfolio(f.store);
+  f.development.applicabilityPolicy(c.id,{requiredConditions:['source-grounded-review'],excludedConditions:['unrelated-transaction'],rationale:'Use the review method only on source-grounded review work.'});
+  assert.throws(()=>f.development.applicabilityPolicy(c.id,{requiredConditions:['anything'],excludedConditions:['nothing'],rationale:'Changed fit'}),/APPLICABILITY_IMMUTABLE/);
+  const positive=portfolio.recordObservation(f.company.id,{kind:'fixture-fit',summary:'A review task uses source evidence.',source:f.source.id,provenance:'developer-authored fixture interpretation',metadata:{conditions:['source-grounded-review']},reassess:false}).observation;
+  const input={id:'positive',businessId:f.company.id,jobId:c.jobId,observationIds:[positive.id]},fit=f.development.assessApplicability(c.id,input);assert.equal(fit.decision,'applicable_for_evaluation');assert.deepEqual(f.development.assessApplicability(c.id,input),fit);
+  const negative=portfolio.recordObservation(f.company.id,{kind:'fixture-fit',summary:'The request concerns an unrelated transaction.',source:'fixture case',provenance:'developer-authored fixture interpretation',metadata:{conditions:['unrelated-transaction']},reassess:false}).observation;
+  const excluded=f.development.assessApplicability(c.id,{...input,id:'excluded',observationIds:[positive.id,negative.id]});assert.equal(excluded.decision,'do_not_reuse');assert(excluded.reasons.includes('counterexample:unrelated-transaction'));
+  assert.equal(f.development.assessApplicability(c.id,{...input,id:'other-job',jobId:'fulfillment'}).decision,'do_not_reuse');
+  const other=f.knowledge.createCompany({name:'Other company',goal:'Other job'});assert.throws(()=>f.development.assessApplicability(c.id,{...input,id:'other-company',businessId:other.id}),/TRANSFER_PERMISSION_REQUIRED/);
+  f.knowledge.selectEvidence(f.company.id,[]);assert(f.development.assessApplicability(c.id,{...input,id:'revoked'}).reasons.includes('source_or_material_unavailable'));
+  assert.equal(f.development.registry.selected(f.worker.procedureScope,f.worker.baselineProcedureId).procedure.id,f.worker.baselineProcedureId);
+ }finally{f.close();}
+});
+
+test('an observed later failure rolls back an exact adopted procedure once and preserves pinned work', () => {
+ const f=setup();try{
+  const c=candidate(f),d=f.worker,baseline=f.store.get('portfolio-procedure',c.baselineProcedureId),procedure=f.store.get('portfolio-procedure',c.procedureId),shared={model:d.model.route,toolsHash:hash(d.tools),evidenceHash:d.evidenceAccess.evidenceHash,resourcesHash:hash('test-only')};
+  // Structural setup for rollback only. No model or independent human was run.
+  const evaluation=f.development.registry.evaluate(c.procedureId,{id:'monitor-test',scope:d.procedureScope,provenance:'independent',baseline:{...shared,instructionsHash:hash(baseline.procedure)},candidate:{...shared,instructionsHash:hash(procedure.procedure)},strongBaselineReference:baseline.strongBaselineReference,resultEvidence:'In-memory mechanical setup only',semanticReview:{accepted:true,reviewer:'unit-test',independent:true},cases:[1,2].map(i=>({id:'case'+i,fresh:true,regression:i===2,baselinePassed:false,candidatePassed:true,criticalError:false,baselineCorrectionSeconds:null,candidateCorrectionSeconds:null}))});
+  seedHistoricalProcedureSelection(f.store,c.procedureId,d.procedureScope);
+  const taskId='monitor-task',pin={taskId,ventureId:f.company.id,procedureHash:hash(procedure.procedure),modelProvenance:'offline_mock'};f.store.transaction(()=>f.store.put('portfolio-execution',taskId,pin,null));
+  const portfolio=new Portfolio(f.store),base={candidateId:c.id,taskId,procedureHash:pin.procedureHash,passed:true,criticalError:false,provenance:'fixture'};
+  const observe=(id:string,outcome:any)=>portfolio.recordObservation(f.company.id,{id,kind:'worker-check',summary:'A developer-authored test outcome',source:taskId,provenance:'fixture only',metadata:{workerDevelopmentOutcome:outcome},reassess:false}).observation;
+  assert.throws(()=>f.development.monitorOutcome(c.id,observe('forged-runtime',{...base,provenance:'runtime'}).id),/MONITOR_PROVENANCE/);
+  assert.throws(()=>f.development.monitorOutcome(c.id,observe('wrong-pin',{...base,procedureHash:hash('wrong')}).id),/MONITOR_PROCEDURE_MISMATCH/);
+  const success=f.development.monitorOutcome(c.id,observe('success',base).id);assert.equal(success.decision,'retain_observation_without_promotion');
+  const failure=observe('failure',{...base,passed:false,criticalError:true}),result=f.development.monitorOutcome(c.id,failure.id);assert.equal(result.decision,'rollback_to_baseline');assert.equal(result.futureProcedureId,c.baselineProcedureId);assert.deepEqual(f.development.monitorOutcome(c.id,failure.id),result);
+  assert.equal(f.store.get('portfolio-execution',taskId).procedureHash,pin.procedureHash);assert.equal(f.development.registry.selected(d.procedureScope,d.baselineProcedureId).procedure.id,d.baselineProcedureId);assert.equal(f.development.getDefinition(f.company.id,c.jobId).evaluationHistory.length,2);
+  const replay=f.development.definition(f.company.id,c.jobId,{responsibilities:d.responsibilities,model:d.model.id,tools:d.tools,sourceIds:d.evidenceAccess.sourceIds,outputContract:{id:d.outputContract.id,version:d.outputContract.version,description:d.outputContract.description}});assert.equal(replay.evaluationHistory.length,2,'Planning the next assignment preserves learning history instead of rejecting an unchanged definition');
+ }finally{f.close();}
+});
+
+test('revoking a material source outside the worker source list blocks its later comparison', async () => {
+ const f=setup();try{
+  const c=candidate(f),secondSource=f.knowledge.selectedSources(f.company.id)[1],material=f.store.get('pilot-worker-development-material',c.materialIds[0]);
+  // Bind this fixture material to a separate already-permitted source.
+  f.store.transaction(()=>f.store.put('pilot-worker-development-material',material.id,{...material,sourceId:secondSource.id},material._version));
+  f.knowledge.selectEvidence(f.company.id,[f.source.id]);let calls=0;
+  await assert.rejects(()=>f.development.runComparison(c.id,{mode:'offline_fixture',modelPort:{kind:'fixture',run(){calls++;throw Error('must not dispatch revoked material');}},resources:{maxCostMinor:0,maxCalls:4,maxAttempts:1,maxHumanMinutes:0},custody:{claimedProtected:false,custody:'not_claimed',manifestHash:null,custodianId:null}}),/WORKER_DEVELOPMENT_SOURCE_UNAVAILABLE/);
+  assert.equal(calls,0);
+ }finally{f.close();}
+});

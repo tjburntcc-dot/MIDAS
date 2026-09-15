@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "packetId": "commercial-release-pilot-v1",
+  "version": 1,
+  "provenance": {
+    "author": "development_assistant",
+    "createdOn": "2026-09-14",
+    "runtimeModelGenerated": false,
+    "customerValidated": false,
+    "externalBusinessEffects": false,
+    "visibility": "developer_visible"
+  },
+  "offer": {
+    "status": "proposed_unsent",
+    "audience": "An eligible small apparel merchant owner or support lead with repeated return exceptions.",
+    "promise": "Turn one current policy and a permitted anonymized case set into a tested exception guide, complete review packets and an instrumented local desk, then compare it with the existing flow.",
+    "included": [
+      "One policy version and one merchant context",
+      "A locally usable exception desk and sample handoff",
+      "A policy/source register with unknowns",
+      "One correction cycle",
+      "Task-quality and delivery-effort receipt"
+    ],
+    "excluded": [
+      "Merchant login or account operation",
+      "Customer communications",
+      "Return authorization, labels, refunds, payments or inventory changes",
+      "Public deployment",
+      "Guaranteed savings, demand, conversion lift or revenue"
+    ],
+    "price": {
+      "currency": "USD",
+      "minorUnits": null,
+      "status": "not_quoted",
+      "reason": "Delivery and correction work, account requirements and willingness to pay are unobserved."
+    },
+    "proposedOwnerAttention": {
+      "policyReviewMinutes": 30,
+      "sampleReviewMinutes": 15,
+      "status": "planning_allowance_not_measured_or_agreed"
+    }
+  },
+  "measurementAgreement": {
+    "status": "draft_not_agreed",
+    "question": "Does the exception handoff reduce necessary preparation and clarification while preserving correct policy routing?",
+    "competingExplanations": [
+      "The native workflow already suffices.",
+      "Clearer source presentation alone helps; additional automation is unnecessary.",
+      "The difficult cases require merchant judgment that a desk cannot eliminate."
+    ],
+    "populationNow": "Developer-visible synthetic cases only.",
+    "comparisonNow": "The frozen policy/scope packet plus a competent manual note/checklist.",
+    "futurePopulation": "A separately consenting operator's eligible anonymized exception cases.",
+    "window": {
+      "local": "One disclosed case set, followed by one correction and withdrawal exercise.",
+      "future": "Proposed first ten eligible cases or ten business days, whichever arrives first; descriptive evidence only."
+    },
+    "primaryMeasure": "Correct complete handoff without an unsupported promise.",
+    "secondaryMeasures": [
+      "Actual preparation and review seconds",
+      "Missing-information count",
+      "Correction count",
+      "Repeated clarification reported by the operator"
+    ],
+    "guardrails": [
+      "No unauthorized customer or account effect",
+      "No incorrect merchant approval or rejection",
+      "No use of withdrawn/private out-of-scope evidence",
+      "No real personal data in sandbox fixtures"
+    ],
+    "rules": {
+      "advance": "Propose a further bounded pilot only after an eligible operator confirms a worthwhile unmet need and the instrumented task comparison shows useful effort reduction without a material policy error.",
+      "continue": "Gather specified missing information when sample volume or timing is insufficient.",
+      "change": "Repair a demonstrated routing or usability defect; retain the original result and rerun affected cases.",
+      "stop": "Use the existing workflow if the desk adds effort without useful benefit, needs unavailable authority, or introduces a material policy error."
+    },
+    "inferenceLimit": "No significance claim, conversion estimate, causal revenue effect or ROI can be derived from these synthetic cases."
+  },
+  "economics": {
+    "status": "unmeasured",
+    "inputs": {
+      "cashCollectedMinor": null,
+      "paidRuntimeCostMinor": null,
+      "otherDirectCostMinor": null,
+      "setupHours": null,
+      "deliveryHours": null,
+      "correctionHours": null,
+      "maintenanceHours": null,
+      "pricedLaborMinorPerHour": null,
+      "ownerReviewMinutes": null,
+      "eligibleCasesPerMonth": null,
+      "observedMinutesSavedPerCase": null,
+      "customerSupportMinorPerHour": null
+    },
+    "formulas": {
+      "directDeliveryContribution": "cashCollectedMinor - paidRuntimeCostMinor - otherDirectCostMinor - (deliveryHours + correctionHours) * pricedLaborMinorPerHour",
+      "fullPilotCost": "paidRuntimeCostMinor + otherDirectCostMinor + (setupHours + deliveryHours + correctionHours + maintenanceHours) * pricedLaborMinorPerHour",
+      "supportLaborScenario": "eligibleCasesPerMonth * observedMinutesSavedPerCase / 60 * customerSupportMinorPerHour",
+      "founderAttention": "Record ownerReviewMinutes separately; unpaid time is not zero-cost labor."
+    },
+    "calculationRule": "Return unknown when any required input is null. Do not substitute zero or present estimates as settled spend.",
+    "distinctions": [
+      "Cash collected is not revenue recognized or net profit.",
+      "Refund avoidance or preserved gross sales is not contribution.",
+      "A prepared artifact or local receipt is not a sale.",
+      "Development-session work and runtime expenses must retain their actual billing modes."
+    ]
+  },
+  "nextCustomerLearningAction": {
+    "status": "prepared_unsent_no_recipient",
+    "recipient": null,
+    "consentEvidence": null,
+    "channelHypothesis": "Owner-controlled introduction to an eligible consenting merchant; no such relationship is established.",
+    "subject": "Compare one difficult return with your current process",
+    "body": "Hello — I am testing a small support handoff idea for apparel merchants. I have a clearly labeled example that turns a return-policy exception into a review packet. Could we compare it with how you handled one recent difficult return, using an anonymized description? I want to learn where your current portal or support process already works and whether this adds any useful value. No account access, purchase or workflow change is requested. If it is useful to review, we can agree on a small measurement window afterward.",
+    "requiredBeforeSending": [
+      "Owner chooses an eligible recipient and permitted channel.",
+      "Owner authorizes the exact message.",
+      "Any case material is anonymized and supplied with permission."
+    ]
+  },
+  "secondContext": {
+    "contextId": "reporting-readiness-sandbox",
+    "status": "hypothetical_visible_reuse",
+    "job": "Prepare a readiness packet for one recurring report.",
+    "differentFromFlagship": [
+      "B2B presale/service scope instead of postpurchase retail support",
+      "Field map and decision definition instead of policy route",
+      "Anonymized sample permission instead of item/timing conditions"
+    ],
+    "sharedCore": [
+      "Source versions and scoped context",
+      "Typed local intake and record identity",
+      "Prepared artifact and review status",
+      "Idempotent local action receipt",
+      "Correction, withdrawal and observation lineage"
+    ],
+    "inappropriateReuse": "Retail return rules and merchant facts must not enter the service packet.",
+    "commercialValidation": "No real buyer, demand or delivery result is supplied."
+  }
+}

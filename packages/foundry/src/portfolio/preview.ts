@@ -119,7 +119,8 @@ export class InteractivePreviewSessions{
   else if(action.kind==='key'){requireThat(['Tab','Shift+Tab','Enter','Backspace','Delete','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Control+A','Meta+A','Escape','PageDown','PageUp'].includes(action.key??''),'PREVIEW_KEY_DENIED');await s.page.keyboard.press(action.key);}
   else if(action.kind==='refresh')await s.page.reload();
   else{await s.page.frameLocator('#product-frame').locator('#export').click();const text=await s.page.frameLocator('#product-frame').locator('#export-data').inputValue();requireThat(text.length<=262144,'PREVIEW_EXPORT_TOO_LARGE');extra={exportCsv:text};}
-  await s.page.waitForTimeout(100);return await this.image(s,extra);
+  // Native page scrolling keeps painting after keyboard.press resolves.
+  await s.page.waitForTimeout(action.kind==='key'&&['PageDown','PageUp'].includes(action.key??'')?350:100);return await this.image(s,extra);
  }finally{s.busy=false;}}
  async screenshot(id:string){const s=this.sessions.get(id);requireThat(s,'PREVIEW_SESSION_NOT_FOUND');return this.image(s);}
  async close(id:string){const s=this.sessions.get(id);if(!s)return;this.sessions.delete(id);if(s.timer)clearTimeout(s.timer);await s.browser.close();await new Promise<void>(resolve=>s.server.close(()=>resolve()));}

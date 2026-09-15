@@ -346,3 +346,24 @@ export class BoundedResearchAdapter {
 export function createBoundedResearchAdapter(policy: ResearchPolicy, ports: ResearchPorts = {}): BoundedResearchAdapter {
     return new BoundedResearchAdapter(policy, ports);
 }
+
+/** Public technical acquisition uses the same pinned DNS boundary, never worker
+ * supplied headers, cookies or unrestricted redirects. Bodies are untrusted. */
+export async function acquirePublicBytes(input:{url:string;allowedHosts:string[];maxBytes:number;deadlineMs:number},ports:ResearchPorts={}) {
+    const url=normalizedUrl(input.url);
+    if(url.search||url.hash||blockedHostname(url.hostname)||!input.allowedHosts.includes(url.hostname.toLowerCase()))throw new ResearchError('ACQUISITION_URL_DENIED');
+    if(!Number.isSafeInteger(input.maxBytes)||input.maxBytes<1||input.maxBytes>16_777_216||!Number.isSafeInteger(input.deadlineMs)||input.deadlineMs<1||input.deadlineMs>30000)throw new ResearchError('ACQUISITION_LIMIT_INVALID');
+    const controller=new AbortController(),deadline=Date.now()+input.deadlineMs;
+    const remaining=()=>{const ms=deadline-Date.now();if(ms<=0){controller.abort();throw new ResearchError('FETCH_DEADLINE_EXCEEDED');}return ms;};
+    const resolver=ports.dnsLookup??(async(host:string)=>(await lookup(host,{all:true,verbatim:true})).map(r=>({address:r.address})));
+    const records=await beforeDeadline(resolver(url.hostname),remaining(),controller);
+    if(!records.length||records.some(r=>blockedIp(r.address)))throw new ResearchError('PRIVATE_ADDRESS_RESOLUTION_FORBIDDEN');
+    ports.beforeRequest?.(url.toString());
+    const init={method:'GET' as const,redirect:'manual' as const,headers:{accept:'*/*','user-agent':'MIDAS-BoundedAcquisition/1.0'},signal:controller.signal};
+    try {
+        const response=await beforeDeadline((ports.fetch??pinnedHttpsFetch)(url.toString(),init,records[0].address),remaining(),controller);
+        if(response.status!==200)throw new ResearchError(isRedirect(response.status)?'ACQUISITION_REDIRECT_REQUIRES_NEW_SELECTION':'ACQUISITION_HTTP_'+response.status);
+        const body=await beforeDeadline(readLimited(response,input.maxBytes,false,()=>controller.abort()),remaining(),controller);
+        return {url:url.toString(),observedAt:new Date().toISOString(),bytes:Buffer.from(body.bytes),sha256:sha256(body.bytes),contentType:contentType(response.headers),provenance:'public_retrieval' as const};
+    }finally{controller.abort();}
+}

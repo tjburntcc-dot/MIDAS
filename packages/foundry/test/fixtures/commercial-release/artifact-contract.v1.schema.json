@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:midas:commercial-release:decision-artifact:v1",
+  "title": "Reusable local decision artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactId",
+    "contextId",
+    "title",
+    "provenance",
+    "sourceBinding",
+    "inputs",
+    "decision",
+    "handoff",
+    "measurement",
+    "state"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "artifactId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "author",
+        "evidenceMode",
+        "runtimeModelGenerated",
+        "customerValidated",
+        "externalBusinessEffects"
+      ],
+      "properties": {
+        "author": {
+          "const": "development_assistant"
+        },
+        "evidenceMode": {
+          "enum": [
+            "public_reference_sandbox",
+            "hypothetical_sandbox"
+          ]
+        },
+        "runtimeModelGenerated": {
+          "const": false
+        },
+        "customerValidated": {
+          "const": false
+        },
+        "externalBusinessEffects": {
+          "const": false
+        }
+      }
+    },
+    "sourceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packetId",
+        "packetVersion",
+        "sourceIds"
+      ],
+      "properties": {
+        "packetId": {
+          "const": "commercial-release-evidence-v1"
+        },
+        "packetVersion": {
+          "const": 1
+        },
+        "sourceIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "provenance",
+        "values",
+        "unknownKeys"
+      ],
+      "properties": {
+        "caseId": {
+          "type": "string"
+        },
+        "provenance": {
+          "const": "synthetic"
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "unknownKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "summary",
+        "basis",
+        "missingInformation",
+        "unsupportedAssumptions"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "route_existing",
+            "request_information",
+            "prepare_review",
+            "ready_for_review"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sourceId",
+              "assertionId"
+            ],
+            "properties": {
+              "sourceId": {
+                "type": "string"
+              },
+              "assertionId": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "missingInformation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unsupportedAssumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preparedText",
+        "nextAction",
+        "destination",
+        "permittedEffect",
+        "committedExternalEffect"
+      ],
+      "properties": {
+        "preparedText": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "destination": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "permittedEffect": {
+          "const": "local_preparation_only"
+        },
+        "committedExternalEffect": {
+          "const": false
+        }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineStatus",
+        "handlingSeconds",
+        "reviewSeconds",
+        "correctionCount",
+        "customerAccepted"
+      ],
+      "properties": {
+        "baselineStatus": {
+          "const": "not_observed"
+        },
+        "handlingSeconds": {
+          "type": "null"
+        },
+        "reviewSeconds": {
+          "type": "null"
+        },
+        "correctionCount": {
+          "type": "null"
+        },
+        "customerAccepted": {
+          "type": "null"
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "policyReview",
+        "supersedesArtifactId"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "prepared",
+            "stale",
+            "withdrawn"
+          ]
+        },
+        "policyReview": {
+          "enum": [
+            "pending",
+            "not_applicable"
+          ]
+        },
+        "supersedesArtifactId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "x-implementation-notes": [
+    "This is a sample artifact interchange contract, not a runtime authority or a universal domain procedure.",
+    "Use existing StateStore, source versions, project manifests and action receipts; do not create another authority store.",
+    "The runtime must resolve source IDs/assertion IDs, enforce company scope and reject revoked or changed bindings before action.",
+    "A source-version change makes dependent output stale. Re-preparation must retain lineage and must not reuse external authorization.",
+    "decision.action is a generic preparation outcome. Domain policy belongs in permitted context data.",
+    "Null measurement values mean unobserved, never zero. Fictional inputs must never become customer observations.",
+    "A controlled local receipt is a local effect. It cannot prove a merchant approved a return, issued a label, refunded money or accepted a customer.",
+    "The provenance literals identify these specific development-authored samples; production artifacts need their actual author/evidence provenance, not these fixture constants."
+  ]
+}

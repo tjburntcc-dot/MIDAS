@@ -36,9 +36,9 @@ export class Portfolio {
         text(input.name); text(input.goal); const id = input.id ?? 'venture-' + randomUUID().slice(0, 12); identifier(id); integer(input.priority ?? 50, 0, 1000); requireThat(['local', 'fixture', 'live'].includes(input.mode ?? 'local'), 'VENTURE_MODE');
         return this.store.transaction(() => { const v = this.put(kinds.venture, { ...input, id, stage: input.stage ?? 'discovery', priority: input.priority ?? 50, mode: input.mode ?? 'local', status: 'active', revision: 1, evidenceRevision: 0, economics: { revenue: null, cost: null, currency: 'USD', basis: 'Unobserved' }, commitments: { research: 'permitted preparation', build: 'reversible local work', commit: 'requires adapter authority' }, nextAction: 'Plan valuable work from available evidence', createdAt: this.at(), updatedAt: this.at() }); this.event(id, 'venture_created', { id, goal: input.goal }); return v; });
     }
-    registerWorker(input: WorkerInput) {
+    registerWorker(input: WorkerInput, options: { ifAbsent?: boolean } = {}) {
         identifier(input.id); text(input.name); unique(input.competencies); unique(input.capabilities); input.competencies.forEach(x => text(x)); input.capabilities.forEach(x => text(x)); integer(input.maxConcurrency ?? 1, 1, 1000);
-        return this.store.transaction(() => { const old = this.store.get(kinds.worker, input.id); return this.put(kinds.worker, { ...old, ...input, maxConcurrency: input.maxConcurrency ?? 1, available: input.available ?? true, procedureId: input.procedureId ?? null }); });
+        return this.store.transaction(() => { const old = this.store.get(kinds.worker, input.id); if (old && options.ifAbsent) return old; return this.put(kinds.worker, { ...old, ...input, maxConcurrency: input.maxConcurrency ?? 1, available: input.available ?? true, procedureId: input.procedureId ?? null }); });
     }
     addPlan(ventureId: string, input: PlanInput, expectedRevision?: number) { return this.store.transaction(() => this.addPlanInside(ventureId, input, expectedRevision)); }
     private addPlanInside(ventureId: string, input: PlanInput, expectedRevision?: number) {

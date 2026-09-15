@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "packetId": "commercial-release-samples-v1",
+  "provenance": {
+    "author": "development_assistant",
+    "createdOn": "2026-09-14",
+    "runtimeModelGenerated": false,
+    "customerValidated": false,
+    "externalBusinessEffects": false,
+    "visibility": "developer_visible"
+  },
+  "artifacts": [
+    {
+      "schemaVersion": 1,
+      "artifactId": "sample-retail-sale-review-v1",
+      "contextId": "retail-exception-sandbox",
+      "title": "Sale-item exception review packet",
+      "provenance": {
+        "author": "development_assistant",
+        "evidenceMode": "public_reference_sandbox",
+        "runtimeModelGenerated": false,
+        "customerValidated": false,
+        "externalBusinessEffects": false
+      },
+      "sourceBinding": {
+        "packetId": "commercial-release-evidence-v1",
+        "packetVersion": 1,
+        "sourceIds": [
+          "fitkitty-refund-v1"
+        ]
+      },
+      "inputs": {
+        "caseId": "retail-sale-overlap",
+        "provenance": "synthetic",
+        "values": {
+          "caseReference": "SANDBOX-RET-002",
+          "collection": "Sale",
+          "markedFinalSale": "unknown",
+          "deliveredDaysAgo": 12,
+          "condition": "unworn; tags attached",
+          "desiredOutcome": "refund"
+        },
+        "unknownKeys": [
+          "markedFinalSale"
+        ]
+      },
+      "decision": {
+        "action": "prepare_review",
+        "summary": "Prepare a policy review; the sale classification and possible Final Sale overlap need confirmation.",
+        "basis": [
+          {
+            "sourceId": "fitkitty-refund-v1",
+            "assertionId": "sale-exception"
+          }
+        ],
+        "missingInformation": [
+          "Whether the item is marked Final Sale and which term governs the overlap."
+        ],
+        "unsupportedAssumptions": [
+          "No return, refund, exchange, label or inventory availability has been approved."
+        ]
+      },
+      "handoff": {
+        "preparedText": "SANDBOX CASE. The requester describes an unworn sale-collection item and asks for a refund. Current public policy describes a sale exception. Confirm the item's classification and any overlapping exclusion before giving a final route. Preserve the requested outcome in the handoff; do not silently substitute an exchange.",
+        "nextAction": "An authorized merchant would review classification against its current policy; this release only saves the prepared packet locally.",
+        "destination": null,
+        "permittedEffect": "local_preparation_only",
+        "committedExternalEffect": false
+      },
+      "measurement": {
+        "baselineStatus": "not_observed",
+        "handlingSeconds": null,
+        "reviewSeconds": null,
+        "correctionCount": null,
+        "customerAccepted": null
+      },
+      "state": {
+        "status": "prepared",
+        "policyReview": "pending",
+        "supersedesArtifactId": null
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "artifactId": "sample-report-readiness-v1",
+      "contextId": "reporting-readiness-sandbox",
+      "title": "Weekly fulfillment report readiness packet",
+      "provenance": {
+        "author": "development_assistant",
+        "evidenceMode": "hypothetical_sandbox",
+        "runtimeModelGenerated": false,
+        "customerValidated": false,
+        "externalBusinessEffects": false
+      },
+      "sourceBinding": {
+        "packetId": "commercial-release-evidence-v1",
+        "packetVersion": 1,
+        "sourceIds": [
+          "hypothetical-service-scope-v1"
+        ]
+      },
+      "inputs": {
+        "caseId": "service-complete",
+        "provenance": "synthetic",
+        "values": {
+          "caseReference": "SANDBOX-SVC-001",
+          "decisionQuestion": "Which late-order exception should the hypothetical operations lead review first?",
+          "cadence": "weekly",
+          "sampleDescription": "Fictional rows with synthetic order IDs, due dates, dispatch dates and exception labels.",
+          "dataPermission": "Hypothetical permission for this synthetic sample only",
+          "requestedWork": "map fields and list unresolved definitions"
+        },
+        "unknownKeys": []
+      },
+      "decision": {
+        "action": "ready_for_review",
+        "summary": "The fictional intake is sufficient to prepare a bounded readiness review; field meanings and decision criteria still require confirmation.",
+        "basis": [
+          {
+            "sourceId": "hypothetical-service-scope-v1",
+            "assertionId": "scope"
+          },
+          {
+            "sourceId": "hypothetical-service-scope-v1",
+            "assertionId": "inputs"
+          }
+        ],
+        "missingInformation": [
+          "Definition of a late order and which exceptions the hypothetical lead can act on."
+        ],
+        "unsupportedAssumptions": [
+          "No actual customer, production data, integration commitment, turnaround or price is asserted."
+        ]
+      },
+      "handoff": {
+        "preparedText": "HYPOTHETICAL SERVICE SAMPLE. Intended decision: choose the next late-order exception to review. Cadence: weekly. Candidate fields: synthetic order ID, due date, dispatch date and exception label. Confirm the meaning of late and the available decision before building a report. The review output is a field map plus unresolved definitions; production integration is outside scope.",
+        "nextAction": "Review the synthetic field map and scope locally. A real engagement would need an eligible operator and permitted anonymized sample.",
+        "destination": null,
+        "permittedEffect": "local_preparation_only",
+        "committedExternalEffect": false
+      },
+      "measurement": {
+        "baselineStatus": "not_observed",
+        "handlingSeconds": null,
+        "reviewSeconds": null,
+        "correctionCount": null,
+        "customerAccepted": null
+      },
+      "state": {
+        "status": "prepared",
+        "policyReview": "not_applicable",
+        "supersedesArtifactId": null
+      }
+    }
+  ]
+}

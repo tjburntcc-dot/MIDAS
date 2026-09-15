@@ -25,7 +25,7 @@ test('V3 denies mutated sidecars, unsupported credential files, path links and o
  const f=fixture();try{const w=f.workspace();w.write('adapter.txt','original',null);const backup=join(f.root,'backup'),manifest=backupPilot(f.store,backup,{sourceRoot:f.root,quiescent:true}),item=manifest.sidecars.find(s=>s.path.endsWith('adapter.txt'))!;
   writeFileSync(join(backup,item.path),'modified');assert.throws(()=>restorePilot(backup,join(f.root,'invalid'),manifest.sha256),/RESTORE_SIDECAR_HASH_MISMATCH/);
   w.write('.env','SYNTHETIC_PRIVATE_CONFIGURATION',null);assert.throws(()=>backupPilot(f.store,join(f.root,'secret-backup'),{sourceRoot:f.root,quiescent:true}),/PILOT_ADAPTIVE_AUTH_FILE_DENIED/);rmSync(join(w.workspacePath,'.env'));
-  symlinkSync(join(w.workspacePath,'adapter.txt'),join(w.workspacePath,'linked.txt'));assert.throws(()=>backupPilot(f.store,join(f.root,'linked-backup'),{sourceRoot:f.root,quiescent:true}),/PILOT_SIDECAR_LINK_DENIED/);rmSync(join(w.workspacePath,'linked.txt'));
+  const linked=join(w.workspacePath,'linked');symlinkSync(process.platform==='win32'?w.workspacePath:join(w.workspacePath,'adapter.txt'),linked,process.platform==='win32'?'junction':'file');assert.throws(()=>backupPilot(f.store,join(f.root,'linked-backup'),{sourceRoot:f.root,quiescent:true}),/PILOT_SIDECAR_LINK_DENIED/);rmSync(linked,{recursive:process.platform==='win32'});
   writeFileSync(join(w.workspacePath,'too-large.bin'),Buffer.alloc(1_572_865));assert.throws(()=>backupPilot(f.store,join(f.root,'large-backup'),{sourceRoot:f.root,quiescent:true}),/PILOT_SIDECAR_FILE_INVALID/);assert(!existsSync(join(f.root,'large-backup','manifest.json')));
  }finally{f.close();}
 });

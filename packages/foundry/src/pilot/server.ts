@@ -25,10 +25,17 @@ export function servePilot(options: { service: PilotService; port?: number }) {
         const actual = service.execution.portfolio.getTask(task.id);
         adaptiveContextHash = hash({task:taskDefinitionHash(actual),evidence:service.execution.evidence.taskDigest(actual)});
       } catch { /* A historical binding that cannot be reconstructed stays unverified. */ }
-      return {...task,adaptiveContextHash};
+      return {...task,adaptiveContextHash,serviceCleanup:service.store.get('pilot-adaptive-service-cleanup',task.id)};
     });
-    return {...view,adaptive:adaptiveOwnerView(service.store,view.business?.id??null,tasks)};
+    return {...view,tasks,adaptive:adaptiveOwnerView(service.store,view.business?.id??null,tasks)};
   };
+  const stopScopedServices=async(businessId:string,taskIds:string[])=>{
+    const results=[];for(const taskId of [...new Set(taskIds)]){const task=service.execution.portfolio.getTask(taskId);requireThat(task.ventureId===businessId,'SERVICE_BUSINESS_SCOPE');if(!(task.inputs as any)?.adaptiveExecution?.allowServices)continue;
+      let record:any;try{record={businessId,taskId,status:'confirmed',evidence:await service.execution.stopAdaptiveServices(businessId,taskId),at:new Date().toISOString()};}catch(error){record={businessId,taskId,status:'unconfirmed',code:String((error as any)?.code??(error as Error).message).slice(0,240),at:new Date().toISOString(),nextAction:'Task pause or cancellation remains recorded. Confirm temporary service cleanup before backup or resuming work.'};}
+      service.store.transaction(()=>{const prior=service.store.get('pilot-adaptive-service-cleanup',taskId);service.store.put('pilot-adaptive-service-cleanup',taskId,record,prior?prior._version:null);});results.push(record);
+    }return {status:results.some(r=>r.status==='unconfirmed')?'unconfirmed':'confirmed',tasks:results};
+  };
+  const stopOutcomeServices=async(businessId:string,outcomeId?:string|null)=>stopScopedServices(businessId,outcomeId?service.operatingOutcomes.get(outcomeId).taskIds:[]);
   const previews = new InteractivePreviewSessions();
   const previewOwners = new Map<string, {owner: string; businessId: string; taskId: string;project?:boolean;manifestHash?:string}>();
   const opening = new Set<string>();
@@ -131,8 +138,13 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           requireThat(['response-packet','functional-project','campaign-packet'].includes(body.workflow),'ADAPTIVE_WORKFLOW_UNSUPPORTED');
           requireThat(body.job&&typeof body.job.title==='string'&&body.job.title.trim().length>=4&&body.job.title.length<=160&&typeof body.job.outcome==='string'&&body.job.outcome.trim().length>=8&&body.job.outcome.length<=2000&&typeof body.job.details==='string'&&body.job.details.length<=4000,'ADAPTIVE_OBJECTIVE_REQUIRED');
           requireThat(body.adaptive&&typeof body.adaptive==='object'&&!Array.isArray(body.adaptive),'ADAPTIVE_ALLOCATION_INVALID');
-          result=service.execution.plan({business:service.knowledge.company(selected),sources:service.knowledge.sources(selected),workflow:body.workflow,job:{title:body.job.title.trim(),outcome:body.job.outcome.trim(),details:body.job.details.trim()},adaptive:{prompt:body.adaptive.prompt,allowCommands:body.adaptive.allowCommands,modelCalls:body.adaptive.modelCalls,localToolRuns:body.adaptive.localToolRuns}});
+          const acquisition=body.adaptive.acquisition;requireThat(acquisition===undefined||acquisition&&typeof acquisition==='object'&&!Array.isArray(acquisition),'ACQUISITION_SCOPE_REQUIRED');
+          result=service.execution.plan({business:service.knowledge.company(selected),sources:service.knowledge.sources(selected),workflow:body.workflow,job:{title:body.job.title.trim(),outcome:body.job.outcome.trim(),details:body.job.details.trim()},adaptive:{prompt:body.adaptive.prompt,allowCommands:body.adaptive.allowCommands,...(body.adaptive.allowServices!==undefined?{allowServices:body.adaptive.allowServices}:{}),modelCalls:body.adaptive.modelCalls,localToolRuns:body.adaptive.localToolRuns,...(acquisition?{acquisition:{dataScope:acquisition.dataScope,allowedHosts:acquisition.allowedHosts,maxRequests:acquisition.maxRequests,maxBytes:acquisition.maxBytes,deadlineMs:acquisition.deadlineMs}}:{})}});
         }
+        else if(url.pathname==='/api/observation')result=service.recordBusinessObservation(selected,body);
+        else if(url.pathname==='/api/observation/reject'){result=service.observationLoop.reject(selected,body.decisionId,body.reason);result={...result,serviceCleanup:await stopOutcomeServices(selected,result.outcomeId)};}
+        else if(url.pathname==='/api/observation/withdraw'){result=service.observationLoop.withdraw(selected,body.observationId,body.reason);result={...result,serviceCleanup:await stopOutcomeServices(selected,result.decision?.outcomeId)};}
+        else if(url.pathname==='/api/observation/recover')result=service.observationLoop.recover(selected);
         else if(url.pathname==='/api/development/prepare')result=service.workerDevelopment.prepare(selected,body);
         else if(url.pathname==='/api/development/fixture')result=await service.workerDevelopment.fixture(selected,body.candidateId);
         else if(url.pathname==='/api/connection/sync')result=await service.syncApprovedConnection(selected,body.connectionId);
@@ -141,10 +153,13 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           requireThat(service.connectedAccounts.get(body.connectionId).businessId===selected,'CONNECTION_BUSINESS_SCOPE');
           result=url.pathname.endsWith('/consent')?service.connectedAccounts.grantConsent(body.connectionId,{grantedAt:new Date().toISOString(),grantedBy:'local-owner-session',purpose:body.purpose,scopes:body.scopes,expiresAt:body.expiresAt??null}):service.connectedAccounts.revoke(body.connectionId,body.reason);
         }
-        else if(url.pathname==='/api/outcome/create')result=service.operatingOutcomes.create(selected,{objective:body.objective,autonomy:body.autonomy,allowedFamilies:body.allowedFamilies,maxCalls:body.maxCalls,repairReserve:body.repairReserve});
+        else if(url.pathname==='/api/outcome/create'){
+          const adaptive=body.adaptive;requireThat(adaptive===undefined||adaptive&&typeof adaptive==='object'&&!Array.isArray(adaptive),'ADAPTIVE_CONFIGURATION_INVALID');const acquisition=adaptive?.acquisition;requireThat(acquisition===undefined||acquisition&&typeof acquisition==='object'&&!Array.isArray(acquisition),'ACQUISITION_SCOPE_REQUIRED');
+          result=service.operatingOutcomes.create(selected,{objective:body.objective,autonomy:body.autonomy,allowedFamilies:body.allowedFamilies,maxCalls:body.maxCalls,repairReserve:body.repairReserve,...(adaptive?{adaptive:{prompt:adaptive.prompt,allowCommands:adaptive.allowCommands,...(adaptive.allowServices!==undefined?{allowServices:adaptive.allowServices}:{}),...(acquisition?{acquisition:{dataScope:acquisition.dataScope,allowedHosts:acquisition.allowedHosts,maxRequests:acquisition.maxRequests,maxBytes:acquisition.maxBytes,deadlineMs:acquisition.deadlineMs}}:{})}}:{})});
+        }
         else if(url.pathname.startsWith('/api/outcome/')){
           requireThat(service.operatingOutcomes.get(body.outcomeId).businessId===selected,'OUTCOME_BUSINESS_SCOPE');
-          if(url.pathname.endsWith('/control')){result=service.operatingOutcomes.control(body.outcomeId,body.action);const authority=service.journeyAuthority();if(body.action==='resume'&&authority.liveEnabled&&authority.businessId===selected&&authority.outcomeId===body.outcomeId){service.launchInvestigation(selected,()=>service.runApprovedOutcome(selected,body.outcomeId));status=202;}}
+          if(url.pathname.endsWith('/control')){result=service.operatingOutcomes.control(body.outcomeId,body.action);if(['pause','cancel'].includes(body.action))result={...result,serviceCleanup:await stopOutcomeServices(selected,body.outcomeId)};const authority=service.journeyAuthority();if(body.action==='resume'&&authority.liveEnabled&&authority.businessId===selected&&authority.outcomeId===body.outcomeId){service.launchInvestigation(selected,()=>service.runApprovedOutcome(selected,body.outcomeId));status=202;}}
           else if(url.pathname.endsWith('/allow'))result=service.operatingOutcomes.allowPreparation(body.outcomeId);
           else if(url.pathname.endsWith('/prepare'))result=service.prepareJourney(selected,body.outcomeId);
           else if(url.pathname.endsWith('/plan-fixture')){requireThat(service.knowledge.company(selected).mode==='fixture','OUTCOME_FIXTURE_ONLY');result=await service.operatingOutcomes.propose(body.outcomeId,fixtureOutcomePlanner);}
@@ -184,7 +199,7 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           service.task(selected, body.taskId);
           if(service.knowledge.company(selected).mode === 'fixture')service.launch(selected, body.taskId, () => url.pathname === '/api/resume' ? service.execution.resume(selected, body.taskId) : service.execution.run(selected, body.taskId));
           else {const authority=service.authority();requireThat(authority.approved&&authority.businessId===selected&&(authority.liveEnabled||authority.sameIdRecoveryAvailable),'PILOT_LIVE_GRANT_REQUIRED');if(url.pathname==='/api/resume'&&service.task(selected,body.taskId).status==='paused')service.execution.portfolio.controlTask(body.taskId,'resume');service.launch(selected,body.taskId,()=>service.runApprovedWork(selected,body.taskId));} status = 202;
-        } else if (url.pathname === '/api/pause') { service.task(selected, body.taskId); result = (service.execution as any).pause(selected, body.taskId); }
+        } else if (url.pathname === '/api/pause') { service.task(selected, body.taskId); result = service.execution.pause(selected, body.taskId);result={...result,serviceCleanup:await stopScopedServices(selected,[body.taskId])}; }
         else if (url.pathname === '/api/review/start') { result = {reviewSessionId: service.reviewStart(selected, body.taskId, sessionId)}; }
         else if (url.pathname === '/api/approve') {
           const artifact = service.bindArtifact(selected, body.taskId, body.artifactHash);
@@ -211,6 +226,8 @@ export function servePilot(options: { service: PilotService; port?: number }) {
           service.bindArtifact(selected, body.taskId, body.artifactHash);
           requireThat(['accepted','needs-change','not-useful'].includes(body.kind) && typeof body.notes === 'string' && body.notes.trim().length > 0 && body.notes.length <= 4000 && typeof body.assisted === 'boolean', 'OUTCOME_EVIDENCE_REQUIRED');
           result = service.knowledge.outcome(selected, body);
+          const continuation=service.recordBusinessObservation(selected,{idempotencyKey:'review-'+result.id,taskId:body.taskId,artifactHash:body.artifactHash,sourceIds:[],kind:'owner_statement',result:body.kind==='not-useful'?'not_useful':'inconclusive',notes:body.notes,observedAt:result.createdAt,measurement:null,assisted:body.assisted});
+          result={...result,nextDecisionId:continuation.decision.id,nextOutcomeId:continuation.decision.outcomeId};
           service.store.transaction(() => service.store.put('pilot-owner-outcome', 'outcome-' + randomBytes(12).toString('hex'), {...body, id: result?.id ?? randomBytes(12).toString('hex'), at: new Date().toISOString(), provenance: 'owner_report', measuredRevenueMinor: null, causalAttribution: 'not established'}, null));
         } else if (url.pathname === '/api/learning') {
           service.task(selected, body.taskId);

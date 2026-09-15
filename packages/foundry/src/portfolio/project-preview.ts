@@ -31,7 +31,8 @@ export class ManagedProjectPreviewSessions {
    else if (action.kind === 'key') { requireThat(['Tab', 'Shift+Tab', 'Enter', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Control+A', 'Meta+A', 'Escape', 'PageDown', 'PageUp'].includes(action.key ?? ''), 'PROJECT_PREVIEW_KEY'); await session.page.keyboard.press(action.key); }
    else if (action.kind === 'refresh') await session.page.reload({ waitUntil: 'domcontentloaded' });
    else { const response = await fetch(session.opened.url + '/api/export'); requireThat(response.ok, 'PROJECT_PREVIEW_EXPORT'); extra = { exportJson: await response.json() }; }
-   await session.page.waitForTimeout(75); return await this.image(session, extra);
+   // Native page scrolling keeps painting after keyboard.press resolves.
+   await session.page.waitForTimeout(action.kind==='key'&&['PageDown','PageUp'].includes(action.key??'')?350:75); return await this.image(session, extra);
   } finally { session.busy = false; }
  }
  async screenshot(id: string) { const session = this.sessions.get(id); requireThat(session, 'PROJECT_PREVIEW_SESSION_NOT_FOUND'); requireThat(session.opened.workspace.revision().manifestHash===session.opened.server.manifestHash,'PROJECT_PREVIEW_STALE'); return this.image(session); }

@@ -26,9 +26,9 @@ test('path escape, absolute path and symlink traversal rejected', (t) => {
   const { root, workspace: w } = fixture(t);
   assert.throws(() => w.write('../outside', 'x', null), /PATH_DENIED/);
   assert.throws(() => w.read('/etc/passwd'), /PATH_DENIED/);
-  symlinkSync(root, join(w.workspacePath, 'outside'));
+  symlinkSync(root, join(w.workspacePath, 'outside'), process.platform==='win32'?'junction':'dir');
   assert.throws(() => w.write('outside/stolen', 'x', null), /SYMLINK/);
-  symlinkSync(join(root, 'missing'), join(w.workspacePath, 'dangling'));
+  symlinkSync(join(root, 'missing'), join(w.workspacePath, 'dangling'), process.platform==='win32'?'junction':'dir');
   assert.throws(() => w.write('dangling', 'x', null), /SYMLINK/);
 });
 test('company and task identities have distinct directories', (t) => {
