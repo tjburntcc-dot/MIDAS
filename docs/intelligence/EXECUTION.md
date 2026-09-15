@@ -1,3 +1,48 @@
+# Commercial operator release — governing execution ledger
+
+Integration owner: root development assistant. Governing goal objective and `MIDAS_BIG_RELEASE_MASTER_PROMPT_2026-09-14.md` read in full. Successor `codex/commercial-operator-release` is based on exact Adaptive `296a109cd9e35d73bf3a54185da4c6f834402c3e`. Adaptive draft PR1 and canonical history are preserved. Integrated source commit: `440fb6913a287b7166e84b6bc50f6f40fb184571`; focused trial correction: `8379986bcb94ae7b11d800ae8ac0c17cd2797b6c`. The final docs/publication commit is recorded in the release receipt.
+
+## Acceptance at the release checkpoint
+
+| Outcome | Implemented and verified | Actual-model / business acceptance |
+|---|---|---|
+| Owner operation | Found/Operate intake, scoped evidence, editable mandate, work graph, artifacts, controls and typed observations use persisted state; desktop and390px browser paths pass. | No new actual-model owner journey has run. |
+| Business judgment | Current relevant evidence and observations feed the existing sourced discovery, commercial analysis and substantive planner. Required oversized evidence blocks before dispatch; unrelated large documents no longer block a smaller task. | Actual diagnosis and changed-evidence judgment require new authority. |
+| Substantial delivery | Two different sandbox contexts completed packets, functional local projects and successor reassessment through the shared controller. Actual HTTP, browser, persistence and restore checks ran. | Choices/wording are scripted development fixtures; no model competence or customer benefit. |
+| Adaptive execution | Task-scoped files, bounded targeted edits, actual WSL/bwrap commands, public acquisition, private temporary services, command/service competition, cancellation and same-operation recovery work. | Unfamiliar obstacle diagnosis/acquisition by a model remains unobserved. |
+| Closed loop | Typed evidence creates a fresh context-bound successor mandate. Pending feedback creates an honest wait; corrections, rejection, withdrawal and restart are durable. | No simulated or owner-reported outcome becomes causal truth or revenue. |
+| Learning | Candidate provenance, independent signed assessment, comparison, applicability/nonreuse, future assignment and monitoring/rollback are connected. Direct/baseline/lean procedures have identical tool schemas; existing two procedures are preserved. | No independent assessor, measured benefit or qualified candidate exists. |
+| Reliability | Final13 WSL/service boundary checks passed, nine actually dispatched isolated host processes. V4 restore preserves binary material and unresolved command history, excludes authority/control files, and refuses live services. | Local single-host operation only; not24/7 hosting or universal sandbox proof. |
+| Commercial readiness | Public contrary evidence, retail exception and hypothetical reporting contexts, usable samples, pilot scope, measurement/economic unknowns and an unsent invitation are retained. | No consenting merchant, demand, price, independent labor or cash collected. |
+| Publication | Focused final tests, source scans, independent review and exact successor publication are recorded in the companion release receipt. | Full governing release remains incomplete until authorized runtime/comparison requirements pass or produce a supported negative result. |
+
+## Final engineering evidence
+
+`var/release-verification/` retains final mechanics56pass/1explicit public-opt-in skip, learning/owner34pass, WSL/services13pass, signed integration25pass, scoped semantic TypeScript6.0.3 with101source files/zero errors, final trial15pass and separate three-procedure checks, source scans and publication receipts. Counts are evidence categories and must not be summed without accounting for repeated focused checks. The public-retrieval opt-in had already been independently exercised with retained99850bytes and SHA256. No new provider requests or credential contents were read.
+
+Named material repairs: authority options now bind actual task/procedure at admission; resumed persisted responses do not demand a new first attempt; model and tool recovery remain distinct; inspection preserves custom worker state; no-service cleanup does not create a new adaptive namespace; source selection preserves mandatory documents; three-call correction capacity matches acceptance; status never serializes undefined; preview paging waits for actual painting; concurrency spans command and service; absolute download deadline spans DNS/headers/body; candidate memory and full transfer lineage are bound separately from authority.
+
+The exact host boundary is Windows Node24 with existing Ubuntu WSL, Python3, Bubblewrap and systemd user units. Per-unit limits are1GiB memory/64processes/100%CPU; the worker admits one command OR service per task. There is no host-wide commercial-task cap. Disk usage is monitored at256MiB/4096entries, not quota-enforced. Services expire within600seconds plus systemd teardown grace; stop proof uses fresh systemd state, not an independently read empty-cgroup measure. Public acquisition is exact-host, public-DNS-pinned, no redirect/cookie/query credential; files stay outside credential/evaluator mounts. Backup is not a cross-file atomic snapshot.
+
+## Runnable owner checkpoint
+
+```powershell
+node packages/foundry/src/pilot/cli.ts serve --root var/commercial-release-demo --port 43147
+```
+
+Open `http://127.0.0.1:43147/#archive`, select either explicitly labeled sandbox and inspect Work, Outcomes and Results. The server was restarted on final source; saved records survived. `docs/commercial-release/local-demo.md` contains fresh fixture reproduction and V4 restore commands. Original fixture failed/recovered attempts remain preserved. The current prepared workspace never becomes actual runtime evidence merely by appearing in this interface.
+
+## Remaining controlled execution
+
+The installed included Codex route was investigated using official documentation and actual permission probes. Its tested profile allowed synthetic sibling-file and loopback access; its tool-free configuration could not establish an enforced empty tool inventory. It was rejected rather than used with weaker isolation. The existing direct Responses bridge is implemented, but no new dollar ceiling exists. R5/034 unsigned and historical grants do not authorize this release.
+
+`docs/commercial-release/LIVE-ENVELOPE-V2.md` and its JSON are the single consolidated proposed resource request: AstraMax/default,138maximum admissions,282.90USD inference reservations plus6.90explicitly unpriced count/retrieval allowance =289.80USD maximum proposed exposure. Historical exposure remains separate. The numerical proposal is not approval, invoice reconciliation or permission for account/customer actions.
+
+Actual development can precede independently prepared comparison work; future phase bindings may be supplied only inside their predeclared allocation and order, before the affected phase. Reuse accepted observations, never rerun unknown inference, and preserve failure/rejection. Final comparative claims need externally supplied tasks and a separately trusted assessor; this host has not manufactured a protected holdout. No candidate/ablation spending is justified if no candidate exists. Prefer the stronger/simpler configuration when evidence supports it.
+
+Next useful action after reviewed publication: obtain the one whole-release numerical/data/storage approval and independently supplied case/assessor boundary, then execute the prepared development journey through the existing signed factory and global trial allocation. Continue all covered stages without routine approvals; stop only on the actual bound limit, integrity/access failure or unresolved effect. No unfinished ordinary engineering is delegated to the owner.
+
+## Preserved prior ledger (historical)
 # MIDAS operating execution ledger — Adaptive Operator continuation
 
 ## Current implementation checkpoint (14 September 2026)

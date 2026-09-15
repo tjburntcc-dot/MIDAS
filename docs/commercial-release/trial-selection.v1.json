@@ -1,0 +1,33 @@
+{
+  "kind": "commercial-release-trial-selection-v1",
+  "authoredBy": "development_assistant",
+  "status": "prospective_selection_rules_pending_independent_custodian",
+  "custodian": null,
+  "actualCasesSelected": 0,
+  "selectionTiming": "Development uses its prepared public/synthetic scope. Independent case contents are supplied only after engineering freeze and before their respective chunk is bound. No outcome-conditioned replacement of a failed case.",
+  "eligibility": [
+    "The supplied job belongs to the preregistered case population and its stated artifact/work budget.",
+    "Every business claim is linked to dated primary public evidence or is explicitly a synthetic assumption; access and economic unknowns are retained.",
+    "The baseline alternative and observable acceptance checks are stated without invented customer performance measurements.",
+    "The task permits at least one useful local completion or a justified rejection; no hidden solution procedure is required.",
+    "An unfamiliar obstacle, if included, arises from the job/materials and is independently selected; it is not a forced acquisition command.",
+    "The finishing protocol, required tools and service-stop/check work can fit the fixed stage allowance.",
+    "The source rights, permission, observation date, content hash and exact acquisition hosts are explicit and current.",
+    "No developer fixture or previously exposed answer is eligible as independent evidence."
+  ],
+  "selectionMethod": "The independent custodian records the candidate source and eligibility decision before worker execution, then seals the first eligible candidate under a stable case identifier. If that candidate is ineligible, retain the rejection and reason before selecting another. Do not search for a case that makes a preferred arm win.",
+  "workerPacketFields": ["caseId", "businessContext", "objective", "permittedEffects", "sourceRecords with immutable ids/text/hash/rights/dates/permissions", "requiredObservableOutcomes", "inputData", "unknowns supplied as facts rather than desired answers"],
+  "workerPacketForbidden": ["grader answers", "expected model wording", "preferred diagnosis or package", "arm scores", "other-arm outputs", "assessment signing material", "private account credentials"],
+  "separateCustodyRecordFields": ["custodian identity and independently controlled reference", "selection timestamp", "candidate source and eligibility/rejection log", "worker packet canonical hash", "raw source content hashes", "grader/rubric hash", "developer exposure disclosure", "per-arm root/task/source binding hashes", "assessor identity/trust evidence"],
+  "pairedControls": {
+    "flagship": "Use the same business, source and task IDs/bytes in disjoint fresh roots; same objectives, inputs, model, tool policies and resource ceilings. Vary only direct/baseline/lean procedure and its declared projection.",
+    "transfer": "Use the same new service facts and task IDs across the three same-arm lineage roots. Preserve each arm's own actual learned history; record its provenance and differences. No cross-arm output sharing.",
+    "nonreuse": "Use only an actual retained candidate and independently supplied applicability facts. The worker receives the job and evidence, not the expected reuse decision.",
+    "ablation": "Use the same exact backup hash, task objective/inputs/dependencies/evidence/model/tools/resources in two fresh roots. Only the immutable retained-candidate list differs: empty versus eligible frozen IDs. Other business history remains copied in both."
+  },
+  "absencePolicy": "No eligible independently supplied job or candidate means the affected chunk stays unbound/not-run with its allowance unused. It is not a successful test and does not allow budget transfer.",
+  "scopeChangePolicy": "Changed population, case IDs, order, resources, source code or allowed effects require revised preparation and authority before dispatch; do not tune those after observing trial outcomes.",
+  "independentAssessorAvailable": false,
+  "protectedCustodyClaim": false,
+  "paidSelectionOrAssessmentAuthorized": false
+}

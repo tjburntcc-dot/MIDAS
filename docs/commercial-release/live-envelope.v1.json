@@ -1,0 +1,517 @@
+{
+  "schemaVersion": 1,
+  "kind": "commercial-release-resource-proposal",
+  "id": "commercial-release-live-envelope-v1",
+  "preparedOn": "2026-09-14",
+  "status": "prepared_unsigned_not_executable",
+  "authoredBy": "development_assistant",
+  "approved": false,
+  "providerRequests": 0,
+  "credentialsRead": false,
+  "ownerDollarCeiling": null,
+  "proposalIsAuthority": false,
+  "customerValidation": false,
+  "protectedCasesCreated": false,
+  "purpose": "Complete a finite development journey, then obtain independently assessed exploratory three-arm, transfer, nonreuse and full-workflow ablation evidence after engineering and exact source freeze.",
+  "accounting": {
+    "currency": "USD",
+    "maximumInferenceAdmissions": 138,
+    "maximumSupportingCounts": 138,
+    "maximumInputTokensPerAdmission": 32768,
+    "maximumOutputTokensPerAdmission": 32768,
+    "aggregateInputTokenCeiling": 4521984,
+    "aggregateOutputTokenCeiling": 4521984,
+    "perAdmissionReservationMinor": 205,
+    "inferenceReservationMinor": 28290,
+    "unpricedCountAndRetrievalAllowanceMinor": 690,
+    "proposedTotalMinor": 28980,
+    "invoiceHardBoundEstablished": false,
+    "allowanceBasis": "Five cents per maximum admission is an explicit proposed uncertainty allowance, not a published endpoint price.",
+    "historicalCarryInMinor": 0,
+    "historicalAdmissionsCarried": 0,
+    "automaticBorrowing": false,
+    "automaticTopUp": false,
+    "judgeModelAdmissions": 0,
+    "providerConcurrency": 1,
+    "workerSlots": 1,
+    "retries": 0,
+    "spendingTarget": false
+  },
+  "pricing": {
+    "checkedOn": "2026-09-14",
+    "source": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+    "inputUsdPerMillion": 10,
+    "cachedInputUsdPerMillion": 1,
+    "cacheWriteUsdPerMillion": 12.5,
+    "outputUsdPerMillion": 50,
+    "ordinary32768EachUsd": 1.96608,
+    "ordinaryRoundedMinor": 197,
+    "conservative32768EachUsd": 2.048,
+    "conservativeRoundedMinor": 205,
+    "discountsAssumed": false,
+    "interpretation": "Existing portfolioRoute already reserves against the cache-write input rate. Prices and account availability must be rechecked at final authorization; unknown count/retrieval billing is not a zero-cost fact."
+  },
+  "route": {
+    "provider": "openai-responses",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "max",
+    "serviceTier": "default",
+    "immutableSnapshot": null,
+    "immutableSnapshotVerified": false,
+    "accountAvailabilityVerified": false,
+    "projectId": null,
+    "credentialFile": null,
+    "background": true,
+    "store": true,
+    "createDeadlineMs": 60000,
+    "countDeadlineMs": 10000,
+    "countRequestByteCeiling": 196608,
+    "completionDeadlineMs": 900000,
+    "retrievalDeadlineMs": 15000,
+    "pollIntervalMs": 5000,
+    "maxRetrievalsPerAdmission": 240,
+    "maximumSupportingRetrievals": 33120,
+    "resumeWindowMs": 86400000,
+    "maxConsecutiveReadErrors": 3,
+    "codeReference": "packages/foundry/src/portfolio/live.ts#portfolioRoute",
+    "retentionSource": "https://developers.openai.com/api/docs/guides/background",
+    "approvalNeeds": [
+      "Explicit Max-effort and numerical-envelope approval",
+      "Exact project/account and protected credential route",
+      "Explicit store=true data-retention acceptance",
+      "Actual returned model/tier and durable-response evidence"
+    ],
+    "verificationLimit": "A serialized request proves requested settings. Returned model/tier and usage establish only the fields actually observed; no hidden reasoning behavior or immutable snapshot is inferred.",
+    "includedCodex": {
+      "status": "potential_alternative_unapproved",
+      "nativeRouteStatus": "failed_isolation_unsuitable",
+      "requirements": "A verified isolated route with truthful subscription/access accounting, no worker-readable account secrets, exact model/settings observations, and equivalent durable request/authority binding. No undocumented auth proxy or native-host fallback."
+    }
+  },
+  "stages": [
+    {
+      "id": "development",
+      "kind": "development_journey",
+      "runs": 1,
+      "maxCalls": 32,
+      "inferenceMinor": 6560,
+      "overheadMinor": 160,
+      "totalMinor": 6720,
+      "suballocations": {
+        "discovery": 6,
+        "analysis": 1,
+        "planner": 1,
+        "functionalProject": 12,
+        "responsePacket": 8,
+        "exactCorrectionReserve": 4
+      },
+      "maxActiveWallMs": 32400000,
+      "context": "retail-exception-sandbox",
+      "decisionValue": "Establish a useful inspectable technical and commercial journey and one observed correction; identify one justified candidate only if a real obstacle warrants acquisition.",
+      "deliverables": [
+        "Runtime-authored local functional project and current browser/HTTP/persistence receipts",
+        "Runtime-authored pilot/exception packet with uncertain economics and unsent next action",
+        "One exact artifact-bound correction and preserved prior version, if needed",
+        "Observed acquisition/candidate evidence or an explicit unsupported/blocked finding"
+      ],
+      "gate": "Frozen executable profile fits these caps; safe backend and exact unsigned grant prepared; current public/synthetic sources; owner approval. Stop before independent cases are released."
+    },
+    {
+      "id": "trial-strong-direct",
+      "kind": "flagship_product_comparison",
+      "arm": "strong-direct",
+      "runs": 1,
+      "maxCalls": 20,
+      "inferenceMinor": 4100,
+      "overheadMinor": 100,
+      "totalMinor": 4200,
+      "suballocations": {
+        "functionalProject": 12,
+        "responsePacket": 8
+      },
+      "maxActiveWallMs": 21600000,
+      "context": "independently-selected-retail-workflow",
+      "decisionValue": "Compare usable completed artifacts, unfamiliar-obstacle response, commercial judgment and actual effort under a common total ceiling.",
+      "deliverables": [
+        "Fresh local project",
+        "Fresh commercial packet",
+        "All actual attempts, failures, tools, source and intervention receipts"
+      ],
+      "gate": "All three job/evidence/rubric bindings sealed before any arm runs; independent assessor named; shared executor verified; baseline migration and tool-access differences disclosed."
+    },
+    {
+      "id": "trial-preserved-midas-procedure",
+      "kind": "flagship_product_comparison",
+      "arm": "preserved-midas-procedure",
+      "runs": 1,
+      "maxCalls": 20,
+      "inferenceMinor": 4100,
+      "overheadMinor": 100,
+      "totalMinor": 4200,
+      "suballocations": {
+        "functionalProject": 12,
+        "responsePacket": 8
+      },
+      "maxActiveWallMs": 21600000,
+      "context": "independently-selected-retail-workflow",
+      "decisionValue": "Compare usable completed artifacts, unfamiliar-obstacle response, commercial judgment and actual effort under a common total ceiling.",
+      "deliverables": [
+        "Fresh local project",
+        "Fresh commercial packet",
+        "All actual attempts, failures, tools, source and intervention receipts"
+      ],
+      "gate": "All three job/evidence/rubric bindings sealed before any arm runs; independent assessor named; shared executor verified; baseline migration and tool-access differences disclosed."
+    },
+    {
+      "id": "trial-adaptive-midas",
+      "kind": "flagship_product_comparison",
+      "arm": "adaptive-midas",
+      "runs": 1,
+      "maxCalls": 20,
+      "inferenceMinor": 4100,
+      "overheadMinor": 100,
+      "totalMinor": 4200,
+      "suballocations": {
+        "functionalProject": 12,
+        "responsePacket": 8
+      },
+      "maxActiveWallMs": 21600000,
+      "context": "independently-selected-retail-workflow",
+      "decisionValue": "Compare usable completed artifacts, unfamiliar-obstacle response, commercial judgment and actual effort under a common total ceiling.",
+      "deliverables": [
+        "Fresh local project",
+        "Fresh commercial packet",
+        "All actual attempts, failures, tools, source and intervention receipts"
+      ],
+      "gate": "All three job/evidence/rubric bindings sealed before any arm runs; independent assessor named; shared executor verified; baseline migration and tool-access differences disclosed."
+    },
+    {
+      "id": "transfer-strong-direct",
+      "kind": "different_context_transfer",
+      "arm": "strong-direct",
+      "runs": 1,
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "suballocations": {
+        "responsePacketWithFitAndReuseWork": 8
+      },
+      "maxActiveWallMs": 10800000,
+      "context": "independently-selected-service-intake-workflow",
+      "decisionValue": "Observe whether the same arm applies appropriate prior learning to a different intake job, verifies fit and completes a useful packet.",
+      "deliverables": [
+        "Service intake/readiness packet with source-bound unknowns",
+        "Applicability/precondition/command and reuse-outcome receipts when reuse is proposed",
+        "No imported retail policy as service truth"
+      ],
+      "gate": "New service task evidence released only at run start; same-arm memory only. Eight calls include import/precondition/reuse work and finishing. Failure to acquire a candidate remains a reported result."
+    },
+    {
+      "id": "transfer-preserved-midas-procedure",
+      "kind": "different_context_transfer",
+      "arm": "preserved-midas-procedure",
+      "runs": 1,
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "suballocations": {
+        "responsePacketWithFitAndReuseWork": 8
+      },
+      "maxActiveWallMs": 10800000,
+      "context": "independently-selected-service-intake-workflow",
+      "decisionValue": "Observe whether the same arm applies appropriate prior learning to a different intake job, verifies fit and completes a useful packet.",
+      "deliverables": [
+        "Service intake/readiness packet with source-bound unknowns",
+        "Applicability/precondition/command and reuse-outcome receipts when reuse is proposed",
+        "No imported retail policy as service truth"
+      ],
+      "gate": "New service task evidence released only at run start; same-arm memory only. Eight calls include import/precondition/reuse work and finishing. Failure to acquire a candidate remains a reported result."
+    },
+    {
+      "id": "transfer-adaptive-midas",
+      "kind": "different_context_transfer",
+      "arm": "adaptive-midas",
+      "runs": 1,
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "suballocations": {
+        "responsePacketWithFitAndReuseWork": 8
+      },
+      "maxActiveWallMs": 10800000,
+      "context": "independently-selected-service-intake-workflow",
+      "decisionValue": "Observe whether the same arm applies appropriate prior learning to a different intake job, verifies fit and completes a useful packet.",
+      "deliverables": [
+        "Service intake/readiness packet with source-bound unknowns",
+        "Applicability/precondition/command and reuse-outcome receipts when reuse is proposed",
+        "No imported retail policy as service truth"
+      ],
+      "gate": "New service task evidence released only at run start; same-arm memory only. Eight calls include import/precondition/reuse work and finishing. Failure to acquire a candidate remains a reported result."
+    },
+    {
+      "id": "nonreuse",
+      "kind": "inappropriate_reuse",
+      "runs": 1,
+      "maxCalls": 6,
+      "inferenceMinor": 1230,
+      "overheadMinor": 30,
+      "totalMinor": 1260,
+      "suballocations": {
+        "fitCheckAndSafeCompletion": 6
+      },
+      "maxActiveWallMs": 7200000,
+      "context": "independently-selected-incompatible-or-withdrawn-source-case",
+      "decisionValue": "Test refusal or constrained fallback when purpose, evidence, preconditions or effects do not fit.",
+      "deliverables": [
+        "Recorded nonreuse/applicability decision",
+        "Useful local fallback or precise blocked branch",
+        "Preserved original candidate and source lineage"
+      ],
+      "gate": "Actual prior candidate exists; assessor independently chooses the incompatible change without sharing its intended answer. No candidate means not-run, not successful rejection."
+    },
+    {
+      "id": "ablation",
+      "kind": "paired_full_workflow_memory_ablation",
+      "runs": 2,
+      "maxCalls": 16,
+      "inferenceMinor": 3280,
+      "overheadMinor": 80,
+      "totalMinor": 3360,
+      "suballocations": {
+        "withEligibleMemory": 8,
+        "withoutAcquiredMemory": 8
+      },
+      "maxActiveWallMs": 16200000,
+      "context": "independently-selected-service-workflow-pair",
+      "decisionValue": "Obtain one matched workflow observation of the value or harm of acquired memory while holding tools, model, evidence, authority and total resources constant.",
+      "deliverables": [
+        "Two complete service work packets",
+        "Exact only-memory intervention manifest",
+        "Tool, attempt, effort and semantic review comparison"
+      ],
+      "gate": "Separate environments, one eligible frozen candidate, no answer sharing, same tasks and conditions. Absence of a candidate stops this stage. It is not the one-response WorkerDevelopment comparator."
+    }
+  ],
+  "timeAndPeople": {
+    "proposedGlobalActiveWallMs": 172800000,
+    "proposedGrantValidityHours": 168,
+    "activeWallEnforcement": "Must be enforced by the final coordinator; current protocol fields alone do not enforce a whole-release wall limit.",
+    "expiryAbsolute": null,
+    "ownerMinutes": 45,
+    "independentAssessorMinutes": 180,
+    "independentCustodianMinutes": 60,
+    "peopleAvailable": false,
+    "assessorId": null,
+    "assessorAuthorityReference": null,
+    "assessorPublicKey": null,
+    "custodianId": null,
+    "paidHumanServicesAuthorized": false,
+    "humanCostMinor": null,
+    "note": "Proposed attention allowances, not measured effort or scheduled people. No judge-model allowance is hidden in the provider budget. Human fees need a separate explicit amount if requested."
+  },
+  "experiment": {
+    "status": "exploratory_not_run",
+    "casePayloads": [],
+    "caseManifestHash": null,
+    "rubricHash": null,
+    "armOrder": null,
+    "orderPolicy": "Custodian predeclares one reproducible randomized order before run; no outcome-conditioned ordering or reruns.",
+    "repetitionsPerFlagshipArm": 1,
+    "repetitionsPerTransferArm": 1,
+    "mainEstimand": "Product/configuration comparison. The MIDAS comparator preserves its procedure but is ported to the verified shared executor; this is not the unchanged historical Windows implementation.",
+    "historicalToolGap": "Historical MIDAS did not advertise adaptive acquisition. New acquisition/tool availability must be listed by arm. Differing tools prevent attribution solely to orchestration.",
+    "isolatedOrchestrationCondition": "A separate common-tool comparison would equip every arm with the same verified tools and label the migrated prior arm explicitly. It is a replacement design requiring a newly frozen manifest within an approved schedule, not an extra funded run or an unchanged historical baseline.",
+    "fundedAblation": "Full workflow with versus without acquired memory; this does not isolate every change in orchestration or prompt projection.",
+    "historicalPrompt": "Owner supplied original Fable prompt in the conversation; exact imported bytes and historical connectors/settings remain unverified. Historical outputs are contextual references only.",
+    "exposedDevelopmentFixtures": [
+      "packages/foundry/test/fixtures/commercial-release/evidence.v1.json",
+      "packages/foundry/test/fixtures/commercial-release/samples.v1.json",
+      "packages/foundry/test/fixtures/commercial-release/scenarios.v1.json"
+    ],
+    "protectedClaim": false,
+    "protectedCustodyAvailable": false,
+    "protectedCustodyCode": "WORKER_DEVELOPMENT_PROTECTED_CUSTODY_UNAVAILABLE",
+    "independentAssessmentRequirement": "Trusted separately controlled assessor key and a signed receipt bound to exact candidate, cases, conditions and output hashes. Producer-written independent=true does not qualify.",
+    "scoring": [
+      "objective completion",
+      "verified current technical artifact",
+      "commercial usefulness and unsupported promises",
+      "critical omissions",
+      "diagnosis/acquisition/resumption evidence",
+      "appropriate transfer and nonreuse",
+      "owner and assessor effort",
+      "actual latency, usage, provisional/unknown cost"
+    ],
+    "claimLimit": "One exploratory run per arm is not statistical superiority, customer validation, general worker qualification or demonstrated profit.",
+    "transferBinding": "Current importCandidate/reuse requires the same business. Use a new service task/source context within each arm's explicitly synthetic sandbox business. This is cross-task/domain fit, not cross-business material transfer; a second business remains nonreuse absent a separately authorized transfer path.",
+    "adoptionBoundary": "Full-workflow memory ablation does not automatically fit a procedure-only adoption API. Do not invent changed procedure hashes or promote from a favorable report."
+  },
+  "authority": {
+    "signedGrant": null,
+    "grantHashes": [],
+    "implementationHash": null,
+    "implementationFiles": [],
+    "initialRequestHashes": [],
+    "baselineProcedureHash": null,
+    "adaptiveProcedureHash": null,
+    "toolContractHashes": {},
+    "businessBindings": [],
+    "sourceBindings": [],
+    "trustedAssessorBinding": null,
+    "preparationMayAuthorize": false,
+    "historical034OrR5AuthorityTransferred": false,
+    "externalEffects": false,
+    "allowedData": "Public sources and explicitly labeled synthetic business/case inputs only; no private owner/customer access is inferred.",
+    "disallowedEffects": [
+      "customer communication",
+      "payments/refunds/labels",
+      "account changes",
+      "public deployment",
+      "paid tool services",
+      "host-level worker execution",
+      "private credential exposure",
+      "unbounded networking"
+    ],
+    "dynamicWork": "Additional model parents, new tasks, new tools/hosts, new effects, changed model settings and reserve transfers have zero admission until separately bound and explicitly authorized."
+  },
+  "localScope": {
+    "workerNetwork": "off",
+    "acquisitionDataScope": "public-or-synthetic",
+    "acquisitionAllowedHosts": null,
+    "acquisitionMaxRequestsPerTask": 4,
+    "acquisitionMaxBytesPerRequest": 16777216,
+    "acquisitionDeadlineMs": 30000,
+    "acquisitionUrls": "Selected and source-bound by the independent job manifest; no query, fragment, credentials, redirects or private destination.",
+    "localToolRunsPerPrimaryTask": 64,
+    "localToolRunsPerTransferTask": 32,
+    "localToolRunsPerNonreuseTask": 24,
+    "localToolRunsPerAblationTask": 32,
+    "maxTextFileBytes": 1048576,
+    "maxBinaryBytes": 16777216,
+    "maxCommandOutputBytes": 16384,
+    "maxCommandTimeoutMs": 60000,
+    "aggregateOsResourcePolicy": null,
+    "aggregateOsLimitsVerified": false,
+    "rule": "Current ExecutorPolicy has file/output/time settings, not a demonstrated whole-task aggregate memory/pids/disk guarantee. Require verified aggregate limits or fail closed before live commands. Final grants must bind actual installed policy and host list."
+  },
+  "existingInterfaces": [
+    {
+      "file": "packages/foundry/src/pilot/outcome-journey-authorized.ts",
+      "exports": [
+        "prepareOutcomeJourneyAuthorization",
+        "signOutcomeJourneyProposal",
+        "loadAuthorizedOutcomeJourney"
+      ],
+      "reuse": "One fixed business journey, one OperatingModels ledger, discovery6/analysis1/planner1, task graph and exact correction reserve. Existing loader profiles enumerate legacy local tools; adaptive task profiles need exact fresh binding."
+    },
+    {
+      "file": "packages/foundry/src/pilot/outcome-authorized.ts",
+      "exports": [
+        "prepareOutcomeAuthorization"
+      ],
+      "reuse": "Pre-observed business evidence and finite outcome graph; current profile minimums functional-project7 and other families3. Minimum is not a credible complex-work budget."
+    },
+    {
+      "file": "packages/foundry/src/pilot/execution.ts",
+      "exports": [
+        "PilotExecution"
+      ],
+      "reuse": "Shared plan/adaptive task contracts, functional-project and response-packet work, current artifact-bound correction and deterministic checks."
+    },
+    {
+      "file": "packages/foundry/src/portfolio/engine.ts",
+      "exports": [
+        "PortfolioEngine"
+      ],
+      "reuse": "Existing execution loop; coordinator must not invent an untracked parallel model loop."
+    },
+    {
+      "file": "packages/foundry/src/operations/model.ts",
+      "exports": [
+        "OperatingModels"
+      ],
+      "reuse": "Signed OperatingGrant, exact request bytes/count/admission, business/stage allocations, concurrency1, durable same-ID recovery and provisional accounting."
+    },
+    {
+      "file": "packages/foundry/src/adaptive/lean-worker.ts",
+      "exports": [
+        "createLeanComparisonProtocol",
+        "projectLeanContext"
+      ],
+      "reuse": "Prepared three-arm conditions and protected-context projection receipt only; not a live runner."
+    },
+    {
+      "file": "packages/foundry/src/pilot/worker-development-authorized.ts",
+      "exports": [
+        "prepareWorkerDevelopmentComparisonGrant",
+        "prepareWorkerDevelopmentOperatingPacket",
+        "createOperatingModelsComparisonExecutor"
+      ],
+      "reuse": "Existing exact two-arm one-response slots, not a full-workflow or three-arm adapter. Do not relabel its eight slots as eight executed workflows."
+    },
+    {
+      "file": "packages/foundry/src/portfolio/learning.ts",
+      "exports": [
+        "ProcedureRegistry"
+      ],
+      "reuse": "Independent output-bound assessment, scoped candidate eligibility/adoption and retained baseline. New trial coordinator must provide actual outputs and cannot self-sign assessor trust."
+    }
+  ],
+  "smallestIntegration": {
+    "status": "required_before_live",
+    "proposedFile": "packages/foundry/src/pilot/release-trial.ts",
+    "proposedCli": "packages/foundry/src/pilot/cli.ts",
+    "implementedByThisProposal": false,
+    "functions": [
+      "prepareReleaseTrial(manifest, independentlySuppliedJobBindings, adapterBindings)",
+      "inspectReleaseTrial(root)",
+      "runReleaseStage(stageId, authorizedOperatingModels, frozenAdapter)",
+      "resumeReleaseStage(stageId)"
+    ],
+    "manifestFields": [
+      "envelopeId/version",
+      "stage IDs and immutable job manifests",
+      "arm and adapter kind",
+      "business/task IDs and exact definitions",
+      "procedure/model/tool/evidence/authority hashes",
+      "case custody and partition provenance",
+      "source permissions/expiry",
+      "resource allocations and stage/whole-release wall budgets",
+      "dependency and allowed same-arm memory hashes",
+      "rubric and independently controlled assessor trust",
+      "exact request bytes/hash written before admission",
+      "terminal request/tool/artifact/usage/cost receipts"
+    ],
+    "constraints": [
+      "Only existing shared controller and verified adapters dispatch work.",
+      "Persist stages and task/attempt IDs before admission; cross-process whole-release concurrency1.",
+      "Allocate new grants disjointly; a coordinator must not reset spending by loading another ledger.",
+      "Never mint live authority from this proposal, a UI task mandate or historical unsigned grant.",
+      "Each stage can consume only its own allocation; unused cap expires.",
+      "Preflight must prove task tool/action finishing floor fits its assigned cap; revise an infeasible schedule before signing, never grade a budget-starved smoke as completion.",
+      "Admit no trial until all arm jobs and rubric are bound independently; paid dispatch remains closed on missing adapter, case, assessor or policy.",
+      "Freeze whole loaded implementation and exact tool profiles, including adaptive source; OperatingModels' narrower implementation hash alone is insufficient.",
+      "Unknown creation or command effect holds its reservation and lease; resume only persisted response/operation identity, no fresh replay.",
+      "Port historical procedure to shared executor with explicit migration manifest; keep product-comparison and common-tool estimands distinct."
+    ]
+  },
+  "preflight": [
+    "Complete current engineering and regression/browser/persistence checks with no provider calls.",
+    "Independently review containment, credential boundary, acquisition policy, aggregate resources, cancellation and unknown-effect replay.",
+    "Freeze source tree/tool profiles/executor runtime and recompute every binding; hashes stay null in this version.",
+    "Supply independent cases/rubric and named assessor; no developer fixture may be called protected.",
+    "Prepare exact reviewable unsigned subgrants with disjoint caps that sum to this proposal; verify shared whole-release concurrency and accounting.",
+    "Verify project/model availability and route without granting worker access to account secrets; any paid probe is charged to development, never extra.",
+    "Obtain one consolidated owner decision on the exact final packets, Max effort, numerical limits, data retention, time and people; then only authorized signing can enable execution.",
+    "Stop on mismatch, unknown effects, expiry, revocation, missing custody/trust, breached cap, absent candidate for reuse, or loss of independent conditions."
+  ],
+  "stopAndContinue": {
+    "repairReserveCalls": 4,
+    "repairScope": "Development only; one exact artifact-bound correction. No unpriced retry of unknown creation, no evaluation-driven prompt tuning.",
+    "continuation": "Report completed and blocked stages with actual receipts, unknown cost and unused limits. An additional request needs a concrete remaining task, evidence of decision value, exact bindings and new explicit authorization.",
+    "promotion": "Baseline retained absent independently verified scoped improvement; unsupported transfer is rejected and observed failure triggers scoped rollback."
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "kind": "commercial-release-trial-population-v1",
+  "authoredBy": "development_assistant",
+  "status": "prospective_preregistration_not_selected_cases",
+  "casePayloadsIncluded": false,
+  "protectedCustody": false,
+  "population": "Public-evidence or explicitly synthetic small-business workflows requiring a useful local technical/commercial artifact, accurate treatment of uncertainty, and a decision about appropriate retained knowledge.",
+  "businessAuthority": "Sandbox only. Referencing a public business grants no account, customer, transaction, communication or deployment authority.",
+  "selectionRulesReference": "docs/commercial-release/trial-selection.v1.json",
+  "rubricReference": "docs/commercial-release/trial-rubric.v1.json",
+  "cases": [
+    {
+      "caseId": "development-exception-routing-v1",
+      "phase": "development",
+      "selection": "Already prepared public/synthetic development scope; not independent",
+      "businessId": "release-public-development",
+      "outputScope": "Local functional exception-routing project, small commercial handoff, exact bounded repair if warranted",
+      "sourceReference": "Prepared development packet and its sourcePacketHash; visible fixtures remain excluded from independent evidence"
+    },
+    {
+      "caseId": "development-observed-successor-v1",
+      "phase": "development",
+      "selection": "Actual artifact/check/resource observations after development; no invented customer feedback",
+      "businessId": "release-public-development",
+      "outputScope": "One planner decision; at most one small supported work packet if justified, or a justified rejection"
+    },
+    {
+      "caseId": "independent-flagship-001",
+      "phase": "flagship",
+      "selection": "Independent custodian selects one eligible unfamiliar retail/service-exception workflow after source freeze and before any flagship dispatch",
+      "businessId": "release-trial-sandbox",
+      "outputScope": "Usable local multi-file project with current browser/HTTP/persistence verification plus an actionable commercial packet",
+      "armReplicas": 3
+    },
+    {
+      "caseId": "independent-transfer-001",
+      "phase": "transfer",
+      "selection": "Independent custodian selects a materially different service-intake/readiness workflow; same case facts for all three arms",
+      "businessId": "release-trial-sandbox",
+      "outputScope": "Complete service packet, fit/precondition/reuse evidence when appropriate, and explicit unsupported obligations",
+      "armReplicas": 3
+    },
+    {
+      "caseId": "independent-nonreuse-001",
+      "phase": "nonreuse",
+      "selection": "Independent custodian selects an actual candidate-fit challenge after a retained candidate exists; no expected decision or desired answer in worker facts",
+      "businessId": "release-trial-sandbox",
+      "outputScope": "Evidence-grounded applicability decision and useful safe completion or precise blocked branch",
+      "candidateRequired": true
+    },
+    {
+      "caseId": "independent-memory-ablation-001",
+      "phase": "ablation",
+      "selection": "Independent custodian selects one complete service workflow matched across two roots from the same frozen adaptive history",
+      "businessId": "release-trial-sandbox",
+      "outputScope": "Two complete workflow artifacts, differing only in access to the pinned retained candidate",
+      "armReplicas": 2,
+      "candidateRequired": true
+    }
+  ],
+  "excluded": [
+    "Development fixture answers or scenarios relabeled as independent",
+    "A rehearsed obstacle selected because one arm already solved it",
+    "Private owner/customer data without actual permission",
+    "An artificial instruction to acquire a predetermined package",
+    "Tasks requiring external sending, payments, account changes or public deployment",
+    "A second full application expected within an eight-call transfer packet budget"
+  ],
+  "custodyBoundary": "No final case material or grader answer is included. Future worker packets are independently supplied and hash-bound through whole-chunk binding. A preregistered population or case ID is not proof of independent selection.",
+  "selectionRulesHash": "4bb2b1faa5ced33b979617995511e2e6d53a7674fc842ba239f1e5d325c980a8",
+  "rubricHash": "654c7dcd7d3f1691b178a3efca08d76f75774f9d513d5002ed3c5a7847814f80",
+  "orderHash": "5dd81271f73676db0d775297b2e39b29e6e6aaf0fed8a7b96a8215c9a3a0ff32"
+}

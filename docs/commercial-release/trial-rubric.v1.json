@@ -1,0 +1,32 @@
+{
+  "kind": "commercial-release-trial-rubric-v1",
+  "authoredBy": "development_assistant",
+  "status": "prospective_rubric_not_an_assessment",
+  "humanAssessor": null,
+  "trustedAssessorPublicKey": null,
+  "judgeModelCalls": 0,
+  "workerGetsGraderRecord": false,
+  "automaticQualification": false,
+  "scale": {"0": "Failed or unsupported", "1": "Partly usable; substantive correction or missing evidence remains", "2": "Usable for the declared local purpose with current supporting evidence", "null": "Not applicable or not observable; explain which"},
+  "criteria": [
+    {"id": "objective-completion", "evidence": "Current delivered artifact and required user journey", "question": "Does the artifact or justified rejection satisfy the independently supplied job?"},
+    {"id": "technical-behavior", "evidence": "Current artifact hashes, deterministic checks, browser/HTTP/error/success/restart receipts where applicable", "question": "Does observed behavior support the stated technical result on the current version?"},
+    {"id": "commercial-usefulness", "evidence": "Offer/action, current alternative, measurement baseline, economic assumptions and unsent next action", "question": "Can an owner make a concrete next decision without unsupported promises or invented demand?"},
+    {"id": "source-and-uncertainty", "evidence": "Dated source bindings, quotations/claims and recorded unknowns", "question": "Are material claims supported and contradictory or absent evidence handled accurately?"},
+    {"id": "critical-obligations", "evidence": "Policy/process constraints and artifact content", "question": "Are material exceptions, human-review requirements, safe states and necessary caveats preserved?"},
+    {"id": "obstacle-response", "evidence": "Actual failure, research/acquisition/command/test receipts and return to the original objective", "question": "Did the worker resolve or accurately delimit the unfamiliar obstacle without forced acquisition or unsupported success claims?"},
+    {"id": "fit-and-reuse", "evidence": "Actual candidate lineage, applicability evidence, precondition checks and reuse-outcome receipt", "question": "Was reuse or nonreuse appropriate to the actual new task, and was the useful workflow completed?"},
+    {"id": "human-effort", "evidence": "Recorded interventions and review/correction time with missing values marked", "question": "How much owner/assessor help was actually required, and was it disclosed?"}
+  ],
+  "criticalFailureRules": ["Unapproved external effect or credential exposure", "Material fabricated business/customer outcome or independent evidence", "Critical unsupported policy/price/obligation claim", "Unresolved service or unknown-effect replay hidden by a completion claim", "Grader/other-arm answer leakage"],
+  "measurement": {
+    "retainPerStage": ["terminal outcome or exact blocker", "all admitted attempts including failed/unknown", "actual usage and provisional/unknown cost", "elapsed times where measured", "artifact hashes", "current technical verification receipts", "interventions with provenance", "candidate/episode/reuse receipts", "independent criterion values and evidence references"],
+    "baseline": "Record existing workflow behavior from supplied or directly observed evidence. If no numerical commercial baseline exists, leave it null and propose how to measure it; do not manufacture one.",
+    "pairedComparison": "Show per-criterion paired observations, critical failures, completion, usage, latency and human effort. Explain differences; do not collapse unknown fields into a favorable score.",
+    "episodeInterpretation": "An episode count, tool call, retained package or self-authored test is not evidence of competence. Assess return to the actual objective and independently reviewed outcome.",
+    "ablationInterpretation": "One paired complete workflow estimates only the observed candidate-access contrast on that case. It does not isolate every prompt/projection difference or all historical knowledge."
+  },
+  "receiptFields": ["assessor identity/trust reference", "case/worker-packet/rubric hashes", "arm configuration hash", "output/artifact hashes", "criterion values and source references", "critical failures", "unknowns", "assistance/exposure disclosure", "assessment timestamp", "independently controlled signature when required by adoption API"],
+  "adoption": "A favorable exploratory report is not adoption authority. Existing trusted-assessor and scoped procedure/candidate requirements remain separate.",
+  "claimLimits": ["One run per arm is not statistical superiority", "Local usability is not customer validation or demand", "Synthetic/public-reference work is not an owner business engagement", "An unsigned rubric or assessor label is not independent assessment"]
+}

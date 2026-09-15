@@ -1,0 +1,544 @@
+{
+  "schemaVersion": 2,
+  "kind": "commercial-release-resource-proposal",
+  "id": "commercial-release-live-envelope-v2",
+  "preparedAtUtcDate": "2026-09-15",
+  "supersedesProspectively": "live-envelope.v1.json",
+  "status": "unsigned_resource_proposal_pending_exact_packets_and_owner_approval",
+  "authoredBy": "development_assistant",
+  "approved": false,
+  "ownerDollarCeiling": null,
+  "proposalIsAuthority": false,
+  "providerRequestsByPreparation": 0,
+  "credentialsRead": false,
+  "customerValidation": false,
+  "protectedCasesCreated": false,
+  "accounting": {
+    "currency": "USD",
+    "maximumInferenceAdmissions": 138,
+    "maximumSupportingCounts": 138,
+    "inputTokenCeilingPerAdmission": 32768,
+    "outputTokenCeilingPerAdmission": 32768,
+    "aggregateInputTokenCeiling": 4521984,
+    "aggregateOutputTokenCeiling": 4521984,
+    "perAdmissionReservationMinor": 205,
+    "inferenceReservationMinor": 28290,
+    "unpricedCountAndRetrievalAllowanceMinor": 690,
+    "proposedTotalMinor": 28980,
+    "invoiceHardBoundEstablished": false,
+    "spendingTarget": false,
+    "providerConcurrency": 1,
+    "workerSlots": 1,
+    "retries": 0,
+    "judgeModelAdmissions": 0,
+    "historicalCarryInMinor": 0,
+    "historicalAdmissionsCarried": 0,
+    "automaticBorrowing": false,
+    "automaticTopUp": false,
+    "unpricedAllowanceBasis": "Five cents per maximum admission, an explicit proposed allowance rather than a published endpoint price."
+  },
+  "pricing": {
+    "checkedOn": "2026-09-14",
+    "source": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+    "inputUsdPerMillion": 10,
+    "cachedInputUsdPerMillion": 1,
+    "cacheWriteUsdPerMillion": 12.5,
+    "outputUsdPerMillion": 50,
+    "ordinary32768EachUsd": 1.96608,
+    "ordinaryRoundedMinor": 197,
+    "conservative32768EachUsd": 2.048,
+    "conservativeRoundedMinor": 205,
+    "discountsAssumed": false
+  },
+  "route": {
+    "provider": "openai-responses",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "max",
+    "serviceTier": "default",
+    "projectId": "proj_H01ORqdOPQM6vdGwQYsqFL5r",
+    "credentialFile": "C:/Users/14844/Downloads/MIDAS/var/foundry-worktree-028/var/foundry-smoke-028/auth/provider/openai.key",
+    "routeReference": "docs/foundry/034/LIVE-REQUEST.md",
+    "credentialContentsRead": false,
+    "accountAvailabilityVerified": false,
+    "immutableSnapshot": null,
+    "background": true,
+    "store": true,
+    "retentionSource": "https://developers.openai.com/api/docs/guides/background",
+    "createDeadlineMs": 60000,
+    "countDeadlineMs": 10000,
+    "countRequestByteCeiling": 196608,
+    "completionDeadlineMs": 900000,
+    "retrievalDeadlineMs": 15000,
+    "pollIntervalMs": 5000,
+    "maxRetrievalsPerAdmission": 240,
+    "maximumSupportingRetrievals": 33120,
+    "resumeWindowMs": 86400000,
+    "maxConsecutiveReadErrors": 3,
+    "codeReference": "packages/foundry/src/portfolio/live.ts#portfolioRoute",
+    "verificationLimit": "Serialized requests prove requested settings; retain returned model, tier, token usage and durable identities separately. Unobserved settings and hidden reasoning behavior remain unverified.",
+    "includedCodexAlternative": {
+      "status": "potential_only",
+      "nativeRoute": "failed_isolation_unsuitable",
+      "authority": false,
+      "allocatedAdmissions": 0
+    }
+  },
+  "stages": [
+    {
+      "id": "development-journey",
+      "phase": "development",
+      "chunk": "development",
+      "runner": "outcome-journey",
+      "maxCalls": 28,
+      "inferenceMinor": 5740,
+      "overheadMinor": 140,
+      "totalMinor": 5880,
+      "suballocations": {
+        "discovery": 6,
+        "analysis": 1,
+        "planner": 1,
+        "functionalProject": 12,
+        "smallCommercialPacket": 5,
+        "exactRepairReserve": 3
+      },
+      "decisionValue": "Useful verified technical and commercial journey, with bounded correction only when warranted.",
+      "tradeoff": "Five packet calls fund a small pilot/measurement/economics/unsent-action handoff, not a large campaign. The validated planner must fit the actual finishing work."
+    },
+    {
+      "id": "development-successor",
+      "phase": "development",
+      "chunk": "observed-successor",
+      "runner": "outcome",
+      "maxCalls": 4,
+      "inferenceMinor": 820,
+      "overheadMinor": 20,
+      "totalMinor": 840,
+      "suballocations": {
+        "planner": 1,
+        "justifiedWorkMaximum": 3,
+        "repairReserve": 0
+      },
+      "decisionValue": "Choose the next decision from actual artifact/check/resource observations; a valid rejection after one call preserves the remaining allowance.",
+      "observations": "Fresh immutable observation IDs/context hash; no invented customer outcome; fresh grant and account scope."
+    },
+    {
+      "id": "flagship-direct",
+      "phase": "flagship",
+      "chunk": "flagship",
+      "runner": "pilot",
+      "arm": "strong-direct",
+      "maxCalls": 20,
+      "inferenceMinor": 4100,
+      "overheadMinor": 100,
+      "totalMinor": 4200,
+      "suballocations": {
+        "functionalProject": 12,
+        "commercialPacket": 8
+      },
+      "decisionValue": "Strong generalist completion and business judgment under the shared declared tools."
+    },
+    {
+      "id": "flagship-prior",
+      "phase": "flagship",
+      "chunk": "flagship",
+      "runner": "pilot",
+      "arm": "preserved-midas-procedure",
+      "maxCalls": 20,
+      "inferenceMinor": 4100,
+      "overheadMinor": 100,
+      "totalMinor": 4200,
+      "suballocations": {
+        "functionalProject": 12,
+        "commercialPacket": 8
+      },
+      "decisionValue": "Prior compiled procedure ported to the verified shared executor; migration explicitly recorded."
+    },
+    {
+      "id": "flagship-adaptive",
+      "phase": "flagship",
+      "chunk": "flagship",
+      "runner": "pilot",
+      "arm": "adaptive-midas",
+      "maxCalls": 20,
+      "inferenceMinor": 4100,
+      "overheadMinor": 100,
+      "totalMinor": 4200,
+      "suballocations": {
+        "functionalProject": 12,
+        "commercialPacket": 8
+      },
+      "decisionValue": "Adaptive procedure completion, obstacle response, uncertainty and intervention requirements."
+    },
+    {
+      "id": "transfer-direct",
+      "phase": "transfer",
+      "chunk": "transfer",
+      "runner": "pilot",
+      "arm": "strong-direct",
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "decisionValue": "Complete a materially different service-intake packet with justified same-arm learning or explicit nonreuse."
+    },
+    {
+      "id": "transfer-prior",
+      "phase": "transfer",
+      "chunk": "transfer",
+      "runner": "pilot",
+      "arm": "preserved-midas-procedure",
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "decisionValue": "Complete a materially different service-intake packet with justified same-arm learning or explicit nonreuse."
+    },
+    {
+      "id": "transfer-adaptive",
+      "phase": "transfer",
+      "chunk": "transfer",
+      "runner": "pilot",
+      "arm": "adaptive-midas",
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "decisionValue": "Complete a materially different service-intake packet with justified same-arm learning or explicit nonreuse."
+    },
+    {
+      "id": "nonreuse",
+      "phase": "nonreuse",
+      "chunk": "nonreuse",
+      "runner": "pilot",
+      "arm": "adaptive-midas",
+      "maxCalls": 6,
+      "inferenceMinor": 1230,
+      "overheadMinor": 30,
+      "totalMinor": 1260,
+      "decisionValue": "Reject an incompatible/stale candidate and preserve a useful safe fallback.",
+      "candidateRequired": true
+    },
+    {
+      "id": "ablation-candidate",
+      "phase": "ablation",
+      "chunk": "ablation",
+      "runner": "pilot",
+      "arm": "adaptive-midas",
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "decisionValue": "Complete a workflow with access to an actual frozen eligible candidate.",
+      "candidateRequired": true
+    },
+    {
+      "id": "ablation-masked",
+      "phase": "ablation",
+      "chunk": "ablation",
+      "runner": "pilot",
+      "arm": "adaptive-midas",
+      "maxCalls": 8,
+      "inferenceMinor": 1640,
+      "overheadMinor": 40,
+      "totalMinor": 1680,
+      "decisionValue": "Complete the same workflow with the retained-candidate access list empty; other history is identical.",
+      "candidateRequired": true
+    }
+  ],
+  "armConfigurations": [
+    {
+      "arm": "strong-direct",
+      "adaptivePrompt": "direct",
+      "context": "full",
+      "procedure": "DIRECT_WORKER_PROCEDURE",
+      "description": "Strong generalist master through the same trusted adapter, schema and complete declared tool set."
+    },
+    {
+      "arm": "preserved-midas-procedure",
+      "adaptivePrompt": "baseline",
+      "context": "full",
+      "procedure": "prior compiled worker procedure with unchanged existing baseline bytes",
+      "description": "Procedure port to the shared executor; not unchanged historical Windows implementation."
+    },
+    {
+      "arm": "adaptive-midas",
+      "adaptivePrompt": "lean",
+      "context": "conservative lean projection",
+      "procedure": "lean adaptive compiled worker procedure",
+      "description": "Same allowed tools and schema; procedure/context projection are recorded treatment differences."
+    }
+  ],
+  "comparison": {
+    "status": "exploratory_not_run",
+    "primaryInterpretation": "Declared procedure/configuration comparison on a shared tool adapter; neither raw chat nor unchanged historical-platform comparison.",
+    "historicalToolConfound": "The historical product did not advertise the current acquisition tools. Common-tool migration is explicit; any additional tool/evidence/model/resource/facts difference must be declared before dispatch.",
+    "commonFactsNormalization": "Only adaptiveExecution.prompt and its derived pilotPlanIntentHash are omitted from the comparison condition. Full workerFactsHash remains bound; every other input including candidate-memory policy remains significant.",
+    "repetitionsPerArm": 1,
+    "casePayloads": [],
+    "caseManifestHash": "b8b0b731abf36b32ad5dd1ca05d8fac9f9ebe195a129f20a53dc43ff58d6b64a",
+    "rubricHash": "654c7dcd7d3f1691b178a3efca08d76f75774f9d513d5002ed3c5a7847814f80",
+    "assessorReference": null,
+    "custody": "externally-supplied-not-protected",
+    "protectedCustodyAvailable": false,
+    "order": [
+      "development-journey",
+      "development-successor",
+      "flagship-direct",
+      "flagship-prior",
+      "flagship-adaptive",
+      "transfer-prior",
+      "transfer-adaptive",
+      "transfer-direct",
+      "nonreuse",
+      "ablation-masked",
+      "ablation-candidate"
+    ],
+    "orderPolicy": "Independently select and seal a fixed order before execution; coordinator does not generate randomness or claim counterbalancing.",
+    "selfScoring": false,
+    "semanticAcceptance": null,
+    "customerOutcome": null,
+    "claimLimit": "One exploratory run per arm is not statistical superiority, customer validation, profit or general worker qualification."
+  },
+  "lineageAndAblation": {
+    "implementedHelper": "prepareTrialLineage",
+    "existingApis": [
+      "backupPilot v4",
+      "restorePilot"
+    ],
+    "requirements": [
+      "same business",
+      "same arm",
+      "completed historical tasks",
+      "released execution leases",
+      "terminal response history",
+      "confirmed stopped services",
+      "fresh target and backup roots"
+    ],
+    "seals": [
+      "historical task definition and record hashes",
+      "historical attempt record hashes",
+      "candidate record and package hashes",
+      "copied bounded file hashes",
+      "backup hash",
+      "origin provenance"
+    ],
+    "copiesAuthority": false,
+    "automaticExecution": false,
+    "liveAcceptsFixtureHistory": false,
+    "transferMeaning": "New service task/source context within each same-arm synthetic business; no invented cross-business relationship or material-transfer authority.",
+    "ablationMask": {
+      "kind": "retained-candidates-v1",
+      "withCandidateIds": null,
+      "withoutCandidateIds": []
+    },
+    "matchedFields": [
+      "backupHash",
+      "normalized task facts excluding only memoryPolicy and derived pilotPlanIntentHash",
+      "model",
+      "evidence",
+      "tools",
+      "resources"
+    ],
+    "maskBoundary": "Candidate context/list/import/reuse/reuseOutcome access only; copied portfolio artifacts and other business evidence remain in both arms.",
+    "candidateAbsent": "Do not fabricate a candidate; record not-run and retain the unused allocation."
+  },
+  "coordinator": {
+    "implemented": true,
+    "source": "packages/foundry/src/adaptive/trial.ts",
+    "cli": "tools/adaptive-trial.mjs",
+    "tests": "packages/foundry/test/adaptive-trial.test.ts",
+    "manifestKind": "adaptive-release-trial-v1",
+    "entryPoints": [
+      "ReleaseTrial.preflight",
+      "ReleaseTrial.run",
+      "ReleaseTrial.bindChunk",
+      "inspectTrialStage",
+      "prepareTrialLineage",
+      "releaseTrialTemplate"
+    ],
+    "runnerFactories": [
+      "loadAuthorizedPilot",
+      "loadAuthorizedOutcomeJourney",
+      "loadAuthorizedOutcome"
+    ],
+    "modelLoopAdded": false,
+    "credentialOrSigningPortAdded": false,
+    "templateExecutable": false,
+    "mechanicalRegression": {
+      "testsPassed": 15,
+      "skipped": 0,
+      "actualSignedMockPilotLoaderPreflight": true,
+      "actualSignedMockLineageTargetPreflight": true,
+      "actualThreeDistinctSignedMockProcedureControls": true,
+      "developmentBeforeDeferredFlagship": true,
+      "independentRerun": true,
+      "providerRequests": 0,
+      "wholeElevenStageCommonControlsAndAblation": true
+    },
+    "preflightEnforces": [
+      "current reachable implementation hash",
+      "immutable manifest",
+      "disjoint no-link roots and non-aliased databases",
+      "actual signed runner and exact task/configuration/source/resource hashes",
+      "stage sums within fixed aggregate allowances",
+      "distinct flagship configurations",
+      "declared control differences",
+      "fresh selected tasks and fresh account scope",
+      "no unbound historical model attempts",
+      "retained history seals",
+      "paired candidate-memory controls"
+    ],
+    "executionEnforces": [
+      "durable global lease",
+      "predeclared order",
+      "stable stage attempt",
+      "existing runner recovery only",
+      "unknown command/request/service holds lease",
+      "no completed-stage replay",
+      "no borrowing"
+    ],
+    "phaseBinding": "All three flagship stages can defer their four hashes together in one later chunk. Development starts under the full fixed allocation; no flagship starts until the complete cohort is bound and actual configurations are distinct. Each deferred chunk binds after preceding stages complete; root/arm/case/phase/allowance cannot change.",
+    "wholeProposalPreparation": "Expand the three-arm template to these eleven stages and fixed total. Bind development initially; preregister population, case IDs, selection rules and rubric with a fixed order. Independent job materials, actual worker-facts/evidence/configuration hashes and fresh grants are supplied only through whole-chunk binding. This JSON is not the executable manifest.",
+    "standaloneDevelopmentDistinction": "The proposed development path uses the coordinator's whole-release lease and allocation. Direct standalone journey invocation enforces only its own grant and is not the proposed execution path.",
+    "semanticTrustVerifiedByCoordinator": false,
+    "preparedManifest": {
+      "path": "docs/commercial-release/trial-manifest.v1.json",
+      "hash": "8cee10a3b18d8933ad2e05e3c0537b8c69cdc05fad306011ea564b3b296d019c",
+      "preparationReceipt": "docs/commercial-release/trial-preparation.v1.json",
+      "structureValid": true,
+      "initialSignedBinding": "deferred",
+      "authority": false
+    }
+  },
+  "localPolicy": {
+    "workerNetwork": "off",
+    "backend": "Windows WSL bubblewrap plus systemd user cgroups",
+    "actualHostChecks": "Command execution/path/network denial, process fanout, owner cancellation, deadlines and trusted-completion restart recovery; see docs/intelligence/EXECUTION.md.",
+    "perCommandOrServiceUnit": {
+      "memoryBytes": 1073741824,
+      "swapBytes": 0,
+      "tasks": 64,
+      "cpuPercent": 100,
+      "killMode": "control-group",
+      "commandRuntimeLimit": "ceil(command.timeoutMs/1000+5) seconds",
+      "serviceLifetimeMaxMs": 600000
+    },
+    "wholeReleaseAggregateMemoryCap": null,
+    "workspaceWatchdog": {
+      "bytes": 268435456,
+      "entries": 4096,
+      "diskQuota": false
+    },
+    "maxTextFileBytes": 1048576,
+    "proposedMaxBinaryBytes": 16777216,
+    "maxCommandOutputBytes": 16384,
+    "proposedCommandTimeoutMaxMs": 60000,
+    "serviceScope": "Task-bound private loopback; every started service needs confirmed stop before finalization.",
+    "policyStatus": "Final task grants must bind exact hosts and installed policies. Per-unit OS limits are implemented; monitored storage is not a filesystem quota.",
+    "initialDevelopment": {
+      "adaptiveOptions": {
+        "acquisition": {
+          "allowedHosts": [
+            "docs.python.org",
+            "developer.mozilla.org",
+            "registry.npmjs.org"
+          ],
+          "dataScope": "public-or-synthetic",
+          "deadlineMs": 15000,
+          "maxBytes": 16777216,
+          "maxRequests": 8
+        },
+        "allowCommands": true,
+        "allowServices": true,
+        "prompt": "lean"
+      },
+      "mandateHash": "84a8a2ee5001ba17d740ea8bcb3a66e769b0c8041657887f01b45e6a69612a92",
+      "packetHash": "91b072bc466fb198d6de7c60abbcb4aa30f0ddd98283ad5d6829daf866b19f28",
+      "discovery": "Separate exact journey discovery seeds/limits; see trial-preparation.v1.json",
+      "localToolRunRule": "Math.min(128,Math.max(32,node.calls*4)), then at least node.calls+8; derived by existing outcome materialization. For proposed12/5 calls this gives48/32."
+    },
+    "laterIndependentJobsProposedAcquisition": {
+      "dataScope": "public-or-synthetic",
+      "allowedHosts": null,
+      "maxRequestsPerTask": 4,
+      "maxBytesPerRequest": 16777216,
+      "deadlineMs": 30000,
+      "redirects": false,
+      "queryOrCredentials": false,
+      "status": "Unbound defaults for later jobs only; not the current development grant. Exact hosts and caps require each prospective signed job."
+    },
+    "laterIndependentJobsProposedLocalToolRuns": {
+      "primaryTask": 64,
+      "transferTask": 32,
+      "nonreuseTask": 24,
+      "ablationTask": 32
+    }
+  },
+  "timeAndPeople": {
+    "wholeReleaseWallTimerImplemented": false,
+    "perStageActiveWallTimerImplemented": false,
+    "expiryAbsolute": "2026-09-22T22:00:00.000Z",
+    "finiteControls": "Per-call/count/retrieval/completion limits, same-ID resume window and exact absolute grant expiry; no unsupported 48-hour aggregate wall claim.",
+    "ownerMinutes": 45,
+    "independentAssessorMinutes": 180,
+    "independentCustodianMinutes": 60,
+    "peopleAvailable": false,
+    "assessorId": null,
+    "trustedAssessorPublicKey": null,
+    "custodianId": null,
+    "paidHumanServicesAuthorized": false,
+    "humanCostMinor": null
+  },
+  "authorityAndRemainingGates": {
+    "signedGrant": null,
+    "grantHashes": [],
+    "implementationHash": "6d981ee25d8c834aa0fd30a069e74d96895bb99782b71f98d1724e1fc473444a",
+    "initialRequestHashes": [
+      "c9b9ad84861bd344e79fab592407493bc0a54bc6104fc3989873a9ba64f7736d"
+    ],
+    "caseBindings": [],
+    "toolContractHashes": {},
+    "preparedDevelopmentPacket": {
+      "path": "var/commercial-release-live-development-v4/proposal/pilot.outcome.journey.authorization.request.json",
+      "proposalHash": "91b072bc466fb198d6de7c60abbcb4aa30f0ddd98283ad5d6829daf866b19f28",
+      "receiptPath": "var/commercial-release-live-development-v4/preparation-receipt.json",
+      "preparationTool": "tools/prepare-commercial-release.mjs",
+      "maximumAdmissions": 28,
+      "maximumMinor": 5880,
+      "expiryAbsolute": "2026-09-22T22:00:00.000Z",
+      "approved": false,
+      "providerRequests": 0,
+      "credentialRead": false,
+      "priorUnsignedPacketSuperseded": true,
+      "priorUnsignedRootsPreserved": [
+        "var/commercial-release-live-development-v2",
+        "var/commercial-release-live-development-v3"
+      ]
+    },
+    "successorAndIndependentPackets": "Unprepared until actual result observations or independently supplied jobs exist.",
+    "existingUnsigned034OrR5Transferred": false,
+    "externalEffects": false,
+    "allowedData": "Public read-only evidence and explicitly synthetic sandbox facts; no owner/customer access inferred.",
+    "developmentPrecedesIndependentCustody": true,
+    "gates": [
+      "Final code/tool-policy freeze and recomputed exact hashes",
+      "whole-release manifest with preregistered population/case IDs/selection rules/rubric reference/order/allocations and exact initial development binding",
+      "independently selected worker facts and exact job grants before each later independent chunk",
+      "named independently controlled custodian/assessor and trust evidence before independent assessment",
+      "exact new unsigned per-root packets fitting this whole proposal",
+      "one consolidated owner approval of numerical ceiling, Max, project route and store=true retention",
+      "actual returned model/tier/request/accounting observations during authorized work"
+    ],
+    "excludedEffects": [
+      "customer communication",
+      "payments/refunds/labels",
+      "account changes",
+      "public deployment",
+      "paid external tools",
+      "host-level worker execution",
+      "worker-readable credentials",
+      "unbounded networking"
+    ],
+    "dynamicWork": "New parents/tasks/tools/hosts/effects/routes, retries under new identities and reserve transfers have zero admission until explicitly rebound and approved."
+  }
+}
